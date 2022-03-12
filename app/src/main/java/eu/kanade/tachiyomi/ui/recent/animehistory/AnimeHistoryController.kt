@@ -128,7 +128,7 @@ class AnimeHistoryController :
         if (size > 0) {
             binding.emptyView.hide()
         } else {
-            binding.emptyView.show(R.string.information_no_recent_manga)
+            binding.emptyView.show(R.string.information_no_recent_anime)
         }
     }
 

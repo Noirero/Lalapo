@@ -177,7 +177,7 @@ class NotificationReceiver : BroadcastReceiver() {
             }
             context.startActivity(intent)
         } else {
-            context.toast(context.getString(R.string.chapter_error))
+            context.toast(context.getString(R.string.episode_error))
         }
     }
 

@@ -162,7 +162,7 @@ class PreferencesHelper(val context: Context) {
 
     fun downloadOnlyOverWifi() = prefs.getBoolean(Keys.downloadOnlyOverWifi, true)
 
-    fun saveChaptersAsCBZ() = flowPrefs.getBoolean("save_chapter_as_cbz", false)
+    fun saveChaptersAsCBZ() = flowPrefs.getBoolean("save_episode_as_cbz", false)
 
     fun numberOfBackups() = flowPrefs.getInt("backup_slots", 1)
 

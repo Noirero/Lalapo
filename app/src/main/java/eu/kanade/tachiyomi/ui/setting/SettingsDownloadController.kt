@@ -71,7 +71,7 @@ class SettingsDownloadController : SettingsController() {
         }
         switchPreference {
             bindTo(preferences.saveChaptersAsCBZ())
-            titleRes = R.string.save_chapter_as_cbz
+            titleRes = R.string.save_episode_as_cbz
         }
         preferenceCategory {
             titleRes = R.string.pref_category_delete_episodes

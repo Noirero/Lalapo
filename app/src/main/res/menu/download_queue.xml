@@ -22,7 +22,7 @@
             </item>
             <item
                 android:id="@+id/action_sort_chapter"
-                android:title="@string/action_order_by_chapter_number"
+                android:title="@string/action_order_by_episode_number"
                 app:showAsAction="never">
                 <menu>
                     <item
