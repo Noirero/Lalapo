@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.setting
 
 import android.content.Intent
-import android.os.Build
 import android.provider.Settings
 import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
@@ -29,7 +28,7 @@ class SettingsGeneralController : SettingsController() {
             key = Keys.startScreen
             titleRes = R.string.pref_start_screen
             entriesRes = arrayOf(
-                R.string.label_anime,
+                R.string.label_library,
                 R.string.label_recent_updates,
                 R.string.browse
             )
@@ -46,16 +45,14 @@ class SettingsGeneralController : SettingsController() {
             titleRes = R.string.pref_confirm_exit
             defaultValue = false
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            preference {
-                key = "pref_manage_notifications"
-                titleRes = R.string.pref_manage_notifications
-                onClick {
-                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                    }
-                    startActivity(intent)
+        preference {
+            key = "pref_manage_notifications"
+            titleRes = R.string.pref_manage_notifications
+            onClick {
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                 }
+                startActivity(intent)
             }
         }
 
@@ -71,71 +68,6 @@ class SettingsGeneralController : SettingsController() {
                     "",
                     "${context.getString(R.string.system_default)} (${LocaleHelper.getDisplayName("")})"
                 )
-                // Due to compatibility issues:
-                // - Hebrew: `he` is copied into `iw` at build time
-                langs += arrayOf(
-                    "am",
-                    "ar",
-                    "be",
-                    "bg",
-                    "bn",
-                    "ca",
-                    "cs",
-                    "cv",
-                    "de",
-                    "el",
-                    "eo",
-                    "es",
-                    "es-419",
-                    "en",
-                    "fa",
-                    "fi",
-                    "fil",
-                    "fr",
-                    "gl",
-                    "he",
-                    "hi",
-                    "hr",
-                    "hu",
-                    "in",
-                    "it",
-                    "ja",
-                    "jv",
-                    "ka-rGE",
-                    "kn",
-                    "ko",
-                    "lt",
-                    "lv",
-                    "mr",
-                    "ms",
-                    "my",
-                    "nb-rNO",
-                    "ne",
-                    "nl",
-                    "pl",
-                    "pt",
-                    "pt-BR",
-                    "ro",
-                    "ru",
-                    "sah",
-                    "sc",
-                    "sk",
-                    "sr",
-                    "sv",
-                    "te",
-                    "th",
-                    "tr",
-                    "uk",
-                    "ur-rPK",
-                    "vi",
-                    "uz",
-                    "zh-rCN",
-                    "zh-rTW"
-                )
-                    .map {
-                        Pair(it, LocaleHelper.getDisplayName(it))
-                    }
-                    .sortedBy { it.second }
 
                 entryValues = langs.map { it.first }.toTypedArray()
                 entries = langs.map { it.second }.toTypedArray()

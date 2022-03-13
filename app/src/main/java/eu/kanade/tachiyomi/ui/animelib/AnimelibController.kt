@@ -136,7 +136,7 @@ class AnimelibController(
         }
 
     override fun getTitle(): String? {
-        return currentTitle ?: resources?.getString(R.string.label_anime)
+        return currentTitle ?: resources?.getString(R.string.label_library)
     }
 
     private fun updateTitle() {
@@ -144,7 +144,7 @@ class AnimelibController(
         val currentCategory = adapter?.categories?.getOrNull(binding.libraryPager.currentItem)
 
         var title = if (showCategoryTabs) {
-            resources?.getString(R.string.label_anime)
+            resources?.getString(R.string.label_library)
         } else {
             currentCategory?.name
         }
