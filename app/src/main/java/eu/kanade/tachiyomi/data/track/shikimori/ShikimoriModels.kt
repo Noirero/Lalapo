@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.data.track.shikimori
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 
 fun AnimeTrack.toShikimoriStatus() = when (status) {
-    Shikimori.READING -> "watching"
+    Shikimori.WATCHING -> "watching"
     Shikimori.COMPLETED -> "completed"
     Shikimori.ON_HOLD -> "on_hold"
     Shikimori.DROPPED -> "dropped"
@@ -13,7 +13,7 @@ fun AnimeTrack.toShikimoriStatus() = when (status) {
 }
 
 fun toTrackStatus(status: String) = when (status) {
-    "watching" -> Shikimori.READING
+    "watching" -> Shikimori.WATCHING
     "completed" -> Shikimori.COMPLETED
     "on_hold" -> Shikimori.ON_HOLD
     "dropped" -> Shikimori.DROPPED

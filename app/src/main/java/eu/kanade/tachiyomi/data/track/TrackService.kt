@@ -32,17 +32,11 @@ abstract class TrackService(val id: Int) {
     @ColorInt
     abstract fun getLogoColor(): Int
 
-    abstract fun getStatusList(): List<Int>
-
     abstract fun getStatusListAnime(): List<Int>
 
     abstract fun getStatus(status: Int): String
 
-    abstract fun getReadingStatus(): Int
-
     abstract fun getWatchingStatus(): Int
-
-    abstract fun getRereadingStatus(): Int
 
     abstract fun getRewatchingStatus(): Int
 

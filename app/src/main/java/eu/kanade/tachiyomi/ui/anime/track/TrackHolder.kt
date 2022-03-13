@@ -89,7 +89,7 @@ class TrackHolder(private val binding: TrackItemBinding, adapter: TrackAdapter) 
                         }
                     }
                 } else {
-                    binding.trackStartDate.text = ctx.getString(R.string.track_started_reading_date)
+                    binding.trackStartDate.text = ctx.getString(R.string.track_started_watching_date)
                     binding.trackStartDate.alpha = UNSET_STATUS_TEXT_ALPHA
                     binding.trackStartDate.setOnClickListener {
                         listener.onStartDateEditClick(bindingAdapterPosition)
@@ -107,7 +107,7 @@ class TrackHolder(private val binding: TrackItemBinding, adapter: TrackAdapter) 
                         }
                     }
                 } else {
-                    binding.trackFinishDate.text = ctx.getString(R.string.track_finished_reading_date)
+                    binding.trackFinishDate.text = ctx.getString(R.string.track_finished_watching_date)
                     binding.trackFinishDate.alpha = UNSET_STATUS_TEXT_ALPHA
                     binding.trackFinishDate.setOnClickListener {
                         listener.onFinishDateEditClick(bindingAdapterPosition)

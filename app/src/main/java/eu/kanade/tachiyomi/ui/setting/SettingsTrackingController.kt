@@ -43,7 +43,7 @@ class SettingsTrackingController :
 
         switchPreference {
             key = Keys.autoUpdateTrack
-            titleRes = R.string.pref_auto_update_manga_sync
+            titleRes = R.string.pref_auto_update_anime_sync
             defaultValue = true
         }
 
