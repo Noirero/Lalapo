@@ -704,11 +704,11 @@ class PlayerActivity : AppCompatActivity() {
                         }
                         CONTROL_TYPE_PREVIOUS -> {
                             previousEpisode()
-                            updatePictureInPictureActions(exoPlayer.isPlaying)
+                            updatePictureInPictureActions(true)
                         }
                         CONTROL_TYPE_NEXT -> {
                             nextEpisode()
-                            updatePictureInPictureActions(exoPlayer.isPlaying)
+                            updatePictureInPictureActions(true)
                         }
                         /**CONTROL_TYPE_INFORMATION -> {
                          baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
