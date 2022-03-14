@@ -510,7 +510,6 @@ class PlayerActivity : AppCompatActivity() {
             launchUI {
                 baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
             }
-            return
         }
         currentQuality = 0
         awaitVideoList()
@@ -533,7 +532,6 @@ class PlayerActivity : AppCompatActivity() {
             launchUI {
                 baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
             }
-            return
         }
         currentQuality = 0
         awaitVideoList()
