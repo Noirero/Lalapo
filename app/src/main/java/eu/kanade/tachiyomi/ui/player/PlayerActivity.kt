@@ -506,6 +506,12 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
+        if (isInPipMode) {
+            launchUI {
+                baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
+            }
+            return
+        }
         currentQuality = 0
         awaitVideoList()
     }
@@ -523,6 +529,12 @@ class PlayerActivity : AppCompatActivity() {
             return
         }
         title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
+        if (isInPipMode) {
+            launchUI {
+                baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
+            }
+            return
+        }
         currentQuality = 0
         awaitVideoList()
     }
@@ -696,11 +708,11 @@ class PlayerActivity : AppCompatActivity() {
                     when (intent.getIntExtra(EXTRA_CONTROL_TYPE, 0)) {
                         CONTROL_TYPE_PLAY -> {
                             exoPlayer.play()
-                            updatePictureInPictureActions(exoPlayer.isPlaying)
+                            updatePictureInPictureActions(true)
                         }
                         CONTROL_TYPE_PAUSE -> {
                             exoPlayer.pause()
-                            updatePictureInPictureActions(exoPlayer.isPlaying)
+                            updatePictureInPictureActions(false)
                         }
                         CONTROL_TYPE_PREVIOUS -> {
                             previousEpisode()
