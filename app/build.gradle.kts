@@ -26,11 +26,11 @@ android {
     ndkVersion = AndroidConfig.ndk
 
     defaultConfig {
-        applicationId = "xyz.Quickdev.Animite.mi"
+        applicationId = "xyz.Quickdev.Animiru.mi"
         minSdk = AndroidConfig.minSdk
         targetSdk = AndroidConfig.targetSdk
         versionCode = 72
-        versionName = "0.12.4.2"
+        versionName = "0.12.4.3"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")

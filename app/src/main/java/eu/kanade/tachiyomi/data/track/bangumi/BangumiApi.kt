@@ -179,7 +179,7 @@ class BangumiApi(private val client: OkHttpClient, interceptor: BangumiIntercept
         private const val oauthUrl = "https://bgm.tv/oauth/access_token"
         private const val loginUrl = "https://bgm.tv/oauth/authorize"
 
-        private const val redirectUrl = "Animite://bangumi-auth"
+        private const val redirectUrl = "Animiru://bangumi-auth"
 
         fun authUrl(): Uri =
             loginUrl.toUri().buildUpon()

@@ -27,7 +27,7 @@ data class GithubRelease(
             else -> ""
         }
 
-        return assets.find { it.downloadLink.contains("animite$apkVariant-") }?.downloadLink
+        return assets.find { it.downloadLink.contains("Animiru$apkVariant-") }?.downloadLink
             ?: assets[0].downloadLink
     }
 

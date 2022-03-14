@@ -57,7 +57,7 @@ class AppUpdateChecker {
 
 val GITHUB_REPO: String by lazy {
 
-    "Quickdesh/animite"
+    "Quickdesh/Animiru"
 }
 
 val RELEASE_TAG: String by lazy {

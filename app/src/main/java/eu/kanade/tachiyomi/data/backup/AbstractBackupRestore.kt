@@ -120,7 +120,7 @@ abstract class AbstractBackupRestore<T : AbstractBackupManager>(protected val co
     internal fun writeErrorLog(): File {
         try {
             if (errors.isNotEmpty()) {
-                val file = context.createFileInCacheDir("animite_restore.txt")
+                val file = context.createFileInCacheDir("Animiru_restore.txt")
                 val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
 
                 file.bufferedWriter().use { out ->

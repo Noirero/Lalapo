@@ -165,7 +165,7 @@ class ShikimoriApi(private val client: OkHttpClient, interceptor: ShikimoriInter
         private const val oauthUrl = "$baseUrl/oauth/token"
         private const val loginUrl = "$baseUrl/oauth/authorize"
 
-        private const val redirectUrl = "Animite://shikimori-auth"
+        private const val redirectUrl = "Animiru://shikimori-auth"
 
         fun authUrl(): Uri =
             loginUrl.toUri().buildUpon()

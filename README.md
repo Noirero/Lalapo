@@ -1,12 +1,12 @@
 | Stable | Translate Tachiyomi | Discord Server |
 |------------|---------|---------|
-[![stable release](https://img.shields.io/github/release/Quickdesh/Animite.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/animite/releases) | [![Translation status](https://hosted.weblate.org/widgets/tachiyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/tachiyomi/?utm_source=widget) | [![Discord](https://img.shields.io/discord/841701076242530374?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/F32UjdJZrR) |
+[![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Translation status](https://hosted.weblate.org/widgets/tachiyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/tachiyomi/?utm_source=widget) | [![Discord](https://img.shields.io/discord/841701076242530374?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/F32UjdJZrR) |
 
 
-# ![app icon](.github/readme-images/app-icon.png)Animite
-Animite is an unofficial fork of [Aniyomi](https://github.com/jmir1/aniyomi), which is yet another unofficial fork of the free and open source manga reader [Tachiyomi](https://github.com/tachiyomiorg/tachiyomi) 
+# ![app icon](.github/readme-images/app-icon.png)Animiru
+Animiru is an unofficial fork of [Aniyomi](https://github.com/jmir1/aniyomi), which is yet another unofficial fork of the free and open source manga reader [Tachiyomi](https://github.com/tachiyomiorg/tachiyomi) 
 
-Animite strips the manga capabilities of Aniyomi, to make it an anime only app for Android 8.0+
+Animiru strips the manga capabilities of Aniyomi, to make it an anime only app for Android 8.0+
 
 
 ## Features
@@ -24,7 +24,7 @@ Features include:
     * Create backups locally to watch offline or to your desired cloud service
 
 ## Download
-Get the app from the [releases page](https://github.com/Quickdesh/Animite/releases).
+Get the app from the [releases page](https://github.com/Quickdesh/Animiru/releases).
 
 ## Issues, Feature Requests and Contributing
 
@@ -32,7 +32,7 @@ Please make sure to read the full guidelines. Your issue may be closed without w
 
 <details><summary>Issues</summary>
 
-1. **Before reporting a new issue, take a look at the already opened [issues](https://github.com/Quickdesh/Animite/issues).**
+1. **Before reporting a new issue, take a look at the already opened [issues](https://github.com/Quickdesh/Animiru/issues).**
 2. If you are unsure, ask here: [![Discord](https://img.shields.io/discord/841701076242530374?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/F32UjdJZrR)
 
 </details>

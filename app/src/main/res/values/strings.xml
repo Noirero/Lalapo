@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Animite</string>
+    <string name="app_name" translatable="false">Animiru</string>
 
     <!-- Models -->
     <string name="name">Name</string>
@@ -27,7 +27,7 @@
     <string name="label_default">Default</string>
     <string name="label_warning">Warning</string>
 
-    <string name="unlock_app">Unlock Animite</string>
+    <string name="unlock_app">Unlock Animiru</string>
     <string name="confirm_lock_change">Authenticate to confirm change</string>
     <string name="confirm_exit">Press back again to exit</string>
 
@@ -638,7 +638,7 @@
     <!-- Downloads activity and service -->
     <string name="download_queue_error">Couldn\'t download episodes. You can try again in the downloads section</string>
     <string name="download_insufficient_space">Couldn\'t download episodes due to low storage space</string>
-    <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking Animite</string>
+    <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking Animiru</string>
 
     <!-- Library update service notifications -->
     <string name="notification_check_updates">Checking for new episodes</string>

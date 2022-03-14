@@ -232,7 +232,6 @@ class KitsuApi(private val client: OkHttpClient, interceptor: KitsuInterceptor) 
 
         private const val baseUrl = "https://kitsu.io/api/edge/"
         private const val loginUrl = "https://kitsu.io/api/oauth/token"
-        private const val baseMangaUrl = "https://kitsu.io/manga/"
         private const val baseAnimeUrl = "https://kitsu.io/anime/"
         private const val algoliaKeyUrl = "https://kitsu.io/api/edge/algolia-keys/media/"
 
@@ -241,10 +240,6 @@ class KitsuApi(private val client: OkHttpClient, interceptor: KitsuInterceptor) 
         private const val algoliaAppId = "AWQO5J657S"
         private const val algoliaFilterAnime =
             "&facetFilters=%5B%22kind%3Aanime%22%5D&attributesToRetrieve=%5B%22synopsis%22%2C%22canonicalTitle%22%2C%22episodeCount%22%2C%22posterImage%22%2C%22startDate%22%2C%22subtype%22%2C%22endDate%22%2C%20%22id%22%5D"
-
-        fun mangaUrl(remoteId: Int): String {
-            return baseMangaUrl + remoteId
-        }
 
         fun animeUrl(remoteId: Int): String {
             return baseAnimeUrl + remoteId
