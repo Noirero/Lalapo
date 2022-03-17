@@ -104,7 +104,7 @@ class PreferencesHelper(val context: Context) {
 
     fun progressPreference() = prefs.getString(Keys.progressPreference, "0.85F")!!.toFloat()
 
-    fun unseenProgressPreference() = prefs.getString(Keys.unseenProgressPreference, "0L")!!.toLong()
+    fun unseenProgressPreference() = prefs.getString(Keys.unseenProgressPreference, "0")!!.toLong()
 
     fun skipLengthPreference() = prefs.getString(Keys.skipLengthPreference, "10")!!.toInt()
 

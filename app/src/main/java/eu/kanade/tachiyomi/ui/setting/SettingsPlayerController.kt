@@ -42,32 +42,32 @@ class SettingsPlayerController : SettingsController() {
             summary = "%s"
         }
 
-        /**listPreference {
-         key = Keys.unseenProgressPreference
-         titleRes = R.string.pref_progress_mark_as_unseen
+        listPreference {
+            key = Keys.unseenProgressPreference
+            titleRes = R.string.pref_progress_mark_as_unseen
 
-         entriesRes = arrayOf(
-         R.string.pref_progress_unseen_0s,
-         R.string.pref_progress_unseen_5s,
-         R.string.pref_progress_unseen_10s,
-         R.string.pref_progress_unseen_15s,
-         R.string.pref_progress_unseen_20s,
-         R.string.pref_progress_unseen_25s,
-         R.string.pref_progress_unseen_30s
-         )
-         entryValues = arrayOf(
-         "0L",
-         "5000L",
-         "10000L",
-         "15000L",
-         "20000L",
-         "25000L",
-         "30000L"
-         )
-         defaultValue = "0L"
+            entriesRes = arrayOf(
+                R.string.pref_progress_unseen_0s,
+                R.string.pref_progress_unseen_5s,
+                R.string.pref_progress_unseen_10s,
+                R.string.pref_progress_unseen_15s,
+                R.string.pref_progress_unseen_20s,
+                R.string.pref_progress_unseen_25s,
+                R.string.pref_progress_unseen_30s
+            )
+            entryValues = arrayOf(
+                "0",
+                "5000",
+                "10000",
+                "15000",
+                "20000",
+                "25000",
+                "30000"
+            )
+            defaultValue = "0"
 
-         summary = "%s"
-         }*/
+            summary = "%s"
+        }
 
         listPreference {
             key = Keys.skipLengthPreference

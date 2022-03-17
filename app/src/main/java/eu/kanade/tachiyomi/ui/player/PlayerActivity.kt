@@ -645,7 +645,6 @@ class PlayerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         setVisibilities()
-        updatePictureInPictureActions(exoPlayer.isPlaying)
     }
 
     override fun onStop() {
@@ -654,7 +653,7 @@ class PlayerActivity : AppCompatActivity() {
         if (exoPlayer.isPlaying) exoPlayer.pause()
         // if (isInPipMode) finish()
         playerView.onPause()
-        updatePictureInPictureActions(exoPlayer.isPlaying)
+        updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
         super.onStop()
     }
 
@@ -706,23 +705,24 @@ class PlayerActivity : AppCompatActivity() {
                     when (intent.getIntExtra(EXTRA_CONTROL_TYPE, 0)) {
                         CONTROL_TYPE_PLAY -> {
                             exoPlayer.play()
-                            updatePictureInPictureActions(true)
+                            exoPlayer.isLoading
+                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
                         }
                         CONTROL_TYPE_PAUSE -> {
                             exoPlayer.pause()
-                            updatePictureInPictureActions(false)
+                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
                         }
                         CONTROL_TYPE_PREVIOUS -> {
                             previousEpisode()
-                            updatePictureInPictureActions(true)
+                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
                         }
                         CONTROL_TYPE_NEXT -> {
                             nextEpisode()
-                            updatePictureInPictureActions(true)
+                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
                         }
                         /**CONTROL_TYPE_INFORMATION -> {
                          baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
-                         updatePictureInPictureActions(exoPlayer.isPlaying)
+                         updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
                          }         */
                     }
                 }
@@ -751,7 +751,7 @@ class PlayerActivity : AppCompatActivity() {
 
         if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
             playerView.useController = false
-            this.enterPictureInPictureMode(updatePictureInPictureActions(exoPlayer.isPlaying))
+            this.enterPictureInPictureMode(updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading))
         }
     }
 
@@ -840,7 +840,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun setEpisodeProgress(episode: Episode, anime: Anime, seconds: Long, totalSeconds: Long) {
         if (!incognitoMode && !isBuffering) {
-            if (totalSeconds > 0L) {
+            if (totalSeconds > 0L && seconds >= preferences.unseenProgressPreference()) {
                 episode.last_second_seen = seconds
                 episode.total_seconds = totalSeconds
                 val progress = preferences.progressPreference()
