@@ -14,7 +14,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/RelativeLayout01"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/md_black_1000">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -54,11 +55,57 @@
             android:layout_alignParentRight="true"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/action_player_settings"
-            android:src="@drawable/exo_styled_controls_settings" />
+            android:src="@drawable/ic_watcher_settings" />
 
 
 
     </RelativeLayout>
+
+
+    <ImageButton android:id="@+id/watcher_controls_prev"
+        android:layout_height="100dp"
+        android:layout_width="200dp"
+        android:layout_centerInParent="true"
+        android:layout_toLeftOf="@id/watcher_controls_p_space"
+        android:src="@drawable/ic_watcher_previous"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/action_previous_episode" />
+
+    <View
+        android:id="@+id/watcher_controls_p_space"
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:layout_centerInParent="true"
+        android:background="?android:attr/selectableItemBackground"
+        android:gravity="center" />
+
+    <ImageButton android:id="@id/exo_play"
+        android:layout_height="125dp"
+        android:layout_width="125dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/ic_watcher_play"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/action_play" />
+
+    <ImageButton
+        android:id="@id/exo_pause"
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/ic_watcher_pause"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/action_pause" />
+
+    <ImageButton android:id="@+id/watcher_controls_next"
+        android:layout_height="100dp"
+        android:layout_width="200dp"
+        android:layout_centerInParent="true"
+        android:layout_toRightOf="@id/watcher_controls_p_space"
+        android:src="@drawable/ic_watcher_next"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/action_next_episode" />
+
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -74,74 +121,37 @@
             android:paddingTop="4dp"
             android:orientation="horizontal">
 
-            <ImageButton android:id="@+id/watcher_controls_fit_screen"
-                android:layout_height="50dp"
+            <ImageButton
+                android:id="@+id/watcher_controls_fit_screen"
                 android:layout_width="50dp"
-                android:layout_toLeftOf="@id/watcher_controls_prev"
-                android:src="@drawable/exo_styled_controls_fullscreen_enter"
+                android:layout_height="50dp"
+                android:layout_alignParentLeft="true"
                 android:background="?android:attr/selectableItemBackground"
-                android:contentDescription="@string/action_screen_fit" />
+                android:contentDescription="@string/action_screen_fit"
+                android:src="@drawable/ic_watcher_screen_orientation" />
 
-            <ImageButton android:id="@+id/watcher_controls_prev"
-                android:layout_height="50dp"
-                android:layout_width="50dp"
-                android:layout_toLeftOf="@id/watcher_controls_p_space"
-                android:src="@drawable/exo_controls_previous"
-                android:background="?android:attr/selectableItemBackground"
-                android:contentDescription="@string/action_previous_episode" />
 
-            <View
-                android:id="@+id/watcher_controls_p_space"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_centerInParent="true"
-                android:background="?android:attr/selectableItemBackground"
-                android:gravity="center" />
-
-            <ImageButton android:id="@id/exo_play"
-                android:layout_height="50dp"
-                android:layout_width="50dp"
-                android:layout_centerInParent="true"
-                android:src="@drawable/exo_controls_play"
-                android:background="?android:attr/selectableItemBackground"
-                android:contentDescription="@string/action_play" />
 
             <ImageButton
-                android:id="@id/exo_pause"
+                android:id="@+id/watcher_controls_pip"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:layout_centerInParent="true"
+                android:layout_alignParentRight="true"
                 android:background="?android:attr/selectableItemBackground"
-                android:contentDescription="@string/action_pause"
-                android:src="@drawable/exo_controls_pause" />
-
-            <ImageButton android:id="@+id/watcher_controls_next"
-                android:layout_height="50dp"
-                android:layout_width="50dp"
-                android:layout_toRightOf="@id/watcher_controls_p_space"
-                android:src="@drawable/exo_controls_next"
-                android:background="?android:attr/selectableItemBackground"
-                android:contentDescription="@string/action_next_episode" />
+                android:contentDescription="@string/action_player_pip"
+                android:src="@drawable/ic_watcher_PiP"
+                android:visibility="invisible" />
 
             <TextView
                 android:id="@+id/watcher_controls_skip_btn"
                 android:layout_width="70dp"
                 android:layout_height="50dp"
-                android:layout_toRightOf="@id/watcher_controls_next"
+                android:layout_toLeftOf="@+id/watcher_controls_pip"
                 android:background="?android:attr/selectableItemBackground"
                 android:gravity="center"
                 android:text="@string/watcher_controls_skip_text"
                 android:textColor="@color/md_white_1000"
                 android:textStyle="bold" />
-
-            <ImageButton android:id="@+id/watcher_controls_pip"
-                android:layout_height="50dp"
-                android:layout_width="50dp"
-                android:layout_alignParentRight="true"
-                android:src="@drawable/ic_picture_in_picture_alt_24dp"
-                android:background="?android:attr/selectableItemBackground"
-                android:visibility="invisible"
-                android:contentDescription="@string/action_player_pip" />
 
         </RelativeLayout>
 
