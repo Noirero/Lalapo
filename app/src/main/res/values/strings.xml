@@ -91,6 +91,7 @@
     <string name="action_player_unlock">Unlock player</string>
     <string name="action_player_settings">Player settings</string>
     <string name="action_player_information">Player information</string>
+    <string name="action_player_autoplay">Autoplay</string>
 
     <!-- Do not translate "WebView" -->
     <string name="action_open_in_web_view">Open in WebView</string>
@@ -331,6 +332,8 @@
     <string name="playback_options_speed">Playback speed</string>
     <string name="playback_options_quality">Video quality</string>
     <string name="playback_options_title">Playback options</string>
+    <string name="autoplay_on">Autoplay is On</string>
+    <string name="autoplay_off">Autoplay is Off</string>
 
       <!-- Downloads section -->
     <string name="episode_download_progress">%1$d%%</string>

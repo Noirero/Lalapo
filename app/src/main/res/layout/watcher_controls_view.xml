@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2016 The Android Open Source Project
-         Licensed under the Apache License, Version 2.0 (the "License");
-         you may not use this file except in compliance with the License.
-         You may obtain a copy of the License at
-              http://www.apache.org/licenses/LICENSE-2.0
-         Unless required by applicable law or agreed to in writing, software
-         distributed under the License is distributed on an "AS IS" BASIS,
-         WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-         See the License for the specific language governing permissions and
-         limitations under the License.-->
-
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/RelativeLayout01"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/md_black_1000">
+    tools:ignore="RtlHardcoded">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -36,7 +26,8 @@
             android:paddingHorizontal="20dp"
             android:text="@string/player_overlay_back"
             android:textColor="@color/md_white_1000"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:ignore="RelativeOverlap" />
 
         <TextView
             android:id="@+id/exo_overlay_title"
@@ -47,6 +38,15 @@
             android:paddingTop="4dp"
             android:textColor="@color/md_white_1000"
             android:textStyle="bold" />
+
+        <Switch
+            android:id="@+id/watcher_controls_autoplay"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toLeftOf="@+id/watcher_controls_settings"
+            android:contentDescription="@string/action_player_autoplay"
+            android:switchMinWidth="50dp"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         <ImageButton
             android:id="@+id/watcher_controls_settings"
@@ -62,26 +62,36 @@
     </RelativeLayout>
 
 
-    <ImageButton android:id="@+id/watcher_controls_prev"
-        android:layout_height="100dp"
-        android:layout_width="200dp"
+    <ImageButton
+        android:id="@+id/watcher_controls_prev"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_centerInParent="true"
+        android:layout_toLeftOf="@id/watcher_controls_prev_space"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/action_previous_episode"
+        android:src="@drawable/ic_watcher_previous" />
+
+    <View
+        android:id="@+id/watcher_controls_prev_space"
+        android:layout_width="80dp"
+        android:layout_height="0dp"
         android:layout_centerInParent="true"
         android:layout_toLeftOf="@id/watcher_controls_p_space"
-        android:src="@drawable/ic_watcher_previous"
         android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/action_previous_episode" />
+        android:gravity="center" />
 
     <View
         android:id="@+id/watcher_controls_p_space"
-        android:layout_width="125dp"
-        android:layout_height="125dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:layout_centerInParent="true"
         android:background="?android:attr/selectableItemBackground"
         android:gravity="center" />
 
     <ImageButton android:id="@id/exo_play"
-        android:layout_height="125dp"
-        android:layout_width="125dp"
+        android:layout_height="80dp"
+        android:layout_width="80dp"
         android:layout_centerInParent="true"
         android:src="@drawable/ic_watcher_play"
         android:background="?android:attr/selectableItemBackground"
@@ -89,21 +99,31 @@
 
     <ImageButton
         android:id="@id/exo_pause"
-        android:layout_width="125dp"
-        android:layout_height="125dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:layout_centerInParent="true"
-        android:src="@drawable/ic_watcher_pause"
         android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/action_pause" />
+        android:contentDescription="@string/action_pause"
+        android:src="@drawable/ic_watcher_pause" />
 
-    <ImageButton android:id="@+id/watcher_controls_next"
-        android:layout_height="100dp"
-        android:layout_width="200dp"
+    <View
+        android:id="@+id/watcher_controls_next_space"
+        android:layout_width="80dp"
+        android:layout_height="0dp"
         android:layout_centerInParent="true"
         android:layout_toRightOf="@id/watcher_controls_p_space"
-        android:src="@drawable/ic_watcher_next"
         android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/action_next_episode" />
+        android:gravity="center" />
+
+    <ImageButton
+        android:id="@+id/watcher_controls_next"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_centerInParent="true"
+        android:layout_toRightOf="@id/watcher_controls_next_space"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/action_next_episode"
+        android:src="@drawable/ic_watcher_next" />
 
 
     <LinearLayout
@@ -139,7 +159,7 @@
                 android:layout_alignParentRight="true"
                 android:background="?android:attr/selectableItemBackground"
                 android:contentDescription="@string/action_player_pip"
-                android:src="@drawable/ic_watcher_PiP"
+                android:src="@drawable/ic_watcher_pip"
                 android:visibility="invisible" />
 
             <TextView

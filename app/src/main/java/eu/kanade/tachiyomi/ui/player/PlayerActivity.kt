@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.player
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -119,6 +120,9 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var fitScreenBtn: ImageButton
     private lateinit var pipBtn: ImageButton
     private lateinit var title: TextView
+
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
+    private lateinit var autoplaySch: Switch
     private lateinit var bufferingView: ProgressBar
 
     private lateinit var episode: Episode
@@ -134,6 +138,7 @@ class PlayerActivity : AppCompatActivity() {
     private var playbackPosition = 0L
     private var isFullscreen = false
     private var isPlayerPlaying = true
+    private var isAutoplay = false
     private var mediaItem = MediaItem.Builder()
         .setUri("bruh")
         .setMimeType(MimeTypes.VIDEO_MP4)
@@ -172,6 +177,7 @@ class PlayerActivity : AppCompatActivity() {
         settingsBtn = findViewById(R.id.watcher_controls_settings)
         fitScreenBtn = findViewById(R.id.watcher_controls_fit_screen)
         pipBtn = findViewById(R.id.watcher_controls_pip)
+        autoplaySch = findViewById(R.id.watcher_controls_autoplay)
         if (preferences.pipPlayerPreference()) {
             pipBtn.visibility = View.VISIBLE
         } else {
@@ -189,6 +195,7 @@ class PlayerActivity : AppCompatActivity() {
             playbackPosition = savedInstanceState.getLong(STATE_RESUME_POSITION)
             isFullscreen = savedInstanceState.getBoolean(STATE_PLAYER_FULLSCREEN)
             isPlayerPlaying = savedInstanceState.getBoolean(STATE_PLAYER_PLAYING)
+            isAutoplay = savedInstanceState.getBoolean(STATE_PLAYER_AUTOPLAY)
         }
     }
 
@@ -326,6 +333,19 @@ class PlayerActivity : AppCompatActivity() {
         }
         prevBtn.setOnClickListener {
             previousEpisode()
+        }
+        autoplaySch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                isAutoplay = true
+                launchUI {
+                    baseContext.toast(R.string.autoplay_on, Toast.LENGTH_SHORT)
+                }
+            } else {
+                isAutoplay = false
+                launchUI {
+                    baseContext.toast(R.string.autoplay_off, Toast.LENGTH_SHORT)
+                }
+            }
         }
         youTubeDoubleTap.player(exoPlayer)
         playerView.player = exoPlayer
@@ -592,12 +612,17 @@ class PlayerActivity : AppCompatActivity() {
             }
     }
 
-    class PlayerEventListener(private val playerView: DoubleTapPlayerView, private val baseContext: Context) : Player.Listener {
+    inner class PlayerEventListener(private val playerView: DoubleTapPlayerView, private val baseContext: Context) : Player.Listener {
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             playerView.keepScreenOn = !(
                 playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED ||
                     !playWhenReady
                 )
+            if (playbackState == Player.STATE_ENDED) {
+                if (isAutoplay) {
+                    nextEpisode()
+                }
+            }
         }
         override fun onTracksChanged(trackGroups: TrackGroupArray, trackSelections: TrackSelectionArray) {}
         override fun onLoadingChanged(isLoading: Boolean) {}
@@ -634,9 +659,9 @@ class PlayerActivity : AppCompatActivity() {
         outState.putLong(STATE_RESUME_POSITION, exoPlayer.currentPosition)
         outState.putBoolean(STATE_PLAYER_FULLSCREEN, isFullscreen)
         outState.putBoolean(STATE_PLAYER_PLAYING, isPlayerPlaying)
+        outState.putBoolean(STATE_PLAYER_AUTOPLAY, isAutoplay)
         super.onSaveInstanceState(outState)
     }
-
     override fun onStart() {
         playerView.onResume()
         super.onStart()
@@ -1000,3 +1025,4 @@ class PlayerActivity : AppCompatActivity() {
 private const val STATE_RESUME_POSITION = "resumePosition"
 private const val STATE_PLAYER_FULLSCREEN = "playerFullscreen"
 private const val STATE_PLAYER_PLAYING = "playerOnPlay"
+private const val STATE_PLAYER_AUTOPLAY = "playerOnPlay"
