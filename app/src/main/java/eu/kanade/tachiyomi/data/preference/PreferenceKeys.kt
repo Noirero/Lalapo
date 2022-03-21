@@ -77,7 +77,7 @@ object PreferenceKeys {
 
     const val defaultAnimeCategory = "default_anime_category"
 
-    const val skipRead = "skip_read"
+    const val skipSeen = "skip_seen"
 
     const val skipFiltered = "skip_filtered"
 

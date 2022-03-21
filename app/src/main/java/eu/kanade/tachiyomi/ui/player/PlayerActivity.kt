@@ -14,6 +14,7 @@ import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.View
 import android.view.WindowManager
@@ -23,6 +24,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.vkay94.dtpv.DoubleTapPlayerView
 import com.github.vkay94.dtpv.youtube.YouTubeOverlay
 import com.google.android.exoplayer2.*
@@ -46,6 +49,7 @@ import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import com.google.android.exoplayer2.util.Clock
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
@@ -61,26 +65,33 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.job.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.job.DelayedTrackingUpdateJob
+import eu.kanade.tachiyomi.databinding.PlayerEpisodesDialogBinding
 import eu.kanade.tachiyomi.databinding.WatcherActivityBinding
 import eu.kanade.tachiyomi.ui.anime.episode.EpisodeItem
 import eu.kanade.tachiyomi.ui.base.activity.BaseThemedActivity.Companion.applyAppTheme
+import eu.kanade.tachiyomi.ui.player.episode.PlayerEpisodeAdapter
+import eu.kanade.tachiyomi.ui.player.episode.PlayerEpisodeItem
 import eu.kanade.tachiyomi.util.lang.awaitSingle
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
+import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isOnline
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.widget.listener.SimpleSeekBarListener
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import rx.schedulers.Schedulers
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.util.*
 
-class PlayerActivity : AppCompatActivity() {
+class PlayerActivity : AppCompatActivity(), PlayerEpisodeAdapter.OnBookmarkClickListener {
 
     private val ACTION_MEDIA_CONTROL = "media_control"
     private val EXTRA_CONTROL_TYPE = "control_type"
@@ -98,7 +109,7 @@ class PlayerActivity : AppCompatActivity() {
      private val CONTROL_TYPE_INFORMATION = 5 */
     private var mReceiver: BroadcastReceiver? = null
     private val preferences: PreferencesHelper = Injekt.get()
-    private lateinit var bindingPip: WatcherActivityBinding
+    private lateinit var bindingPlayer: WatcherActivityBinding
     private val incognitoMode = preferences.incognitoMode().get()
     private val db: AnimeDatabaseHelper = Injekt.get()
     private val downloadManager: AnimeDownloadManager = Injekt.get()
@@ -118,8 +129,11 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var backBtn: TextView
     private lateinit var settingsBtn: ImageButton
     private lateinit var fitScreenBtn: ImageButton
+    private lateinit var playlistBtn: ImageButton
     private lateinit var pipBtn: ImageButton
     private lateinit var title: TextView
+    private var adapterPlaylist: FlexibleAdapter<PlayerEpisodeItem>? = null
+    private lateinit var bindingPlaylist: PlayerEpisodesDialogBinding
 
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private lateinit var autoplaySch: Switch
@@ -147,15 +161,14 @@ class PlayerActivity : AppCompatActivity() {
     private var isInPipMode: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        bindingPip = WatcherActivityBinding.inflate(layoutInflater)
+        bindingPlayer = WatcherActivityBinding.inflate(layoutInflater)
         applyAppTheme(preferences)
         super.onCreate(savedInstanceState)
 
-        setContentView(bindingPip.root)
-
-        playerView = bindingPip.playerView
+        setContentView(bindingPlayer.root)
+        playerView = bindingPlayer.playerView
         playerView.resizeMode = preferences.getPlayerViewMode()
-        youTubeDoubleTap = bindingPip.youtubeOverlay
+        youTubeDoubleTap = bindingPlayer.youtubeOverlay
         youTubeDoubleTap.seekSeconds(preferences.skipLengthPreference())
         youTubeDoubleTap
             .performListener(object : YouTubeOverlay.PerformListener {
@@ -178,6 +191,7 @@ class PlayerActivity : AppCompatActivity() {
         fitScreenBtn = findViewById(R.id.watcher_controls_fit_screen)
         pipBtn = findViewById(R.id.watcher_controls_pip)
         autoplaySch = findViewById(R.id.watcher_controls_autoplay)
+        playlistBtn = findViewById(R.id.watcher_controls_playlist)
         if (preferences.pipPlayerPreference()) {
             pipBtn.visibility = View.VISIBLE
         } else {
@@ -202,7 +216,7 @@ class PlayerActivity : AppCompatActivity() {
     @Suppress("DEPRECATION")
     private fun setVisibilities() {
         // TODO: replace this atrocity
-        bindingPip.root.systemUiVisibility =
+        bindingPlayer.root.systemUiVisibility =
             View.SYSTEM_UI_FLAG_LOW_PROFILE or
             View.SYSTEM_UI_FLAG_FULLSCREEN or
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
@@ -323,7 +337,7 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
         settingsBtn.setOnClickListener {
-            optionsDialog()
+            playbackOptionsDialog()
         }
         skipBtn.setOnClickListener {
             exoPlayer.seekTo(exoPlayer.currentPosition + 85000)
@@ -346,6 +360,9 @@ class PlayerActivity : AppCompatActivity() {
                     baseContext.toast(R.string.autoplay_off, Toast.LENGTH_SHORT)
                 }
             }
+        }
+        playlistBtn.setOnClickListener {
+            playerEpisodeDialog()
         }
         youTubeDoubleTap.player(exoPlayer)
         playerView.player = exoPlayer
@@ -385,7 +402,7 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun optionsDialog() {
+    private fun playbackOptionsDialog() {
         val alert = HideBarsMaterialAlertDialogBuilder(this)
 
         alert.setTitle(R.string.playback_options_title)
@@ -495,9 +512,16 @@ class PlayerActivity : AppCompatActivity() {
         playbackPosition = exoPlayer.currentPosition
         exoPlayer.release()
     }
+    private fun saveEpisode(exoPlayer: ExoPlayer, episode: Episode, anime: Anime) {
+        if (exoPlayer.isPlaying) exoPlayer.pause()
+        saveEpisodeHistory(EpisodeItem(episode, anime))
+        setEpisodeProgress(episode, anime, exoPlayer.currentPosition, exoPlayer.duration)
+        awaitVideoList()
+    }
 
     private fun awaitVideoList() {
         isBuffering(true)
+        currentQuality = 0
         launchIO {
             try {
                 EpisodeLoader.getLinks(episode, anime, source)
@@ -1019,6 +1043,113 @@ class PlayerActivity : AppCompatActivity() {
                 addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
         }
+    }
+
+    private fun playerEpisodeDialog() {
+        bindingPlaylist = PlayerEpisodesDialogBinding.inflate(this.layoutInflater)
+
+        val dialogPlaylist = HideBarsMaterialAlertDialogBuilder(this)
+            .setTitle(R.string.episodes)
+            .setView(bindingPlaylist.root)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setOnDismissListener { destroy() }
+            .create()
+
+        adapterPlaylist = PlayerEpisodeAdapter(this)
+        bindingPlaylist.chapterRecycler.adapter = adapterPlaylist
+
+        adapterPlaylist?.mItemClickListener = FlexibleAdapter.OnItemClickListener { _, position ->
+            val item = adapterPlaylist?.getItem(position)
+            if (item != null && item.id != getCurrentEpisode(episode, anime).id) {
+                dialogPlaylist.dismiss()
+                saveEpisode(exoPlayer, episode, anime)
+                episode = item
+                title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
+                awaitVideoList()
+            }
+            true
+        }
+
+        bindingPlaylist.chapterRecycler.layoutManager = LinearLayoutManager(this)
+        this.lifecycleScope.launch {
+            refreshList()
+        }
+
+        dialogPlaylist.show()
+    }
+
+    private fun refreshList(scroll: Boolean = true) {
+        val episodes = getEpisodeList(anime, this, episode)
+
+        adapterPlaylist?.clear()
+        adapterPlaylist?.updateDataSet(episodes)
+
+        if (scroll) {
+            (bindingPlaylist.chapterRecycler.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
+                adapterPlaylist?.getGlobalPositionOf(episodes.find { it.isCurrent }) ?: 0,
+                (bindingPlaylist.chapterRecycler.height / 2).dpToPx
+            )
+        }
+    }
+
+    fun destroy() {
+        adapterPlaylist = null
+    }
+
+    override fun bookmarkEpisode(episode: Episode, anime: Anime) {
+        toggleBookmark(episode.id!!, !episode.bookmark, episode, anime)
+        refreshList(scroll = false)
+    }
+
+    private fun getCurrentEpisode(episode: Episode, anime: Anime): Episode {
+        val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
+            Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.source_order.compareTo(c1.source_order) }
+            Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episode_number.compareTo(c2.episode_number) }
+            Anime.EPISODE_SORTING_UPLOAD_DATE -> { c1, c2 -> c1.date_upload.compareTo(c2.date_upload) }
+            else -> throw NotImplementedError("Unknown sorting method")
+        }
+
+        val episodes = db.getEpisodes(anime).executeAsBlocking()
+            .sortedWith { e1, e2 -> sortFunction(e2, e1) }
+
+        val currEpisodeIndex = episodes.indexOfFirst { episode.id == it.id }
+        val episodeNumber = episode.episode_number
+        return (currEpisodeIndex + 1 until episodes.size)
+            .map { episodes[it] }
+            .firstOrNull {
+                it.episode_number == episodeNumber
+            } ?: episode
+    }
+
+    private fun getEpisodeList(anime: Anime, context: Context, episode: Episode): List<PlayerEpisodeItem> {
+        val currentEpisode = getCurrentEpisode(episode, anime)
+        val decimalFormat = DecimalFormat(
+            "#.###",
+            DecimalFormatSymbols()
+                .apply { decimalSeparator = '.' }
+        )
+        val episodeList: MutableList<PlayerEpisodeItem> = mutableListOf()
+        db.getEpisodes(anime).executeAsBlocking().forEach { ep ->
+            episodeList.add(
+                PlayerEpisodeItem(
+                    ep,
+                    anime,
+                    ep.id == currentEpisode.id,
+                    context,
+                    preferences.dateFormat(),
+                    decimalFormat
+                )
+            )
+        }
+        Log.i("episode List", episodeList.toString())
+
+        return episodeList
+    }
+
+    private fun toggleBookmark(episodeId: Long, bookmarked: Boolean, episode: Episode, anime: Anime) {
+        val ep = getEpisodeList(anime, this, episode).find { it.id == episodeId } ?: return
+        ep.bookmark = bookmarked
+        db.updateEpisodeProgress(ep).executeAsBlocking()
     }
 }
 

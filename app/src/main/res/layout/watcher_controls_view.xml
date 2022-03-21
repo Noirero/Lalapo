@@ -151,6 +151,14 @@
                 android:contentDescription="@string/action_screen_fit"
                 android:src="@drawable/ic_watcher_screen_orientation" />
 
+            <ImageButton
+                android:id="@+id/watcher_controls_playlist"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_toRightOf="@+id/watcher_controls_fit_screen"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="@string/action_player_playlist"
+                android:src="@drawable/ic_watcher_playlist" />
 
 
             <ImageButton

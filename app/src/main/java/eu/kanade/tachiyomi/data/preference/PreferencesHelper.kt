@@ -252,7 +252,7 @@ class PreferencesHelper(val context: Context) {
 
     fun categorizedDisplaySettings() = flowPrefs.getBoolean("categorized_display", false)
 
-    fun skipRead() = prefs.getBoolean(Keys.skipRead, false)
+    fun skipSeen() = prefs.getBoolean(Keys.skipSeen, false)
 
     fun skipFiltered() = prefs.getBoolean(Keys.skipFiltered, true)
 
