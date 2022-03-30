@@ -8,8 +8,12 @@ import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_CATE
 import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_CATEGORY_MASK
 import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_CHAPTER
 import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_CHAPTER_MASK
+import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_CUSTOM_INFO
+import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_CUSTOM_INFO_MASK
 import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_HISTORY
 import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_HISTORY_MASK
+import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_READ_MANGA
+import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_READ_MANGA_MASK
 import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_TRACK
 import eu.kanade.tachiyomi.data.backup.BackupCreateService.Companion.BACKUP_TRACK_MASK
 import eu.kanade.tachiyomi.data.backup.full.models.Backup
@@ -49,7 +53,11 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         var backup: Backup? = null
 
         animedatabaseHelper.inTransaction {
-            val databaseAnime = getFavoriteAnime()
+            val databaseAnime = getFavoriteAnime() /* SY --> */ + if (flags and BACKUP_READ_MANGA_MASK == BACKUP_READ_MANGA) {
+                getSeenAnime()
+            } else {
+                emptyList()
+            }
 
             backup = Backup(
                 backupAnime(databaseAnime, flags),

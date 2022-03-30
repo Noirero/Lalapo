@@ -4,7 +4,7 @@ import android.view.View
 import androidx.core.view.isVisible
 import coil.dispose
 import eu.davidea.flexibleadapter.FlexibleAdapter
-import eu.kanade.tachiyomi.data.coil.MangaCoverFetcher
+import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.databinding.SourceComfortableGridItemBinding
 import eu.kanade.tachiyomi.util.view.loadAutoPause
@@ -48,7 +48,7 @@ class AnimeSourceComfortableGridHolder(private val view: View, private val adapt
     override fun setImage(anime: Anime) {
         binding.thumbnail.dispose()
         binding.thumbnail.loadAutoPause(anime) {
-            setParameter(MangaCoverFetcher.USE_CUSTOM_COVER, false)
+            setParameter(AnimeCoverFetcher.USE_CUSTOM_COVER, false)
         }
     }
 }

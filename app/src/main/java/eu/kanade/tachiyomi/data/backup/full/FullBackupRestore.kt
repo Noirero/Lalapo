@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup.full
 import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.backup.AbstractBackupRestore
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.full.models.*
@@ -62,9 +63,10 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         val categories = backupAnime.categories
         val history = backupAnime.brokenHistory.map { BackupAnimeHistory(it.url, it.lastSeen) } + backupAnime.history
         val tracks = backupAnime.getTrackingImpl()
+        val customAnime = backupAnime.getCustomAnimeInfo()
 
         try {
-            restoreAnimeData(anime, episodes, categories, history, tracks, backupCategories)
+            restoreAnimeData(anime, episodes, categories, history, tracks, backupCategories, customAnime)
         } catch (e: Exception) {
             val sourceName = sourceMapping[anime.source] ?: anime.source.toString()
             errors.add(Date() to "${anime.title} [$sourceName]: ${e.message}")
@@ -89,19 +91,20 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         categories: List<Int>,
         history: List<BackupAnimeHistory>,
         tracks: List<AnimeTrack>,
-        backupCategories: List<BackupCategory>
+        backupCategories: List<BackupCategory>,
+        customAnime: CustomAnimeManager.AnimeJson?
     ) {
         animedb.inTransaction {
             val dbAnime = backupManager.getAnimeFromDatabase(anime)
             if (dbAnime == null) {
                 // Manga not in database
-                restoreAnimeFetch(anime, episodes, categories, history, tracks, backupCategories)
+                restoreAnimeFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
             } else {
                 // Manga in database
                 // Copy information from manga already in database
                 backupManager.restoreAnimeNoFetch(anime, dbAnime)
                 // Fetch rest of manga information
-                restoreAnimeNoFetch(anime, episodes, categories, history, tracks, backupCategories)
+                restoreAnimeNoFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
             }
         }
     }
@@ -119,7 +122,8 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         categories: List<Int>,
         history: List<BackupAnimeHistory>,
         tracks: List<AnimeTrack>,
-        backupCategories: List<BackupCategory>
+        backupCategories: List<BackupCategory>,
+        customAnime: CustomAnimeManager.AnimeJson?
     ) {
         try {
             val fetchedAnime = backupManager.restoreAnime(anime)
@@ -127,7 +131,7 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
 
             backupManager.restoreEpisodesForAnime(fetchedAnime, episodes)
 
-            restoreExtraForAnime(fetchedAnime, categories, history, tracks, backupCategories)
+            restoreExtraForAnime(fetchedAnime, categories, history, tracks, backupCategories, customAnime)
         } catch (e: Exception) {
             errors.add(Date() to "${anime.title} - ${e.message}")
         }
@@ -139,14 +143,15 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         categories: List<Int>,
         history: List<BackupAnimeHistory>,
         tracks: List<AnimeTrack>,
-        backupCategories: List<BackupCategory>
+        backupCategories: List<BackupCategory>,
+        customAnime: CustomAnimeManager.AnimeJson?
     ) {
         backupManager.restoreEpisodesForAnime(backupAnime, episodes)
 
-        restoreExtraForAnime(backupAnime, categories, history, tracks, backupCategories)
+        restoreExtraForAnime(backupAnime, categories, history, tracks, backupCategories, customAnime)
     }
 
-    private fun restoreExtraForAnime(anime: Anime, categories: List<Int>, history: List<BackupAnimeHistory>, tracks: List<AnimeTrack>, backupCategories: List<BackupCategory>) {
+    private fun restoreExtraForAnime(anime: Anime, categories: List<Int>, history: List<BackupAnimeHistory>, tracks: List<AnimeTrack>, backupCategories: List<BackupCategory>, customAnime: CustomAnimeManager.AnimeJson?) {
         // Restore categories
         backupManager.restoreCategoriesForAnime(anime, categories, backupCategories)
 
@@ -155,5 +160,8 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
 
         // Restore tracking
         backupManager.restoreTrackForAnime(anime, tracks)
+
+        customAnime?.id = anime.id!!
+        customAnime?.let { customAnimeManager.saveAnimeInfo(it) }
     }
 }

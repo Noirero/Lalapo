@@ -156,3 +156,15 @@ fun getSourceIdsWithNonLibraryAnimeQuery() =
     WHERE ${Anime.COL_FAVORITE} = 0
     GROUP BY ${Anime.COL_SOURCE}
     """
+
+/**
+ * Query to get manga that are not in library, but have read chapters
+ */
+fun getSeenAnimeNotInLibraryQuery() =
+    """
+    SELECT ${Anime.TABLE}.* 
+    FROM ${Anime.TABLE} 
+    WHERE ${Anime.COL_FAVORITE} = 0 AND ${Anime.COL_ID} IN(
+        SELECT ${Episode.TABLE}.${Episode.COL_ANIME_ID} FROM ${Episode.TABLE} WHERE ${Episode.COL_SEEN} = 1 OR ${Episode.COL_LAST_SECOND_SEEN} != 0
+    )
+"""

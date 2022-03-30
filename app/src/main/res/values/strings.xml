@@ -9,6 +9,8 @@
     <string name="episodes">Episodes</string>
     <string name="track">Tracking</string>
     <string name="history">History</string>
+    <string name="custom_info">Custom info</string>
+    <string name="all_seen_anime">All seen anime</string>
 
     <!-- Activities and fragments labels (toolbar title) -->
     <string name="label_more">More</string>
@@ -93,6 +95,7 @@
     <string name="action_player_information">Player information</string>
     <string name="action_player_autoplay">Autoplay</string>
     <string name="action_player_playlist">View the episodes of the anime</string>
+    <string name="action_edit_info">Edit info</string>
 
     <!-- Do not translate "WebView" -->
     <string name="action_open_in_web_view">Open in WebView</string>
@@ -698,6 +701,12 @@
 
     <!--Content Description-->
     <string name="description_cover">Cover of anime</string>
+    <string name="reset_tags">Reset Tags</string>
+    <string name="add_tag">Add Tag</string>
+    <string name="title_hint">Title: %1$s</string>
+    <string name="description_hint">Description: %1$s</string>
+    <string name="studio_hint">Studio: %1$s</string>
+    <string name="artist_hint">Artist: %1$s</string>
 
     <!-- Information Text -->
     <string name="information_no_downloads">No downloads</string>

@@ -81,6 +81,15 @@ interface AnimeQueries : AnimeDbProvider {
 
     fun insertAnimes(animes: List<Anime>) = db.put().objects(animes).prepare()
 
+    fun getSeenNotInLibraryAnimes() = db.get()
+        .listOfObjects(Anime::class.java)
+        .withQuery(
+            RawQuery.builder()
+                .query(getSeenAnimeNotInLibraryQuery())
+                .build()
+        )
+        .prepare()
+
     fun updateAnimeInfo(anime: Anime) = db.put()
         .`object`(anime)
         .withPutResolver(AnimeInfoPutResolver())

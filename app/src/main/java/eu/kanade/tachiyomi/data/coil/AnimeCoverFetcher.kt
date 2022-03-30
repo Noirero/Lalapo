@@ -10,12 +10,12 @@ import coil.fetch.SourceResult
 import coil.network.HttpException
 import coil.request.Options
 import coil.request.Parameters
+import eu.kanade.tachiyomi.animesource.AnimeSourceManager
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher.Companion.USE_CUSTOM_COVER
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.network.await
-import eu.kanade.tachiyomi.source.SourceManager
-import eu.kanade.tachiyomi.source.online.HttpSource
 import okhttp3.CacheControl
 import okhttp3.Call
 import okhttp3.Request
@@ -38,7 +38,7 @@ import java.net.HttpURLConnection
  */
 class AnimeCoverFetcher(
     private val anime: Anime,
-    private val sourceLazy: Lazy<HttpSource?>,
+    private val sourceLazy: Lazy<AnimeHttpSource?>,
     private val options: Options,
     private val coverCache: AnimeCoverCache,
     private val callFactoryLazy: Lazy<Call.Factory>,
@@ -216,10 +216,10 @@ class AnimeCoverFetcher(
     ) : Fetcher.Factory<Anime> {
 
         private val coverCache: AnimeCoverCache by injectLazy()
-        private val sourceManager: SourceManager by injectLazy()
+        private val sourceManager: AnimeSourceManager by injectLazy()
 
         override fun create(data: Anime, options: Options, imageLoader: ImageLoader): Fetcher {
-            val source = lazy { sourceManager.get(data.source) as? HttpSource }
+            val source = lazy { sourceManager.get(data.source) as? AnimeHttpSource }
             return AnimeCoverFetcher(data, source, options, coverCache, callFactoryLazy, diskCacheLazy)
         }
     }
