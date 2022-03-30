@@ -9,9 +9,11 @@ import coil.imageLoader
 import coil.memory.MemoryCache
 import com.jakewharton.rxrelay.PublishRelay
 import eu.kanade.tachiyomi.animesource.AnimeSource
+import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.LocalAnimeSource
 import eu.kanade.tachiyomi.animesource.model.toSAnime
 import eu.kanade.tachiyomi.animesource.model.toSEpisode
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
@@ -45,6 +47,7 @@ import eu.kanade.tachiyomi.util.storage.getTempShareDir
 import eu.kanade.tachiyomi.util.system.ImageUtil
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.trimOrNull
 import eu.kanade.tachiyomi.util.updateCoverLastModified
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import kotlinx.coroutines.Job
@@ -58,6 +61,7 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.util.Date
 
@@ -68,7 +72,8 @@ class AnimePresenter(
     private val db: AnimeDatabaseHelper = Injekt.get(),
     private val trackManager: TrackManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
-    private val coverCache: AnimeCoverCache = Injekt.get()
+    private val coverCache: AnimeCoverCache = Injekt.get(),
+    private val sourceManager: AnimeSourceManager = Injekt.get()
 ) : BasePresenter<AnimeController>() {
 
     /**
@@ -121,6 +126,8 @@ class AnimePresenter(
     private var trackSubscription: Subscription? = null
     private var searchTrackerJob: Job? = null
     private var refreshTrackersJob: Job? = null
+
+    private val customAnimeManager: CustomAnimeManager by injectLazy()
 
     override fun onCreate(savedState: Bundle?) {
         super.onCreate(savedState)
@@ -224,6 +231,74 @@ class AnimePresenter(
         }
     }
 
+    fun updateAnimeInfo(
+        context: Context,
+        title: String?,
+        author: String?,
+        artist: String?,
+        description: String?,
+        tags: List<String>?,
+        status: Int?,
+        uri: Uri?,
+        resetCover: Boolean = false
+    ) {
+        if (anime.source == LocalAnimeSource.ID) {
+            anime.title = if (title.isNullOrBlank()) anime.url else title.trim()
+            anime.author = author?.trimOrNull()
+            anime.artist = artist?.trimOrNull()
+            anime.description = description?.trimOrNull()
+            val tagsString = tags?.joinToString()
+            anime.genre = if (tags.isNullOrEmpty()) null else tagsString?.trim()
+            anime.status = status ?: 0
+            (sourceManager.get(LocalAnimeSource.ID) as LocalAnimeSource).updateAnimeInfo(anime)
+            db.updateAnimeInfo(anime).executeAsBlocking()
+        } else {
+            val genre = if (!tags.isNullOrEmpty() && tags.joinToString() != anime.originalGenre) {
+                tags
+            } else {
+                null
+            }
+            val anime = CustomAnimeManager.AnimeJson(
+                anime.id!!,
+                title?.trimOrNull(),
+                author?.trimOrNull(),
+                artist?.trimOrNull(),
+                description?.trimOrNull(),
+                genre,
+                status.takeUnless { it == anime.originalStatus }
+            )
+            customAnimeManager.saveAnimeInfo(anime)
+        }
+
+        if (uri != null) {
+            editCover(anime, context, uri)
+        } else if (resetCover) {
+            coverCache.deleteCustomCover(anime)
+            anime.updateCoverLastModified(db)
+        }
+
+        if (uri == null && resetCover) {
+            Observable.just(anime)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeLatestCache(
+                    { view, _ ->
+                        view.setRefreshing()
+                    }
+                )
+            fetchAnimeFromSource(manualFetch = true)
+        } else {
+            Observable.just(anime)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeLatestCache(
+                    { view, _ ->
+                        view.onNextAnimeInfo(anime, source)
+                    }
+                )
+        }
+    }
+
     /**
      * Update favorite status of anime, (removes / adds) anime (to / from) library.
      *
@@ -298,12 +373,12 @@ class AnimePresenter(
     }
 
     /**
-     * Get the manga cover as a Bitmap, either from the CoverCache (only works for library manga)
+     * Get the anime cover as a Bitmap, either from the CoverCache (only works for library anime)
      * or from the Coil ImageLoader cache.
      *
      * @param context the context used to get the Coil ImageLoader
      * @param memoryCacheKey Coil MemoryCache.Key that points to the cover Bitmap cache location
-     * @return manga cover as Bitmap
+     * @return anime cover as Bitmap
      */
     fun getCoverBitmap(context: Context, memoryCacheKey: MemoryCache.Key?): Bitmap {
         var resultBitmap = coverBitmapFromCoverCache()
@@ -315,9 +390,9 @@ class AnimePresenter(
     }
 
     /**
-     * Attempt manga cover retrieval from the CoverCache.
+     * Attempt anime cover retrieval from the CoverCache.
      *
-     * @return cover as Bitmap or null if CoverCache does not contain cover for manga
+     * @return cover as Bitmap or null if CoverCache does not contain cover for anime
      */
     private fun coverBitmapFromCoverCache(): Bitmap? {
         val cover = coverCache.getCoverFile(anime)
@@ -329,7 +404,7 @@ class AnimePresenter(
     }
 
     /**
-     * Attempt manga cover retrieval from the Coil ImageLoader memoryCache.
+     * Attempt anime cover retrieval from the Coil ImageLoader memoryCache.
      *
      * @param context the context used to get the Coil ImageLoader
      * @param memoryCacheKey Coil MemoryCache.Key that points to the cover Bitmap cache location
@@ -340,7 +415,7 @@ class AnimePresenter(
     }
 
     /**
-     * Save manga cover Bitmap to temporary share directory.
+     * Save anime cover Bitmap to temporary share directory.
      *
      * @param context for the temporary share directory
      * @param coverBitmap the cover to save (as Bitmap)
@@ -351,7 +426,7 @@ class AnimePresenter(
     }
 
     /**
-     * Save manga cover to pictures directory of the device.
+     * Save anime cover to pictures directory of the device.
      *
      * @param context for the pictures directory of the user
      * @param coverBitmap the cover to save (as Bitmap)
@@ -362,11 +437,11 @@ class AnimePresenter(
     }
 
     /**
-     * Save a manga cover Bitmap to a new File in a given directory.
+     * Save a anime cover Bitmap to a new File in a given directory.
      * Overwrites file if it already exists.
      *
      * @param directory The directory in which the new file will be created
-     * @param coverBitmap The manga cover to save
+     * @param coverBitmap The anime cover to save
      * @return the newly created File
      */
     private fun saveCover(directory: File, coverBitmap: Bitmap): File {

@@ -195,6 +195,8 @@ class AnimeController :
 
     private var dialog: DialogController? = null
 
+    private var editAnimeDialog: EditAnimeDialog? = null
+
     private val incognitoMode = preferences.incognitoMode().get()
 
     private val db: AnimeDatabaseHelper = Injekt.get()
@@ -458,6 +460,7 @@ class AnimeController :
         menu.findItem(R.id.download_group).isVisible = !isLocalSource
 
         // Hide options for non-animelib anime
+        menu.findItem(R.id.action_edit).isVisible = presenter.anime.favorite || isLocalSource
         menu.findItem(R.id.action_edit_categories).isVisible = presenter.anime.favorite && presenter.getCategories().isNotEmpty()
         menu.findItem(R.id.action_migrate).isVisible = presenter.anime.favorite
     }
@@ -468,6 +471,14 @@ class AnimeController :
             R.id.download_next, R.id.download_next_5, R.id.download_next_10,
             R.id.download_custom, R.id.download_unread, R.id.download_all
             -> downloadEpisodes(item.itemId)
+
+            R.id.action_edit -> {
+                editAnimeDialog = EditAnimeDialog(
+                    this,
+                    presenter.anime
+                )
+                editAnimeDialog?.showDialog(router)
+            }
 
             R.id.action_edit_categories -> onCategoriesClick()
             R.id.action_migrate -> migrateAnime()
@@ -625,6 +636,11 @@ class AnimeController :
                     }
                 }
         }
+    }
+
+    fun setRefreshing() {
+        isRefreshingInfo = true
+        updateRefreshing()
     }
 
     /**
@@ -850,7 +866,9 @@ class AnimeController :
             val dataUri = data?.data
             if (dataUri == null || resultCode != Activity.RESULT_OK) return
             val activity = activity ?: return
-            presenter.editCover(anime!!, activity, dataUri)
+            if (editAnimeDialog != null) {
+                editAnimeDialog?.updateCover(dataUri)
+            } else presenter.editCover(anime!!, activity, dataUri)
         }
         if (requestCode == REQUEST_EXTERNAL && resultCode == Activity.RESULT_OK) {
             val anime = anime ?: return
@@ -964,6 +982,7 @@ class AnimeController :
     }
 
     fun onSetCoverSuccess() {
+        editAnimeDialog?.loadCover()
         animeInfoAdapter?.notifyItemChanged(0, this)
         (dialog as? AnimeFullCoverDialog)?.setImage(anime)
         activity?.toast(R.string.cover_updated)

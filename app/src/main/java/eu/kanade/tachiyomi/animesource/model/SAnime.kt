@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.animesource.model
 
+import eu.kanade.tachiyomi.data.database.models.AnimeImpl
 import tachiyomi.animesource.model.AnimeInfo
 import java.io.Serializable
 
@@ -23,23 +24,36 @@ interface SAnime : Serializable {
 
     var initialized: Boolean
 
+    val originalTitle: String
+        get() = (this as? AnimeImpl)?.ogTitle ?: title
+    val originalAuthor: String?
+        get() = (this as? AnimeImpl)?.ogAuthor ?: author
+    val originalArtist: String?
+        get() = (this as? AnimeImpl)?.ogArtist ?: artist
+    val originalDescription: String?
+        get() = (this as? AnimeImpl)?.ogDesc ?: description
+    val originalGenre: String?
+        get() = (this as? AnimeImpl)?.ogGenre ?: genre
+    val originalStatus: Int
+        get() = (this as? AnimeImpl)?.ogStatus ?: status
+
     fun copyFrom(other: SAnime) {
         title = other.title
 
         if (other.author != null) {
-            author = other.author
+            author = other.originalAuthor
         }
 
         if (other.artist != null) {
-            artist = other.artist
+            artist = other.originalArtist
         }
 
         if (other.description != null) {
-            description = other.description
+            description = other.originalDescription
         }
 
         if (other.genre != null) {
-            genre = other.genre
+            genre = other.originalGenre
         }
 
         if (other.thumbnail_url != null) {

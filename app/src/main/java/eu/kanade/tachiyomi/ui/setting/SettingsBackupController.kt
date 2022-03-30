@@ -222,7 +222,8 @@ class SettingsBackupController : SettingsController() {
                 R.string.anime_categories,
                 R.string.episodes,
                 R.string.track,
-                R.string.history
+                R.string.history,
+                R.string.custom_info,
             )
                 .map { activity.getString(it) }
             val selected = options.map { true }.toBooleanArray()
@@ -245,6 +246,7 @@ class SettingsBackupController : SettingsController() {
                                 2 -> flags = flags or BackupCreateService.BACKUP_CHAPTER
                                 3 -> flags = flags or BackupCreateService.BACKUP_TRACK
                                 4 -> flags = flags or BackupCreateService.BACKUP_HISTORY
+                                5 -> flags = flags or BackupCreateService.BACKUP_CUSTOM_INFO
                             }
                         }
                     }

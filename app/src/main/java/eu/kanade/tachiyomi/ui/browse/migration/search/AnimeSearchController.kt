@@ -20,7 +20,7 @@ import uy.kohesive.injekt.injectLazy
 
 class AnimeSearchController(
     private var anime: Anime? = null
-) : GlobalAnimeSearchController(anime?.title) {
+) : GlobalAnimeSearchController(anime?.originalTitle) {
 
     private var newAnime: Anime? = null
 

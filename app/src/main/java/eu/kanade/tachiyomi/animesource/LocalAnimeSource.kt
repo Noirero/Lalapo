@@ -14,13 +14,8 @@ import eu.kanade.tachiyomi.util.episode.EpisodeRecognition
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.ImageUtil
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.decodeFromStream
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.*
 import rx.Observable
 import tachiyomi.animesource.model.AnimeInfo
 import tachiyomi.animesource.model.EpisodeInfo
@@ -135,6 +130,31 @@ class LocalAnimeSource(private val context: Context) : AnimeCatalogueSource, Unm
 
         return Observable.just(AnimesPage(animes.toList(), false))
     }
+
+    fun updateAnimeInfo(anime: SAnime) {
+        val directory = getBaseDirectories(context).map { File(it, anime.url) }.find {
+            it.exists()
+        } ?: return
+        val existingFileName = directory.listFiles()?.find { it.extension == "json" }?.name
+        val file = File(directory, existingFileName ?: "info.json")
+        file.outputStream().use {
+            json.encodeToStream(anime.toJson(), it)
+        }
+    }
+
+    private fun SAnime.toJson(): AnimeJson {
+        return AnimeJson(title, author, artist, description, genre?.split(", "), status)
+    }
+
+    @Serializable
+    data class AnimeJson(
+        val title: String? = null,
+        val author: String? = null,
+        val artist: String? = null,
+        val description: String? = null,
+        val genre: List<String>? = null,
+        val status: Int? = null
+    )
 
     override fun fetchLatestUpdates(page: Int) = fetchSearchAnime(page, "", LATEST_FILTERS)
 

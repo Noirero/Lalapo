@@ -133,7 +133,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
      */
     private fun backupAnimeObject(anime: Anime, options: Int): BackupAnime {
         // Entry for this manga
-        val animeObject = BackupAnime.copyFrom(anime)
+        val animeObject = BackupAnime.copyFrom(anime, if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) customAnimeManager else null)
 
         // Check if user wants chapter information in backup
         if (options and BACKUP_CHAPTER_MASK == BACKUP_CHAPTER) {
