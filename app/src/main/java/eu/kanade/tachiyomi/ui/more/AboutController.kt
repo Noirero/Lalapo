@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.ui.base.controller.NoAppBarElevationController
 import eu.kanade.tachiyomi.ui.base.controller.openInBrowser
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
+import eu.kanade.tachiyomi.ui.main.WhatsNewDialogController
 import eu.kanade.tachiyomi.ui.more.licenses.LicensesController
 import eu.kanade.tachiyomi.ui.setting.SettingsController
 import eu.kanade.tachiyomi.util.CrashLogUtil
@@ -71,7 +72,7 @@ class AboutController : SettingsController(), NoAppBarElevationController {
                 titleRes = R.string.whats_new
 
                 onClick {
-                    openInBrowser(RELEASE_URL)
+                    WhatsNewDialogController().showDialog(router)
                 }
             }
         }
