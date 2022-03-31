@@ -20,3 +20,7 @@ fun String?.nullIfBlank(): String? = if (isNullOrBlank()) {
 } else {
     this
 }
+
+fun String?.newUpdateFormat(): String? {
+    return this?.split("---")?.get(0)?.replace("    -", "    ⦾")?.replace("-", "⦿")?.replace("### ", "")
+}

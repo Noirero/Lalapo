@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.updater.AppUpdateResult
 import eu.kanade.tachiyomi.data.updater.AppUpdateService
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
+import eu.kanade.tachiyomi.util.newUpdateFormat
 
 class NewUpdateDialogController(bundle: Bundle? = null) : DialogController(bundle) {
 
@@ -18,7 +19,7 @@ class NewUpdateDialogController(bundle: Bundle? = null) : DialogController(bundl
     override fun onCreateDialog(savedViewState: Bundle?): Dialog {
         return MaterialAlertDialogBuilder(activity!!)
             .setTitle(R.string.update_check_notification_update_available)
-            .setMessage(args.getString(BODY_KEY) ?: "")
+            .setMessage(args.getString(BODY_KEY).newUpdateFormat() ?: "")
             .setPositiveButton(R.string.update_check_confirm) { _, _ ->
                 val appContext = applicationContext
                 if (appContext != null) {
