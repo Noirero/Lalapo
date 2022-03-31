@@ -280,6 +280,12 @@ class PreferencesHelper(val context: Context) {
 
     fun tabletUiMode() = flowPrefs.getEnum("tablet_ui_mode", Values.TabletUiMode.AUTOMATIC)
 
+    fun bottomBarLabels() = flowPrefs.getBoolean("pref_show_bottom_bar_labels", true)
+
+    fun showNavUpdates() = flowPrefs.getBoolean("pref_show_updates_button", true)
+
+    fun showNavHistory() = flowPrefs.getBoolean("pref_show_history_button", true)
+
     fun extensionInstaller() = flowPrefs.getEnum(
         "extension_installer",
         if (DeviceUtil.isMiui) Values.ExtensionInstaller.LEGACY else Values.ExtensionInstaller.PACKAGEINSTALLER

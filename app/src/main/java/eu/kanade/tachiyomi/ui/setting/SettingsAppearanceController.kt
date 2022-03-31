@@ -153,6 +153,23 @@ class SettingsAppearanceController : SettingsController() {
                 summary = "%s"
             }
         }
+
+        preferenceCategory {
+            titleRes = R.string.pref_category_navbar
+
+            switchPreference {
+                bindTo(preferences.showNavUpdates())
+                titleRes = R.string.pref_hide_updates_button
+            }
+            switchPreference {
+                bindTo(preferences.showNavHistory())
+                titleRes = R.string.pref_hide_history_button
+            }
+            switchPreference {
+                bindTo(preferences.bottomBarLabels())
+                titleRes = R.string.pref_show_bottom_bar_labels
+            }
+        }
     }
 
     override fun onSaveViewState(view: View, outState: Bundle) {

@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.Menu
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Toast
@@ -54,6 +55,7 @@ import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchC
 import eu.kanade.tachiyomi.ui.download.DownloadController
 import eu.kanade.tachiyomi.ui.more.MoreController
 import eu.kanade.tachiyomi.ui.more.NewUpdateDialogController
+import eu.kanade.tachiyomi.ui.recent.animehistory.AnimeHistoryController
 import eu.kanade.tachiyomi.ui.recent.animeupdates.AnimeUpdatesController
 import eu.kanade.tachiyomi.ui.setting.SettingsMainController
 import eu.kanade.tachiyomi.util.lang.launchIO
@@ -80,9 +82,9 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
 
     private val startScreenId by lazy {
         when (preferences.startScreen()) {
-            1 -> R.id.nav_animelib
-            2 -> R.id.nav_updates
-            3 -> R.id.nav_browse
+            2 -> R.id.nav_history
+            3 -> R.id.nav_updates
+            4 -> R.id.nav_browse
             else -> R.id.nav_animelib
         }
     }
@@ -165,6 +167,7 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
                 when (id) {
                     R.id.nav_animelib -> router.setRoot(AnimelibController(), id)
                     R.id.nav_updates -> router.setRoot(AnimeUpdatesController(), id)
+                    R.id.nav_history -> router.setRoot(AnimeHistoryController(), id)
                     R.id.nav_browse -> router.setRoot(BrowseController(), id)
                     R.id.nav_more -> router.setRoot(MoreController(), id)
                 }
@@ -259,7 +262,7 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
             .onEach {
                 binding.incognitoMode.isVisible = it
 
-                // Close BrowseAnimeSourceController and its MangaController child when incognito mode is disabled
+                // Close BrowseAnimeSourceController when incognito mode is disabled
                 if (!it) {
                     val fga = router.backstack.last().controller
                     if (fga is BrowseAnimeSourceController || fga is AnimeController && fga.fromSource) {
@@ -267,6 +270,10 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
                     }
                 }
             }
+            .launchIn(lifecycleScope)
+
+        preferences.bottomBarLabels()
+            .asImmediateFlow { setNavLabelVisibility() }
             .launchIn(lifecycleScope)
     }
 
@@ -397,7 +404,7 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
         when (intent.action) {
             SHORTCUT_ANIMELIB -> setSelectedNavItem(R.id.nav_animelib)
             SHORTCUT_RECENTLY_UPDATED -> setSelectedNavItem(R.id.nav_updates)
-            // SHORTCUT_RECENTLY_READ -> setSelectedNavItem(R.id.nav_history)
+            SHORTCUT_RECENTLY_READ -> setSelectedNavItem(R.id.nav_history)
             SHORTCUT_CATALOGUES -> setSelectedNavItem(R.id.nav_browse)
             SHORTCUT_EXTENSIONS -> {
                 if (router.backstackSize > 1) {
@@ -599,6 +606,7 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
     fun showBottomNav(visible: Boolean) {
         if (visible) {
             binding.bottomNav?.slideUp()
+            binding.bottomNav?.menu?.let { updateNavMenu(it) }
         } else {
             binding.bottomNav?.slideDown()
         }
@@ -606,10 +614,24 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
 
     private fun showSideNav(visible: Boolean) {
         binding.sideNav?.isVisible = visible
+        binding.sideNav?.let { updateNavMenu(it.menu) }
+    }
+
+    private fun updateNavMenu(menu: Menu) {
+        menu.findItem(R.id.nav_updates).isVisible = preferences.showNavUpdates().get()
+        menu.findItem(R.id.nav_history).isVisible = preferences.showNavHistory().get()
     }
 
     private val nav: NavigationBarView
         get() = binding.bottomNav ?: binding.sideNav!!
+
+    private fun setNavLabelVisibility() {
+        if (preferences.bottomBarLabels().get()) {
+            nav.labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
+        } else {
+            nav.labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_SELECTED
+        }
+    }
 
     companion object {
         // Splash screen
@@ -620,6 +642,7 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
         // Shortcut actions
         const val SHORTCUT_ANIMELIB = "eu.kanade.tachiyomi.SHOW_ANIMELIB"
         const val SHORTCUT_RECENTLY_UPDATED = "eu.kanade.tachiyomi.SHOW_RECENTLY_UPDATED"
+        const val SHORTCUT_RECENTLY_READ = "eu.kanade.tachiyomi.SHOW_RECENTLY_READ"
         const val SHORTCUT_CATALOGUES = "eu.kanade.tachiyomi.SHOW_CATALOGUES"
         const val SHORTCUT_ANIME_DOWNLOADS = "eu.kanade.tachiyomi.SHOW_ANIME_DOWNLOADS"
         const val SHORTCUT_ANIME = "eu.kanade.tachiyomi.SHOW_ANIME"
