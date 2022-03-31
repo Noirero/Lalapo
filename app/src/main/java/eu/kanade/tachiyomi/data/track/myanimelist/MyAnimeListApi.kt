@@ -235,7 +235,7 @@ class MyAnimeListApi(private val client: OkHttpClient, interceptor: MyAnimeListI
     }
 
     companion object {
-        private const val clientId = "93272c7b6a31b6010e2713ad7f2b6b91"
+        private const val clientId = "9d84f771b558696ffc83110a28d55d3d"
 
         private const val baseOAuthUrl = "https://myanimelist.net/v1/oauth2"
         private const val baseApiUrl = "https://api.myanimelist.net/v2"
@@ -248,11 +248,6 @@ class MyAnimeListApi(private val client: OkHttpClient, interceptor: MyAnimeListI
             .appendQueryParameter("client_id", clientId)
             .appendQueryParameter("code_challenge", getPkceChallengeCode())
             .appendQueryParameter("response_type", "code")
-            .build()
-
-        fun mangaUrl(id: Int): Uri = "$baseApiUrl/manga".toUri().buildUpon()
-            .appendPath(id.toString())
-            .appendPath("my_list_status")
             .build()
 
         fun animeUrl(id: Int): Uri = "$baseApiUrl/anime".toUri().buildUpon()

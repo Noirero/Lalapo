@@ -27,9 +27,7 @@ class TrackManager(context: Context) {
 
     val bangumi = Bangumi(context, BANGUMI)
 
-    // val services = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi)
-
-    val services = listOf(myAnimeList, aniList, kitsu)
+    val services = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi)
 
     fun getService(id: Int) = services.find { it.id == id }
 
