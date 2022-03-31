@@ -16,7 +16,7 @@ class WhatsNewDialogController(bundle: Bundle? = null) : DialogController(bundle
         return MaterialAlertDialogBuilder(activity!!)
             .setTitle(activity!!.getString(R.string.updated_version, BuildConfig.VERSION_NAME))
             .setPositiveButton(android.R.string.ok, null)
-            .setNeutralButton(R.string.whats_new) { _, _ ->
+            .setNeutralButton(R.string.github) { _, _ ->
                 openInBrowser(RELEASE_URL)
             }
             .create()
