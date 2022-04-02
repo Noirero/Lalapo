@@ -1216,6 +1216,8 @@ class AnimeController :
         toolbar.findToolbarItem(R.id.action_remove_bookmark_episode)?.isVisible = episodes.all { it.episode.bookmark }
         toolbar.findToolbarItem(R.id.action_mark_as_seen)?.isVisible = episodes.any { !it.episode.seen }
         toolbar.findToolbarItem(R.id.action_mark_as_unseen)?.isVisible = episodes.all { it.episode.seen }
+        toolbar.findToolbarItem(R.id.action_mark_filler_episode)?.isVisible = episodes.any { !it.episode.filler }
+        toolbar.findToolbarItem(R.id.action_unmark_filler_episode)?.isVisible = episodes.all { it.episode.filler }
         toolbar.findToolbarItem(R.id.action_play_externally)?.isVisible = !preferences.alwaysUseExternalPlayer()
         toolbar.findToolbarItem(R.id.action_play_internally)?.isVisible = preferences.alwaysUseExternalPlayer()
     }
@@ -1230,6 +1232,8 @@ class AnimeController :
             R.id.action_remove_bookmark_episode -> bookmarkEpisodes(getSelectedEpisodes(), false)
             R.id.action_mark_as_seen -> markAsRead(getSelectedEpisodes())
             R.id.action_mark_as_unseen -> markAsUnread(getSelectedEpisodes())
+            R.id.action_mark_filler_episode -> fillerEpisodes(getSelectedEpisodes(), true)
+            R.id.action_unmark_filler_episode -> fillerEpisodes(getSelectedEpisodes(), false)
             R.id.action_mark_previous_as_seen -> markPreviousAsRead(getSelectedEpisodes())
             R.id.action_play_internally -> openEpisode(getSelectedEpisodes().last().episode, playerChangeRequested = true)
             R.id.action_play_externally -> openEpisode(getSelectedEpisodes().last().episode, playerChangeRequested = true)
@@ -1374,6 +1378,11 @@ class AnimeController :
 
     private fun bookmarkEpisodes(episodes: List<EpisodeItem>, bookmarked: Boolean) {
         presenter.bookmarkEpisodes(episodes, bookmarked)
+        destroyActionModeIfNeeded()
+    }
+
+    private fun fillerEpisodes(episodes: List<EpisodeItem>, fillered: Boolean) {
+        presenter.fillerEpisodes(episodes, fillered)
         destroyActionModeIfNeeded()
     }
 

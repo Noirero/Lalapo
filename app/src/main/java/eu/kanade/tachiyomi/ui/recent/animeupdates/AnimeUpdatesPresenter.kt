@@ -209,6 +209,22 @@ class AnimeUpdatesPresenter : BasePresenter<AnimeUpdatesController>() {
     }
 
     /**
+     * Mark selected episodes as fillered
+     * @param items list of selected episodes
+     * @param fillered filler status
+     */
+    fun fillerEpisodes(items: List<AnimeUpdatesItem>, fillered: Boolean) {
+        val episodes = items.map { it.episode }
+        episodes.forEach {
+            it.filler = fillered
+        }
+
+        Observable.fromCallable { db.updateEpisodesProgress(episodes).executeAsBlocking() }
+            .subscribeOn(Schedulers.io())
+            .subscribe()
+    }
+
+    /**
      * Download selected episodes
      * @param items list of recent episodes seleted.
      */

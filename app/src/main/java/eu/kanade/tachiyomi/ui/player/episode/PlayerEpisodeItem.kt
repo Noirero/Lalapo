@@ -26,6 +26,7 @@ class PlayerEpisodeItem(episode: Episode, val anime: Anime, val isCurrent: Boole
     val readColor = context.getResourceColor(R.attr.colorOnSurface, 0.38f)
     val unreadColor = context.getResourceColor(R.attr.colorOnSurface)
     val bookmarkedColor = context.getResourceColor(R.attr.colorAccent)
+    val filleredColor = context.getResourceColor(R.attr.colorTertiary)
 
     override fun getLayoutRes(): Int {
         return R.layout.player_episode_item
@@ -77,6 +78,7 @@ class PlayerEpisodeItem(episode: Episode, val anime: Anime, val isCurrent: Boole
             val episodeColor = when {
                 item.seen -> item.readColor
                 item.bookmark -> item.bookmarkedColor
+                item.filler -> item.filleredColor
                 else -> item.unreadColor
             }
             binding.episodeTitle.setTextColor(episodeColor)
@@ -105,6 +107,12 @@ class PlayerEpisodeItem(episode: Episode, val anime: Anime, val isCurrent: Boole
                 binding.bookmarkImage.setVectorCompat(R.drawable.ic_bookmark_border_24dp, R.attr.colorOnSurface)
             }
 
+            if (item.filler) {
+                binding.fillerImage.setVectorCompat(R.drawable.ic_filler_24dp, R.attr.colorTertiary)
+            } else {
+                binding.fillerImage.setVectorCompat(R.drawable.ic_filler_border_24dp, R.attr.colorOnSurface)
+            }
+
             if (item.isCurrent) {
                 binding.episodeTitle.setTypeface(null, Typeface.BOLD_ITALIC)
                 binding.episodeDetails.setTypeface(null, Typeface.BOLD_ITALIC)
@@ -113,7 +121,10 @@ class PlayerEpisodeItem(episode: Episode, val anime: Anime, val isCurrent: Boole
                 binding.episodeDetails.setTypeface(null, Typeface.NORMAL)
             }
             binding.bookmarkLayout.setOnClickListener {
-                adapter.clickListener.bookmarkEpisode(item, item.anime)
+                adapter.clickBookmarkListener.bookmarkEpisode(item, item.anime)
+            }
+            binding.fillerLayout.setOnClickListener {
+                adapter.clickFillerListener.fillerEpisode(item, item.anime)
             }
         }
     }

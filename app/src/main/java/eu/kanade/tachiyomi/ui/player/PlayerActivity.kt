@@ -91,7 +91,7 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
 
-class PlayerActivity : AppCompatActivity(), PlayerEpisodeAdapter.OnBookmarkClickListener {
+class PlayerActivity : AppCompatActivity(), PlayerEpisodeAdapter.OnBookmarkClickListener, PlayerEpisodeAdapter.OnFillerClickListener {
 
     private val ACTION_MEDIA_CONTROL = "media_control"
     private val EXTRA_CONTROL_TYPE = "control_type"
@@ -1055,7 +1055,7 @@ class PlayerActivity : AppCompatActivity(), PlayerEpisodeAdapter.OnBookmarkClick
             .setOnDismissListener { destroy() }
             .create()
 
-        adapterPlaylist = PlayerEpisodeAdapter(this)
+        adapterPlaylist = PlayerEpisodeAdapter(this, this)
         bindingPlaylist.chapterRecycler.adapter = adapterPlaylist
 
         adapterPlaylist?.mItemClickListener = FlexibleAdapter.OnItemClickListener { _, position ->
@@ -1098,6 +1098,11 @@ class PlayerActivity : AppCompatActivity(), PlayerEpisodeAdapter.OnBookmarkClick
 
     override fun bookmarkEpisode(episode: Episode, anime: Anime) {
         toggleBookmark(episode.id!!, !episode.bookmark, episode, anime)
+        refreshList(scroll = false)
+    }
+
+    override fun fillerEpisode(episode: Episode, anime: Anime) {
+        toggleFiller(episode.id!!, !episode.filler, episode, anime)
         refreshList(scroll = false)
     }
 
@@ -1149,6 +1154,12 @@ class PlayerActivity : AppCompatActivity(), PlayerEpisodeAdapter.OnBookmarkClick
     private fun toggleBookmark(episodeId: Long, bookmarked: Boolean, episode: Episode, anime: Anime) {
         val ep = getEpisodeList(anime, this, episode).find { it.id == episodeId } ?: return
         ep.bookmark = bookmarked
+        db.updateEpisodeProgress(ep).executeAsBlocking()
+    }
+
+    private fun toggleFiller(episodeId: Long, fillered: Boolean, episode: Episode, anime: Anime) {
+        val ep = getEpisodeList(anime, this, episode).find { it.id == episodeId } ?: return
+        ep.filler = fillered
         db.updateEpisodeProgress(ep).executeAsBlocking()
     }
 }

@@ -29,6 +29,7 @@ class EpisodeBackupPutResolver : PutResolver<Episode>() {
         contentValuesOf(
             EpisodeTable.COL_SEEN to episode.last_second_seen,
             EpisodeTable.COL_BOOKMARK to episode.bookmark,
+            EpisodeTable.COL_FILLER to episode.filler,
             EpisodeTable.COL_LAST_SECOND_SEEN to episode.last_second_seen
         )
 }

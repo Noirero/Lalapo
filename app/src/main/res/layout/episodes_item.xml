@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,7 +7,9 @@
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:paddingVertical="10dp"
     android:paddingStart="16dp"
-    android:paddingEnd="5dp">
+    android:paddingEnd="5dp"
+    tools:layout_editor_absoluteX="-4dp"
+    tools:layout_editor_absoluteY="-14dp">
 
     <ImageView
         android:id="@+id/bookmark_icon"
@@ -18,11 +19,27 @@
         android:contentDescription="@string/action_filter_bookmarked"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/episode_title"
-        app:layout_constraintEnd_toStartOf="@id/episode_title"
+        app:layout_constraintEnd_toStartOf="@id/filler_icon"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/episode_title"
         app:srcCompat="@drawable/ic_bookmark_24dp"
         app:tint="?attr/colorAccent"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/filler_icon"
+        android:layout_width="16dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="4dp"
+        android:contentDescription="@string/action_filter_fillered"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/episode_title"
+        app:layout_constraintEnd_toStartOf="@id/episode_title"
+        app:layout_constraintStart_toEndOf="@id/bookmark_icon"
+        app:layout_constraintTop_toTopOf="@id/episode_title"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/ic_filler_24dp"
+        app:tint="?attr/colorTertiary"
         tools:visibility="visible" />
 
     <TextView
@@ -34,7 +51,7 @@
         android:textAppearance="?attr/textAppearanceBodyMedium"
         app:layout_constraintBottom_toTopOf="@+id/episode_description"
         app:layout_constraintEnd_toStartOf="@+id/animedownload"
-        app:layout_constraintStart_toEndOf="@+id/bookmark_icon"
+        app:layout_constraintStart_toEndOf="@+id/filler_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Title" />

@@ -34,7 +34,7 @@
         app:layout_constraintEnd_toStartOf="@id/bookmark_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/episode_title"
-        tools:text="3 days ago • On page 45 • Scanlator" />
+        tools:text="3 days ago • 25:09 • Translator" />
 
     <FrameLayout
         android:id="@+id/bookmark_layout"
@@ -45,7 +45,7 @@
         android:focusable="true"
         android:src="@drawable/ic_bookmark_24dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/filler_layout"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
@@ -54,6 +54,27 @@
             android:layout_height="30dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_bookmark_border_24dp"
+            app:tint="?attr/colorOnSurface" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/filler_layout"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="12dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/ic_filler_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/filler_image"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_filler_border_24dp"
             app:tint="?attr/colorOnSurface" />
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

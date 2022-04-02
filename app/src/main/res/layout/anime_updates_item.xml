@@ -46,9 +46,25 @@
         app:layout_constraintStart_toStartOf="@id/manga_title"
         app:layout_constraintTop_toBottomOf="@id/manga_title"
         app:layout_constraintBottom_toBottomOf="@id/chapter_title"
-        app:layout_constraintEnd_toStartOf="@id/chapter_title"
+        app:layout_constraintEnd_toStartOf="@id/filler_icon"
         app:srcCompat="@drawable/ic_bookmark_24dp"
         app:tint="?attr/colorAccent"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/filler_icon"
+        android:layout_width="16dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="4dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/chapter_title"
+        app:layout_constraintEnd_toStartOf="@id/chapter_title"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@id/bookmark_icon"
+        app:layout_constraintTop_toBottomOf="@id/manga_title"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/ic_filler_24dp"
+        app:tint="?attr/colorTertiary"
         tools:visibility="visible" />
 
     <TextView
@@ -62,7 +78,7 @@
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/download"
-        app:layout_constraintStart_toEndOf="@id/bookmark_icon"
+        app:layout_constraintStart_toEndOf="@id/filler_icon"
         app:layout_constraintTop_toBottomOf="@+id/manga_title"
         tools:text="Chapter title" />
 

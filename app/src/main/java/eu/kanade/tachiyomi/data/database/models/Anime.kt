@@ -64,6 +64,10 @@ interface Anime : SAnime {
         get() = episode_flags and EPISODE_BOOKMARKED_MASK
         set(filter) = setEpisodeFlags(filter, EPISODE_BOOKMARKED_MASK)
 
+    var filleredFilter: Int
+        get() = episode_flags and EPISODE_FILLERED_MASK
+        set(filter) = setEpisodeFlags(filter, EPISODE_FILLERED_MASK)
+
     var sorting: Int
         get() = episode_flags and EPISODE_SORTING_MASK
         set(sort) = setEpisodeFlags(sort, EPISODE_SORTING_MASK)
@@ -89,10 +93,14 @@ interface Anime : SAnime {
         const val EPISODE_SHOW_NOT_BOOKMARKED = 0x00000040
         const val EPISODE_BOOKMARKED_MASK = 0x00000060
 
+        const val EPISODE_SHOW_FILLERED = 0x00000200
+        const val EPISODE_SHOW_NOT_FILLERED = 0x00000400
+        const val EPISODE_FILLERED_MASK = 0x00000600
+
         const val EPISODE_SORTING_SOURCE = 0x00000000
-        const val EPISODE_SORTING_NUMBER = 0x00000100
-        const val EPISODE_SORTING_UPLOAD_DATE = 0x00000200
-        const val EPISODE_SORTING_MASK = 0x00000300
+        const val EPISODE_SORTING_NUMBER = 0x00001000
+        const val EPISODE_SORTING_UPLOAD_DATE = 0x00002000
+        const val EPISODE_SORTING_MASK = 0x00003000
 
         const val EPISODE_DISPLAY_NAME = 0x00000000
         const val EPISODE_DISPLAY_NUMBER = 0x00100000

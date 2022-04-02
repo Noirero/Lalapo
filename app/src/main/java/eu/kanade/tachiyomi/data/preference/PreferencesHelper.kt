@@ -174,7 +174,6 @@ class PreferencesHelper(val context: Context) {
 
     fun removeBookmarkedChapters() = prefs.getBoolean(Keys.removeBookmarkedChapters, false)
 
-    // fun removeExcludeCategories() = flowPrefs.getStringSet("remove_exclude_categories", emptySet())
     fun removeExcludeAnimeCategories() = flowPrefs.getStringSet("remove_exclude_categories_anime", emptySet())
 
     fun libraryUpdateInterval() = flowPrefs.getInt("pref_library_update_interval_key", 24)
@@ -270,6 +269,8 @@ class PreferencesHelper(val context: Context) {
 
     fun filterEpisodeByBookmarked() = prefs.getInt(Keys.defaultEpisodeFilterByBookmarked, Anime.SHOW_ALL)
 
+    fun filterEpisodeByFillered() = prefs.getInt(Keys.defaultEpisodeFilterByFillered, Anime.SHOW_ALL)
+
     fun sortEpisodeBySourceOrNumber() = prefs.getInt(Keys.defaultEpisodeSortBySourceOrNumber, Anime.EPISODE_SORTING_SOURCE)
 
     fun displayEpisodeByNameOrNumber() = prefs.getInt(Keys.defaultEpisodeDisplayByNameOrNumber, Anime.EPISODE_DISPLAY_NAME)
@@ -300,6 +301,7 @@ class PreferencesHelper(val context: Context) {
             putInt(Keys.defaultEpisodeFilterByRead, anime.seenFilter)
             putInt(Keys.defaultEpisodeFilterByDownloaded, anime.downloadedFilter)
             putInt(Keys.defaultEpisodeFilterByBookmarked, anime.bookmarkedFilter)
+            putInt(Keys.defaultEpisodeFilterByFillered, anime.filleredFilter)
             putInt(Keys.defaultEpisodeSortBySourceOrNumber, anime.sorting)
             putInt(Keys.defaultEpisodeDisplayByNameOrNumber, anime.displayMode)
             putInt(

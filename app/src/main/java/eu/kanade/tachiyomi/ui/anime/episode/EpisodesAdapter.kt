@@ -25,6 +25,7 @@ class EpisodesAdapter(
     val unreadColorSecondary = context.getResourceColor(android.R.attr.textColorSecondary)
 
     val bookmarkedColor = context.getResourceColor(R.attr.colorAccent)
+    val filleredColor = context.getResourceColor(R.attr.colorTertiary)
 
     val decimalFormat = DecimalFormat(
         "#.###",

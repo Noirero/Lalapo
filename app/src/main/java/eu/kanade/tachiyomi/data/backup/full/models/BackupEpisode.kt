@@ -14,6 +14,7 @@ data class BackupEpisode(
     @ProtoNumber(3) var scanlator: String? = null,
     @ProtoNumber(4) var seen: Boolean = false,
     @ProtoNumber(5) var bookmark: Boolean = false,
+    @ProtoNumber(11) var filler: Boolean = false,
     // lastPageRead is called progress in 1.x
     @ProtoNumber(6) var lastSecondSeen: Long = 0,
     @ProtoNumber(7) var dateFetch: Long = 0,
@@ -30,6 +31,7 @@ data class BackupEpisode(
             scanlator = this@BackupEpisode.scanlator
             seen = this@BackupEpisode.seen
             bookmark = this@BackupEpisode.bookmark
+            filler = this@BackupEpisode.filler
             last_second_seen = this@BackupEpisode.lastSecondSeen
             date_fetch = this@BackupEpisode.dateFetch
             date_upload = this@BackupEpisode.dateUpload
@@ -46,6 +48,7 @@ data class BackupEpisode(
                 scanlator = episode.scanlator,
                 seen = episode.seen,
                 bookmark = episode.bookmark,
+                filler = episode.filler,
                 lastSecondSeen = episode.last_second_seen,
                 dateFetch = episode.date_fetch,
                 dateUpload = episode.date_upload,

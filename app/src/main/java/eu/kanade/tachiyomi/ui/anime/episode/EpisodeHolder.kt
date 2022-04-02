@@ -46,6 +46,7 @@ class EpisodeHolder(
         val episodeTitleColor = when {
             episode.seen -> adapter.readColor
             episode.bookmark -> adapter.bookmarkedColor
+            episode.filler -> adapter.filleredColor
             else -> adapter.unreadColor
         }
         binding.episodeTitle.setTextColor(episodeTitleColor)
@@ -53,11 +54,13 @@ class EpisodeHolder(
         val episodeDescriptionColor = when {
             episode.seen -> adapter.readColor
             episode.bookmark -> adapter.bookmarkedColor
+            episode.filler -> adapter.filleredColor
             else -> adapter.unreadColorSecondary
         }
         binding.episodeDescription.setTextColor(episodeDescriptionColor)
 
         binding.bookmarkIcon.isVisible = episode.bookmark
+        binding.fillerIcon.isVisible = episode.filler
 
         val descriptions = mutableListOf<CharSequence>()
 

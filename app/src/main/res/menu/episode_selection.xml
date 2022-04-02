@@ -52,6 +52,22 @@
         tools:ignore="AlwaysShowAction" />
 
     <item
+        android:id="@+id/action_mark_filler_episode"
+        android:icon="@drawable/ic_filler_border_24dp"
+        android:title="@string/action_mark_filler_episode"
+        app:iconTint="?attr/colorOnSurface"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+
+    <item
+        android:id="@+id/action_unmark_filler_episode"
+        android:icon="@drawable/ic_filler_24dp"
+        android:title="@string/action_unmark_filler_episode"
+        app:iconTint="?attr/colorOnSurface"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+
+    <item
         android:id="@+id/action_mark_previous_as_seen"
         android:icon="@drawable/ic_done_prev_24dp"
         android:title="@string/action_mark_previous_as_seen"
