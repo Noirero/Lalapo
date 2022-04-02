@@ -543,8 +543,8 @@
     <string name="manga_info_expand">More</string>
     <string name="manga_info_collapse">Less</string>
     <plurals name="anime_num_episodes">
-        <item quantity="one">1 episode</item>
-        <item quantity="other">%1$s episodes</item>
+        <item quantity="one">1 Episode</item>
+        <item quantity="other">%1$s Episodes</item>
     </plurals>
     <string name="delete_downloads_for_anime">Delete downloaded episodes?</string>
     <string name="copied_to_clipboard">Copied to clipboard:\n%1$s</string>
