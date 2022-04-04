@@ -19,7 +19,7 @@ plugins {
 
 shortcutHelper.setFilePath("./shortcuts.xml")
 
-val SUPPORTED_ABIS = setOf("armeabi-v7a", "arm64-v8a", "x86")
+val SUPPORTED_ABIS = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
 android {
     compileSdk = AndroidConfig.compileSdk
@@ -91,6 +91,16 @@ android {
             "META-INF/NOTICE",
             "META-INF/*.kotlin_module",
             "META-INF/*.version",
+        ))
+
+        jniLibs.pickFirsts.addAll(listOf(
+            "**/libavcodec.so",
+            "**/libavdevice.so",
+            "**/libavfilter.so",
+            "**/libavformat.so",
+            "**/libavutil.so",
+            "**/libswresample.so",
+            "**/libswscale.so",
         ))
     }
 
@@ -268,20 +278,11 @@ dependencies {
     // For detecting memory leaks; see https://square.github.io/leakcanary/
     // debugImplementation("com.squareup.leakcanary:leakcanary-android:2.7")
 
-    // Exoplayer
-    val exoplayerVersion = "2.16.0"
-    implementation("com.google.android.exoplayer:exoplayer:$exoplayerVersion")
-    implementation("com.google.android.exoplayer:exoplayer-core:$exoplayerVersion")
-    implementation("com.google.android.exoplayer:exoplayer-dash:$exoplayerVersion")
-    implementation("com.google.android.exoplayer:exoplayer-hls:$exoplayerVersion")
-    implementation("com.google.android.exoplayer:exoplayer-ui:$exoplayerVersion")
-    implementation("com.google.android.exoplayer:extension-mediasession:$exoplayerVersion")
-
-    // Doubletap Player
-    implementation("com.github.vkay94:DoubleTapPlayerView:1.0.2")
-
     // FFmpeg
     implementation("com.arthenica:ffmpeg-kit-https:4.5.LTS")
+
+    // mpv-android
+    implementation(files("C:\\Users\\user\\Downloads\\aniyomi-mpv-lib-0.5.aar"))
 }
 
 tasks {
