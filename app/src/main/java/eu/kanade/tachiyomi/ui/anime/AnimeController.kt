@@ -1064,7 +1064,8 @@ class AnimeController :
 
     private fun openEpisode(episode: Episode, hasAnimation: Boolean = false, playerChangeRequested: Boolean = false) {
         val context = view?.context ?: return
-        val intent = PlayerActivity.newIntent(context, presenter.anime, episode)
+        val anime = anime ?: return
+        val intent = PlayerActivity.newIntent(context, anime, episode) // Intent(Intent.ACTION_VIEW).setClass(context, MPVActivity::class.java).setData(Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")) // NewPlayerActivity.newIntent(context, presenter.anime, episode)
         val useInternal = preferences.alwaysUseExternalPlayer() == playerChangeRequested
         if (hasAnimation) {
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
@@ -1072,14 +1073,13 @@ class AnimeController :
 
         if (!useInternal) launchIO {
             val video = try {
-                EpisodeLoader.getLink(episode, anime!!, source!!).awaitSingle()
+                EpisodeLoader.getLink(episode, anime, source!!).awaitSingle()
             } catch (e: Exception) {
                 return@launchIO makeErrorToast(context, e)
             }
             if (video != null) {
                 currentExtEpisode = episode
 
-                val anime = anime ?: return@launchIO
                 val source = source ?: return@launchIO
                 val extIntent = ExternalIntents(anime, source).getExternalIntent(episode, video, context)
                 if (extIntent != null) try {

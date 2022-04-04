@@ -1,1170 +1,857 @@
 package eu.kanade.tachiyomi.ui.player
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.app.PictureInPictureParams
-import android.app.RemoteAction
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.content.res.Configuration
-import android.graphics.drawable.Icon
-import android.net.Uri
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.Menu
+import android.os.Handler
+import android.os.Looper
+import android.util.DisplayMetrics
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewAnimationUtils
 import android.view.WindowManager
-import android.webkit.WebSettings
-import android.widget.*
+import android.widget.SeekBar
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.github.vkay94.dtpv.DoubleTapPlayerView
-import com.github.vkay94.dtpv.youtube.YouTubeOverlay
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.analytics.AnalyticsCollector
-import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
-import com.google.android.exoplayer2.source.MediaSourceFactory
-import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSource
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.upstream.HttpDataSource.HttpDataSourceException
-import com.google.android.exoplayer2.upstream.HttpDataSource.InvalidResponseCodeException
-import com.google.android.exoplayer2.upstream.cache.CacheDataSource
-import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
-import com.google.android.exoplayer2.upstream.cache.SimpleCache
-import com.google.android.exoplayer2.util.Clock
-import com.google.android.exoplayer2.util.MimeTypes
+import androidx.core.content.ContextCompat
+import androidx.core.view.GestureDetectorCompat
+import androidx.core.view.isVisible
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.animesource.AnimeSource
-import eu.kanade.tachiyomi.animesource.AnimeSourceManager
-import eu.kanade.tachiyomi.animesource.LocalAnimeSource
+import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.AnimeHistory
 import eu.kanade.tachiyomi.data.database.models.Episode
-import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.data.track.job.DelayedTrackingStore
-import eu.kanade.tachiyomi.data.track.job.DelayedTrackingUpdateJob
-import eu.kanade.tachiyomi.databinding.PlayerEpisodesDialogBinding
-import eu.kanade.tachiyomi.databinding.WatcherActivityBinding
-import eu.kanade.tachiyomi.ui.anime.episode.EpisodeItem
+import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
+import eu.kanade.tachiyomi.ui.base.activity.BaseRxActivity
 import eu.kanade.tachiyomi.ui.base.activity.BaseThemedActivity.Companion.applyAppTheme
-import eu.kanade.tachiyomi.ui.player.episode.PlayerEpisodeAdapter
-import eu.kanade.tachiyomi.ui.player.episode.PlayerEpisodeItem
-import eu.kanade.tachiyomi.util.lang.awaitSingle
-import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
-import eu.kanade.tachiyomi.util.system.dpToPx
-import eu.kanade.tachiyomi.util.system.isOnline
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.toast
-import eu.kanade.tachiyomi.widget.listener.SimpleSeekBarListener
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
+import `is`.xyz.mpv.MPVLib
+import `is`.xyz.mpv.PickerDialog
+import `is`.xyz.mpv.SpeedPickerDialog
+import `is`.xyz.mpv.StateRestoreCallback
+import `is`.xyz.mpv.Utils
 import logcat.LogPriority
-import rx.schedulers.Schedulers
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
-import java.io.File
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
-import java.util.*
+import nucleus.factory.RequiresPresenter
+import uy.kohesive.injekt.injectLazy
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
-class PlayerActivity : AppCompatActivity(), PlayerEpisodeAdapter.OnBookmarkClickListener, PlayerEpisodeAdapter.OnFillerClickListener {
+@RequiresPresenter(PlayerPresenter::class)
+class PlayerActivity :
+    BaseRxActivity<PlayerActivityBinding,
+        PlayerPresenter>(),
+    MPVLib.EventObserver {
 
-    private val ACTION_MEDIA_CONTROL = "media_control"
-    private val EXTRA_CONTROL_TYPE = "control_type"
-    private val REQUEST_PLAY = 1
-    private val REQUEST_PAUSE = 2
-    private val CONTROL_TYPE_PLAY = 1
-    private val CONTROL_TYPE_PAUSE = 2
-    private val REQUEST_PREVIOUS = 3
-    private val REQUEST_NEXT = 4
-    private val CONTROL_TYPE_PREVIOUS = 3
-    private val CONTROL_TYPE_NEXT = 4
+    companion object {
+        fun newIntent(context: Context, anime: Anime, episode: Episode): Intent {
+            return Intent(context, PlayerActivity::class.java).apply {
+                putExtra("anime", anime.id)
+                putExtra("episode", episode.id)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+        }
+    }
 
-    /**
-     private val REQUEST_INFORMATION = 5
-     private val CONTROL_TYPE_INFORMATION = 5 */
-    private var mReceiver: BroadcastReceiver? = null
-    private val preferences: PreferencesHelper = Injekt.get()
-    private lateinit var bindingPlayer: WatcherActivityBinding
-    private val incognitoMode = preferences.incognitoMode().get()
-    private val db: AnimeDatabaseHelper = Injekt.get()
-    private val downloadManager: AnimeDownloadManager = Injekt.get()
-    private val delayedTrackingStore: DelayedTrackingStore = Injekt.get()
-    private lateinit var exoPlayer: ExoPlayer
-    private lateinit var dataSourceFactory: DataSource.Factory
-    private lateinit var dbProvider: StandaloneDatabaseProvider
-    private val cacheSize = 100L * 1024L * 1024L // 100 MB
-    private var simpleCache: SimpleCache? = null
-    private lateinit var cacheFactory: CacheDataSource.Factory
-    private lateinit var mediaSourceFactory: MediaSourceFactory
-    private lateinit var playerView: DoubleTapPlayerView
-    private lateinit var youTubeDoubleTap: YouTubeOverlay
-    private lateinit var skipBtn: TextView
-    private lateinit var nextBtn: ImageButton
-    private lateinit var prevBtn: ImageButton
-    private lateinit var backBtn: TextView
-    private lateinit var settingsBtn: ImageButton
-    private lateinit var fitScreenBtn: ImageButton
-    private lateinit var playlistBtn: ImageButton
-    private lateinit var pipBtn: ImageButton
-    private lateinit var title: TextView
-    private var adapterPlaylist: FlexibleAdapter<PlayerEpisodeItem>? = null
-    private lateinit var bindingPlaylist: PlayerEpisodesDialogBinding
+    private val preferences: PreferencesHelper by injectLazy()
 
-    @SuppressLint("UseSwitchCompatOrMaterialCode")
-    private lateinit var autoplaySch: Switch
-    private lateinit var bufferingView: ProgressBar
+    private val langName = LocaleHelper.getSimpleLocaleDisplay(preferences.lang().get())
 
-    private lateinit var episode: Episode
-    private lateinit var anime: Anime
-    private lateinit var source: AnimeSource
-    private lateinit var uri: String
-    private var videos = emptyList<Video>()
-    private var isBuffering = true
-    private var isLocal = false
-    private var currentQuality = 0
+    private val player get() = binding.player
 
-    private var duration: Long = 0
-    private var playbackPosition = 0L
-    private var isFullscreen = false
-    private var isPlayerPlaying = true
-    private var isAutoplay = false
-    private var mediaItem = MediaItem.Builder()
-        .setUri("bruh")
-        .setMimeType(MimeTypes.VIDEO_MP4)
-        .build()
+    private var audioManager: AudioManager? = null
+    private var fineVolume = 0F
+    private var maxVolume = 0
 
-    private var isInPipMode: Boolean = false
+    private var brightness = 0F
 
+    private var width = 0
+    private var height = 0
+
+    private var audioFocusRestore: () -> Unit = {}
+
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { type ->
+        when (type) {
+            AudioManager.AUDIOFOCUS_LOSS,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                // loss can occur in addition to ducking, so remember the old callback
+                val oldRestore = audioFocusRestore
+                val wasPlayerPaused = player.paused ?: false
+                player.paused = true
+                audioFocusRestore = {
+                    oldRestore()
+                    if (!wasPlayerPaused) player.paused = false
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                MPVLib.command(arrayOf("multiply", "volume", 0.5F.toString()))
+                audioFocusRestore = {
+                    MPVLib.command(arrayOf("multiply", "volume", 2F.toString()))
+                }
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                audioFocusRestore()
+                audioFocusRestore = {}
+            }
+        }
+    }
+
+    private var hasAudioFocus = false
+
+    private val audioFocusRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setOnAudioFocusChangeListener(audioFocusChangeListener)
+            .build()
+    } else null
+
+    @Suppress("DEPRECATION")
+    private fun requestAudioFocus() {
+        if (hasAudioFocus) return
+        hasAudioFocus = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioManager!!.requestAudioFocus(audioFocusRequest!!)
+        } else {
+            audioManager!!.requestAudioFocus(
+                audioFocusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun abandonAudioFocus() {
+        if (!hasAudioFocus) return
+        hasAudioFocus = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioManager!!.abandonAudioFocusRequest(audioFocusRequest!!)
+        } else {
+            audioManager!!.abandonAudioFocus(audioFocusChangeListener)
+        }
+    }
+
+    private fun setAudioFocus(paused: Boolean) {
+        if (paused) {
+            abandonAudioFocus()
+        } else {
+            requestAudioFocus()
+        }
+    }
+
+    private var initialSeek = -1
+
+    private var userIsOperatingSeekbar = false
+
+    // private var lockedUI = false
+    private lateinit var mDetector: GestureDetectorCompat
+
+    private val animationHandler = Handler(Looper.getMainLooper())
+
+    // Fade out gesture text
+    private val gestureTextRunnable = Runnable {
+        binding.gestureTextView.visibility = View.GONE
+    }
+
+    private fun showGestureText() {
+        animationHandler.removeCallbacks(gestureTextRunnable)
+        binding.gestureTextView.visibility = View.VISIBLE
+
+        animationHandler.postDelayed(gestureTextRunnable, 500L)
+    }
+
+    private val seekBarChangeListener = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+            if (!fromUser) {
+                return
+            }
+            player.timePos = progress
+            updatePlaybackPos(progress)
+        }
+
+        override fun onStartTrackingTouch(seekBar: SeekBar) {
+            userIsOperatingSeekbar = true
+        }
+
+        override fun onStopTrackingTouch(seekBar: SeekBar) {
+            userIsOperatingSeekbar = false
+        }
+    }
+
+    private var currentVideoList: List<Video>? = null
+
+    private var playerViewMode: Int = preferences.getPlayerViewMode()
+
+    private var playerIsDestroyed = true
+
+    private var subTracks: Array<Track> = emptyArray()
+
+    private var selectedSub = 0
+
+    private var hadPreviousSubs = false
+
+    private var audioTracks: Array<Track> = emptyArray()
+
+    private var selectedAudio = 0
+
+    private var hadPreviousAudio = false
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
-        bindingPlayer = WatcherActivityBinding.inflate(layoutInflater)
+        Utils.copyAssets(this)
         applyAppTheme(preferences)
         super.onCreate(savedInstanceState)
 
-        setContentView(bindingPlayer.root)
-        playerView = bindingPlayer.playerView
-        playerView.resizeMode = preferences.getPlayerViewMode()
-        youTubeDoubleTap = bindingPlayer.youtubeOverlay
-        youTubeDoubleTap.seekSeconds(preferences.skipLengthPreference())
-        youTubeDoubleTap
-            .performListener(object : YouTubeOverlay.PerformListener {
-                override fun onAnimationStart() {
-                    // Do UI changes when circle scaling animation starts (e.g. hide controller views)
-                    youTubeDoubleTap.visibility = View.VISIBLE
-                }
+        binding = PlayerActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-                override fun onAnimationEnd() {
-                    // Do UI changes when circle scaling animation starts (e.g. show controller views)
-                    youTubeDoubleTap.visibility = View.GONE
-                }
-            })
-        backBtn = findViewById(R.id.exo_overlay_back)
-        title = findViewById(R.id.exo_overlay_title)
-        skipBtn = findViewById(R.id.watcher_controls_skip_btn)
-        nextBtn = findViewById(R.id.watcher_controls_next)
-        prevBtn = findViewById(R.id.watcher_controls_prev)
-        settingsBtn = findViewById(R.id.watcher_controls_settings)
-        fitScreenBtn = findViewById(R.id.watcher_controls_fit_screen)
-        pipBtn = findViewById(R.id.watcher_controls_pip)
-        autoplaySch = findViewById(R.id.watcher_controls_autoplay)
-        playlistBtn = findViewById(R.id.watcher_controls_playlist)
-        if (preferences.pipPlayerPreference()) {
-            pipBtn.visibility = View.VISIBLE
-        } else {
-            pipBtn.visibility = View.GONE
+        setVisibilities()
+        player.initialize(applicationContext.filesDir.path)
+        MPVLib.setOptionString("keep-open", "always")
+        player.addObserver(this)
+
+        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
+            logcat(LogPriority.ERROR, throwable)
+            finish()
         }
-        bufferingView = findViewById(R.id.exo_buffering)
 
-        anime = intent.getSerializableExtra("anime") as Anime
-        episode = intent.getSerializableExtra("episode") as Episode
-        title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
-        source = Injekt.get<AnimeSourceManager>().getOrStub(anime.source)
-        initDummyPlayer()
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        fineVolume = audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+        maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-        if (savedInstanceState != null) {
-            playbackPosition = savedInstanceState.getLong(STATE_RESUME_POSITION)
-            isFullscreen = savedInstanceState.getBoolean(STATE_PLAYER_FULLSCREEN)
-            isPlayerPlaying = savedInstanceState.getBoolean(STATE_PLAYER_PLAYING)
-            isAutoplay = savedInstanceState.getBoolean(STATE_PLAYER_AUTOPLAY)
+        brightness = Utils.getScreenBrightness(this) ?: 0.5F
+
+        volumeControlStream = AudioManager.STREAM_MUSIC
+
+        val dm = DisplayMetrics()
+        windowManager.defaultDisplay.getRealMetrics(dm)
+        width = dm.widthPixels
+        height = dm.heightPixels
+
+        val gestures = Gestures(this, width.toFloat(), height.toFloat())
+        mDetector = GestureDetectorCompat(this, gestures)
+        // player.setOnClickListener { binding.controls.isVisible = !binding.controls.isVisible }
+        player.setOnTouchListener { v, event ->
+            gestures.onTouch(v, event)
+            mDetector.onTouchEvent(event)
+        }
+        binding.cycleAudioBtn.setOnLongClickListener { pickAudio(); true }
+        binding.cycleSpeedBtn.setOnLongClickListener { pickSpeed(); true }
+        binding.cycleSubsBtn.setOnLongClickListener { pickSub(); true }
+
+        binding.playbackSeekbar.setOnSeekBarChangeListener(seekBarChangeListener)
+        // player.playFile(currentVideoList!!.first().videoUrl!!.toString())
+
+        binding.nextBtn.setOnClickListener { presenter.nextEpisode() }
+        binding.prevBtn.setOnClickListener { presenter.previousEpisode() }
+
+        if (presenter?.needsInit() == true) {
+            val anime = intent.extras!!.getLong("anime", -1)
+            val episode = intent.extras!!.getLong("episode", -1)
+            if (anime == -1L || episode == -1L) {
+                finish()
+                return
+            }
+            presenter.init(anime, episode)
+        }
+
+        playerIsDestroyed = false
+    }
+
+    fun toggleControls() {
+        binding.controls.isVisible = !binding.controls.isVisible
+    }
+
+    private fun pickAudio() {
+        val restore = pauseForDialog()
+
+        with(MaterialAlertDialogBuilder(this)) {
+            setSingleChoiceItems(
+                audioTracks.map { it.lang }.toTypedArray(),
+                selectedAudio
+            ) { dialog, item ->
+                if (item == selectedSub) return@setSingleChoiceItems
+                if (item == 0) {
+                    selectedAudio = 0
+                    player.aid = -1
+                    return@setSingleChoiceItems
+                }
+                setAudio(item)
+                dialog.dismiss()
+            }
+            setOnDismissListener { restore() }
+            create().show()
+        }
+    }
+
+    private fun pickSub() {
+        val restore = pauseForDialog()
+
+        with(MaterialAlertDialogBuilder(this)) {
+            setSingleChoiceItems(
+                subTracks.map { it.lang }.toTypedArray(),
+                selectedSub
+            ) { dialog, item ->
+                if (item == 0) {
+                    selectedSub = 0
+                    player.sid = -1
+                    return@setSingleChoiceItems
+                }
+                setSub(item)
+                dialog.dismiss()
+            }
+            setOnDismissListener { restore() }
+            create().show()
+        }
+    }
+
+    private fun setSub(index: Int) {
+        if (selectedSub == index || selectedSub > subTracks.lastIndex) return
+        selectedSub = index
+        if (index == 0) {
+            player.sid = -1
+            return
+        }
+        val tracks = player.tracks.getValue("sub")
+        val selectedLoadedTrack = tracks.firstOrNull {
+            it.name == subTracks[index].url ||
+                it.mpvId.toString() == subTracks[index].url
+        }
+        selectedLoadedTrack?.let { player.sid = it.mpvId }
+            ?: MPVLib.command(arrayOf("sub-add", subTracks[index].url, "select", subTracks[index].url))
+    }
+
+    private fun setAudio(index: Int) {
+        if (selectedAudio == index || selectedAudio > audioTracks.lastIndex) return
+        selectedAudio = index
+        if (index == 0) {
+            player.aid = -1
+            return
+        }
+        val tracks = player.tracks.getValue("audio")
+        val selectedLoadedTrack = tracks.firstOrNull {
+            it.name == audioTracks[index].url ||
+                it.mpvId.toString() == audioTracks[index].url
+        }
+        selectedLoadedTrack?.let { player.aid = it.mpvId }
+            ?: MPVLib.command(arrayOf("audio-add", audioTracks[index].url, "select", audioTracks[index].url))
+    }
+
+    private fun pauseForDialog(): StateRestoreCallback {
+        val wasPlayerPaused = player.paused ?: true // default to not changing state
+        player.paused = true
+        return {
+            if (!wasPlayerPaused) {
+                player.paused = false
+            }
+        }
+    }
+
+    private fun pickSpeed() {
+        // TODO: replace this with SliderPickerDialog
+        val picker = SpeedPickerDialog()
+
+        val restore = pauseForDialog()
+        genericPickerDialog(picker, R.string.title_speed_dialog, "speed") {
+            updateSpeedButton()
+            restore()
+        }
+    }
+
+    private fun genericPickerDialog(
+        picker: PickerDialog,
+        @StringRes titleRes: Int,
+        property: String,
+        restoreState: StateRestoreCallback
+    ) {
+        val dialog = with(AlertDialog.Builder(this)) {
+            setTitle(titleRes)
+            setView(picker.buildView(layoutInflater))
+            setPositiveButton(R.string.dialog_ok) { _, _ ->
+                picker.number?.let {
+                    if (picker.isInteger()) {
+                        MPVLib.setPropertyInt(property, it.toInt())
+                    } else {
+                        MPVLib.setPropertyDouble(property, it)
+                    }
+                }
+            }
+            setNegativeButton(R.string.dialog_cancel) { dialog, _ -> dialog.cancel() }
+            setOnDismissListener { restoreState() }
+            create()
+        }
+
+        picker.number = MPVLib.getPropertyDouble(property)
+        dialog.show()
+    }
+
+    private fun setViewMode() {
+        when (playerViewMode) {
+            2 -> {
+                MPVLib.setOptionString("video-aspect-override", "-1")
+                MPVLib.setOptionString("panscan", "1.0")
+            }
+            1 -> {
+                MPVLib.setOptionString("video-aspect-override", "-1")
+                MPVLib.setOptionString("panscan", "0.0")
+            }
+            0 -> {
+                val newAspect = "${binding.root.width}/${binding.root.height}"
+                MPVLib.setOptionString("video-aspect-override", newAspect)
+                MPVLib.setOptionString("panscan", "0.0")
+            }
         }
     }
 
     @Suppress("DEPRECATION")
     private fun setVisibilities() {
         // TODO: replace this atrocity
-        bindingPlayer.root.systemUiVisibility =
+        binding.root.systemUiVisibility =
             View.SYSTEM_UI_FLAG_LOW_PROFILE or
             View.SYSTEM_UI_FLAG_FULLSCREEN or
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && preferences.playerFullscreen()) {
+            window.attributes.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
     }
 
-    private fun initDummyPlayer() {
-        mediaSourceFactory = DefaultMediaSourceFactory(DefaultDataSource.Factory(this))
-        exoPlayer = newPlayer()
-        dbProvider = StandaloneDatabaseProvider(baseContext)
-        val cacheFolder = File(baseContext.filesDir, "media")
-        simpleCache = if (SimpleCache.isCacheFolderLocked(cacheFolder)) {
-            null
-        } else {
-            SimpleCache(
-                cacheFolder,
-                LeastRecentlyUsedCacheEvictor(cacheSize),
-                dbProvider
-            )
+    fun updatePlaybackPos(position: Int) {
+        binding.playbackPositionTxt.text = Utils.prettyTime(position)
+        if (!userIsOperatingSeekbar) {
+            binding.playbackSeekbar.progress = position
         }
 
-        initPlayer()
+        updateDecoderButton()
+        updateSpeedButton()
     }
 
-    private fun onGetLinksError(e: Throwable? = null) {
-        launchUI {
-            baseContext.toast(e?.message ?: "error getting links", Toast.LENGTH_LONG)
-            finish()
+    private fun updatePlaybackDuration(duration: Int) {
+        binding.playbackDurationTxt.text = Utils.prettyTime(duration)
+        if (!userIsOperatingSeekbar) {
+            binding.playbackSeekbar.max = duration
         }
     }
 
-    private fun onGetLinks() {
-        val context = this
-        launchUI {
-            isBuffering(false)
-            if (videos.isEmpty()) {
-                onGetLinksError(Exception("Couldn't find any video links."))
-                return@launchUI
-            }
-            dbProvider = StandaloneDatabaseProvider(baseContext)
-            isLocal = EpisodeLoader.isDownloaded(episode, anime) || source is LocalAnimeSource
-            if (isLocal) {
-                uri = videos.firstOrNull()?.uri?.toString() ?: return@launchUI onGetLinksError(Exception("URI is null."))
-                dataSourceFactory = DefaultDataSource.Factory(context)
-            } else {
-                uri = videos.firstOrNull()?.videoUrl ?: return@launchUI onGetLinksError(Exception("video URL is null."))
-                dataSourceFactory = newDataSourceFactory()
-            }
-            logcat(LogPriority.INFO) { "playing $uri" }
-            if (simpleCache != null) {
-                cacheFactory = CacheDataSource.Factory().apply {
-                    setCache(simpleCache!!)
-                    setUpstreamDataSourceFactory(dataSourceFactory)
-                }
-                mediaSourceFactory = DefaultMediaSourceFactory(cacheFactory)
-            } else {
-                mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
-            }
-            mediaItem = MediaItem.Builder()
-                .setUri(uri)
-                .setMimeType(getMime(uri))
-                .build()
-            playbackPosition = episode.last_second_seen
-            changePlayer(playbackPosition, isLocal)
-        }
-    }
-
-    private fun newDataSourceFactory(): DefaultHttpDataSource.Factory {
-        val defaultUserAgentString = WebSettings.getDefaultUserAgent(baseContext)
-        return DefaultHttpDataSource.Factory().apply {
-            val currentHeaders = videos.getOrNull(currentQuality)?.headers
-            val headers = currentHeaders?.toMultimap()
-                ?.mapValues { it.value.getOrNull(0) ?: "" }
-                ?.toMutableMap()
-                ?: (source as AnimeHttpSource).headers.toMultimap()
-                    .mapValues { it.value.getOrNull(0) ?: "" }
-                    .toMutableMap()
-            setDefaultRequestProperties(headers)
-            setUserAgent(headers["user-agent"] ?: defaultUserAgentString)
-        }
-    }
-
-    private fun getMime(uri: String): String {
-        return when (Uri.parse(uri).path?.substringAfterLast(".")) {
-            "mp4" -> MimeTypes.VIDEO_MP4
-            "mkv" -> MimeTypes.VIDEO_MATROSKA
-            "m3u8" -> MimeTypes.APPLICATION_M3U8
-            else -> MimeTypes.VIDEO_MP4
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    private fun initPlayer() {
-        exoPlayer = newPlayer().apply {
-            playWhenReady = isPlayerPlaying
-            prepare()
-        }
-        exoPlayer.addListener(PlayerEventListener(playerView, baseContext))
-
-        backBtn.setOnClickListener {
-            onBackPressed()
-        }
-        fitScreenBtn.setOnClickListener {
-            onClickFitScreen()
-        }
-        if (preferences.pipPlayerPreference()) {
-            pipBtn.setOnClickListener {
-                startPiP()
-            }
-        }
-        settingsBtn.setOnClickListener {
-            playbackOptionsDialog()
-        }
-        skipBtn.setOnClickListener {
-            exoPlayer.seekTo(exoPlayer.currentPosition + 85000)
-        }
-        nextBtn.setOnClickListener {
-            nextEpisode()
-        }
-        prevBtn.setOnClickListener {
-            previousEpisode()
-        }
-        autoplaySch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                isAutoplay = true
-                launchUI {
-                    baseContext.toast(R.string.autoplay_on, Toast.LENGTH_SHORT)
-                }
-            } else {
-                isAutoplay = false
-                launchUI {
-                    baseContext.toast(R.string.autoplay_off, Toast.LENGTH_SHORT)
-                }
-            }
-        }
-        playlistBtn.setOnClickListener {
-            playerEpisodeDialog()
-        }
-        youTubeDoubleTap.player(exoPlayer)
-        playerView.player = exoPlayer
-        duration = exoPlayer.duration
-        awaitVideoList()
-    }
-
-    private fun isBuffering(param: Boolean) {
-        isBuffering = param
-        if (param) {
-            bufferingView.visibility = View.VISIBLE
-        } else {
-            bufferingView.visibility = View.GONE
-        }
-    }
-
-    private fun onClickFitScreen() {
-        playerView.resizeMode = when (playerView.resizeMode) {
-            AspectRatioFrameLayout.RESIZE_MODE_FILL -> AspectRatioFrameLayout.RESIZE_MODE_FIT
-            AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_FILL
-            else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
-        }
-        preferences.setPlayerViewMode(playerView.resizeMode)
-    }
-
-    private inner class HideBarsMaterialAlertDialogBuilder(context: Context) : MaterialAlertDialogBuilder(context) {
-        override fun create(): AlertDialog {
-            return super.create().apply {
-                val window = this.window ?: return@apply
-                window.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-
-                val alertWindowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
-                alertWindowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-                alertWindowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        }
-    }
-
-    private fun playbackOptionsDialog() {
-        val alert = HideBarsMaterialAlertDialogBuilder(this)
-
-        alert.setTitle(R.string.playback_options_title)
-        alert.setPositiveButton(android.R.string.ok) { dialog, _ ->
-            dialog.cancel()
-        }
-        alert.setItems(R.array.playback_options) { _, which ->
-            when (which) {
-                0 -> {
-                    val speedAlert = HideBarsMaterialAlertDialogBuilder(this)
-
-                    val linear = LinearLayout(this)
-
-                    val items = arrayOf(
-                        "10%", "25%", "40%", "50%", "60%", "70%", "75%", "80%",
-                        "85%", "90%", "95%", "100% (Normal)", "105%", "110%", "115%", "120%", "125%",
-                        "130%", "140%", "150%", "175%", "200%", "250%", "300%"
-                    )
-                    val floatItems = arrayOf(
-                        0.1F, 0.25F, 0.4F, 0.5F, 0.6F, 0.7F, 0.75F, 0.8F, 0.85F, 0.9F,
-                        0.95F, 1F, 1.05F, 1.1F, 1.15F, 1.2F, 1.25F, 1.3F, 1.4F, 1.5F, 1.75F, 2F, 2.5F, 3F
-                    )
-                    var newSpeed = preferences.getPlayerSpeed()
-
-                    speedAlert.setTitle(R.string.playback_speed_dialog_title)
-
-                    linear.orientation = LinearLayout.VERTICAL
-                    val text = TextView(this)
-                    text.text = items[floatItems.indexOf(newSpeed)]
-                    text.setPadding(30, 10, 10, 10)
-
-                    val seek = SeekBar(this).apply {
-                        max = items.lastIndex
-                        progress = floatItems.indexOf(newSpeed)
-                    }
-                    seek.setOnSeekBarChangeListener(object : SimpleSeekBarListener() {
-                        override fun onProgressChanged(seekBar: SeekBar, value: Int, fromUser: Boolean) {
-                            text.text = items[value]
-                            newSpeed = floatItems[value]
-                        }
-                    })
-
-                    linear.addView(seek)
-                    linear.addView(text)
-
-                    speedAlert.setView(linear)
-
-                    speedAlert.setPositiveButton(android.R.string.ok) { speedDialog, _ ->
-                        exoPlayer.playbackParameters = PlaybackParameters(newSpeed)
-                        preferences.setPlayerSpeed(newSpeed)
-                        speedDialog.dismiss()
-                    }
-
-                    speedAlert.setNegativeButton(android.R.string.cancel) { speedDialog, _ ->
-                        speedDialog.cancel()
-                    }
-
-                    speedAlert.setNeutralButton(R.string.playback_speed_dialog_reset) { _, _ ->
-                        newSpeed = 1F
-                        val newProgress = floatItems.indexOf(newSpeed)
-                        text.text = items[newProgress]
-                        seek.progress = newProgress
-                        exoPlayer.playbackParameters = PlaybackParameters(newSpeed)
-                        preferences.setPlayerSpeed(newSpeed)
-                    }
-
-                    speedAlert.show()
-                }
-                1 -> {
-                    if (videos.isNotEmpty()) {
-                        val qualityAlert = HideBarsMaterialAlertDialogBuilder(this)
-
-                        qualityAlert.setTitle(R.string.playback_quality_dialog_title)
-
-                        var requestedQuality = 0
-                        val qualities = videos.map { it.quality }.toTypedArray()
-                        qualityAlert.setSingleChoiceItems(qualities, currentQuality) { qualityDialog, selectedQuality ->
-                            if (selectedQuality > qualities.lastIndex) {
-                                qualityDialog.cancel()
-                            } else {
-                                requestedQuality = selectedQuality
-                            }
-                        }
-
-                        qualityAlert.setPositiveButton(android.R.string.ok) { qualityDialog, _ ->
-                            if (requestedQuality != currentQuality) changeQuality(requestedQuality)
-                            qualityDialog.dismiss()
-                        }
-
-                        qualityAlert.setNegativeButton(android.R.string.cancel) { qualityDialog, _ ->
-                            qualityDialog.cancel()
-                        }
-
-                        qualityAlert.show()
-                    }
-                }
-                else -> {
-                }
-            }
-        }
-        alert.show()
-    }
-
-    private fun releasePlayer() {
-        youTubeDoubleTap.player(exoPlayer)
-        isPlayerPlaying = exoPlayer.playWhenReady
-        playbackPosition = exoPlayer.currentPosition
-        exoPlayer.release()
-    }
-    private fun saveEpisode(exoPlayer: ExoPlayer, episode: Episode, anime: Anime) {
-        if (exoPlayer.isPlaying) exoPlayer.pause()
-        saveEpisodeHistory(EpisodeItem(episode, anime))
-        setEpisodeProgress(episode, anime, exoPlayer.currentPosition, exoPlayer.duration)
-        awaitVideoList()
-    }
-
-    private fun awaitVideoList() {
-        isBuffering(true)
-        currentQuality = 0
-        launchIO {
-            try {
-                EpisodeLoader.getLinks(episode, anime, source)
-                    .doOnNext {
-                        videos = it
-                        onGetLinks()
-                    }.awaitSingle()
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { e.message ?: "error getting links" }
-                onGetLinksError(e)
-            }
-        }
-    }
-
-    private fun nextEpisode() {
-        if (exoPlayer.isPlaying) exoPlayer.pause()
-        saveEpisodeHistory(EpisodeItem(episode, anime))
-        setEpisodeProgress(episode, anime, exoPlayer.currentPosition, exoPlayer.duration)
-        val oldEpisode = episode
-        episode = getNextEpisode(episode, anime)
-        if (oldEpisode == episode) {
-            launchUI {
-                baseContext.toast(R.string.no_next_episode, Toast.LENGTH_SHORT)
-            }
+    private fun updateDecoderButton() {
+        if (binding.cycleDecoderBtn.visibility != View.VISIBLE) {
             return
         }
-
-        title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
-        if (isInPipMode) {
-            launchUI {
-                baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
-            }
-        }
-        currentQuality = 0
-        awaitVideoList()
+        binding.cycleDecoderBtn.text = if (player.hwdecActive) "HW" else "SW"
     }
 
-    private fun previousEpisode() {
-        if (exoPlayer.isPlaying) exoPlayer.pause()
-        saveEpisodeHistory(EpisodeItem(episode, anime))
-        setEpisodeProgress(episode, anime, exoPlayer.currentPosition, exoPlayer.duration)
-        val oldEpisode = episode
-        episode = getPreviousEpisode(episode, anime)
-        if (oldEpisode == episode) {
-            launchUI {
-                baseContext.toast(R.string.no_previous_episode, Toast.LENGTH_SHORT)
-            }
+    private fun updateSpeedButton() {
+        binding.cycleSpeedBtn.text = getString(R.string.ui_speed, player.playbackSpeed)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun playPause(view: View) {
+        player.cyclePause()
+    }
+
+    fun doubleTapSeek(time: Int, event: MotionEvent? = null) {
+        val v = if (time < 0) binding.rewBg else binding.ffwdBg
+        val w = if (time < 0) width * 0.2F else width * 0.8F
+        val x = (event?.x?.toInt() ?: w.toInt()) - v.x.toInt()
+        val y = (event?.y?.toInt() ?: height / 2) - v.y.toInt()
+        ViewAnimationUtils.createCircularReveal(v, x, y, 0f, kotlin.math.max(v.height, v.width).toFloat()).setDuration(500).start()
+
+        ObjectAnimator.ofFloat(v, "alpha", 0f, 0.2f).setDuration(500).start()
+        ObjectAnimator.ofFloat(v, "alpha", 0.2f, 0.2f, 0f).setDuration(1000).start()
+        val newPos = (player.timePos ?: 0) + time // only for display
+        MPVLib.command(arrayOf("seek", time.toString(), "relative"))
+
+        val diffText = Utils.prettyTime(time, true)
+        binding.gestureTextView.text = getString(R.string.ui_seek_distance, Utils.prettyTime(newPos), diffText)
+        showGestureText()
+    }
+
+    fun verticalScrollLeft(diff: Float) {
+        brightness = (brightness + diff).coerceIn(-0.75F, 1F)
+        window.attributes = window.attributes.apply {
+            // value of 0 and 0.01 is broken somehow
+            screenBrightness = brightness.coerceAtLeast(0.02F)
+        }
+        if (brightness < 0) {
+            binding.brightnessOverlay.isVisible = true
+            val alpha = (abs(brightness) * 256).toInt()
+            binding.brightnessOverlay.setBackgroundColor(Color.argb(alpha, 0, 0, 0))
+        } else {
+            binding.brightnessOverlay.isVisible = false
+        }
+
+        binding.gestureTextView.text = getString(R.string.ui_brightness, (brightness * 100).roundToInt())
+        showGestureText()
+    }
+
+    fun verticalScrollRight(diff: Float) {
+        fineVolume = (fineVolume + (diff * maxVolume)).coerceIn(0F, maxVolume.toFloat())
+        val newVolume = fineVolume.toInt()
+        val newVolumePercent = 100 * newVolume / maxVolume
+        audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
+
+        binding.gestureTextView.text = getString(R.string.ui_volume, newVolumePercent)
+        showGestureText()
+    }
+
+    fun initSeek() {
+        initialSeek = player.timePos ?: -1
+    }
+
+    fun horizontalScroll(diff: Float) {
+        // disable seeking when timePos is not available
+        val duration = player.duration ?: 0
+        if (duration == 0 || initialSeek < 0) {
             return
         }
-        title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
-        if (isInPipMode) {
-            launchUI {
-                baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
-            }
+        val newPos = (initialSeek + diff.toInt()).coerceIn(0, duration)
+        val newDiff = newPos - initialSeek
+        // seek faster than assigning to timePos but less precise
+        MPVLib.command(arrayOf("seek", newPos.toString(), "absolute+keyframes"))
+        updatePlaybackPos(newPos)
+
+        val diffText = Utils.prettyTime(newDiff, true)
+        binding.gestureTextView.text = getString(R.string.ui_seek_distance, Utils.prettyTime(newPos), diffText)
+        showGestureText()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun cycleAudio(view: View) {
+        setAudio(if (selectedAudio < audioTracks.lastIndex) selectedAudio + 1 else 0)
+        toast("Audio: ${audioTracks[selectedAudio].lang}")
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun cycleSub(view: View) {
+        setSub(if (selectedSub < subTracks.lastIndex) selectedSub + 1 else 0)
+        toast("Sub: ${subTracks[selectedSub].lang}")
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun cycleViewMode(view: View) {
+        playerViewMode = when (playerViewMode) {
+            0 -> 1
+            1 -> 2
+            2 -> 0
+            else -> 1
         }
-        currentQuality = 0
-        awaitVideoList()
+        preferences.setPlayerViewMode(playerViewMode)
+        setViewMode()
+    }
+
+    private var currentQuality = 0
+
+    @Suppress("UNUSED_PARAMETER")
+    fun openSettings(view: View) {
+        if (currentVideoList?.isNotEmpty() == true) {
+            val qualityAlert = MaterialAlertDialogBuilder(this)
+
+            qualityAlert.setTitle(R.string.playback_quality_dialog_title)
+
+            var requestedQuality = 0
+            val qualities = currentVideoList!!.map { it.quality }.toTypedArray()
+            qualityAlert.setSingleChoiceItems(
+                qualities,
+                currentQuality
+            ) { qualityDialog, selectedQuality ->
+                if (selectedQuality > qualities.lastIndex) {
+                    qualityDialog.cancel()
+                } else {
+                    requestedQuality = selectedQuality
+                }
+            }
+
+            qualityAlert.setPositiveButton(android.R.string.ok) { qualityDialog, _ ->
+                if (requestedQuality != currentQuality) {
+                    currentQuality = requestedQuality
+                    changeQuality(requestedQuality)
+                }
+                qualityDialog.dismiss()
+            }
+
+            qualityAlert.setNegativeButton(android.R.string.cancel) { qualityDialog, _ ->
+                qualityDialog.cancel()
+            }
+
+            qualityAlert.show()
+        }
     }
 
     private fun changeQuality(quality: Int) {
-        baseContext.toast(videos.getOrNull(quality)?.quality, Toast.LENGTH_SHORT)
-        uri = if (isLocal) {
-            videos.getOrNull(quality)?.uri?.toString() ?: return
+        if (playerIsDestroyed) return
+        logcat(LogPriority.INFO) { "changing quality" }
+        currentVideoList?.getOrNull(quality)?.let {
+            setHttpOptions(it)
+            player.timePos?.let {
+                MPVLib.command(arrayOf("set", "start", "${player.timePos}"))
+            }
+            subTracks = arrayOf(Track("nothing", "Off")) + it.subtitleTracks.toTypedArray()
+            audioTracks = arrayOf(Track("nothing", "Off")) + it.audioTracks.toTypedArray()
+            MPVLib.command(arrayOf("loadfile", it.videoUrl))
+        }
+        launchUI { refreshUi() }
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun switchDecoder(view: View) {
+        player.cycleHwdec()
+        preferences.getPlayerViewMode()
+        updateDecoderButton()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun cycleSpeed(view: View) {
+        player.cycleSpeed()
+        updateSpeedButton()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun skipIntro(view: View) {
+        doubleTapSeek(85)
+    }
+
+    private fun refreshUi() {
+        // forces update of entire UI, used when resuming the activity
+        val paused = player.paused ?: return
+        updatePlaybackStatus(paused)
+        player.timePos?.let { updatePlaybackPos(it) }
+        player.duration?.let { updatePlaybackDuration(it) }
+        updatePlaylistButtons()
+        updateEpisodeText()
+        player.loadTracks()
+    }
+
+    private fun updateEpisodeText() {
+        binding.fullTitleTextView.text = applicationContext.getString(
+            R.string.playertitle,
+            presenter.anime?.title,
+            presenter.currentEpisode?.name
+        )
+    }
+
+    private fun updatePlaylistButtons() {
+        val plCount = presenter.episodeList.size
+        val plPos = presenter.getCurrentEpisodeIndex()
+
+        if (plCount == 1) {
+            // use View.GONE so the buttons won't take up any space
+            binding.prevBtn.visibility = View.GONE
+            binding.nextBtn.visibility = View.GONE
+            return
+        }
+        binding.prevBtn.visibility = View.VISIBLE
+        binding.nextBtn.visibility = View.VISIBLE
+
+        val g = ContextCompat.getColor(this, R.color.tint_disabled)
+        val w = ContextCompat.getColor(this, R.color.tint_normal)
+        binding.prevBtn.imageTintList = ColorStateList.valueOf(if (plPos == 0) g else w)
+        binding.nextBtn.imageTintList = ColorStateList.valueOf(if (plPos == plCount - 1) g else w)
+    }
+
+    private fun updatePlaybackStatus(paused: Boolean) {
+        val r = if (paused) R.drawable.ic_play_arrow_100dp else R.drawable.ic_pause_100dp
+        binding.playBtn.setImageResource(r)
+
+        if (paused) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
-            videos.getOrNull(quality)?.videoUrl ?: return
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-        currentQuality = quality
-        mediaItem = MediaItem.Builder()
-            .setUri(uri)
-            .setMimeType(getMime(uri))
-            .build()
-        changePlayer(exoPlayer.currentPosition, isLocal)
-    }
-
-    private fun changePlayer(resumeAt: Long, isLocal: Boolean) {
-        dataSourceFactory = if (isLocal) {
-            DefaultDataSource.Factory(this)
-        } else {
-            newDataSourceFactory()
-        }
-        if (simpleCache != null) {
-            cacheFactory = CacheDataSource.Factory().apply {
-                setCache(simpleCache!!)
-                setUpstreamDataSourceFactory(dataSourceFactory)
-            }
-            mediaSourceFactory = DefaultMediaSourceFactory(cacheFactory)
-        } else {
-            mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
-        }
-        exoPlayer.release()
-        exoPlayer = newPlayer()
-        exoPlayer.setMediaSource(mediaSourceFactory.createMediaSource(mediaItem), resumeAt)
-        exoPlayer.prepare()
-        exoPlayer.playWhenReady = true
-        exoPlayer.addListener(PlayerEventListener(playerView, baseContext))
-        youTubeDoubleTap.player(exoPlayer)
-        playerView.player = exoPlayer
-    }
-
-    private fun newPlayer(): ExoPlayer {
-        return ExoPlayer.Builder(
-            this,
-            DefaultRenderersFactory(this),
-            mediaSourceFactory,
-            DefaultTrackSelector(this),
-            DefaultLoadControl(),
-            DefaultBandwidthMeter.Builder(this).build(),
-            AnalyticsCollector(Clock.DEFAULT)
-        ).setSeekForwardIncrementMs(85000L)
-            .build().apply {
-                playbackParameters = PlaybackParameters(preferences.getPlayerSpeed())
-            }
-    }
-
-    inner class PlayerEventListener(private val playerView: DoubleTapPlayerView, private val baseContext: Context) : Player.Listener {
-        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-            playerView.keepScreenOn = !(
-                playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED ||
-                    !playWhenReady
-                )
-            if (playbackState == Player.STATE_ENDED) {
-                if (isAutoplay) {
-                    nextEpisode()
-                }
-            }
-        }
-        override fun onTracksChanged(trackGroups: TrackGroupArray, trackSelections: TrackSelectionArray) {}
-        override fun onLoadingChanged(isLoading: Boolean) {}
-        override fun onRepeatModeChanged(repeatMode: Int) {}
-        override fun onPlayerError(error: PlaybackException) {
-            val cause: Throwable? = error.cause
-            if (cause is HttpDataSourceException) {
-                // An HTTP error occurred.
-                // This is the request for which the error occurred.
-                val requestDataSpec = cause.dataSpec
-                for (header in requestDataSpec.httpRequestHeaders) {
-                    var message = ""
-                    message += header.key + " - " + header.value
-                }
-                // It's possible to find out more about the error both by casting and by
-                // querying the cause.
-                if (cause is InvalidResponseCodeException) {
-                    // Cast to InvalidResponseCodeException and retrieve the response code,
-                    // message and headers.
-                    val errorMessage =
-                        "Error " + cause.responseCode.toString() + ": " + cause.message
-                    baseContext.toast(errorMessage, Toast.LENGTH_SHORT)
-                } else {
-                    cause.cause
-                    // Try calling httpError.getCause() to retrieve the underlying cause,
-                    // although note that it may be null.
-                }
-            }
-        }
-        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {}
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putLong(STATE_RESUME_POSITION, exoPlayer.currentPosition)
-        outState.putBoolean(STATE_PLAYER_FULLSCREEN, isFullscreen)
-        outState.putBoolean(STATE_PLAYER_PLAYING, isPlayerPlaying)
-        outState.putBoolean(STATE_PLAYER_AUTOPLAY, isAutoplay)
-        super.onSaveInstanceState(outState)
-    }
-    override fun onStart() {
-        playerView.onResume()
-        super.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        setVisibilities()
-    }
-
-    override fun onStop() {
-        saveEpisodeHistory(EpisodeItem(episode, anime))
-        setEpisodeProgress(episode, anime, exoPlayer.currentPosition, exoPlayer.duration)
-        if (exoPlayer.isPlaying) exoPlayer.pause()
-        // if (isInPipMode) finish()
-        playerView.onPause()
-        updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
-        super.onStop()
     }
 
     override fun onDestroy() {
-        deletePendingEpisodes()
-        releasePlayer()
-        simpleCache?.release()
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-            finishAndRemoveTask()
+        presenter.deletePendingEpisodes()
+        if (!playerIsDestroyed) {
+            playerIsDestroyed = true
+            player.removeObserver(this)
+            player.destroy()
         }
+        abandonAudioFocus()
         super.onDestroy()
     }
 
-    override fun onUserLeaveHint() {
-        if (exoPlayer.isPlaying) {
-            startPiP()
+    override fun onStop() {
+        presenter.saveEpisodeHistory()
+        if (!playerIsDestroyed) {
+            presenter.saveEpisodeProgress(player.timePos, player.duration)
+            player.paused = true
         }
-
-        super.onUserLeaveHint()
+        super.onStop()
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        val oldAnime = anime
-        anime = intent?.getSerializableExtra("anime") as? Anime ?: return
-        val oldEpisode = episode
-        episode = intent.getSerializableExtra("episode") as Episode
-        if (oldEpisode == episode) return
-        saveEpisodeHistory(EpisodeItem(oldEpisode, oldAnime))
-        setEpisodeProgress(oldEpisode, oldAnime, exoPlayer.currentPosition, exoPlayer.duration)
-        title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
-        source = Injekt.get<AnimeSourceManager>().getOrStub(anime.source)
-        awaitVideoList()
+    /**
+     * Called from the presenter if the initial load couldn't load the videos of the episode. In
+     * this case the activity is closed and a toast is shown to the user.
+     */
+    fun setInitialEpisodeError(error: Throwable) {
+        launchUI { toast(error.message) }
+        logcat(LogPriority.ERROR, error)
+        finish()
     }
 
-    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration?) {
-        isInPipMode = isInPictureInPictureMode
-        playerView.useController = !isInPictureInPictureMode
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-
-        if (isInPictureInPictureMode) {
-            // On Android TV it is required to hide controller in this PIP change callback
-            playerView.hideController()
-            mReceiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    if (intent == null || ACTION_MEDIA_CONTROL != intent.action) {
-                        return
-                    }
-                    when (intent.getIntExtra(EXTRA_CONTROL_TYPE, 0)) {
-                        CONTROL_TYPE_PLAY -> {
-                            exoPlayer.play()
-                            exoPlayer.isLoading
-                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
-                        }
-                        CONTROL_TYPE_PAUSE -> {
-                            exoPlayer.pause()
-                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
-                        }
-                        CONTROL_TYPE_PREVIOUS -> {
-                            previousEpisode()
-                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
-                        }
-                        CONTROL_TYPE_NEXT -> {
-                            nextEpisode()
-                            updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
-                        }
-                        /**CONTROL_TYPE_INFORMATION -> {
-                         baseContext.toast(baseContext.getString(R.string.playertitle, anime.title, episode.name), Toast.LENGTH_SHORT)
-                         updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading)
-                         }         */
-                    }
-                }
+    fun setVideoList(videos: List<Video>) {
+        if (playerIsDestroyed) return
+        currentVideoList = videos
+        currentVideoList?.firstOrNull()?.let {
+            setHttpOptions(it)
+            presenter.currentEpisode?.last_second_seen?.let { pos ->
+                val intPos = pos / 1000F
+                MPVLib.command(arrayOf("set", "start", "$intPos"))
             }
-            registerReceiver(mReceiver, IntentFilter(ACTION_MEDIA_CONTROL))
+            setViewMode()
+            subTracks = arrayOf(Track("nothing", "Off")) + it.subtitleTracks.toTypedArray()
+            audioTracks = arrayOf(Track("nothing", "Off")) + it.audioTracks.toTypedArray()
+            MPVLib.command(arrayOf("loadfile", it.videoUrl))
+        }
+        launchUI { refreshUi() }
+    }
+
+    private fun setHttpOptions(video: Video) {
+        if (presenter.isEpisodeOnline() != true) return
+        val source = presenter.source as AnimeHttpSource
+
+        val headers = video.headers?.toMultimap()
+            ?.mapValues { it.value.getOrNull(0) ?: "" }
+            ?.toMutableMap()
+            ?: source.headers.toMultimap()
+                .mapValues { it.value.getOrNull(0) ?: "" }
+                .toMutableMap()
+
+        val httpHeaderString = headers.map {
+            it.key + ": " + it.value.replace(",", "\\,")
+        }.joinToString(",")
+
+        MPVLib.setOptionString("http-header-fields", httpHeaderString)
+        headers["user-agent"]?.let { MPVLib.setOptionString("user-agent", it) }
+
+        // need to fix the cache
+        // MPVLib.setOptionString("cache-on-disk", "yes")
+        // val cacheDir = File(applicationContext.filesDir, "media").path
+        // MPVLib.setOptionString("cache-dir", cacheDir)
+    }
+
+    private fun clearTracks() {
+        val count = MPVLib.getPropertyInt("track-list/count")!!
+        // Note that because events are async, properties might disappear at any moment
+        // so use ?: continue instead of !!
+        for (i in 0 until count) {
+            val type = MPVLib.getPropertyString("track-list/$i/type") ?: continue
+            if (!player.tracks.containsKey(type)) {
+                continue
+            }
+            val mpvId = MPVLib.getPropertyInt("track-list/$i/id") ?: continue
+            when (type) {
+                "video" -> MPVLib.command(arrayOf("video-remove", "$mpvId"))
+                "audio" -> MPVLib.command(arrayOf("audio-remove", "$mpvId"))
+                "sub" -> MPVLib.command(arrayOf("sub-remove", "$mpvId"))
+            }
+        }
+    }
+
+    private fun fileLoaded() {
+        clearTracks()
+        player.loadTracks()
+        subTracks += player.tracks.getValue("sub")
+            .drop(1).map { track ->
+                Track(track.mpvId.toString(), track.name)
+            }.toTypedArray()
+        audioTracks += player.tracks.getValue("audio")
+            .drop(1).map { track ->
+                Track(track.mpvId.toString(), track.name)
+            }.toTypedArray()
+        if (hadPreviousSubs) {
+            subTracks.getOrNull(selectedSub)?.let { sub ->
+                MPVLib.command(arrayOf("sub-add", sub.url, "select", sub.url))
+            }
         } else {
-            if (mReceiver != null) {
-                unregisterReceiver(mReceiver)
-                mReceiver = null
+            currentVideoList?.getOrNull(currentQuality)
+                ?.subtitleTracks?.let { tracks ->
+                    val langIndex = tracks.indexOfFirst {
+                        it.lang.contains(langName)
+                    }
+                    val requestedLanguage = if (langIndex == -1) 0 else langIndex
+                    tracks.getOrNull(requestedLanguage)?.let { sub ->
+                        hadPreviousSubs = true
+                        selectedSub = requestedLanguage + 1
+                        MPVLib.command(arrayOf("sub-add", sub.url, "select", sub.url))
+                    }
+                } ?: run {
+                val mpvSub = player.tracks.getValue("sub").first { player.sid == it.mpvId }
+                selectedSub = subTracks.indexOfFirst { it.url == mpvSub.mpvId.toString() }
             }
-            playerView.controllerAutoShow = true
+        }
+        if (hadPreviousAudio) {
+            audioTracks.getOrNull(selectedAudio)?.let { audio ->
+                MPVLib.command(arrayOf("audio-add", audio.url, "select", audio.url))
+            }
+        } else {
+            currentVideoList?.getOrNull(currentQuality)
+                ?.audioTracks?.let { tracks ->
+                    val langIndex = tracks.indexOfFirst {
+                        it.lang.contains(langName)
+                    }
+                    val requestedLanguage = if (langIndex == -1) 0 else langIndex
+                    tracks.getOrNull(requestedLanguage)?.let { audio ->
+                        hadPreviousAudio = true
+                        selectedAudio = requestedLanguage + 1
+                        MPVLib.command(arrayOf("audio-add", audio.url, "select", audio.url))
+                    }
+                } ?: run {
+                val mpvAudio = player.tracks.getValue("audio").first { player.aid == it.mpvId }
+                selectedAudio = audioTracks.indexOfFirst { it.url == mpvAudio.mpvId.toString() }
+            }
+        }
+    }
 
-            /**if (exoPlayer != null) {
-             if (exoPlayer.isPlaying()) Utils.toggleSystemUi(
-             this,
-             playerView,
-             false
-             ) else playerView.showController()
-             }*/
+    // mpv events
+
+    private fun eventPropertyUi(property: String, value: Long) {
+        when (property) {
+            "time-pos" -> updatePlaybackPos(value.toInt())
+            "duration" -> updatePlaybackDuration(value.toInt())
         }
     }
 
     @Suppress("DEPRECATION")
-    private fun startPiP() {
-        if (!preferences.pipPlayerPreference()) return
-
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-            playerView.useController = false
-            this.enterPictureInPictureMode(updatePictureInPictureActions(exoPlayer.isPlaying && !exoPlayer.isLoading))
-        }
-    }
-
-    private fun createRemoteAction(
-        iconResId: Int,
-        titleResId: Int,
-        requestCode: Int,
-        controlType: Int
-    ): RemoteAction {
-        return RemoteAction(
-            Icon.createWithResource(this, iconResId),
-            getString(titleResId),
-            getString(titleResId),
-            PendingIntent.getBroadcast(
-                this,
-                requestCode,
-                Intent(ACTION_MEDIA_CONTROL)
-                    .putExtra(EXTRA_CONTROL_TYPE, controlType),
-                PendingIntent.FLAG_IMMUTABLE
-            )
-        )
-    }
-
-    fun updatePictureInPictureActions(
-        playing: Boolean
-    ): PictureInPictureParams {
-        val mPictureInPictureParams = PictureInPictureParams.Builder()
-            // Set action items for the picture-in-picture mode. These are the only custom controls
-            // available during the picture-in-picture mode.
-            .setActions(
-                arrayListOf(
-                    /**
-                     createRemoteAction(
-                     R.drawable.ic_watcher_info_32dp,
-                     R.string.action_previous_episode,
-                     CONTROL_TYPE_INFORMATION,
-                     REQUEST_INFORMATION
-                     ),    */
-
-                    createRemoteAction(
-                        R.drawable.exo_controls_previous,
-                        R.string.action_next_episode,
-                        CONTROL_TYPE_PREVIOUS,
-                        REQUEST_PREVIOUS
-                    ),
-
-                    if (playing) {
-                        // "Pause" action when the stopwatch is already started.
-                        createRemoteAction(
-                            R.drawable.exo_controls_pause,
-                            R.string.exo_controls_pause_description,
-                            CONTROL_TYPE_PAUSE,
-                            REQUEST_PAUSE
-                        )
-                    } else {
-                        // "Start" action when the stopwatch is not started.
-                        createRemoteAction(
-                            R.drawable.exo_controls_play,
-                            R.string.exo_controls_play_description,
-                            CONTROL_TYPE_PLAY,
-                            REQUEST_PLAY
-                        )
-                    },
-                    createRemoteAction(
-                        R.drawable.exo_controls_next,
-                        R.string.action_player_information,
-                        CONTROL_TYPE_NEXT,
-                        REQUEST_NEXT
-                    )
-
-                )
-            )
-            .build()
-        setPictureInPictureParams(mPictureInPictureParams)
-        return mPictureInPictureParams
-    }
-    private fun saveEpisodeHistory(episode: EpisodeItem) {
-        if (!incognitoMode && !isBuffering) {
-            val history = AnimeHistory.create(episode.episode).apply { last_seen = Date().time }
-            db.updateAnimeHistoryLastSeen(history).asRxCompletable()
-                .onErrorComplete()
-                .subscribeOn(Schedulers.io())
-                .subscribe()
-        }
-    }
-
-    private fun setEpisodeProgress(episode: Episode, anime: Anime, seconds: Long, totalSeconds: Long) {
-        if (!incognitoMode && !isBuffering) {
-            if (totalSeconds > 0L && seconds >= preferences.unseenProgressPreference()) {
-                episode.last_second_seen = seconds
-                episode.total_seconds = totalSeconds
-                val progress = preferences.progressPreference()
-                if (!episode.seen) episode.seen = episode.last_second_seen >= episode.total_seconds * progress
-                val episodes = listOf(EpisodeItem(episode, anime))
-                launchIO {
-                    db.updateEpisodesProgress(episodes).executeAsBlocking()
-                    if (preferences.autoUpdateTrack() && episode.seen) {
-                        updateTrackEpisodeSeen(episode)
-                    }
-                    if (episode.seen) {
-                        deleteEpisodeIfNeeded(episode)
-                        deleteEpisodeFromDownloadQueue(episode)
-                    }
-                }
+    private fun eventPropertyUi(property: String, value: Boolean) {
+        when (property) {
+            "pause" -> {
+                setAudioFocus(value)
+                updatePlaybackStatus(value)
             }
         }
     }
 
-    private fun deleteEpisodeFromDownloadQueue(episode: Episode) {
-        downloadManager.getEpisodeDownloadOrNull(episode)?.let { download ->
-            downloadManager.deletePendingDownload(download)
+    override fun eventProperty(property: String) {}
+
+    override fun eventProperty(property: String, value: Boolean) {
+        runOnUiThread { eventPropertyUi(property, value) }
+    }
+
+    override fun eventProperty(property: String, value: Long) {
+        runOnUiThread { eventPropertyUi(property, value) }
+    }
+
+    override fun eventProperty(property: String, value: String) {}
+
+    override fun event(eventId: Int) {
+        when (eventId) {
+            MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> fileLoaded()
         }
-    }
-
-    private fun enqueueDeleteSeenEpisodes(episode: Episode) {
-        if (!episode.seen) return
-        val anime = anime
-
-        launchIO {
-            downloadManager.enqueueDeleteEpisodes(listOf(episode), anime)
-        }
-    }
-
-    private fun deleteEpisodeIfNeeded(episode: Episode) {
-        // Determine which chapter should be deleted and enqueue
-        val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
-            Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.source_order.compareTo(c1.source_order) }
-            Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episode_number.compareTo(c2.episode_number) }
-            Anime.EPISODE_SORTING_UPLOAD_DATE -> { c1, c2 -> c1.date_upload.compareTo(c2.date_upload) }
-            else -> throw NotImplementedError("Unknown sorting method")
-        }
-
-        val episodes = db.getEpisodes(anime).executeAsBlocking()
-            .sortedWith { e1, e2 -> sortFunction(e1, e2) }
-
-        val currentEpisodePosition = episodes.indexOf(episode)
-        val removeAfterReadSlots = preferences.removeAfterReadSlots()
-        val episodeToDelete = episodes.getOrNull(currentEpisodePosition - removeAfterReadSlots)
-
-        // Check if deleting option is enabled and chapter exists
-        if (removeAfterReadSlots != -1 && episodeToDelete != null) {
-            enqueueDeleteSeenEpisodes(episodeToDelete)
-        }
-    }
-
-    /**
-     * Deletes all the pending episodes. This operation will run in a background thread and errors
-     * are ignored.
-     */
-    private fun deletePendingEpisodes() {
-        launchIO {
-            downloadManager.deletePendingEpisodes()
-        }
-    }
-
-    private fun updateTrackEpisodeSeen(episode: Episode) {
-        val episodeSeen = episode.episode_number
-
-        val trackManager = Injekt.get<TrackManager>()
-
-        launchIO {
-            db.getTracks(anime).executeAsBlocking()
-                .mapNotNull { track ->
-                    val service = trackManager.getService(track.sync_id)
-                    if (service != null && service.isLogged && episodeSeen > track.last_episode_seen) {
-                        track.last_episode_seen = episodeSeen
-
-                        // We want these to execute even if the presenter is destroyed and leaks
-                        // for a while. The view can still be garbage collected.
-                        async {
-                            runCatching {
-                                if (baseContext.isOnline()) {
-                                    service.update(track, true)
-                                    db.insertTrack(track).executeAsBlocking()
-                                } else {
-                                    delayedTrackingStore.addItem(track)
-                                    DelayedTrackingUpdateJob.setupTask(baseContext)
-                                }
-                            }
-                        }
-                    } else {
-                        null
-                    }
-                }
-                .awaitAll()
-                .mapNotNull { it.exceptionOrNull() }
-                .forEach { logcat(LogPriority.WARN, it) }
-        }
-    }
-
-    private fun getNextEpisode(episode: Episode, anime: Anime): Episode {
-        val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
-            Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.source_order.compareTo(c1.source_order) }
-            Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episode_number.compareTo(c2.episode_number) }
-            Anime.EPISODE_SORTING_UPLOAD_DATE -> { c1, c2 -> c1.date_upload.compareTo(c2.date_upload) }
-            else -> throw NotImplementedError("Unknown sorting method")
-        }
-
-        val episodes = db.getEpisodes(anime).executeAsBlocking()
-            .sortedWith { e1, e2 -> sortFunction(e1, e2) }
-
-        val currEpisodeIndex = episodes.indexOfFirst { episode.id == it.id }
-        val episodeNumber = episode.episode_number
-        return (currEpisodeIndex + 1 until episodes.size)
-            .map { episodes[it] }
-            .firstOrNull {
-                it.episode_number > episodeNumber &&
-                    it.episode_number <= episodeNumber + 1
-            } ?: episode
-    }
-
-    private fun getPreviousEpisode(episode: Episode, anime: Anime): Episode {
-        val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
-            Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.source_order.compareTo(c1.source_order) }
-            Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episode_number.compareTo(c2.episode_number) }
-            Anime.EPISODE_SORTING_UPLOAD_DATE -> { c1, c2 -> c1.date_upload.compareTo(c2.date_upload) }
-            else -> throw NotImplementedError("Unknown sorting method")
-        }
-
-        val episodes = db.getEpisodes(anime).executeAsBlocking()
-            .sortedWith { e1, e2 -> sortFunction(e2, e1) }
-
-        val currEpisodeIndex = episodes.indexOfFirst { episode.id == it.id }
-        val episodeNumber = episode.episode_number
-        return (currEpisodeIndex + 1 until episodes.size)
-            .map { episodes[it] }
-            .firstOrNull {
-                it.episode_number < episodeNumber &&
-                    it.episode_number >= episodeNumber - 1
-            } ?: episode
-    }
-
-    companion object {
-        fun newIntent(context: Context, anime: Anime, episode: Episode): Intent {
-            return Intent(context, PlayerActivity::class.java).apply {
-                putExtra("anime", anime)
-                putExtra("episode", episode)
-                putExtra("second", episode.last_second_seen)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            }
-        }
-    }
-
-    private fun playerEpisodeDialog() {
-        bindingPlaylist = PlayerEpisodesDialogBinding.inflate(this.layoutInflater)
-
-        val dialogPlaylist = HideBarsMaterialAlertDialogBuilder(this)
-            .setTitle(R.string.episodes)
-            .setView(bindingPlaylist.root)
-            .setNegativeButton(android.R.string.cancel, null)
-            .setOnDismissListener { destroy() }
-            .create()
-
-        adapterPlaylist = PlayerEpisodeAdapter(this, this)
-        bindingPlaylist.chapterRecycler.adapter = adapterPlaylist
-
-        adapterPlaylist?.mItemClickListener = FlexibleAdapter.OnItemClickListener { _, position ->
-            val item = adapterPlaylist?.getItem(position)
-            if (item != null && item.id != getCurrentEpisode(episode, anime).id) {
-                dialogPlaylist.dismiss()
-                saveEpisode(exoPlayer, episode, anime)
-                episode = item
-                title.text = baseContext.getString(R.string.playertitle, anime.title, episode.name)
-                awaitVideoList()
-            }
-            true
-        }
-
-        bindingPlaylist.chapterRecycler.layoutManager = LinearLayoutManager(this)
-        this.lifecycleScope.launch {
-            refreshList()
-        }
-
-        dialogPlaylist.show()
-    }
-
-    private fun refreshList(scroll: Boolean = true) {
-        val episodes = getEpisodeList(anime, this, episode)
-
-        adapterPlaylist?.clear()
-        adapterPlaylist?.updateDataSet(episodes)
-
-        if (scroll) {
-            (bindingPlaylist.chapterRecycler.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
-                adapterPlaylist?.getGlobalPositionOf(episodes.find { it.isCurrent }) ?: 0,
-                (bindingPlaylist.chapterRecycler.height / 2).dpToPx
-            )
-        }
-    }
-
-    fun destroy() {
-        adapterPlaylist = null
-    }
-
-    override fun bookmarkEpisode(episode: Episode, anime: Anime) {
-        toggleBookmark(episode.id!!, !episode.bookmark, episode, anime)
-        refreshList(scroll = false)
-    }
-
-    override fun fillerEpisode(episode: Episode, anime: Anime) {
-        toggleFiller(episode.id!!, !episode.filler, episode, anime)
-        refreshList(scroll = false)
-    }
-
-    private fun getCurrentEpisode(episode: Episode, anime: Anime): Episode {
-        val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
-            Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.source_order.compareTo(c1.source_order) }
-            Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episode_number.compareTo(c2.episode_number) }
-            Anime.EPISODE_SORTING_UPLOAD_DATE -> { c1, c2 -> c1.date_upload.compareTo(c2.date_upload) }
-            else -> throw NotImplementedError("Unknown sorting method")
-        }
-
-        val episodes = db.getEpisodes(anime).executeAsBlocking()
-            .sortedWith { e1, e2 -> sortFunction(e2, e1) }
-
-        val currEpisodeIndex = episodes.indexOfFirst { episode.id == it.id }
-        val episodeNumber = episode.episode_number
-        return (currEpisodeIndex + 1 until episodes.size)
-            .map { episodes[it] }
-            .firstOrNull {
-                it.episode_number == episodeNumber
-            } ?: episode
-    }
-
-    private fun getEpisodeList(anime: Anime, context: Context, episode: Episode): List<PlayerEpisodeItem> {
-        val currentEpisode = getCurrentEpisode(episode, anime)
-        val decimalFormat = DecimalFormat(
-            "#.###",
-            DecimalFormatSymbols()
-                .apply { decimalSeparator = '.' }
-        )
-        val episodeList: MutableList<PlayerEpisodeItem> = mutableListOf()
-        db.getEpisodes(anime).executeAsBlocking().forEach { ep ->
-            episodeList.add(
-                PlayerEpisodeItem(
-                    ep,
-                    anime,
-                    ep.id == currentEpisode.id,
-                    context,
-                    preferences.dateFormat(),
-                    decimalFormat
-                )
-            )
-        }
-        Log.i("episode List", episodeList.toString())
-
-        return episodeList
-    }
-
-    private fun toggleBookmark(episodeId: Long, bookmarked: Boolean, episode: Episode, anime: Anime) {
-        val ep = getEpisodeList(anime, this, episode).find { it.id == episodeId } ?: return
-        ep.bookmark = bookmarked
-        db.updateEpisodeProgress(ep).executeAsBlocking()
-    }
-
-    private fun toggleFiller(episodeId: Long, fillered: Boolean, episode: Episode, anime: Anime) {
-        val ep = getEpisodeList(anime, this, episode).find { it.id == episodeId } ?: return
-        ep.filler = fillered
-        db.updateEpisodeProgress(ep).executeAsBlocking()
     }
 }
-
-private const val STATE_RESUME_POSITION = "resumePosition"
-private const val STATE_PLAYER_FULLSCREEN = "playerFullscreen"
-private const val STATE_PLAYER_PLAYING = "playerOnPlay"
-private const val STATE_PLAYER_AUTOPLAY = "playerOnPlay"

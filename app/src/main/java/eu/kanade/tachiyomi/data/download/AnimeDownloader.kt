@@ -6,12 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import android.widget.Toast
-import com.arthenica.ffmpegkit.ExecuteCallback
-import com.arthenica.ffmpegkit.FFmpegKitConfig
-import com.arthenica.ffmpegkit.FFmpegSession
-import com.arthenica.ffmpegkit.LogCallback
-import com.arthenica.ffmpegkit.SessionState
-import com.arthenica.ffmpegkit.StatisticsCallback
+import com.arthenica.ffmpegkit.*
 import com.hippo.unifile.UniFile
 import com.jakewharton.rxrelay.BehaviorRelay
 import com.jakewharton.rxrelay.PublishRelay
@@ -441,7 +436,7 @@ class AnimeDownloader(
         return pageObservable
             // When the video is ready, set image path, progress (just in case) and status
             .doOnNext { file ->
-                video.uri = file.uri
+                video.videoUrl = file.uri.path
                 video.progress = 100
                 download.downloadedImages++
                 video.status = Video.READY
@@ -485,10 +480,11 @@ class AnimeDownloader(
 
     private fun hlsObservable(video: Video, source: AnimeHttpSource, tmpDir: UniFile, filename: String): Observable<UniFile> {
         isFFmpegRunning = true
+        val escapedFilename = "${tmpDir.filePath}/$filename.mp4".replace("\"", "\\\"")
         val headers = video.headers ?: source.headers
-        val headerOptions = headers.joinToString("-headers ", "-headers ", " ") { "\"${it.first}: ${it.second}\"" }
+        val headerOptions = headers.joinToString("", "-headers '", "'") { "${it.first}: ${it.second}\r\n" }
         // TODO: Support other file formats here as well (ffprobe or something, idk)
-        val ffmpegOptions = FFmpegKitConfig.parseArguments(headerOptions + "-i \"${video.videoUrl}\"  -c copy \"${tmpDir.filePath}/$filename.mp4\"")
+        val ffmpegOptions = FFmpegKitConfig.parseArguments(headerOptions + " -i '${video.videoUrl}' -c copy \"$escapedFilename\"")
         val executeCallback = ExecuteCallback {
             if (it.state != SessionState.COMPLETED) tmpDir.findFile("$filename.mp4")?.delete()
         }
@@ -576,14 +572,14 @@ class AnimeDownloader(
                         // TODO: this only works for 1DM
                         component = ComponentName(pkgName, "${pkgName.substringBeforeLast(".")}.Downloader")
                         action = Intent.ACTION_VIEW
-                        data = video.uri ?: Uri.parse(video.videoUrl)
+                        data = Uri.parse(video.videoUrl)
                         putExtra("extra_filename", filename)
                     }
                 } else {
                     intent = Intent(Intent.ACTION_VIEW)
                     intent.apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        data = video.uri ?: Uri.parse(video.videoUrl)
+                        data = Uri.parse(video.videoUrl)
                         putExtra("extra_filename", filename)
                     }
                 }
