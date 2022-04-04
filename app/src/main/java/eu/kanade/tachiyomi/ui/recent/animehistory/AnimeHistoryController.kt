@@ -174,7 +174,7 @@ class AnimeHistoryController :
 
     override fun onItemClick(position: Int) {
         val anime = (adapter?.getItem(position) as? AnimeHistoryItem)?.aeh?.anime ?: return
-        parentController!!.router.pushController(AnimeController(anime).withFadeTransaction())
+        router.pushController(AnimeController(anime).withFadeTransaction())
     }
 
     override fun removeAnimeHistory(anime: Anime, animehistory: AnimeHistory, all: Boolean) {
