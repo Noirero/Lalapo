@@ -23,7 +23,9 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.disk.DiskCache
 import coil.util.DebugLogger
-import eu.kanade.tachiyomi.data.coil.*
+import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
+import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
+import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
@@ -68,7 +70,6 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
         Injekt.importModule(AppModule(this))
 
-        setupAcra()
         setupNotificationChannels()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -143,10 +144,6 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         if (!AuthenticatorUtil.isAuthenticating && preferences.lockAppAfter().get() >= 0) {
             SecureActivityDelegate.locked = true
         }
-    }
-
-    protected open fun setupAcra() {
-        // removed acra
     }
 
     protected open fun setupNotificationChannels() {
