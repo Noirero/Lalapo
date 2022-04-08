@@ -1,6 +1,6 @@
-| Stable | Translate Tachiyomi | Discord Server |
-|------------|---------|---------|
-[![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Translation status](https://hosted.weblate.org/widgets/tachiyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/tachiyomi/?utm_source=widget) | [![Discord](https://img.shields.io/discord/841701076242530374?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/F32UjdJZrR) |
+| Latest Release | Aniyomi Discord Server |
+|------------|---------|
+[![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Discord](https://img.shields.io/discord/841701076242530374?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/F32UjdJZrR) |
 
 
 # ![app icon](.github/readme-images/app-icon.png)Animiru
