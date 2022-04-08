@@ -3,7 +3,7 @@
 I acknowledge that:
 
 - I have updated:
-  - To the latest version of the app (stable is 0.12.6.6)
+  - To the latest version of the app (stable is 0.12.7.0)
   - All extensions
 - If this is an issue with an anime extension, that I should be opening an issue in https://github.com/jmir1/aniyomi-extensions
 - I have searched the existing issues and this is new ticket **NOT** a duplicate or related to another open issue
