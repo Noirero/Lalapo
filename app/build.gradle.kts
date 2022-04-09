@@ -118,9 +118,8 @@ android {
     }
 
     lint {
-        disable("MissingTranslation", "ExtraTranslation")
-        isAbortOnError = false
-        isCheckReleaseBuilds = false
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 
 
@@ -254,9 +253,9 @@ dependencies {
     implementation("com.squareup.logcat:logcat:0.1")
 
     // Crash reports/analytics
-    implementation("ch.acra:acra-http:5.8.4")
-    "standardImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.2.6")
-    "standardImplementation"("com.google.firebase:firebase-analytics-ktx:20.0.2")
+   // implementation("ch.acra:acra-http:5.8.4")
+   // "standardImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.2.6")
+   // "standardImplementation"("com.google.firebase:firebase-analytics-ktx:20.0.2")
 
     // Licenses
     implementation("com.mikepenz:aboutlibraries-core:${BuildPluginsVersion.ABOUTLIB_PLUGIN}")
@@ -281,7 +280,7 @@ dependencies {
     // FFmpeg
     implementation("com.arthenica:ffmpeg-kit-https:4.5.LTS")
 
-    // mpv-android
+    // jmir1-mpv-android
     implementation("com.github.jmir1:aniyomi-mpv-lib:0.5")
 }
 
