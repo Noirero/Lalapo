@@ -14,7 +14,6 @@ import eu.kanade.tachiyomi.databinding.MigrationSourcesControllerBinding
 import eu.kanade.tachiyomi.ui.base.controller.NucleusController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.browse.migration.anime.MigrationAnimeController
-import eu.kanade.tachiyomi.ui.browse.migration.manga.MigrationMangaController
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import uy.kohesive.injekt.injectLazy
@@ -88,17 +87,6 @@ class MigrationSourcesController :
         presenter.requestSortUpdate()
     }
 
-    fun setSources(sourcesWithManga: List<SourceItem>) {
-        // Show empty view if needed
-        if (sourcesWithManga.isNotEmpty()) {
-            binding.emptyView.hide()
-        } else {
-            binding.emptyView.show(R.string.information_empty_library)
-        }
-
-        adapter?.updateDataSet(sourcesWithManga)
-    }
-
     fun setAnimeSources(sourcesWithAnime: List<AnimeSourceItem>) {
         // Show empty view if needed
         if (sourcesWithAnime.isNotEmpty()) {
@@ -111,29 +99,16 @@ class MigrationSourcesController :
     }
 
     override fun onItemClick(view: View, position: Int): Boolean {
-        if (adapter?.getItem(position) is AnimeSourceItem) {
-            val item = adapter?.getItem(position) as? AnimeSourceItem ?: return false
-            val controller = MigrationAnimeController(item.source.id, item.source.name)
-            parentController!!.router.pushController(controller.withFadeTransaction())
-            return false
-        } else {
-            val item = adapter?.getItem(position) as? SourceItem ?: return false
-            val controller = MigrationMangaController(item.source.id, item.source.name)
-            parentController!!.router.pushController(controller.withFadeTransaction())
-            return false
-        }
+        val item = adapter?.getItem(position) as? AnimeSourceItem ?: return false
+        val controller = MigrationAnimeController(item.source.id, item.source.name)
+        parentController!!.router.pushController(controller.withFadeTransaction())
+        return false
     }
 
     override fun onItemLongClick(position: Int) {
-        if (adapter?.getItem(position) is AnimeSourceItem) {
-            val item = adapter?.getItem(position) as? AnimeSourceItem ?: return
-            val sourceId = item.source.id.toString()
-            activity?.copyToClipboard(sourceId, sourceId)
-        } else {
-            val item = adapter?.getItem(position) as? SourceItem ?: return
-            val sourceId = item.source.id.toString()
-            activity?.copyToClipboard(sourceId, sourceId)
-        }
+        val item = adapter?.getItem(position) as? AnimeSourceItem ?: return
+        val sourceId = item.source.id.toString()
+        activity?.copyToClipboard(sourceId, sourceId)
     }
 
     enum class DirectionSetting {

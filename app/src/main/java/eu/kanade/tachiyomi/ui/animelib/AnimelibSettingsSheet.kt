@@ -10,9 +10,9 @@ import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
-import eu.kanade.tachiyomi.ui.library.setting.DisplayModeSetting
-import eu.kanade.tachiyomi.ui.library.setting.SortDirectionSetting
-import eu.kanade.tachiyomi.ui.library.setting.SortModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.SortDirectionSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.SortModeSetting
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import eu.kanade.tachiyomi.widget.sheet.TabbedBottomSheetDialog

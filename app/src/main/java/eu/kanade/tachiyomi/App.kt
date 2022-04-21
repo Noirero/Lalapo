@@ -25,8 +25,6 @@ import coil.disk.DiskCache
 import coil.util.DebugLogger
 import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
-import eu.kanade.tachiyomi.data.coil.MangaCoverFetcher
-import eu.kanade.tachiyomi.data.coil.MangaCoverKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
@@ -132,9 +130,7 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
                     add(GifDecoder.Factory())
                 }
                 add(TachiyomiImageDecoder.Factory())
-                add(MangaCoverFetcher.Factory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeCoverFetcher.Factory(lazy(callFactoryInit), lazy(diskCacheInit)))
-                add(MangaCoverKeyer())
                 add(AnimeCoverKeyer())
             }
             callFactory(callFactoryInit)

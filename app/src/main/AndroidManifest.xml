@@ -82,17 +82,6 @@
         </activity>
 
         <activity
-            android:name=".ui.reader.ReaderActivity"
-            android:launchMode="singleTask"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.samsung.android.support.REMOTE_ACTION" />
-            </intent-filter>
-
-            <meta-data android:name="com.samsung.android.support.REMOTE_ACTION"
-                android:resource="@xml/s_pen_actions"/>
-        </activity>
-        <activity
             android:name=".ui.player.PlayerActivity"
             android:launchMode="singleTask"
             android:screenOrientation="fullSensor"
@@ -108,6 +97,7 @@
             <meta-data android:name="com.samsung.android.support.REMOTE_ACTION"
                 android:resource="@xml/s_pen_actions"/>
         </activity>
+
         <activity
             android:name=".ui.security.UnlockActivity"
             android:theme="@style/Theme.Tachiyomi"
@@ -116,11 +106,6 @@
         <activity
             android:name=".ui.webview.WebViewActivity"
             android:configChanges="uiMode|orientation|screenSize"
-            android:exported="false" />
-
-        <activity
-            android:name=".extension.util.ExtensionInstallActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="false" />
 
         <activity
@@ -200,15 +185,7 @@
         </receiver>
 
         <service
-            android:name=".data.library.LibraryUpdateService"
-            android:exported="false" />
-
-        <service
             android:name=".data.animelib.AnimelibUpdateService"
-            android:exported="false" />
-
-        <service
-            android:name=".data.download.DownloadService"
             android:exported="false" />
 
         <service
@@ -221,9 +198,6 @@
 
         <service
             android:name=".data.backup.BackupRestoreService"
-            android:exported="false" />
-
-        <service android:name=".extension.util.ExtensionInstallService"
             android:exported="false" />
 
         <service android:name=".extension.util.AnimeExtensionInstallService"

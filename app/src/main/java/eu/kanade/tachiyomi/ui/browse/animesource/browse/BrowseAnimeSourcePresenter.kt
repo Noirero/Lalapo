@@ -15,9 +15,7 @@ import eu.kanade.tachiyomi.data.database.models.AnimeCategory
 import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.ui.browse.animesource.filter.CheckboxItem
 import eu.kanade.tachiyomi.ui.browse.animesource.filter.CheckboxSectionItem
@@ -33,7 +31,6 @@ import eu.kanade.tachiyomi.ui.browse.animesource.filter.TextSectionItem
 import eu.kanade.tachiyomi.ui.browse.animesource.filter.TriStateItem
 import eu.kanade.tachiyomi.ui.browse.animesource.filter.TriStateSectionItem
 import eu.kanade.tachiyomi.util.episode.EpisodeSettingsHelper
-import eu.kanade.tachiyomi.util.episode.syncEpisodesWithTrackServiceTwoWay
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.removeCovers
@@ -265,32 +262,9 @@ open class BrowseAnimeSourcePresenter(
             anime.removeCovers(coverCache)
         } else {
             EpisodeSettingsHelper.applySettingDefaults(anime)
-
-            autoAddTrack(anime)
         }
 
         db.insertAnime(anime).executeAsBlocking()
-    }
-
-    private fun autoAddTrack(anime: Anime) {
-        loggedServices
-            .filterIsInstance<EnhancedTrackService>()
-            .filter { it.accept(source) }
-            .forEach { service ->
-                launchIO {
-                    try {
-                        service.match(anime)?.let { track ->
-                            track.anime_id = anime.id!!
-                            (service as TrackService).bind(track)
-                            db.insertTrack(track).executeAsBlocking()
-
-                            syncEpisodesWithTrackServiceTwoWay(db, db.getEpisodes(anime).executeAsBlocking(), track, service as TrackService)
-                        }
-                    } catch (e: Exception) {
-                        logcat(LogPriority.WARN, e) { "Could not match anime: ${anime.title} with service $service" }
-                    }
-                }
-            }
     }
 
     /**

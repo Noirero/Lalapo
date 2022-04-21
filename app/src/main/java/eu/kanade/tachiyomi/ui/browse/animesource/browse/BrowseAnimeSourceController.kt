@@ -32,11 +32,11 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.SourceControllerBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.animelib.ChangeAnimeCategoriesDialog
+import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
 import eu.kanade.tachiyomi.ui.base.controller.FabController
 import eu.kanade.tachiyomi.ui.base.controller.SearchableNucleusController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchController
-import eu.kanade.tachiyomi.ui.library.setting.DisplayModeSetting
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.more.MoreController
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity

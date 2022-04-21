@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.data.backup.full
 
 import android.content.Context
 import android.net.Uri
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.AbstractBackupRestoreValidator
 import eu.kanade.tachiyomi.data.backup.ValidatorParseException
 import eu.kanade.tachiyomi.data.backup.full.models.BackupSerializer
@@ -30,28 +29,20 @@ class FullBackupRestoreValidator : AbstractBackupRestoreValidator() {
             throw ValidatorParseException(e)
         }
 
-        if (backup.backupManga.isEmpty() && backup.backupAnime.isEmpty()) {
-            throw Exception(context.getString(R.string.invalid_backup_file_missing_manga))
-        }
-
-        val sources = backup.backupSources.associate { it.sourceId to it.name }
         val animesources = backup.backupAnimeSources.associate { it.sourceId to it.name }
-        val missingSources = sources
-            .filter { sourceManager.get(it.key) == null }
+        val missingSources = animesources
+            .filter { animesourceManager.get(it.key) == null }
             .values
-            .sorted() +
-            animesources
-                .filter { animesourceManager.get(it.key) == null }
-                .values
-                .sorted()
+            .sorted()
 
-        val trackers = backup.backupManga
+        val trackers = backup.backupAnime
             .flatMap { it.tracking }
             .map { it.syncId }
             .distinct() + backup.backupAnime
             .flatMap { it.tracking }
             .map { it.syncId }
             .distinct()
+
         val missingTrackers = trackers
             .mapNotNull { trackManager.getService(it) }
             .filter { !it.isLogged }

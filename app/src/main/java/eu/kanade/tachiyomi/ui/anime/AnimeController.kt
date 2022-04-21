@@ -54,9 +54,7 @@ import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.Location
-import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.databinding.MangaControllerBinding
 import eu.kanade.tachiyomi.network.HttpException
@@ -88,8 +86,6 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.ExternalIntents
 import eu.kanade.tachiyomi.ui.player.PlayerActivity
-import eu.kanade.tachiyomi.ui.recent.HistoryTabsController
-import eu.kanade.tachiyomi.ui.recent.UpdatesTabsController
 import eu.kanade.tachiyomi.ui.recent.animehistory.AnimeHistoryController
 import eu.kanade.tachiyomi.ui.recent.animeupdates.AnimeUpdatesController
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
@@ -646,24 +642,6 @@ class AnimeController :
                 showChangeCategoryDialog(anime, categories, preselected)
             }
         }
-
-        if (source != null) {
-            presenter.trackList
-                .map { it.service }
-                .filterIsInstance<EnhancedTrackService>()
-                .filter { it.accept(source!!) }
-                .forEach { service ->
-                    launchIO {
-                        try {
-                            service.match(anime)?.let { track ->
-                                presenter.registerTracking(track, service as TrackService)
-                            }
-                        } catch (e: Exception) {
-                            logcat(LogPriority.WARN, e) { "Could not match anime: ${anime.title} with service $service" }
-                        }
-                    }
-                }
-        }
     }
 
     /**
@@ -750,8 +728,6 @@ class AnimeController :
                 router.handleBack()
                 previousController.search(query)
             }
-            is UpdatesTabsController,
-            is HistoryTabsController,
             is AnimeUpdatesController,
             is AnimeHistoryController, -> {
                 // Manually navigate to AnimelibController

@@ -1,16 +1,6 @@
 package eu.kanade.tachiyomi.data.track.bangumi
 
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
-import eu.kanade.tachiyomi.data.database.models.Track
-
-fun Track.toBangumiStatus() = when (status) {
-    Bangumi.READING -> "do"
-    Bangumi.COMPLETED -> "collect"
-    Bangumi.ON_HOLD -> "on_hold"
-    Bangumi.DROPPED -> "dropped"
-    Bangumi.PLAN_TO_READ -> "wish"
-    else -> throw NotImplementedError("Unknown status: $status")
-}
 
 fun AnimeTrack.toBangumiStatus() = when (status) {
     Bangumi.READING -> "do"

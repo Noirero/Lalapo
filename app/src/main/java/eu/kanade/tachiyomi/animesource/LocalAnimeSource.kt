@@ -9,7 +9,6 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.toEpisodeInfo
 import eu.kanade.tachiyomi.animesource.model.toSAnime
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.util.episode.EpisodeRecognition
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import eu.kanade.tachiyomi.util.storage.DiskUtil

@@ -14,9 +14,9 @@ import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
+import eu.kanade.tachiyomi.ui.animelib.setting.SortDirectionSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.SortModeSetting
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
-import eu.kanade.tachiyomi.ui.library.setting.SortDirectionSetting
-import eu.kanade.tachiyomi.ui.library.setting.SortModeSetting
 import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.lang.combineLatest
 import eu.kanade.tachiyomi.util.lang.isNullOrUnsubscribed

@@ -25,7 +25,6 @@ import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.ImageSaver
-import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.ui.anime.episode.EpisodeItem
@@ -34,7 +33,6 @@ import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.util.episode.EpisodeSettingsHelper
 import eu.kanade.tachiyomi.util.episode.getEpisodeSort
 import eu.kanade.tachiyomi.util.episode.syncEpisodesWithSource
-import eu.kanade.tachiyomi.util.episode.syncEpisodesWithTrackServiceTwoWay
 import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.withUIContext
@@ -834,10 +832,6 @@ class AnimePresenter(
                             async {
                                 val track = it.service.refresh(it.track!!)
                                 db.insertTrack(track).executeAsBlocking()
-
-                                if (it.service is EnhancedTrackService) {
-                                    syncEpisodesWithTrackServiceTwoWay(db, allEpisodes, track, it.service)
-                                }
                             }
                         }
                         .awaitAll()
@@ -868,10 +862,6 @@ class AnimePresenter(
                     val hasReadChapters = allEpisodes.any { it.seen }
                     service.bind(item, hasReadChapters)
                     db.insertTrack(item).executeAsBlocking()
-
-                    if (service is EnhancedTrackService) {
-                        syncEpisodesWithTrackServiceTwoWay(db, allEpisodes, item, service)
-                    }
                 } catch (e: Throwable) {
                     withUIContext { view?.applicationContext?.toast(e.message) }
                 }

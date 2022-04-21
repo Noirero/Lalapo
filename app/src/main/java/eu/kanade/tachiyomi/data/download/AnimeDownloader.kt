@@ -16,6 +16,7 @@ import com.jakewharton.rxrelay.BehaviorRelay
 import com.jakewharton.rxrelay.PublishRelay
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.animesource.online.fetchUrlFromVideo
@@ -25,7 +26,6 @@ import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.download.model.AnimeDownloadQueue
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchNow
 import eu.kanade.tachiyomi.util.lang.plusAssign

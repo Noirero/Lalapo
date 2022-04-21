@@ -15,10 +15,9 @@ import dev.chrisbanes.insetter.applyInsetter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.databinding.MangaFullCoverDialogBinding
+import eu.kanade.tachiyomi.databinding.AnimeFullCoverDialogBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
-import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.util.view.setNavigationBarTransparentCompat
 import eu.kanade.tachiyomi.widget.TachiyomiFullscreenDialog
 import uy.kohesive.injekt.Injekt
@@ -28,7 +27,7 @@ class AnimeFullCoverDialog : DialogController {
 
     private var anime: Anime? = null
 
-    private var binding: MangaFullCoverDialogBinding? = null
+    private var binding: AnimeFullCoverDialogBinding? = null
 
     private var disposable: Disposable? = null
 
@@ -47,7 +46,7 @@ class AnimeFullCoverDialog : DialogController {
     }
 
     override fun onCreateDialog(savedViewState: Bundle?): Dialog {
-        binding = MangaFullCoverDialogBinding.inflate(activity!!.layoutInflater)
+        binding = AnimeFullCoverDialogBinding.inflate(activity!!.layoutInflater)
 
         binding?.toolbar?.apply {
             setNavigationOnClickListener { dialog?.dismiss() }
@@ -106,7 +105,7 @@ class AnimeFullCoverDialog : DialogController {
             .target {
                 binding?.container?.setImage(
                     it,
-                    ReaderPageImageView.Config(
+                    AnimeCoverImageMaker.Config(
                         zoomDuration = 500,
                     ),
                 )

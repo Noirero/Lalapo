@@ -10,8 +10,6 @@ import eu.kanade.tachiyomi.animesource.model.toSEpisode
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimeCategory
 import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
-import eu.kanade.tachiyomi.data.track.EnhancedTrackService
-import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchCardItem
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchItem
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchPresenter
@@ -21,8 +19,6 @@ import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
 import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.system.toast
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.Date
 
 class AnimeSearchPresenter(
@@ -31,8 +27,6 @@ class AnimeSearchPresenter(
 ) : GlobalAnimeSearchPresenter(initialQuery) {
 
     private val replacingAnimeRelay = BehaviorRelay.create<Pair<Boolean, Anime?>>()
-
-    private val enhancedServices by lazy { Injekt.get<TrackManager>().services.filterIsInstance<EnhancedTrackService>() }
 
     override fun onCreate(savedState: Bundle?) {
         super.onCreate(savedState)
@@ -146,11 +140,7 @@ class AnimeSearchPresenter(
                 val tracksToUpdate = db.getTracks(prevAnime).executeAsBlocking().mapNotNull { track ->
                     track.id = null
                     track.anime_id = anime.id!!
-
-                    val service = enhancedServices
-                        .firstOrNull { it.isTrackFrom(track, prevAnime, prevSource) }
-                    if (service != null) service.migrateTrack(track, anime, source)
-                    else track
+                    track
                 }
                 db.insertTracks(tracksToUpdate).executeAsBlocking()
             }

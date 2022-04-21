@@ -9,14 +9,10 @@ import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.AnimeDownloadService
-import eu.kanade.tachiyomi.data.download.DownloadManager
-import eu.kanade.tachiyomi.data.download.DownloadService
 import eu.kanade.tachiyomi.ui.base.controller.NoAppBarElevationController
 import eu.kanade.tachiyomi.ui.base.controller.RootController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
-import eu.kanade.tachiyomi.ui.category.CategoryController
-import eu.kanade.tachiyomi.ui.download.DownloadTabsController
-import eu.kanade.tachiyomi.ui.recent.HistoryTabsController
+import eu.kanade.tachiyomi.ui.recent.animehistory.AnimeHistoryController
 import eu.kanade.tachiyomi.ui.setting.SettingsBackupController
 import eu.kanade.tachiyomi.ui.setting.SettingsController
 import eu.kanade.tachiyomi.ui.setting.SettingsMainController
@@ -40,17 +36,15 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.subscriptions.CompositeSubscription
 import uy.kohesive.injekt.injectLazy
 import eu.kanade.tachiyomi.ui.animecategory.CategoryController as AnimeCategoryController
+import eu.kanade.tachiyomi.ui.download.DownloadController as AnimeDownloadController
 
 class MoreController :
     SettingsController(),
     RootController,
     NoAppBarElevationController {
 
-    private val downloadManager: DownloadManager by injectLazy()
     private val animedownloadManager: AnimeDownloadManager by injectLazy()
-    private var isDownloading: Boolean = false
     private var isDownloadingAnime: Boolean = false
-    private var downloadQueueSize: Int = 0
     private var downloadQueueSizeAnime: Int = 0
 
     private var untilDestroySubscriptions = CompositeSubscription()
@@ -90,20 +84,20 @@ class MoreController :
                 iconRes = R.drawable.ic_history_24dp
                 iconTint = tintColor
                 onClick {
-                    router.pushController(HistoryTabsController().withFadeTransaction())
+                    router.pushController(AnimeHistoryController().withFadeTransaction())
                 }
             }
             preference {
                 titleRes = R.string.label_download_queue
 
-                if (downloadManager.queue.isNotEmpty() || animedownloadManager.queue.isNotEmpty()) {
+                if (animedownloadManager.queue.isNotEmpty()) {
                     initDownloadQueueSummary(this)
                 }
 
                 iconRes = R.drawable.ic_get_app_24dp
                 iconTint = tintColor
                 onClick {
-                    router.pushController(DownloadTabsController().withFadeTransaction())
+                    router.pushController(AnimeDownloadController().withFadeTransaction())
                 }
             }
             preference {
@@ -112,14 +106,6 @@ class MoreController :
                 iconTint = tintColor
                 onClick {
                     router.pushController(AnimeCategoryController().withFadeTransaction())
-                }
-            }
-            preference {
-                titleRes = R.string.categories
-                iconRes = R.drawable.ic_label_24dp
-                iconTint = tintColor
-                onClick {
-                    router.pushController(CategoryController().withFadeTransaction())
                 }
             }
             preference {
@@ -175,13 +161,6 @@ class MoreController :
 
     private fun initDownloadQueueSummary(preference: Preference) {
         // Handle running/paused status change
-        DownloadService.runningRelay
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeUntilDestroy { isRunning ->
-                isDownloading = isRunning
-                updateDownloadQueueSummary(preference)
-            }
-
         AnimeDownloadService.runningRelay
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeUntilDestroy { isRunning ->
@@ -190,13 +169,6 @@ class MoreController :
             }
 
         // Handle queue progress updating
-        downloadManager.queue.getUpdatedObservable()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeUntilDestroy {
-                downloadQueueSize = it.size
-                updateDownloadQueueSummary(preference)
-            }
-
         animedownloadManager.queue.getUpdatedObservable()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeUntilDestroy {
@@ -206,14 +178,14 @@ class MoreController :
     }
 
     private fun updateDownloadQueueSummary(preference: Preference) {
-        val pendingDownloadExists = downloadQueueSize + downloadQueueSizeAnime != 0
+        val pendingDownloadExists = downloadQueueSizeAnime != 0
         val pauseMessage = resources?.getString(R.string.paused)
-        val numberOfPendingDownloads = resources?.getQuantityString(R.plurals.download_queue_summary, downloadQueueSize + downloadQueueSizeAnime, downloadQueueSize + downloadQueueSizeAnime)
+        val numberOfPendingDownloads = resources?.getQuantityString(R.plurals.download_queue_summary, downloadQueueSizeAnime, downloadQueueSizeAnime)
 
         preference.summary = when {
             !pendingDownloadExists -> null
-            !isDownloading && !isDownloadingAnime && !pendingDownloadExists -> pauseMessage
-            !isDownloading && !isDownloadingAnime && pendingDownloadExists -> "$pauseMessage • $numberOfPendingDownloads"
+            !isDownloadingAnime && !pendingDownloadExists -> pauseMessage
+            !isDownloadingAnime && pendingDownloadExists -> "$pauseMessage • $numberOfPendingDownloads"
             else -> numberOfPendingDownloads
         }
     }

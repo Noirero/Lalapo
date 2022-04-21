@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.main
 
 import android.animation.ValueAnimator
-import android.app.SearchManager
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
@@ -34,14 +33,12 @@ import dev.chrisbanes.insetter.applyInsetter
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.cache.ChapterCache
-import eu.kanade.tachiyomi.data.cache.EpisodeCache
+// import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.AppUpdateResult
 import eu.kanade.tachiyomi.databinding.MainActivityBinding
 import eu.kanade.tachiyomi.extension.api.AnimeExtensionGithubApi
-import eu.kanade.tachiyomi.extension.api.ExtensionGithubApi
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.animelib.AnimelibController
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -55,14 +52,10 @@ import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.browse.BrowseController
 import eu.kanade.tachiyomi.ui.browse.animesource.browse.BrowseAnimeSourceController
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchController
-import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceController
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchController
-import eu.kanade.tachiyomi.ui.download.DownloadTabsController
-import eu.kanade.tachiyomi.ui.library.LibraryController
-import eu.kanade.tachiyomi.ui.manga.MangaController
 import eu.kanade.tachiyomi.ui.more.MoreController
 import eu.kanade.tachiyomi.ui.more.NewUpdateDialogController
-import eu.kanade.tachiyomi.ui.recent.UpdatesTabsController
+import eu.kanade.tachiyomi.ui.recent.animehistory.AnimeHistoryController
+import eu.kanade.tachiyomi.ui.recent.animeupdates.AnimeUpdatesController
 import eu.kanade.tachiyomi.ui.setting.SettingsMainController
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
@@ -80,9 +73,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import logcat.LogPriority
-import uy.kohesive.injekt.injectLazy
-import eu.kanade.tachiyomi.ui.download.anime.DownloadController as AnimeDownloadController
-import eu.kanade.tachiyomi.ui.download.manga.DownloadController as MangaDownloadController
+// import uy.kohesive.injekt.injectLazy
+import eu.kanade.tachiyomi.ui.download.DownloadController as AnimeDownloadController
 
 class MainActivity : BaseActivity() {
 
@@ -93,8 +85,8 @@ class MainActivity : BaseActivity() {
     private val startScreenId by lazy {
         when (preferences.startScreen()) {
             1 -> R.id.nav_animelib
-            2 -> R.id.nav_library
-            3 -> R.id.nav_updates
+            2 -> R.id.nav_updates
+            3 -> R.id.nav_history
             4 -> R.id.nav_browse
             else -> R.id.nav_animelib
         }
@@ -108,8 +100,7 @@ class MainActivity : BaseActivity() {
      */
     private val backstackLiftState = mutableMapOf<String, Boolean>()
 
-    private val chapterCache: ChapterCache by injectLazy()
-    private val episodeCache: EpisodeCache by injectLazy()
+    // private val episodeCache: EpisodeCache by injectLazy()
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false
@@ -177,21 +168,17 @@ class MainActivity : BaseActivity() {
             val currentRoot = router.backstack.firstOrNull()
             if (currentRoot?.tag()?.toIntOrNull() != id) {
                 when (id) {
-                    R.id.nav_library -> router.setRoot(LibraryController(), id)
                     R.id.nav_animelib -> router.setRoot(AnimelibController(), id)
-                    R.id.nav_updates -> router.setRoot(UpdatesTabsController(), id)
+                    R.id.nav_updates -> router.setRoot(AnimeUpdatesController(), id)
+                    R.id.nav_history -> router.setRoot(AnimeHistoryController(), id)
                     R.id.nav_browse -> router.setRoot(BrowseController(), id)
                     R.id.nav_more -> router.setRoot(MoreController(), id)
                 }
             } else if (!isHandlingShortcut) {
                 when (id) {
-                    R.id.nav_library -> {
-                        val controller = router.getControllerWithTag(id.toString()) as? LibraryController
-                        controller?.showSettingsSheet()
-                    }
                     R.id.nav_updates -> {
                         if (router.backstackSize == 1) {
-                            router.pushController(DownloadTabsController().withFadeTransaction())
+                            router.pushController(AnimeDownloadController().withFadeTransaction())
                         }
                     }
                     R.id.nav_animelib -> {
@@ -283,10 +270,6 @@ class MainActivity : BaseActivity() {
 
                 // Close BrowseSourceController and its MangaController child when incognito mode is disabled
                 if (!it) {
-                    val fg = router.backstack.lastOrNull()?.controller
-                    if (fg is BrowseSourceController || fg is MangaController && fg.fromSource) {
-                        router.popToRoot()
-                    }
                     val fga = router.backstack.last().controller
                     if (fga is BrowseAnimeSourceController || fga is AnimeController && fga.fromSource) {
                         router.popToRoot()
@@ -387,9 +370,6 @@ class MainActivity : BaseActivity() {
                 AnimeExtensionGithubApi().checkForUpdates(this@MainActivity)?.let { pendingUpdates ->
                     preferences.animeextensionUpdatesCount().set(pendingUpdates.size)
                 }
-                ExtensionGithubApi().checkForUpdates(this@MainActivity)?.let { pendingUpdates ->
-                    preferences.extensionUpdatesCount().set(pendingUpdates.size)
-                }
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e)
             }
@@ -425,10 +405,9 @@ class MainActivity : BaseActivity() {
         isHandlingShortcut = true
 
         when (intent.action) {
-            SHORTCUT_LIBRARY -> setSelectedNavItem(R.id.nav_library)
             SHORTCUT_ANIMELIB -> setSelectedNavItem(R.id.nav_animelib)
             SHORTCUT_RECENTLY_UPDATED -> setSelectedNavItem(R.id.nav_updates)
-            // SHORTCUT_RECENTLY_READ -> setSelectedNavItem(R.id.nav_history)
+            SHORTCUT_RECENTLY_READ -> setSelectedNavItem(R.id.nav_history)
             SHORTCUT_CATALOGUES -> setSelectedNavItem(R.id.nav_browse)
             SHORTCUT_EXTENSIONS -> {
                 if (router.backstackSize > 1) {
@@ -436,15 +415,6 @@ class MainActivity : BaseActivity() {
                 }
                 setSelectedNavItem(R.id.nav_browse)
                 router.pushController(BrowseController(toExtensions = true).withFadeTransaction())
-            }
-            SHORTCUT_MANGA -> {
-                val extras = intent.extras ?: return false
-                val fgController = router.backstack.lastOrNull()?.controller as? MangaController
-                if (fgController?.manga?.id != extras.getLong(MangaController.MANGA_EXTRA)) {
-                    router.popToRoot()
-                    setSelectedNavItem(R.id.nav_library)
-                    router.pushController(RouterTransaction.with(MangaController(extras)))
-                }
             }
             SHORTCUT_ANIME -> {
                 val extras = intent.extras ?: return false
@@ -455,42 +425,12 @@ class MainActivity : BaseActivity() {
                     router.pushController(RouterTransaction.with(AnimeController(extras)))
                 }
             }
-            SHORTCUT_DOWNLOADS -> {
-                if (router.backstackSize > 1) {
-                    router.popToRoot()
-                }
-                setSelectedNavItem(R.id.nav_more)
-                router.pushController(MangaDownloadController().withFadeTransaction())
-            }
             SHORTCUT_ANIME_DOWNLOADS -> {
                 if (router.backstackSize > 1) {
                     router.popToRoot()
                 }
                 setSelectedNavItem(R.id.nav_more)
                 router.pushController(AnimeDownloadController().withFadeTransaction())
-            }
-            Intent.ACTION_SEARCH, Intent.ACTION_SEND, "com.google.android.gms.actions.SEARCH_ACTION" -> {
-                // If the intent match the "standard" Android search intent
-                // or the Google-specific search intent (triggered by saying or typing "search *query* on *Tachiyomi*" in Google Search/Google Assistant)
-
-                // Get the search query provided in extras, and if not null, perform a global search with it.
-                val query = intent.getStringExtra(SearchManager.QUERY) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
-                if (query != null && query.isNotEmpty()) {
-                    if (router.backstackSize > 1) {
-                        router.popToRoot()
-                    }
-                    router.pushController(GlobalSearchController(query).withFadeTransaction())
-                }
-            }
-            INTENT_SEARCH -> {
-                val query = intent.getStringExtra(INTENT_SEARCH_QUERY)
-                if (query != null && query.isNotEmpty()) {
-                    val filter = intent.getStringExtra(INTENT_SEARCH_FILTER)
-                    if (router.backstackSize > 1) {
-                        router.popToRoot()
-                    }
-                    router.pushController(GlobalSearchController(query, filter).withFadeTransaction())
-                }
             }
             INTENT_ANIMESEARCH -> {
                 val query = intent.getStringExtra(INTENT_SEARCH_QUERY)
@@ -518,8 +458,8 @@ class MainActivity : BaseActivity() {
         super.onDestroy()
 
         // Binding sometimes isn't actually instantiated yet somehow
-        nav?.setOnItemSelectedListener(null)
-        binding?.toolbar?.setNavigationOnClickListener(null)
+        nav.setOnItemSelectedListener(null)
+        binding.toolbar.setNavigationOnClickListener(null)
     }
 
     override fun onBackPressed() {
@@ -531,10 +471,6 @@ class MainActivity : BaseActivity() {
             // Exit confirmation (resets after 2 seconds)
             lifecycleScope.launchUI { resetExitConfirmation() }
         } else if (backstackSize == 1 || !router.handleBack()) {
-            // Regular back (i.e. closing the app)
-            if (preferences.autoClearChapterCache()) {
-                chapterCache.clear()
-            }
             super.onBackPressed()
         }
     }
@@ -659,8 +595,8 @@ class MainActivity : BaseActivity() {
 
         binding.root.isLiftAppBarOnScroll = to !is NoAppBarElevationController
 
-        binding.appbar.isTransparentWhenNotLifted = to is MangaController || to is AnimeController
-        binding.controllerContainer.overlapHeader = to is MangaController || to is AnimeController
+        binding.appbar.isTransparentWhenNotLifted = to is AnimeController
+        binding.controllerContainer.overlapHeader = to is AnimeController
     }
 
     private fun showNav(visible: Boolean) {
@@ -695,18 +631,13 @@ class MainActivity : BaseActivity() {
         private const val SPLASH_EXIT_ANIM_DURATION = 400L // ms
 
         // Shortcut actions
-        const val SHORTCUT_LIBRARY = "eu.kanade.tachiyomi.SHOW_LIBRARY"
         const val SHORTCUT_ANIMELIB = "eu.kanade.tachiyomi.SHOW_ANIMELIB"
         const val SHORTCUT_RECENTLY_UPDATED = "eu.kanade.tachiyomi.SHOW_RECENTLY_UPDATED"
         const val SHORTCUT_RECENTLY_READ = "eu.kanade.tachiyomi.SHOW_RECENTLY_READ"
         const val SHORTCUT_CATALOGUES = "eu.kanade.tachiyomi.SHOW_CATALOGUES"
-        const val SHORTCUT_DOWNLOADS = "eu.kanade.tachiyomi.SHOW_DOWNLOADS"
         const val SHORTCUT_ANIME_DOWNLOADS = "eu.kanade.tachiyomi.SHOW_ANIME_DOWNLOADS"
-        const val SHORTCUT_MANGA = "eu.kanade.tachiyomi.SHOW_MANGA"
         const val SHORTCUT_ANIME = "eu.kanade.tachiyomi.SHOW_ANIME"
         const val SHORTCUT_EXTENSIONS = "eu.kanade.tachiyomi.EXTENSIONS"
-
-        const val INTENT_SEARCH = "eu.kanade.tachiyomi.SEARCH"
         const val INTENT_ANIMESEARCH = "eu.kanade.tachiyomi.ANIMESEARCH"
         const val INTENT_SEARCH_QUERY = "query"
         const val INTENT_SEARCH_FILTER = "filter"

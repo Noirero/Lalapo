@@ -13,16 +13,12 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.databinding.TrackControllerBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.base.controller.openInBrowser
-import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.toLocalCalendar
 import eu.kanade.tachiyomi.util.lang.toUtcCalendar
-import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.widget.sheet.BaseBottomSheetDialog
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -81,31 +77,8 @@ class TrackSheet(
     override fun onSetClick(position: Int) {
         val item = adapter.getItem(position) ?: return
 
-        if (item.service is EnhancedTrackService) {
-            if (item.track != null) {
-                controller.presenter.unregisterTracking(item.service)
-                return
-            }
-
-            if (!item.service.accept(sourceManager.getOrStub(anime.source))) {
-                controller.presenter.view?.applicationContext?.toast(R.string.source_unsupported)
-                return
-            }
-
-            launchIO {
-                try {
-                    item.service.match(anime)?.let { track ->
-                        controller.presenter.registerTracking(track, item.service)
-                    }
-                        ?: withUIContext { controller.presenter.view?.applicationContext?.toast(R.string.error_no_match) }
-                } catch (e: Exception) {
-                    withUIContext { controller.presenter.view?.applicationContext?.toast(R.string.error_no_match) }
-                }
-            }
-        } else {
-            TrackSearchDialog(controller, item.service, item.track?.tracking_url)
-                .showDialog(controller.router, TAG_SEARCH_CONTROLLER)
-        }
+        TrackSearchDialog(controller, item.service, item.track?.tracking_url)
+            .showDialog(controller.router, TAG_SEARCH_CONTROLLER)
     }
 
     override fun onTitleLongClick(position: Int) {

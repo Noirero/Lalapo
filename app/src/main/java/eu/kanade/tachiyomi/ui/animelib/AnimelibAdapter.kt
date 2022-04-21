@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.AnimelibCategoryBinding
-import eu.kanade.tachiyomi.ui.library.setting.DisplayModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
 import eu.kanade.tachiyomi.widget.RecyclerViewPagerAdapter
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn

@@ -9,15 +9,12 @@ import androidx.preference.PreferenceManager
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
+import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.SortDirectionSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.SortModeSetting
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrationSourcesController
-import eu.kanade.tachiyomi.ui.library.setting.DisplayModeSetting
-import eu.kanade.tachiyomi.ui.library.setting.SortDirectionSetting
-import eu.kanade.tachiyomi.ui.library.setting.SortModeSetting
-import eu.kanade.tachiyomi.ui.reader.setting.OrientationType
-import eu.kanade.tachiyomi.ui.reader.setting.ReadingModeType
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 import java.io.File
@@ -115,12 +112,6 @@ class PreferencesHelper(val context: Context) {
     fun grayscale() = flowPrefs.getBoolean("pref_grayscale", false)
 
     fun invertedColors() = flowPrefs.getBoolean("pref_inverted_colors", false)
-
-    fun defaultReadingMode() = prefs.getInt(Keys.defaultReadingMode, ReadingModeType.RIGHT_TO_LEFT.flagValue)
-
-    fun defaultOrientationType() = prefs.getInt(Keys.defaultOrientationType, OrientationType.FREE.flagValue)
-
-    fun defaultPlayerOrientationType() = prefs.getInt(Keys.defaultPlayerOrientationType, OrientationType.FREE.flagValue)
 
     fun getPlayerSpeed() = prefs.getFloat(Keys.playerSpeed, 1F)
 
@@ -354,23 +345,11 @@ class PreferencesHelper(val context: Context) {
 
     fun lastSearchQuerySearchSettings() = flowPrefs.getString("last_search_query", "")
 
-    fun filterChapterByRead() = prefs.getInt(Keys.defaultChapterFilterByRead, Manga.SHOW_ALL)
-
-    fun filterChapterByDownloaded() = prefs.getInt(Keys.defaultChapterFilterByDownloaded, Manga.SHOW_ALL)
-
-    fun filterChapterByBookmarked() = prefs.getInt(Keys.defaultChapterFilterByBookmarked, Manga.SHOW_ALL)
-
     fun filterEpisodeBySeen() = prefs.getInt(Keys.defaultEpisodeFilterByRead, Anime.SHOW_ALL)
 
     fun filterEpisodeByDownloaded() = prefs.getInt(Keys.defaultEpisodeFilterByDownloaded, Anime.SHOW_ALL)
 
     fun filterEpisodeByBookmarked() = prefs.getInt(Keys.defaultEpisodeFilterByBookmarked, Anime.SHOW_ALL)
-
-    fun sortChapterBySourceOrNumber() = prefs.getInt(Keys.defaultChapterSortBySourceOrNumber, Manga.CHAPTER_SORTING_SOURCE)
-
-    fun displayChapterByNameOrNumber() = prefs.getInt(Keys.defaultChapterDisplayByNameOrNumber, Manga.CHAPTER_DISPLAY_NAME)
-
-    fun sortChapterByAscendingOrDescending() = prefs.getInt(Keys.defaultChapterSortByAscendingOrDescending, Manga.CHAPTER_SORT_DESC)
 
     fun sortEpisodeBySourceOrNumber() = prefs.getInt(Keys.defaultEpisodeSortBySourceOrNumber, Anime.EPISODE_SORTING_SOURCE)
 
@@ -390,17 +369,6 @@ class PreferencesHelper(val context: Context) {
     fun verboseLogging() = prefs.getBoolean(Keys.verboseLogging, false)
 
     fun autoClearChapterCache() = prefs.getBoolean(Keys.autoClearChapterCache, false)
-
-    fun setChapterSettingsDefault(manga: Manga) {
-        prefs.edit {
-            putInt(Keys.defaultChapterFilterByRead, manga.readFilter)
-            putInt(Keys.defaultChapterFilterByDownloaded, manga.downloadedFilter)
-            putInt(Keys.defaultChapterFilterByBookmarked, manga.bookmarkedFilter)
-            putInt(Keys.defaultChapterSortBySourceOrNumber, manga.sorting)
-            putInt(Keys.defaultChapterDisplayByNameOrNumber, manga.displayMode)
-            putInt(Keys.defaultChapterSortByAscendingOrDescending, if (manga.sortDescending()) Manga.CHAPTER_SORT_DESC else Manga.CHAPTER_SORT_ASC)
-        }
-    }
 
     fun setEpisodeSettingsDefault(anime: Anime) {
         prefs.edit {

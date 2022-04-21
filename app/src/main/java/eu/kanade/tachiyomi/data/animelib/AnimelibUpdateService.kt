@@ -8,6 +8,7 @@ import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.toSAnime
 import eu.kanade.tachiyomi.animesource.model.toSEpisode
@@ -26,13 +27,10 @@ import eu.kanade.tachiyomi.data.preference.MANGA_HAS_UNREAD
 import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
 import eu.kanade.tachiyomi.data.preference.MANGA_NON_READ
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.util.episode.NoEpisodesException
 import eu.kanade.tachiyomi.util.episode.syncEpisodesWithSource
-import eu.kanade.tachiyomi.util.episode.syncEpisodesWithTrackServiceTwoWay
 import eu.kanade.tachiyomi.util.lang.withIOContext
 import eu.kanade.tachiyomi.util.prepUpdateCover
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
@@ -506,10 +504,6 @@ class AnimelibUpdateService(
                             try {
                                 val updatedTrack = service.refresh(track)
                                 db.insertTrack(updatedTrack).executeAsBlocking()
-
-                                if (service is EnhancedTrackService) {
-                                    syncEpisodesWithTrackServiceTwoWay(db, db.getEpisodes(anime).executeAsBlocking(), track, service)
-                                }
                             } catch (e: Throwable) {
                                 // Ignore errors and continue
                                 logcat(LogPriority.ERROR, e)

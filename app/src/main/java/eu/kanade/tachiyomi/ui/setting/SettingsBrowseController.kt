@@ -4,7 +4,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.extension.AnimeExtensionUpdateJob
-import eu.kanade.tachiyomi.extension.ExtensionUpdateJob
 import eu.kanade.tachiyomi.util.preference.bindTo
 import eu.kanade.tachiyomi.util.preference.defaultValue
 import eu.kanade.tachiyomi.util.preference.infoPreference
@@ -31,7 +30,6 @@ class SettingsBrowseController : SettingsController() {
 
                 onChange { newValue ->
                     val checked = newValue as Boolean
-                    ExtensionUpdateJob.setupTask(activity!!, checked)
                     AnimeExtensionUpdateJob.setupTask(activity!!, checked)
                     true
                 }

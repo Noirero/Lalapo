@@ -5,10 +5,8 @@ import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
-import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -42,10 +40,6 @@ class Kitsu(private val context: Context, id: Int) : TrackService(id) {
 
     override fun getLogoColor() = Color.rgb(51, 37, 50)
 
-    override fun getStatusList(): List<Int> {
-        return listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ)
-    }
-
     override fun getStatusListAnime(): List<Int> {
         return listOf(WATCHING, PLAN_TO_WATCH, COMPLETED, ON_HOLD, DROPPED)
     }
@@ -63,11 +57,7 @@ class Kitsu(private val context: Context, id: Int) : TrackService(id) {
         }
     }
 
-    override fun getReadingStatus(): Int = READING
-
     override fun getWatchingStatus(): Int = WATCHING
-
-    override fun getRereadingStatus(): Int = -1
 
     override fun getRewatchingStatus(): Int = -1
 
@@ -82,40 +72,13 @@ class Kitsu(private val context: Context, id: Int) : TrackService(id) {
         return if (index > 0) (index + 1) / 2f else 0f
     }
 
-    override fun displayScore(track: Track): String {
-        val df = DecimalFormat("0.#")
-        return df.format(track.score)
-    }
-
     override fun displayScore(track: AnimeTrack): String {
         val df = DecimalFormat("0.#")
         return df.format(track.score)
     }
 
-    private suspend fun add(track: Track): Track {
-        return api.addLibManga(track, getUserId())
-    }
-
     private suspend fun add(track: AnimeTrack): AnimeTrack {
         return api.addLibAnime(track, getUserId())
-    }
-
-    override suspend fun update(track: Track, didReadChapter: Boolean): Track {
-        if (track.status != COMPLETED) {
-            if (didReadChapter) {
-                if (track.last_chapter_read.toInt() == track.total_chapters && track.total_chapters > 0) {
-                    track.status = COMPLETED
-                    track.finished_reading_date = System.currentTimeMillis()
-                } else {
-                    track.status = READING
-                    if (track.last_chapter_read == 1F) {
-                        track.started_reading_date = System.currentTimeMillis()
-                    }
-                }
-            }
-        }
-
-        return api.updateLibManga(track)
     }
 
     override suspend fun update(track: AnimeTrack, didWatchEpisode: Boolean): AnimeTrack {
@@ -136,24 +99,6 @@ class Kitsu(private val context: Context, id: Int) : TrackService(id) {
         return api.updateLibAnime(track)
     }
 
-    override suspend fun bind(track: Track, hasReadChapters: Boolean): Track {
-        val remoteTrack = api.findLibManga(track, getUserId())
-        return if (remoteTrack != null) {
-            track.copyPersonalFrom(remoteTrack)
-            track.media_id = remoteTrack.media_id
-
-            if (track.status != COMPLETED) {
-                track.status = if (hasReadChapters) READING else track.status
-            }
-
-            update(track)
-        } else {
-            track.status = if (hasReadChapters) READING else PLAN_TO_READ
-            track.score = 0F
-            add(track)
-        }
-    }
-
     override suspend fun bind(track: AnimeTrack, hasReadChapters: Boolean): AnimeTrack {
         val remoteTrack = api.findLibAnime(track, getUserId())
         return if (remoteTrack != null) {
@@ -172,19 +117,8 @@ class Kitsu(private val context: Context, id: Int) : TrackService(id) {
         }
     }
 
-    override suspend fun search(query: String): List<TrackSearch> {
-        return api.search(query)
-    }
-
     override suspend fun searchAnime(query: String): List<AnimeTrackSearch> {
         return api.searchAnime(query)
-    }
-
-    override suspend fun refresh(track: Track): Track {
-        val remoteTrack = api.getLibManga(track)
-        track.copyPersonalFrom(remoteTrack)
-        track.total_chapters = remoteTrack.total_chapters
-        return track
     }
 
     override suspend fun refresh(track: AnimeTrack): AnimeTrack {

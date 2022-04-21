@@ -10,7 +10,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.databinding.SourceComfortableGridItemBinding
 import eu.kanade.tachiyomi.databinding.SourceCompactGridItemBinding
-import eu.kanade.tachiyomi.ui.library.setting.DisplayModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
 
 class AnimeSourceItem(val anime: Anime, private val displayMode: Preference<DisplayModeSetting>) :
     AbstractFlexibleItem<AnimeSourceHolder<*>>() {

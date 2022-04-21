@@ -12,7 +12,7 @@ import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.data.database.models.AnimelibAnime
 import eu.kanade.tachiyomi.databinding.SourceComfortableGridItemBinding
 import eu.kanade.tachiyomi.databinding.SourceCompactGridItemBinding
-import eu.kanade.tachiyomi.ui.library.setting.DisplayModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
