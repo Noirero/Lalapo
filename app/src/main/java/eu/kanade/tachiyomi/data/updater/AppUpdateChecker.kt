@@ -58,25 +58,18 @@ class AppUpdateChecker {
         val newVersion = versionTag.replace("[^\\d.]".toRegex(), "")
 
         return if (BuildConfig.PREVIEW) {
-            // Preview builds: based on releases in "jmir1/tachiyomi-preview" repo
+            // Preview builds: based on releases in "Quickdesh/Animiru-preview" repo
             // tagged as something like "r1234"
             newVersion.toInt() > BuildConfig.COMMIT_COUNT.toInt()
         } else {
-            // Release builds: based on releases in "jmir1/aniyomi" repo
+            // Release builds: based on releases in "Quickdesh/Animiru" repo
             // tagged as something like "v0.1.2"
             newVersion != BuildConfig.VERSION_NAME
         }
     }
 }
 
-val GITHUB_REPO: String by lazy {
-    if (BuildConfig.PREVIEW) {
-        // TODO: CHANGE THIS BACK
-        "jmir1/aniyomi-mpv-beta"
-    } else {
-        "jmir1/aniyomi"
-    }
-}
+val GITHUB_REPO = "Quickdesh/Animiru"
 
 val RELEASE_TAG: String by lazy {
     if (BuildConfig.PREVIEW) {

@@ -7,12 +7,14 @@
     android:background="?attr/colorSurface">
 
     <ImageView
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
         android:layout_gravity="center"
-        android:layout_margin="32dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="10dp"
         app:srcCompat="@drawable/ic_ani"
-        app:tint="?attr/colorOnSurface"
         tools:ignore="ContentDescription" />
 
     <com.google.android.material.divider.MaterialDivider

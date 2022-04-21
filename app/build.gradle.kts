@@ -22,7 +22,7 @@ android {
     ndkVersion = AndroidConfig.ndk
 
     defaultConfig {
-        applicationId = "xyz.jmir.tachiyomi.mi"
+        applicationId = "xyz.Quickdesh.Animiru"
         minSdk = AndroidConfig.minSdk
         targetSdk = AndroidConfig.targetSdk
         versionCode = 78
@@ -35,7 +35,7 @@ android {
         buildConfigField("boolean", "PREVIEW", "false")
 
         // Please disable ACRA or use your own instance in forked versions of the project
-        //buildConfigField("String", "ACRA_URI", "\"https://acra.jmir.xyz/report\"")
+        //buildConfigField("String", "ACRA_URI", "\"https://acra.Quickdesh.xyz/report\"")
 
         ndk {
             abiFilters += SUPPORTED_ABIS
