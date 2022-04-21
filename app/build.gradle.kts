@@ -8,10 +8,10 @@ plugins {
     id("com.github.zellius.shortcut-helper")
 }
 
-if (gradle.startParameter.taskRequests.toString().contains("Standard")) {
-    apply<com.google.gms.googleservices.GoogleServicesPlugin>()
-    apply(plugin = "com.google.firebase.crashlytics")
-}
+// if (gradle.startParameter.taskRequests.toString().contains("Standard")) {
+//    apply<com.google.gms.googleservices.GoogleServicesPlugin>()
+//    apply(plugin = "com.google.firebase.crashlytics")
+// }
 
 shortcutHelper.setFilePath("./shortcuts.xml")
 
@@ -241,9 +241,9 @@ dependencies {
     implementation(libs.logcat)
 
     // Crash reports/analytics
-    implementation(libs.acra.http)
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.crashlytics)
+    // implementation(libs.acra.http)
+    // implementation(libs.firebase.analytics)
+    // implementation(libs.firebase.crashlytics)
 
     // Licenses
     implementation(libs.aboutlibraries.core)

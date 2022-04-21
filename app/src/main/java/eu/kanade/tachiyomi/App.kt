@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi
 
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.Application
 import android.app.PendingIntent
@@ -54,6 +55,7 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
     private val disableIncognitoReceiver = DisableIncognitoReceiver()
 
+    @SuppressLint("LaunchActivityFromNotification")
     override fun onCreate() {
         super<Application>.onCreate()
 
@@ -70,7 +72,7 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
         Injekt.importModule(AppModule(this))
 
-        setupAcra()
+        // setupAcra()
         setupNotificationChannels()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -160,9 +162,9 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         return super.getPackageName()
     }
 
-    protected open fun setupAcra() {
-        // removed acra
-    }
+    // protected open fun setupAcra() {
+    // removed acra
+    // }
 
     protected open fun setupNotificationChannels() {
         try {
