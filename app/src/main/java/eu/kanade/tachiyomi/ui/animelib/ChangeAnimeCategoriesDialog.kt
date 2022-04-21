@@ -59,7 +59,7 @@ class ChangeAnimeCategoriesDialog<T>(bundle: Bundle? = null) :
                     setNeutralButton(R.string.action_edit) { _, _ -> openCategoryController() }
                 } else {
                     setMessage(R.string.information_empty_category_dialog)
-                    setPositiveButton(R.string.action_edit_anime_categories) { _, _ -> openCategoryController() }
+                    setPositiveButton(R.string.action_edit_categories) { _, _ -> openCategoryController() }
                 }
             }
             .create()

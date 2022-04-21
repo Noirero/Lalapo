@@ -67,7 +67,7 @@ class AnimeHistoryController :
     private var query = ""
 
     override fun getTitle(): String? {
-        return resources?.getString(R.string.label_recent_manga)
+        return resources?.getString(R.string.label_recent_history)
     }
 
     override fun createPresenter(): AnimeHistoryPresenter {
@@ -129,7 +129,7 @@ class AnimeHistoryController :
         if (size > 0) {
             binding.emptyView.hide()
         } else {
-            binding.emptyView.show(R.string.information_no_recent_manga)
+            binding.emptyView.show(R.string.information_no_recent_anime)
         }
     }
 

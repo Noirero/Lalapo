@@ -71,22 +71,22 @@ class SettingsDownloadController : SettingsController() {
         }
         switchPreference {
             bindTo(preferences.saveChaptersAsCBZ())
-            titleRes = R.string.save_chapter_as_cbz
+            titleRes = R.string.save_as_cbz
         }
         preferenceCategory {
-            titleRes = R.string.pref_category_delete_chapters
+            titleRes = R.string.pref_category_delete_episodes
 
             switchPreference {
                 key = Keys.removeAfterMarkedAsRead
-                titleRes = R.string.pref_remove_after_marked_as_read
+                titleRes = R.string.pref_remove_after_marked_as_seen
                 defaultValue = false
             }
             intListPreference {
                 key = Keys.removeAfterReadSlots
-                titleRes = R.string.pref_remove_after_read
+                titleRes = R.string.pref_remove_after_seen
                 entriesRes = arrayOf(
                     R.string.disabled,
-                    R.string.last_read_chapter,
+                    R.string.last_seen_episode,
                     R.string.second_to_last,
                     R.string.third_to_last,
                     R.string.fourth_to_last,
@@ -98,12 +98,12 @@ class SettingsDownloadController : SettingsController() {
             }
             switchPreference {
                 key = Keys.removeBookmarkedChapters
-                titleRes = R.string.pref_remove_bookmarked_chapters
+                titleRes = R.string.pref_remove_bookmarked_episodes
                 defaultValue = false
             }
             multiSelectListPreference {
                 bindTo(preferences.removeExcludeAnimeCategories())
-                titleRes = R.string.pref_remove_exclude_categories_anime
+                titleRes = R.string.pref_remove_exclude_categories
                 entries = animeCategories.map { it.name }.toTypedArray()
                 entryValues = animeCategories.map { it.id.toString() }.toTypedArray()
 
@@ -131,7 +131,7 @@ class SettingsDownloadController : SettingsController() {
             }
             preference {
                 bindTo(preferences.downloadNewCategoriesAnime())
-                titleRes = R.string.anime_categories
+                titleRes = R.string.categories
                 onClick {
                     DownloadAnimeCategoriesDialog().showDialog(router)
                 }
@@ -173,7 +173,7 @@ class SettingsDownloadController : SettingsController() {
             }
         }
         preferenceCategory {
-            titleRes = R.string.pref_category_anime_download
+            titleRes = R.string.pref_category_download
             switchPreference {
                 key = Keys.useExternalDownloader
                 titleRes = R.string.pref_use_external_downloader
@@ -296,7 +296,7 @@ class SettingsDownloadController : SettingsController() {
                 .toIntArray()
 
             return MaterialAlertDialogBuilder(activity!!)
-                .setTitle(R.string.anime_categories)
+                .setTitle(R.string.categories)
                 .setQuadStateMultiChoiceItems(
                     message = R.string.pref_download_new_anime_categories_details,
                     items = items,

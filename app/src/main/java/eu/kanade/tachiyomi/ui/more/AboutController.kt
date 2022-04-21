@@ -79,14 +79,6 @@ class AboutController : SettingsController(), NoAppBarElevationController {
             }
         }
         preference {
-            key = "pref_about_help_translate"
-            titleRes = R.string.help_translate
-
-            onClick {
-                openInBrowser("https://aniyomi.jmir.xyz/help/contribution/#translation")
-            }
-        }
-        preference {
             key = "pref_about_licenses"
             titleRes = R.string.licenses
             onClick {

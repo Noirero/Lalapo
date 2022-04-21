@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.databinding.MangaChaptersHeaderBinding
+import eu.kanade.tachiyomi.databinding.AnimeEpisodesHeaderBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.util.system.getResourceColor
 import kotlinx.coroutines.flow.launchIn
@@ -21,10 +21,10 @@ class AnimeEpisodesHeaderAdapter(
     private var numEpisodes: Int? = null
     private var hasActiveFilters: Boolean = false
 
-    private lateinit var binding: MangaChaptersHeaderBinding
+    private lateinit var binding: AnimeEpisodesHeaderBinding
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderViewHolder {
-        binding = MangaChaptersHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        binding = AnimeEpisodesHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return HeaderViewHolder(binding.root)
     }
 

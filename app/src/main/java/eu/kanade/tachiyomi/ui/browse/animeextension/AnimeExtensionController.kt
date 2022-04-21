@@ -51,7 +51,7 @@ open class AnimeExtensionController :
     }
 
     override fun getTitle(): String? {
-        return applicationContext?.getString(R.string.label_animeextensions)
+        return applicationContext?.getString(R.string.label_extensions)
     }
 
     override fun createPresenter(): AnimeExtensionPresenter {

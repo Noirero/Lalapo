@@ -124,7 +124,7 @@ class TrackSheet(
         }.build()
 
         val picker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText(R.string.track_started_reading_date)
+            .setTitleText(R.string.track_started_date)
             .setSelection(selection)
             .setCalendarConstraints(constraints)
             .build()
@@ -153,7 +153,7 @@ class TrackSheet(
         }.build()
 
         val picker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText(R.string.track_finished_reading_date)
+            .setTitleText(R.string.track_finished_date)
             .setSelection(selection)
             .setCalendarConstraints(constraints)
             .build()

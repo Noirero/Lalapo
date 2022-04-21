@@ -229,10 +229,10 @@ class AnimelibUpdateNotifier(private val context: Context) {
             setContentIntent(NotificationReceiver.openEpisodePendingActivity(context, anime, episodes.first()))
             setAutoCancel(true)
 
-            // Mark episodes as read action
+            // Mark episodes as seen action
             addAction(
                 R.drawable.ic_glasses_24dp,
-                context.getString(R.string.action_mark_as_read),
+                context.getString(R.string.action_mark_as_seen),
                 NotificationReceiver.markAsSeenPendingBroadcast(
                     context,
                     anime,

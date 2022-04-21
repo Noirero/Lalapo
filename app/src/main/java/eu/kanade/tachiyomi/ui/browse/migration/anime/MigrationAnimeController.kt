@@ -7,14 +7,14 @@ import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.LinearLayoutManager
 import dev.chrisbanes.insetter.applyInsetter
 import eu.davidea.flexibleadapter.FlexibleAdapter
-import eu.kanade.tachiyomi.databinding.MigrationMangaControllerBinding
+import eu.kanade.tachiyomi.databinding.MigrationAnimeControllerBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.base.controller.NucleusController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.browse.migration.search.AnimeSearchController
 
 class MigrationAnimeController :
-    NucleusController<MigrationMangaControllerBinding, MigrationAnimePresenter>,
+    NucleusController<MigrationAnimeControllerBinding, MigrationAnimePresenter>,
     FlexibleAdapter.OnItemClickListener,
     MigrationAnimeAdapter.OnCoverClickListener {
 
@@ -44,7 +44,7 @@ class MigrationAnimeController :
         return MigrationAnimePresenter(sourceId)
     }
 
-    override fun createBinding(inflater: LayoutInflater) = MigrationMangaControllerBinding.inflate(inflater)
+    override fun createBinding(inflater: LayoutInflater) = MigrationAnimeControllerBinding.inflate(inflater)
 
     override fun onViewCreated(view: View) {
         super.onViewCreated(view)

@@ -41,7 +41,7 @@ class Bangumi(private val context: Context, id: Int) : TrackService(id) {
                 if (track.last_episode_seen.toInt() == track.total_episodes && track.total_episodes > 0) {
                     track.status = COMPLETED
                 } else {
-                    track.status = READING
+                    track.status = WATCHING
                 }
             }
         }
@@ -57,7 +57,7 @@ class Bangumi(private val context: Context, id: Int) : TrackService(id) {
             track.library_id = remoteTrack.library_id
 
             if (track.status != COMPLETED) {
-                track.status = if (hasReadChapters) READING else statusTrack.status
+                track.status = if (hasReadChapters) WATCHING else statusTrack.status
             }
 
             track.status = statusTrack.status
@@ -67,7 +67,7 @@ class Bangumi(private val context: Context, id: Int) : TrackService(id) {
             refresh(track)
         } else {
             // Set default fields if it's not found in the list
-            track.status = if (hasReadChapters) READING else PLAN_TO_READ
+            track.status = if (hasReadChapters) WATCHING else PLAN_TO_WATCH
             track.score = 0F
             add(track)
             update(track)
@@ -92,13 +92,13 @@ class Bangumi(private val context: Context, id: Int) : TrackService(id) {
     override fun getLogoColor() = Color.rgb(240, 145, 153)
 
     override fun getStatusListAnime(): List<Int> {
-        return listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ)
+        return listOf(WATCHING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_WATCH)
     }
 
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
-            READING -> getString(R.string.reading)
-            PLAN_TO_READ -> getString(R.string.plan_to_read)
+            WATCHING -> getString(R.string.watching)
+            PLAN_TO_WATCH -> getString(R.string.plan_to_watch)
             COMPLETED -> getString(R.string.completed)
             ON_HOLD -> getString(R.string.on_hold)
             DROPPED -> getString(R.string.dropped)
@@ -106,7 +106,7 @@ class Bangumi(private val context: Context, id: Int) : TrackService(id) {
         }
     }
 
-    override fun getWatchingStatus(): Int = READING
+    override fun getWatchingStatus(): Int = WATCHING
 
     override fun getRewatchingStatus(): Int = -1
 
@@ -143,10 +143,10 @@ class Bangumi(private val context: Context, id: Int) : TrackService(id) {
     }
 
     companion object {
-        const val READING = 3
+        const val WATCHING = 3
         const val COMPLETED = 2
         const val ON_HOLD = 4
         const val DROPPED = 5
-        const val PLAN_TO_READ = 1
+        const val PLAN_TO_WATCH = 1
     }
 }

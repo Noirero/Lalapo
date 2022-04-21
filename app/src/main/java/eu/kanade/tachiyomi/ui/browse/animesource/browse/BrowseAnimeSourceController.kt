@@ -595,7 +595,7 @@ open class BrowseAnimeSourceController(bundle: Bundle) :
                         0 -> {
                             presenter.changeAnimeFavorite(anime)
                             adapter?.notifyItemChanged(position)
-                            activity.toast(activity.getString(R.string.manga_removed_library))
+                            activity.toast(activity.getString(R.string.item_removed_library))
                         }
                     }
                 }
@@ -612,7 +612,7 @@ open class BrowseAnimeSourceController(bundle: Bundle) :
 
                     presenter.changeAnimeFavorite(anime)
                     adapter?.notifyItemChanged(position)
-                    activity.toast(activity.getString(R.string.manga_added_library))
+                    activity.toast(activity.getString(R.string.item_added_library))
                 }
 
                 // Automatic 'Default' or no categories
@@ -621,7 +621,7 @@ open class BrowseAnimeSourceController(bundle: Bundle) :
 
                     presenter.changeAnimeFavorite(anime)
                     adapter?.notifyItemChanged(position)
-                    activity.toast(activity.getString(R.string.manga_added_library))
+                    activity.toast(activity.getString(R.string.item_added_library))
                 }
 
                 // Choose a category
@@ -658,7 +658,7 @@ open class BrowseAnimeSourceController(bundle: Bundle) :
         if (position != null) {
             adapter?.notifyItemChanged(position)
         }
-        activity?.toast(activity?.getString(R.string.manga_added_library))
+        activity?.toast(activity?.getString(R.string.item_added_library))
     }
 
     protected companion object {

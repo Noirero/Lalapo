@@ -70,7 +70,7 @@ abstract class AbstractBackupRestore<T : AbstractBackupManager>(protected val co
         } catch (e: Exception) {
             // If there's any error, return empty update and continue.
             val errorMessage = if (e is NoEpisodesException) {
-                context.getString(R.string.no_chapters_error)
+                context.getString(R.string.no_episodes_error)
             } else {
                 e.message
             }

@@ -185,7 +185,7 @@ class AnimelibSettingsSheet(
             private val lastChecked = Item.MultiSort(R.string.action_sort_last_checked, this)
             private val unseen = Item.MultiSort(R.string.action_filter_unseen, this)
             private val latestEpisode = Item.MultiSort(R.string.action_sort_latest_episode, this)
-            private val episodeFetchDate = Item.MultiSort(R.string.action_sort_chapter_fetch_date, this)
+            private val episodeFetchDate = Item.MultiSort(R.string.action_sort_fetch_date, this)
             private val dateAdded = Item.MultiSort(R.string.action_sort_date_added, this)
 
             override val header = null

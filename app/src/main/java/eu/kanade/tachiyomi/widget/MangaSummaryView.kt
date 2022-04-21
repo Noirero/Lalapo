@@ -16,7 +16,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.databinding.MangaSummaryBinding
+import eu.kanade.tachiyomi.databinding.AnimeSummaryBinding
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.view.setChips
@@ -30,7 +30,7 @@ class MangaSummaryView @JvmOverloads constructor(
     @StyleRes defStyleRes: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr, defStyleRes) {
 
-    private val binding = MangaSummaryBinding.inflate(LayoutInflater.from(context), this, true)
+    private val binding = AnimeSummaryBinding.inflate(LayoutInflater.from(context), this, true)
 
     private var animatorSet: AnimatorSet? = null
 

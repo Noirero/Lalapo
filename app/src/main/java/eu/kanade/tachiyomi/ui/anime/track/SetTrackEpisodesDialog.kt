@@ -9,7 +9,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.databinding.TrackChaptersDialogBinding
+import eu.kanade.tachiyomi.databinding.TrackEpisodesDialogBinding
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -37,7 +37,7 @@ class SetTrackEpisodesDialog<T> : DialogController
     }
 
     override fun onCreateDialog(savedViewState: Bundle?): Dialog {
-        val pickerView = TrackChaptersDialogBinding.inflate(LayoutInflater.from(activity!!))
+        val pickerView = TrackEpisodesDialogBinding.inflate(LayoutInflater.from(activity!!))
         val np = pickerView.chaptersPicker
 
         // Set initial value
@@ -52,7 +52,7 @@ class SetTrackEpisodesDialog<T> : DialogController
         np.wrapSelectorWheel = false
 
         return MaterialAlertDialogBuilder(activity!!)
-            .setTitle(R.string.chapters)
+            .setTitle(R.string.episodes)
             .setView(pickerView.root)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 np.clearFocus()

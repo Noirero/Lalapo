@@ -79,7 +79,7 @@ class MoreController :
 
         preferenceCategory {
             preference {
-                titleRes = R.string.label_recent_manga
+                titleRes = R.string.label_recent_history
 
                 iconRes = R.drawable.ic_history_24dp
                 iconTint = tintColor
@@ -101,7 +101,7 @@ class MoreController :
                 }
             }
             preference {
-                titleRes = R.string.anime_categories
+                titleRes = R.string.categories
                 iconRes = R.drawable.ic_label_24dp
                 iconTint = tintColor
                 onClick {

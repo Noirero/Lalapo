@@ -15,7 +15,7 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.databinding.MangaInfoHeaderBinding
+import eu.kanade.tachiyomi.databinding.AnimeInfoHeaderBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.base.controller.getMainAppBarHeight
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -41,10 +41,10 @@ class AnimeInfoHeaderAdapter(
     private var source: AnimeSource = controller.presenter.source
     private var trackCount: Int = 0
 
-    private lateinit var binding: MangaInfoHeaderBinding
+    private lateinit var binding: AnimeInfoHeaderBinding
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderViewHolder {
-        binding = MangaInfoHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        binding = AnimeInfoHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         updateCoverPosition()
 
         // Expand anime info if navigated from source listing or explicitly set to
@@ -120,7 +120,7 @@ class AnimeInfoHeaderAdapter(
                         isActivated = true
                     } else {
                         setIconResource(R.drawable.ic_sync_24dp)
-                        text = view.context.getString(R.string.manga_tracking_tab)
+                        text = view.context.getString(R.string.tracking_tab)
                         isActivated = false
                     }
 
@@ -208,7 +208,7 @@ class AnimeInfoHeaderAdapter(
             ).map(controller.activity!!::getString).toTypedArray()
 
             MaterialAlertDialogBuilder(controller.activity!!)
-                .setTitle(R.string.manga_cover)
+                .setTitle(R.string.anime_cover)
                 .setItems(options) { _, item ->
                     when (item) {
                         0 -> controller.shareCover()

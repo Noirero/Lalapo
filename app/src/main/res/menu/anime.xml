@@ -12,7 +12,7 @@
     <item
         android:id="@+id/download_group"
         android:icon="@drawable/ic_get_app_24dp"
-        android:title="@string/manga_download"
+        android:title="@string/anime_download"
         app:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom">
         <menu>
@@ -39,7 +39,7 @@
 
     <item
         android:id="@+id/action_edit_categories"
-        android:title="@string/action_edit_anime_categories"
+        android:title="@string/action_edit_categories"
         app:showAsAction="never" />
 
     <item

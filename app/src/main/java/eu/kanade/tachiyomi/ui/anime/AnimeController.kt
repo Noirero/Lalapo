@@ -56,7 +56,7 @@ import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.Location
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.databinding.MangaControllerBinding
+import eu.kanade.tachiyomi.databinding.AnimeControllerBinding
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.ui.anime.episode.AnimeEpisodesHeaderAdapter
 import eu.kanade.tachiyomi.ui.anime.episode.DeleteEpisodesDialog
@@ -118,7 +118,7 @@ import java.util.Date
 import kotlin.math.min
 
 class AnimeController :
-    NucleusController<MangaControllerBinding, AnimePresenter>,
+    NucleusController<AnimeControllerBinding, AnimePresenter>,
     FabController,
     ActionModeWithToolbar.Callback,
     FlexibleAdapter.OnItemClickListener,
@@ -244,7 +244,7 @@ class AnimeController :
         )
     }
 
-    override fun createBinding(inflater: LayoutInflater) = MangaControllerBinding.inflate(inflater)
+    override fun createBinding(inflater: LayoutInflater) = AnimeControllerBinding.inflate(inflater)
 
     override fun onViewCreated(view: View) {
         super.onViewCreated(view)
@@ -570,7 +570,7 @@ class AnimeController :
 
         if (anime.favorite) {
             toggleFavorite()
-            activity?.toast(activity?.getString(R.string.manga_removed_library))
+            activity?.toast(activity?.getString(R.string.item_removed_library))
             activity?.invalidateOptionsMenu()
         } else {
             val duplicateAnime = presenter.getDuplicateAnimelibAnime(anime)
@@ -589,7 +589,7 @@ class AnimeController :
         activity?.let {
             val source = sourceManager.getOrStub(animelibAnime.source)
             MaterialAlertDialogBuilder(it).apply {
-                setMessage(activity?.getString(R.string.confirm_manga_add_duplicate, source.name))
+                setMessage(activity?.getString(R.string.confirm_item_add_duplicate, source.name))
                 setPositiveButton(activity?.getString(R.string.action_add)) { _, _ ->
                     addToAnimelib(newAnime)
                 }
@@ -616,7 +616,7 @@ class AnimeController :
             defaultCategory != null -> {
                 toggleFavorite()
                 presenter.moveAnimeToCategory(anime, defaultCategory)
-                activity?.toast(activity?.getString(R.string.manga_added_library))
+                activity?.toast(activity?.getString(R.string.item_added_library))
                 activity?.invalidateOptionsMenu()
             }
 
@@ -624,7 +624,7 @@ class AnimeController :
             defaultCategoryId == 0 || categories.isEmpty() -> {
                 toggleFavorite()
                 presenter.moveAnimeToCategory(anime, null)
-                activity?.toast(activity?.getString(R.string.manga_added_library))
+                activity?.toast(activity?.getString(R.string.item_added_library))
                 activity?.invalidateOptionsMenu()
             }
 
@@ -697,7 +697,7 @@ class AnimeController :
 
         if (!anime.favorite) {
             toggleFavorite()
-            activity?.toast(activity?.getString(R.string.manga_added_library))
+            activity?.toast(activity?.getString(R.string.item_added_library))
             activity?.invalidateOptionsMenu()
         }
 
@@ -1232,9 +1232,9 @@ class AnimeController :
         toolbar.findToolbarItem(R.id.action_delete)?.isVisible = !isLocalSource && episodes.any { it.isDownloaded }
         toolbar.findToolbarItem(R.id.action_bookmark)?.isVisible = episodes.any { !it.episode.bookmark }
         toolbar.findToolbarItem(R.id.action_remove_bookmark)?.isVisible = episodes.all { it.episode.bookmark }
-        toolbar.findToolbarItem(R.id.action_mark_as_read)?.isVisible = episodes.any { !it.episode.seen }
-        toolbar.findToolbarItem(R.id.action_mark_as_unread)?.isVisible = episodes.any { it.episode.seen }
-        toolbar.findToolbarItem(R.id.action_mark_previous_as_read)?.isVisible = episodes.size == 1
+        toolbar.findToolbarItem(R.id.action_mark_as_seen)?.isVisible = episodes.any { !it.episode.seen }
+        toolbar.findToolbarItem(R.id.action_mark_as_unseen)?.isVisible = episodes.any { it.episode.seen }
+        toolbar.findToolbarItem(R.id.action_mark_previous_as_seen)?.isVisible = episodes.size == 1
         toolbar.findToolbarItem(R.id.action_play_externally)?.isVisible = !preferences.alwaysUseExternalPlayer()
         toolbar.findToolbarItem(R.id.action_play_internally)?.isVisible = preferences.alwaysUseExternalPlayer()
     }
@@ -1247,9 +1247,9 @@ class AnimeController :
             R.id.action_delete -> showDeleteEpisodesConfirmationDialog()
             R.id.action_bookmark -> bookmarkEpisodes(getSelectedEpisodes(), true)
             R.id.action_remove_bookmark -> bookmarkEpisodes(getSelectedEpisodes(), false)
-            R.id.action_mark_as_read -> markAsRead(getSelectedEpisodes())
-            R.id.action_mark_as_unread -> markAsUnread(getSelectedEpisodes())
-            R.id.action_mark_previous_as_read -> markPreviousAsRead(getSelectedEpisodes())
+            R.id.action_mark_as_seen -> markAsRead(getSelectedEpisodes())
+            R.id.action_mark_as_unseen -> markAsUnread(getSelectedEpisodes())
+            R.id.action_mark_previous_as_seen -> markPreviousAsRead(getSelectedEpisodes())
             R.id.action_play_internally -> openEpisode(getSelectedEpisodes().last().episode, playerChangeRequested = true)
             R.id.action_play_externally -> openEpisode(getSelectedEpisodes().last().episode, playerChangeRequested = true)
             else -> return false

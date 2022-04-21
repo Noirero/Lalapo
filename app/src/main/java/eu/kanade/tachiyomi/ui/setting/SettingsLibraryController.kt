@@ -33,7 +33,6 @@ import eu.kanade.tachiyomi.util.preference.preferenceCategory
 import eu.kanade.tachiyomi.util.preference.summaryRes
 import eu.kanade.tachiyomi.util.preference.switchPreference
 import eu.kanade.tachiyomi.util.preference.titleRes
-import eu.kanade.tachiyomi.util.system.isTablet
 import eu.kanade.tachiyomi.widget.materialdialogs.QuadStateTextView
 import eu.kanade.tachiyomi.widget.materialdialogs.setQuadStateMultiChoiceItems
 import kotlinx.coroutines.flow.combine
@@ -83,21 +82,14 @@ class SettingsLibraryController : SettingsController() {
                     }
                     .launchIn(viewScope)
             }
-            if (!context.isTablet()) {
-                switchPreference {
-                    key = Keys.jumpToChapters
-                    titleRes = R.string.pref_jump_to_chapters
-                    defaultValue = false
-                }
-            }
         }
 
         preferenceCategory {
-            titleRes = R.string.general_categories
+            titleRes = R.string.categories
 
             preference {
                 key = "pref_action_edit_anime_categories"
-                titleRes = R.string.action_edit_anime_categories
+                titleRes = R.string.action_edit_categories
 
                 val catCount = dbCategoriesAnime.size
                 summary = context.resources.getQuantityString(R.plurals.num_categories, catCount, catCount)
@@ -109,7 +101,7 @@ class SettingsLibraryController : SettingsController() {
 
             intListPreference {
                 key = Keys.defaultAnimeCategory
-                titleRes = R.string.default_anime_category
+                titleRes = R.string.default_category
 
                 entries = arrayOf(context.getString(R.string.default_category_summary)) +
                     categoriesAnime.map { it.name }.toTypedArray()
@@ -195,8 +187,8 @@ class SettingsLibraryController : SettingsController() {
             }
             multiSelectListPreference {
                 bindTo(preferences.libraryUpdateMangaRestriction())
-                titleRes = R.string.pref_library_update_manga_restriction
-                entriesRes = arrayOf(R.string.pref_update_only_completely_read, R.string.pref_update_only_started, R.string.pref_update_only_non_completed)
+                titleRes = R.string.pref_library_update_anime_restriction
+                entriesRes = arrayOf(R.string.pref_update_only_completely_seen, R.string.pref_update_only_started, R.string.pref_update_only_non_completed)
                 entryValues = arrayOf(MANGA_HAS_UNREAD, MANGA_NON_READ, MANGA_NON_COMPLETED)
 
                 fun updateSummary() {
@@ -204,7 +196,7 @@ class SettingsLibraryController : SettingsController() {
                         .map {
                             when (it) {
                                 MANGA_NON_READ -> context.getString(R.string.pref_update_only_started)
-                                MANGA_HAS_UNREAD -> context.getString(R.string.pref_update_only_completely_read)
+                                MANGA_HAS_UNREAD -> context.getString(R.string.pref_update_only_completely_seen)
                                 MANGA_NON_COMPLETED -> context.getString(R.string.pref_update_only_non_completed)
                                 else -> it
                             }
@@ -224,7 +216,7 @@ class SettingsLibraryController : SettingsController() {
             }
             preference {
                 bindTo(preferences.animelibUpdateCategories())
-                titleRes = R.string.anime_categories
+                titleRes = R.string.categories
 
                 onClick {
                     AnimelibGlobalUpdateCategoriesDialog().showDialog(router)
@@ -353,7 +345,7 @@ class SettingsLibraryController : SettingsController() {
                 .toIntArray()
 
             return MaterialAlertDialogBuilder(activity!!)
-                .setTitle(R.string.anime_categories)
+                .setTitle(R.string.categories)
                 .setQuadStateMultiChoiceItems(
                     message = R.string.pref_animelib_update_categories_details,
                     items = items,

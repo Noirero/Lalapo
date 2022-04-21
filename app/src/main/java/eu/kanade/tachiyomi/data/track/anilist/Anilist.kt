@@ -15,14 +15,11 @@ import uy.kohesive.injekt.injectLazy
 class Anilist(private val context: Context, id: Int) : TrackService(id) {
 
     companion object {
-        const val READING = 1
         const val WATCHING = 11
         const val COMPLETED = 2
         const val PAUSED = 3
         const val DROPPED = 4
-        const val PLANNING = 5
         const val PLANNING_ANIME = 15
-        const val REPEATING = 6
         const val REPEATING_ANIME = 16
 
         const val POINT_100 = "POINT_100"
@@ -66,11 +63,8 @@ class Anilist(private val context: Context, id: Int) : TrackService(id) {
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
             WATCHING -> getString(R.string.watching)
-            READING -> getString(R.string.reading)
-            PLANNING -> getString(R.string.plan_to_read)
             PLANNING_ANIME -> getString(R.string.plan_to_watch)
             COMPLETED -> getString(R.string.completed)
-            REPEATING -> getString(R.string.repeating)
             REPEATING_ANIME -> getString(R.string.repeating_anime)
             PAUSED -> getString(R.string.paused)
             DROPPED -> getString(R.string.dropped)

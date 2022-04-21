@@ -37,7 +37,7 @@
                 app:layout_constraintWidth_max="@dimen/tablet_sidebar_max_width"
                 app:layout_constraintWidth_percent="0.5"
                 tools:itemCount="1"
-                tools:listitem="@layout/manga_info_header" />
+                tools:listitem="@layout/anime_info_header" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/chapters_recycler"
@@ -49,7 +49,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/info_recycler"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:listitem="@layout/chapters_item" />
+                tools:listitem="@layout/episodes_item" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

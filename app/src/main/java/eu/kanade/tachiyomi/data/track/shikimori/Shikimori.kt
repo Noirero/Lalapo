@@ -15,12 +15,12 @@ import uy.kohesive.injekt.injectLazy
 class Shikimori(private val context: Context, id: Int) : TrackService(id) {
 
     companion object {
-        const val READING = 1
+        const val WATCHING = 1
         const val COMPLETED = 2
         const val ON_HOLD = 3
         const val DROPPED = 4
-        const val PLAN_TO_READ = 5
-        const val REREADING = 6
+        const val PLAN_TO_WATCH = 5
+        const val REWATCHING = 6
     }
 
     private val json: Json by injectLazy()
@@ -49,8 +49,8 @@ class Shikimori(private val context: Context, id: Int) : TrackService(id) {
             if (didWatchEpisode) {
                 if (track.last_episode_seen.toInt() == track.total_episodes && track.total_episodes > 0) {
                     track.status = COMPLETED
-                } else if (track.status != REREADING) {
-                    track.status = READING
+                } else if (track.status != REWATCHING) {
+                    track.status = WATCHING
                 }
             }
         }
@@ -65,14 +65,14 @@ class Shikimori(private val context: Context, id: Int) : TrackService(id) {
             track.library_id = remoteTrack.library_id
 
             if (track.status != COMPLETED) {
-                val isRereading = track.status == REREADING
-                track.status = if (isRereading.not() && hasReadChapters) READING else track.status
+                val isRereading = track.status == REWATCHING
+                track.status = if (isRereading.not() && hasReadChapters) WATCHING else track.status
             }
 
             update(track)
         } else {
             // Set default fields if it's not found in the list
-            track.status = if (hasReadChapters) READING else PLAN_TO_READ
+            track.status = if (hasReadChapters) WATCHING else PLAN_TO_WATCH
             track.score = 0F
             add(track)
         }
@@ -95,24 +95,24 @@ class Shikimori(private val context: Context, id: Int) : TrackService(id) {
     override fun getLogoColor() = Color.rgb(40, 40, 40)
 
     override fun getStatusListAnime(): List<Int> {
-        return listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ, REREADING)
+        return listOf(WATCHING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_WATCH, REWATCHING)
     }
 
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
-            READING -> getString(R.string.reading)
-            PLAN_TO_READ -> getString(R.string.plan_to_read)
+            WATCHING -> getString(R.string.watching)
+            PLAN_TO_WATCH -> getString(R.string.plan_to_watch)
             COMPLETED -> getString(R.string.completed)
             ON_HOLD -> getString(R.string.on_hold)
             DROPPED -> getString(R.string.dropped)
-            REREADING -> getString(R.string.repeating)
+            REWATCHING -> getString(R.string.repeating_anime)
             else -> ""
         }
     }
 
-    override fun getWatchingStatus(): Int = READING
+    override fun getWatchingStatus(): Int = WATCHING
 
-    override fun getRewatchingStatus(): Int = REREADING
+    override fun getRewatchingStatus(): Int = REWATCHING
 
     override fun getCompletionStatus(): Int = COMPLETED
 
