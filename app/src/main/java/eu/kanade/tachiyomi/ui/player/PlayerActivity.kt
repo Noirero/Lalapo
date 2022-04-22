@@ -13,6 +13,8 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.content.res.Configuration
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.media.AudioFocusRequest
@@ -296,8 +298,6 @@ class PlayerActivity :
 
         volumeControlStream = AudioManager.STREAM_MUSIC
 
-        setupGestures()
-
         if (presenter?.needsInit() == true) {
             val anime = intent.extras!!.getLong("anime", -1)
             val episode = intent.extras!!.getLong("episode", -1)
@@ -315,8 +315,8 @@ class PlayerActivity :
      * Sets up the gestures to be used
      */
 
-    @SuppressLint("ClickableViewAccessibility")
     @Suppress("DEPRECATION")
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupGestures() {
         val dm = DisplayMetrics()
         windowManager.defaultDisplay.getRealMetrics(dm)
@@ -329,6 +329,11 @@ class PlayerActivity :
             gestures.onTouch(v, event)
             mDetector.onTouchEvent(event)
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (newConfig.orientation == ORIENTATION_PORTRAIT || newConfig.orientation == ORIENTATION_LANDSCAPE) launchUI { setupGestures(); setViewMode() }
     }
 
     /**
@@ -409,7 +414,7 @@ class PlayerActivity :
                 MPVLib.setOptionString("panscan", "0.0")
             }
             0 -> {
-                val newAspect = "${binding.root.width}/${binding.root.height}"
+                val newAspect = "$width/$height"
                 MPVLib.setOptionString("video-aspect-override", newAspect)
                 MPVLib.setOptionString("panscan", "0.0")
             }
@@ -443,7 +448,6 @@ class PlayerActivity :
             binding.playerControls.binding.controlsTopLandscape.isVisible = false
             binding.playerControls.binding.controlsTopPortrait.isVisible = true
         }
-        setupGestures()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -903,7 +907,6 @@ class PlayerActivity :
                 val intPos = pos / 1000F
                 MPVLib.command(arrayOf("set", "start", "$intPos"))
             }
-            setViewMode()
             subTracks = arrayOf(Track("nothing", "Off")) + it.subtitleTracks.toTypedArray()
             audioTracks = arrayOf(Track("nothing", "Off")) + it.audioTracks.toTypedArray()
             MPVLib.command(arrayOf("loadfile", parseVideoUrl(it.videoUrl)))
@@ -1054,7 +1057,7 @@ class PlayerActivity :
                 binding.playerControls.binding.controlsTopLandscape.visibility = View.GONE
             }
         }
-        launchUI { setupGestures() }
+        launchUI { setupGestures(); setViewMode() }
     }
 
     // mpv events
