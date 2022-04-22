@@ -295,17 +295,7 @@ class PlayerActivity :
 
         volumeControlStream = AudioManager.STREAM_MUSIC
 
-        val dm = DisplayMetrics()
-        windowManager.defaultDisplay.getRealMetrics(dm)
-        width = dm.widthPixels
-        height = dm.heightPixels
-
-        val gestures = Gestures(this, width.toFloat(), height.toFloat())
-        mDetector = GestureDetectorCompat(this, gestures)
-        player.setOnTouchListener { v, event ->
-            gestures.onTouch(v, event)
-            mDetector.onTouchEvent(event)
-        }
+        setupGestures()
 
         if (presenter?.needsInit() == true) {
             val anime = intent.extras!!.getLong("anime", -1)
@@ -318,6 +308,26 @@ class PlayerActivity :
         }
 
         playerIsDestroyed = false
+    }
+
+    /**
+     * Sets up the gestures to be used
+     */
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Suppress("DEPRECATION")
+    private fun setupGestures() {
+        val dm = DisplayMetrics()
+        windowManager.defaultDisplay.getRealMetrics(dm)
+        width = dm.widthPixels
+        height = dm.heightPixels
+
+        val gestures = Gestures(this, width.toFloat(), height.toFloat())
+        mDetector = GestureDetectorCompat(this, gestures)
+        player.setOnTouchListener { v, event ->
+            gestures.onTouch(v, event)
+            mDetector.onTouchEvent(event)
+        }
     }
 
     /**
@@ -409,9 +419,9 @@ class PlayerActivity :
     private fun setVisibilities() {
         binding.root.systemUiVisibility =
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-            View.SYSTEM_UI_FLAG_LOW_PROFILE
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LOW_PROFILE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && preferences.playerFullscreen()) {
@@ -432,6 +442,7 @@ class PlayerActivity :
             binding.playerControls.binding.controlsTopLandscape.isVisible = false
             binding.playerControls.binding.controlsTopPortrait.isVisible = true
         }
+        setupGestures()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -825,7 +836,7 @@ class PlayerActivity :
                         REQUEST_NEXT,
                     ),
 
-                ),
+                    ),
             )
             .setAspectRatio(player.videoAspect?.times(10000)?.let { Rational(it.toInt(), 10000) })
             .build()
@@ -1003,6 +1014,7 @@ class PlayerActivity :
                 binding.playerControls.binding.controlsTopLandscape.visibility = View.GONE
             }
         }
+        launchUI { setupGestures() }
     }
 
     // mpv events
