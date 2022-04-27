@@ -113,6 +113,8 @@ class PreferencesHelper(val context: Context) {
 
     fun invertedColors() = flowPrefs.getBoolean("pref_inverted_colors", false)
 
+    fun pipEpisodeToasts() = prefs.getBoolean(Keys.pipEpisodeToasts, true)
+
     fun getPlayerSpeed() = prefs.getFloat(Keys.playerSpeed, 1F)
 
     fun setPlayerSpeed(newSpeed: Float) = prefs.edit {
