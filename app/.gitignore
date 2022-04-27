@@ -2,3 +2,4 @@
 *iml
 *.iml
 custom.gradle
+/src/main/res/values-iw/strings.xml
