@@ -1021,7 +1021,6 @@ class PlayerActivity :
 
     @SuppressLint("SourceLockedOrientationActivity")
     private fun fileLoaded() {
-        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
         MPVLib.setPropertyDouble("speed", preferences.getPlayerSpeed().toDouble())
         clearTracks()
         player.loadTracks()
