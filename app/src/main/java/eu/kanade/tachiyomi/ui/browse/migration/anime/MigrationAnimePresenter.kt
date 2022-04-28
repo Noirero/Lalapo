@@ -25,7 +25,7 @@ class MigrationAnimePresenter(
 
     private fun libraryToMigrationItem(library: List<Anime>): List<MigrationAnimeItem> {
         return library.filter { it.source == sourceId }
-            .sortedBy { it.title }
+            .sortedBy { it.originalTitle }
             .map { MigrationAnimeItem(it) }
     }
 }
