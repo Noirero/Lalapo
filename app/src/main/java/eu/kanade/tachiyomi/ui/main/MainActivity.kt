@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.Menu
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Toast
@@ -84,7 +85,6 @@ class MainActivity : BaseActivity() {
 
     private val startScreenId by lazy {
         when (preferences.startScreen()) {
-            1 -> R.id.nav_animelib
             2 -> R.id.nav_updates
             3 -> R.id.nav_history
             4 -> R.id.nav_browse
@@ -276,6 +276,10 @@ class MainActivity : BaseActivity() {
                     }
                 }
             }
+            .launchIn(lifecycleScope)
+
+        preferences.bottomBarLabels()
+            .asImmediateFlow { setNavLabelVisibility() }
             .launchIn(lifecycleScope)
     }
 
@@ -608,6 +612,7 @@ class MainActivity : BaseActivity() {
     fun showBottomNav(visible: Boolean) {
         if (visible) {
             binding.bottomNav?.slideUp()
+            binding.bottomNav?.menu?.let { updateNavMenu(it) }
         } else {
             binding.bottomNav?.slideDown()
         }
@@ -615,10 +620,24 @@ class MainActivity : BaseActivity() {
 
     private fun showSideNav(visible: Boolean) {
         binding.sideNav?.isVisible = visible
+        binding.sideNav?.let { updateNavMenu(it.menu) }
+    }
+
+    private fun updateNavMenu(menu: Menu) {
+        menu.findItem(R.id.nav_updates).isVisible = preferences.showNavUpdates().get()
+        menu.findItem(R.id.nav_history).isVisible = preferences.showNavHistory().get()
     }
 
     private val nav: NavigationBarView
         get() = binding.bottomNav ?: binding.sideNav!!
+
+    private fun setNavLabelVisibility() {
+        if (preferences.bottomBarLabels().get()) {
+            nav.labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
+        } else {
+            nav.labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_SELECTED
+        }
+    }
 
     init {
         registerSecureActivity(this)

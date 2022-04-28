@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.ui.base.controller.NoAppBarElevationController
 import eu.kanade.tachiyomi.ui.base.controller.RootController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.recent.animehistory.AnimeHistoryController
+import eu.kanade.tachiyomi.ui.recent.animeupdates.AnimeUpdatesController
 import eu.kanade.tachiyomi.ui.setting.SettingsBackupController
 import eu.kanade.tachiyomi.ui.setting.SettingsController
 import eu.kanade.tachiyomi.ui.setting.SettingsMainController
@@ -78,13 +79,24 @@ class MoreController :
         }
 
         preferenceCategory {
-            preference {
-                titleRes = R.string.label_recent_history
-
-                iconRes = R.drawable.ic_history_24dp
-                iconTint = tintColor
-                onClick {
-                    router.pushController(AnimeHistoryController().withFadeTransaction())
+            if (!preferences.showNavUpdates().get()) {
+                preference {
+                    titleRes = R.string.label_recent_updates
+                    iconRes = R.drawable.ic_updates_outline_24dp
+                    iconTint = tintColor
+                    onClick {
+                        router.pushController(AnimeUpdatesController().withFadeTransaction())
+                    }
+                }
+            }
+            if (!preferences.showNavHistory().get()) {
+                preference {
+                    titleRes = R.string.label_recent_history
+                    iconRes = R.drawable.ic_history_24dp
+                    iconTint = tintColor
+                    onClick {
+                        router.pushController(AnimeHistoryController().withFadeTransaction())
+                    }
                 }
             }
             preference {
