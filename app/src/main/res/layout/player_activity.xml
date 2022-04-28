@@ -100,7 +100,7 @@
             android:id="@+id/volumeImg"
             android:layout_width="30dp"
             android:layout_height="20dp"
-            android:src="@drawable/ic_volume_high_24dp"
+            android:src="@drawable/ic_volume_on_24dp"
             app:tint="#FFFFFF"
             android:layout_marginTop="5dp"
             tools:ignore="ContentDescription" />

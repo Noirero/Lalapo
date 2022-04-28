@@ -20,7 +20,11 @@ import android.graphics.drawable.Icon
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.ParcelFileDescriptor
 import android.util.DisplayMetrics
 import android.util.Rational
 import android.view.KeyEvent
@@ -563,8 +567,8 @@ class PlayerActivity :
 
         binding.volumeText.text = newVolume.toString()
         binding.volumeBar.progress = newVolume
-        if (newVolume == 0) binding.volumeImg.setImageResource(R.drawable.ic_volume_none_24dp)
-        else binding.volumeImg.setImageResource(R.drawable.ic_volume_high_24dp)
+        if (newVolume == 0) binding.volumeImg.setImageResource(R.drawable.ic_volume_off_24dp)
+        else binding.volumeImg.setImageResource(R.drawable.ic_volume_on_24dp)
         showGestureView("volume")
     }
 
