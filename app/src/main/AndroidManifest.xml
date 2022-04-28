@@ -125,7 +125,7 @@
 
                 <data
                     android:host="anilist-auth"
-                    android:scheme="tachiyomi" />
+                    android:scheme="animiru" />
             </intent-filter>
         </activity>
         <activity
@@ -140,7 +140,7 @@
 
                 <data
                     android:host="myanimelist-auth"
-                    android:scheme="tachiyomi" />
+                    android:scheme="animiru" />
             </intent-filter>
         </activity>
         <activity
@@ -155,7 +155,7 @@
 
                 <data
                     android:host="shikimori-auth"
-                    android:scheme="tachiyomi" />
+                    android:scheme="animiru" />
             </intent-filter>
         </activity>
         <activity
@@ -170,7 +170,7 @@
 
                 <data
                     android:host="bangumi-auth"
-                    android:scheme="tachiyomi" />
+                    android:scheme="animiru" />
             </intent-filter>
         </activity>
 
