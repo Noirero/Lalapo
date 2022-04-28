@@ -17,6 +17,7 @@ data class BackupEpisode(
     @ProtoNumber(15) var fillermark: Boolean = false,
     // lastPageRead is called progress in 1.x
     @ProtoNumber(6) var lastSecondSeen: Long = 0,
+    @ProtoNumber(16) var totalSeconds: Long = 0,
     @ProtoNumber(7) var dateFetch: Long = 0,
     @ProtoNumber(8) var dateUpload: Long = 0,
     // episodeNumber is called number is 1.x
@@ -33,6 +34,7 @@ data class BackupEpisode(
             bookmark = this@BackupEpisode.bookmark
             fillermark = this@BackupEpisode.fillermark
             last_second_seen = this@BackupEpisode.lastSecondSeen
+            total_seconds = this@BackupEpisode.totalSeconds
             date_fetch = this@BackupEpisode.dateFetch
             date_upload = this@BackupEpisode.dateUpload
             source_order = this@BackupEpisode.sourceOrder
@@ -50,6 +52,7 @@ data class BackupEpisode(
                 bookmark = episode.bookmark,
                 fillermark = episode.fillermark,
                 lastSecondSeen = episode.last_second_seen,
+                totalSeconds = episode.total_seconds,
                 dateFetch = episode.date_fetch,
                 dateUpload = episode.date_upload,
                 sourceOrder = episode.source_order,
