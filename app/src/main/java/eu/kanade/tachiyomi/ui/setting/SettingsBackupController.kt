@@ -247,7 +247,7 @@ class SettingsBackupController : SettingsController() {
                         if (checked) {
                             when (i) {
                                 1 -> flags = flags or BackupConst.BACKUP_CATEGORY
-                                2 -> flags = flags or BackupConst.BACKUP_CHAPTER
+                                2 -> flags = flags or BackupConst.BACKUP_EPISODE
                                 3 -> flags = flags or BackupConst.BACKUP_TRACK
                                 4 -> flags = flags or BackupConst.BACKUP_HISTORY
                                 5 -> flags = flags or BackupConst.BACKUP_CUSTOM_INFO

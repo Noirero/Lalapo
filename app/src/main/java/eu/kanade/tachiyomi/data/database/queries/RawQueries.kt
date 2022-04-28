@@ -37,7 +37,7 @@ val animelibQuery =
 """
 
 /**
- * Query to get the recent chapters of manga from the library up to a date.
+ * Query to get the recent episodes of anime from the library up to a date.
  */
 fun getRecentsQueryAnime() =
     """
@@ -143,7 +143,7 @@ fun getCategoriesForAnimeQuery() =
 """
 
 /** Query to get the list of sources in the database that have
- * non-library manga, and how many
+ * non-library anime, and how many
  */
 fun getSourceIdsWithNonLibraryAnimeQuery() =
     """
