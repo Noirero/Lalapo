@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.full.models
 
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimeImpl
 import eu.kanade.tachiyomi.data.database.models.AnimeTrackImpl
@@ -35,6 +36,13 @@ data class BackupAnime(
     @ProtoNumber(102) var brokenHistory: List<BrokenBackupAnimeHistory> = emptyList(),
     @ProtoNumber(103) var viewer_flags: Int = 0,
     @ProtoNumber(104) var history: List<BackupAnimeHistory> = emptyList(),
+    // Bump values by 200
+    @ProtoNumber(200) var customStatus: Int = 0,
+    @ProtoNumber(201) var customTitle: String? = null,
+    @ProtoNumber(202) var customArtist: String? = null,
+    @ProtoNumber(203) var customAuthor: String? = null,
+    @ProtoNumber(204) var customDescription: String? = null,
+    @ProtoNumber(205) var customGenre: List<String>? = null,
 ) {
     fun getAnimeImpl(): AnimeImpl {
         return AnimeImpl().apply {
@@ -60,6 +68,27 @@ data class BackupAnime(
         }
     }
 
+    fun getCustomAnimeInfo(): CustomAnimeManager.AnimeJson? {
+        if (customTitle != null ||
+            customArtist != null ||
+            customAuthor != null ||
+            customDescription != null ||
+            customGenre != null ||
+            customStatus != 0
+        ) {
+            return CustomAnimeManager.AnimeJson(
+                id = 0L,
+                title = customTitle,
+                author = customAuthor,
+                artist = customArtist,
+                description = customDescription,
+                genre = customGenre,
+                status = customStatus.takeUnless { it == 0 },
+            )
+        }
+        return null
+    }
+
     fun getTrackingImpl(): List<AnimeTrackImpl> {
         return tracking.map {
             it.getTrackingImpl()
@@ -67,22 +96,31 @@ data class BackupAnime(
     }
 
     companion object {
-        fun copyFrom(anime: Anime): BackupAnime {
+        fun copyFrom(anime: Anime, customAnimeManager: CustomAnimeManager?): BackupAnime {
             return BackupAnime(
                 url = anime.url,
-                title = anime.title,
-                artist = anime.artist,
-                author = anime.author,
-                description = anime.description,
-                genre = anime.getGenres() ?: emptyList(),
-                status = anime.status,
+                title = anime.originalTitle,
+                artist = anime.originalArtist,
+                author = anime.originalAuthor,
+                description = anime.originalDescription,
+                genre = anime.getOriginalGenres() ?: emptyList(),
+                status = anime.originalStatus,
                 thumbnailUrl = anime.thumbnail_url,
                 favorite = anime.favorite,
                 source = anime.source,
                 dateAdded = anime.date_added,
                 viewer_flags = anime.viewer_flags,
                 episodeFlags = anime.episode_flags,
-            )
+            ).also { backupAnime ->
+                customAnimeManager?.getAnime(anime)?.let {
+                    backupAnime.customTitle = it.title
+                    backupAnime.customArtist = it.artist
+                    backupAnime.customAuthor = it.author
+                    backupAnime.customDescription = it.description
+                    backupAnime.customGenre = it.getGenres()
+                    backupAnime.customStatus = it.status
+                }
+            }
         }
     }
 }

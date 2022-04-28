@@ -77,6 +77,7 @@
     <string name="action_edit_categories">Edit categories</string>
     <string name="action_rename_category">Rename category</string>
     <string name="action_move_category">Set categories</string>
+    <string name="action_edit_info">Edit info</string>
     <string name="action_edit_cover">Edit cover</string>
     <string name="action_view_episodes">View episodes</string>
     <string name="action_stop">Stop</string>
@@ -217,6 +218,14 @@
         <item quantity="one">Yesterday</item>
         <item quantity="other">%1$d days ago</item>
     </plurals>
+
+    <!-- Anime Info Edit -->
+    <string name="reset_tags">Reset Tags</string>
+    <string name="add_tag">Add Tag</string>
+    <string name="title_hint">Title: %1$s</string>
+    <string name="description_hint">Description: %1$s</string>
+    <string name="studio_hint">Studio: %1$s</string>
+    <string name="artist_hint">Artist: %1$s</string>
 
       <!-- Library section -->
     <string name="pref_category_display">Display</string>
@@ -388,6 +397,7 @@
     <string name="restoring_backup_error">Restoring backup failed</string>
     <string name="restoring_backup_canceled">Canceled restore</string>
     <string name="backup_info">Automatic backups are highly recommended. You should keep copies in other places as well.</string>
+    <string name="custom_anime_info">Custom anime info</string>
 
       <!-- Advanced section -->
     <string name="label_network">Network</string>

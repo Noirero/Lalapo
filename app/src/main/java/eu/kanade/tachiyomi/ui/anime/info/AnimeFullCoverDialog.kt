@@ -58,7 +58,7 @@ class AnimeFullCoverDialog : DialogController {
                 }
                 true
             }
-            menu?.findItem(R.id.action_edit_cover)?.isVisible = anime?.favorite ?: false
+            menu?.findItem(R.id.action_edit_cover)?.isVisible = false // anime?.favorite ?: false
         }
 
         setImage(anime)

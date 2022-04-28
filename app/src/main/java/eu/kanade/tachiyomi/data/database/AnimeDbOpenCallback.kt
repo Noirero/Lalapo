@@ -42,12 +42,6 @@ class AnimeDbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
     override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) {
             db.execSQL(EpisodeTable.sourceOrderUpdateQuery)
-
-            // Fix kissmanga covers after supporting cloudflare
-            db.execSQL(
-                """UPDATE animes SET thumbnail_url =
-                    REPLACE(thumbnail_url, '93.174.95.110', 'kissmanga.com') WHERE source = 4""",
-            )
         }
         if (oldVersion < 3) {
             // Initialize history tables

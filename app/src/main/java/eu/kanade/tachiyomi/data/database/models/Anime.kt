@@ -35,6 +35,10 @@ interface Anime : SAnime {
         return genre?.split(", ")?.map { it.trim() }?.filterNot { it.isBlank() }?.distinct()
     }
 
+    fun getOriginalGenres(): List<String>? {
+        return originalGenre?.split(", ")?.map { it.trim() }
+    }
+
     private fun setEpisodeFlags(flag: Int, mask: Int) {
         episode_flags = episode_flags and mask.inv() or (flag and mask)
     }

@@ -5,6 +5,7 @@ import android.net.Uri
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.toSEpisode
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.Episode
@@ -20,6 +21,7 @@ abstract class AbstractBackupManager(protected val context: Context) {
     internal val animesourceManager: AnimeSourceManager by injectLazy()
     internal val trackManager: TrackManager by injectLazy()
     protected val preferences: PreferencesHelper by injectLazy()
+    protected val customAnimeManager: CustomAnimeManager by injectLazy()
 
     abstract fun createBackup(uri: Uri, flags: Int, isAutoBackup: Boolean): String
 

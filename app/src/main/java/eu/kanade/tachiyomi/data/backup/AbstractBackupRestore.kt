@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
@@ -22,6 +23,8 @@ abstract class AbstractBackupRestore<T : AbstractBackupManager>(protected val co
 
     protected val animedb: AnimeDatabaseHelper by injectLazy()
     protected val trackManager: TrackManager by injectLazy()
+
+    protected val customAnimeManager: CustomAnimeManager by injectLazy()
 
     var job: Job? = null
 

@@ -5,6 +5,7 @@ import com.jakewharton.rxrelay.BehaviorRelay
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
@@ -21,6 +22,7 @@ import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.lang.combineLatest
 import eu.kanade.tachiyomi.util.lang.isNullOrUnsubscribed
 import eu.kanade.tachiyomi.util.lang.launchIO
+import eu.kanade.tachiyomi.util.nullIfBlank
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import rx.Observable
@@ -54,6 +56,7 @@ class AnimelibPresenter(
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val trackManager: TrackManager = Injekt.get(),
+    private val customAnimeManager: CustomAnimeManager = Injekt.get(),
 ) : BasePresenter<AnimelibController>() {
 
     private val context = preferences.context
@@ -456,7 +459,7 @@ class AnimelibPresenter(
     }
 
     /**
-     * Returns the mix (non-common) categories for the given list of manga.
+     * Returns the mix (non-common) categories for the given list of anime.
      *
      * @param animes the list of anime.
      */
@@ -479,6 +482,33 @@ class AnimelibPresenter(
                     .filter { !it.seen }
 
                 downloadManager.downloadEpisodes(anime, episodes)
+            }
+        }
+    }
+
+    fun cleanTitles(animes: List<Anime>) {
+        animes.forEach { anime ->
+            val editedTitle = anime.title.replace("\\[.*?]".toRegex(), "").trim().replace("\\(.*?\\)".toRegex(), "").trim().replace("\\{.*?\\}".toRegex(), "").trim().let {
+                if (it.contains("|")) {
+                    it.replace(".*\\|".toRegex(), "").trim()
+                } else {
+                    it
+                }
+            }
+            if (anime.title == editedTitle) return@forEach
+            val animeJson = anime.id?.let { animeId ->
+                CustomAnimeManager.AnimeJson(
+                    animeId,
+                    editedTitle.nullIfBlank(),
+                    anime.author.takeUnless { it == anime.originalAuthor },
+                    anime.artist.takeUnless { it == anime.originalArtist },
+                    anime.description.takeUnless { it == anime.originalDescription },
+                    anime.genre.takeUnless { it == anime.originalGenre }?.let { anime.getGenres() },
+                    anime.status.takeUnless { it == anime.originalStatus },
+                )
+            }
+            if (animeJson != null) {
+                customAnimeManager.saveAnimeInfo(animeJson)
             }
         }
     }

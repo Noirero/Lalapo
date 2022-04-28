@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi
 import android.app.Application
 import androidx.core.content.ContextCompat
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
@@ -49,6 +50,8 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { ImageSaver(app) }
 
+        addSingletonFactory { CustomAnimeManager(app) }
+
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(app).execute {
             get<PreferencesHelper>()
@@ -60,6 +63,8 @@ class AppModule(val app: Application) : InjektModule {
             get<AnimeDatabaseHelper>()
 
             get<AnimeDownloadManager>()
+
+            get<CustomAnimeManager>()
         }
     }
 }
