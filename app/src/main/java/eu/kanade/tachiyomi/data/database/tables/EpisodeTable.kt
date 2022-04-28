@@ -18,6 +18,8 @@ object EpisodeTable {
 
     const val COL_BOOKMARK = "bookmark"
 
+    const val COL_FILLERMARK = "fillermark"
+
     const val COL_DATE_FETCH = "date_fetch"
 
     const val COL_DATE_UPLOAD = "date_upload"
@@ -40,6 +42,7 @@ object EpisodeTable {
             $COL_SCANLATOR TEXT,
             $COL_SEEN BOOLEAN NOT NULL,
             $COL_BOOKMARK BOOLEAN NOT NULL,
+            $COL_FILLERMARK BOOLEAN NOT NULL,
             $COL_LAST_SECOND_SEEN LONG NOT NULL,
             $COL_TOTAL_SECONDS LONG NOT NULL,
             $COL_EPISODE_NUMBER FLOAT NOT NULL,
@@ -62,6 +65,9 @@ object EpisodeTable {
 
     val bookmarkUpdateQuery: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_BOOKMARK BOOLEAN DEFAULT FALSE"
+
+    val fillermarkUpdateQuery: String
+        get() = "ALTER TABLE $TABLE ADD COLUMN $COL_FILLERMARK BOOLEAN DEFAULT FALSE"
 
     val addScanlator: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_SCANLATOR TEXT DEFAULT NULL"

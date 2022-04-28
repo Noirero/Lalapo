@@ -18,11 +18,27 @@
         android:contentDescription="@string/action_filter_bookmarked"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/episode_title"
-        app:layout_constraintEnd_toStartOf="@id/episode_title"
+        app:layout_constraintEnd_toStartOf="@id/fillermark_icon"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/episode_title"
         app:srcCompat="@drawable/ic_bookmark_24dp"
         app:tint="?attr/colorAccent"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/fillermark_icon"
+        android:layout_width="16dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="4dp"
+        android:contentDescription="@string/action_filter_fillermarked"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/episode_title"
+        app:layout_constraintEnd_toStartOf="@id/episode_title"
+        app:layout_constraintStart_toEndOf="@id/bookmark_icon"
+        app:layout_constraintTop_toTopOf="@id/episode_title"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/ic_fillermark_24dp"
+        app:tint="?attr/colorTertiary"
         tools:visibility="visible" />
 
     <TextView
@@ -34,7 +50,7 @@
         android:textAppearance="?attr/textAppearanceBodyMedium"
         app:layout_constraintBottom_toTopOf="@+id/episode_description"
         app:layout_constraintEnd_toStartOf="@+id/animedownload"
-        app:layout_constraintStart_toEndOf="@+id/bookmark_icon"
+        app:layout_constraintStart_toEndOf="@+id/fillermark_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Title" />
@@ -52,7 +68,7 @@
         app:layout_constraintEnd_toStartOf="@+id/animedownload"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/episode_title"
-        tools:text="22/02/2016 • Scanlator • Page: 45" />
+        tools:text="22/02/2016 • Translator • 25:09" />
 
     <eu.kanade.tachiyomi.ui.anime.episode.EpisodeDownloadView
         android:id="@+id/animedownload"

@@ -359,6 +359,9 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
                 if (!episode.bookmark && dbEpisode.bookmark) {
                     episode.bookmark = dbEpisode.bookmark
                 }
+                if (!episode.fillermark && dbEpisode.fillermark) {
+                    episode.fillermark = dbEpisode.fillermark
+                }
             }
 
             episode.anime_id = anime.id

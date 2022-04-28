@@ -1251,6 +1251,8 @@ class AnimeController :
         toolbar.findToolbarItem(R.id.action_delete)?.isVisible = !isLocalSource && episodes.any { it.isDownloaded }
         toolbar.findToolbarItem(R.id.action_bookmark)?.isVisible = episodes.any { !it.episode.bookmark }
         toolbar.findToolbarItem(R.id.action_remove_bookmark)?.isVisible = episodes.all { it.episode.bookmark }
+        toolbar.findToolbarItem(R.id.action_fillermark)?.isVisible = episodes.any { !it.episode.fillermark }
+        toolbar.findToolbarItem(R.id.action_remove_fillermark)?.isVisible = episodes.all { it.episode.fillermark }
         toolbar.findToolbarItem(R.id.action_mark_as_seen)?.isVisible = episodes.any { !it.episode.seen }
         toolbar.findToolbarItem(R.id.action_mark_as_unseen)?.isVisible = episodes.any { it.episode.seen }
         toolbar.findToolbarItem(R.id.action_mark_previous_as_seen)?.isVisible = episodes.size == 1
@@ -1266,6 +1268,8 @@ class AnimeController :
             R.id.action_delete -> showDeleteEpisodesConfirmationDialog()
             R.id.action_bookmark -> bookmarkEpisodes(getSelectedEpisodes(), true)
             R.id.action_remove_bookmark -> bookmarkEpisodes(getSelectedEpisodes(), false)
+            R.id.action_fillermark -> fillermarkEpisodes(getSelectedEpisodes(), true)
+            R.id.action_remove_fillermark -> fillermarkEpisodes(getSelectedEpisodes(), false)
             R.id.action_mark_as_seen -> markAsRead(getSelectedEpisodes())
             R.id.action_mark_as_unseen -> markAsUnread(getSelectedEpisodes())
             R.id.action_mark_previous_as_seen -> markPreviousAsRead(getSelectedEpisodes())
@@ -1412,6 +1416,11 @@ class AnimeController :
 
     private fun bookmarkEpisodes(episodes: List<EpisodeItem>, bookmarked: Boolean) {
         presenter.bookmarkEpisodes(episodes, bookmarked)
+        destroyActionModeIfNeeded()
+    }
+
+    private fun fillermarkEpisodes(episodes: List<EpisodeItem>, fillermarked: Boolean) {
+        presenter.fillermarkEpisodes(episodes, fillermarked)
         destroyActionModeIfNeeded()
     }
 

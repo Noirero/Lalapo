@@ -38,19 +38,31 @@ class AnimeUpdatesHolder(private val view: View, private val adapter: AnimeUpdat
         // Set anime title
         binding.mangaTitle.text = item.anime.title
 
-        // Check if episode is seen and/or bookmarked and set correct color
+        // Check if episode is seen and/or bookmarked and/or fillermarked and set correct color
         if (item.episode.seen) {
             binding.chapterTitle.setTextColor(adapter.seenColor)
             binding.mangaTitle.setTextColor(adapter.seenColor)
         } else {
             binding.mangaTitle.setTextColor(adapter.unseenColor)
             binding.chapterTitle.setTextColor(
-                if (item.bookmark) adapter.bookmarkedColor else adapter.unseenColorSecondary,
+
+                if (item.bookmark) {
+                    adapter.bookmarkedColor
+                } else {
+                    if (item.fillermark) {
+                        adapter.fillermarkedColor
+                    } else {
+                        adapter.unseenColorSecondary
+                    }
+                },
             )
         }
 
         // Set bookmark status
         binding.bookmarkIcon.isVisible = item.bookmark
+
+        // Set fillermark status
+        binding.fillermarkIcon.isVisible = item.fillermark
 
         // Set episode status
         binding.download.isVisible = item.anime.source != LocalAnimeSource.ID

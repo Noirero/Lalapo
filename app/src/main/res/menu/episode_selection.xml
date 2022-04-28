@@ -28,6 +28,22 @@
         tools:ignore="AlwaysShowAction" />
 
     <item
+        android:id="@+id/action_fillermark"
+        android:icon="@drawable/ic_fillermark_border_24dp"
+        android:title="@string/action_fillermark"
+        app:iconTint="?attr/colorOnSurface"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+
+    <item
+        android:id="@+id/action_remove_fillermark"
+        android:icon="@drawable/ic_fillermark_24dp"
+        android:title="@string/action_remove_fillermark"
+        app:iconTint="?attr/colorOnSurface"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+
+    <item
         android:id="@+id/action_mark_as_seen"
         android:icon="@drawable/ic_done_24dp"
         android:title="@string/action_mark_as_seen"

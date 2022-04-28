@@ -601,6 +601,13 @@ class AnimePresenter(
             observable = observable.filter { !it.bookmark }
         }
 
+        val fillermarkedFilter = onlyFillermarked()
+        if (fillermarkedFilter == State.INCLUDE) {
+            observable = observable.filter { it.fillermark }
+        } else if (fillermarkedFilter == State.EXCLUDE) {
+            observable = observable.filter { !it.fillermark }
+        }
+
         return observable.toSortedList(getEpisodeSort(anime))
     }
 
@@ -726,6 +733,20 @@ class AnimePresenter(
     }
 
     /**
+     * Fillers the given list of episodes.
+     * @param selectedEpisodes the list of episodes to fillermark.
+     */
+    fun fillermarkEpisodes(selectedEpisodes: List<EpisodeItem>, fillermarked: Boolean) {
+        launchIO {
+            selectedEpisodes
+                .forEach {
+                    it.fillermark = fillermarked
+                    db.updateEpisodeProgress(it).executeAsBlocking()
+                }
+        }
+    }
+
+    /**
      * Deletes the given list of episode.
      * @param episodes the list of episodes to delete.
      */
@@ -808,6 +829,20 @@ class AnimePresenter(
     }
 
     /**
+     * Sets the fillermark filter and requests an UI update.
+     * @param state whether to display only fillermarked episodes or all episodes.
+     */
+    fun setFillermarkedFilter(state: State) {
+        anime.fillermarkedFilter = when (state) {
+            State.IGNORE -> Anime.SHOW_ALL
+            State.INCLUDE -> Anime.EPISODE_SHOW_FILLERMARKED
+            State.EXCLUDE -> Anime.EPISODE_SHOW_NOT_FILLERMARKED
+        }
+        db.updateEpisodeFlags(anime).executeAsBlocking()
+        refreshEpisodes()
+    }
+
+    /**
      * Sets the active display mode.
      * @param mode the mode to set.
      */
@@ -849,12 +884,23 @@ class AnimePresenter(
     }
 
     /**
-     * Whether the display only downloaded filter is enabled.
+     * Whether the display only bookmarked filter is enabled.
      */
     fun onlyBookmarked(): State {
         return when (anime.bookmarkedFilter) {
             Anime.EPISODE_SHOW_BOOKMARKED -> State.INCLUDE
             Anime.EPISODE_SHOW_NOT_BOOKMARKED -> State.EXCLUDE
+            else -> State.IGNORE
+        }
+    }
+
+    /**
+     * Whether the display only fillermarked filter is enabled.
+     */
+    fun onlyFillermarked(): State {
+        return when (anime.fillermarkedFilter) {
+            Anime.EPISODE_SHOW_FILLERMARKED -> State.INCLUDE
+            Anime.EPISODE_SHOW_NOT_FILLERMARKED -> State.EXCLUDE
             else -> State.IGNORE
         }
     }

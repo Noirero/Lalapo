@@ -353,6 +353,8 @@ class PreferencesHelper(val context: Context) {
 
     fun filterEpisodeByBookmarked() = prefs.getInt(Keys.defaultEpisodeFilterByBookmarked, Anime.SHOW_ALL)
 
+    fun filterEpisodeByFillermarked() = prefs.getInt(Keys.defaultEpisodeFilterByFillermarked, Anime.SHOW_ALL)
+
     fun sortEpisodeBySourceOrNumber() = prefs.getInt(Keys.defaultEpisodeSortBySourceOrNumber, Anime.EPISODE_SORTING_SOURCE)
 
     fun displayEpisodeByNameOrNumber() = prefs.getInt(Keys.defaultEpisodeDisplayByNameOrNumber, Anime.EPISODE_DISPLAY_NAME)
@@ -383,6 +385,7 @@ class PreferencesHelper(val context: Context) {
             putInt(Keys.defaultEpisodeFilterByRead, anime.seenFilter)
             putInt(Keys.defaultEpisodeFilterByDownloaded, anime.downloadedFilter)
             putInt(Keys.defaultEpisodeFilterByBookmarked, anime.bookmarkedFilter)
+            putInt(Keys.defaultEpisodeFilterByFillermarked, anime.fillermarkedFilter)
             putInt(Keys.defaultEpisodeSortBySourceOrNumber, anime.sorting)
             putInt(Keys.defaultEpisodeDisplayByNameOrNumber, anime.displayMode)
             putInt(

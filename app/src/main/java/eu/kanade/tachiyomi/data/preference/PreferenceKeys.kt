@@ -106,6 +106,8 @@ object PreferenceKeys {
 
     const val defaultEpisodeFilterByBookmarked = "default_episode_filter_by_bookmarked"
 
+    const val defaultEpisodeFilterByFillermarked = "default_episode_filter_by_fillermarked"
+
     const val defaultEpisodeSortBySourceOrNumber = "default_episode_sort_by_source_or_number" // and upload date
 
     const val defaultEpisodeSortByAscendingOrDescending = "default_episode_sort_by_ascending_or_descending"

@@ -16,6 +16,7 @@ class AnimeUpdatesAdapter(
     var unseenColor = context.getResourceColor(R.attr.colorOnSurface)
     val unseenColorSecondary = context.getResourceColor(android.R.attr.textColorSecondary)
     var bookmarkedColor = context.getResourceColor(R.attr.colorAccent)
+    val fillermarkedColor = context.getResourceColor(R.attr.colorTertiary)
 
     val coverClickListener: OnCoverClickListener = controller
 

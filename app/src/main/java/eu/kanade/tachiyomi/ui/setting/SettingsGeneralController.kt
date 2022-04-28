@@ -32,7 +32,7 @@ class SettingsGeneralController : SettingsController() {
                 R.string.label_recent_history,
                 R.string.browse,
             )
-            entryValues = arrayOf("1", "2", "3","4")
+            entryValues = arrayOf("1", "2", "3", "4")
             defaultValue = "1"
             summary = "%s"
         }

@@ -84,9 +84,10 @@ class EpisodesSettingsSheet(
             private val downloaded = Item.TriStateGroup(R.string.action_filter_downloaded, this)
             private val unread = Item.TriStateGroup(R.string.action_filter_unseen, this)
             private val bookmarked = Item.TriStateGroup(R.string.action_filter_bookmarked, this)
+            private val fillermarked = Item.TriStateGroup(R.string.action_filter_fillermarked, this)
 
             override val header = null
-            override val items = listOf(downloaded, unread, bookmarked)
+            override val items = listOf(downloaded, unread, bookmarked, fillermarked)
             override val footer = null
 
             override fun initModels() {
@@ -98,6 +99,7 @@ class EpisodesSettingsSheet(
                 }
                 unread.state = presenter.onlyUnread().value
                 bookmarked.state = presenter.onlyBookmarked().value
+                fillermarked.state = presenter.onlyFillermarked().value
             }
 
             override fun onItemClicked(item: Item) {
@@ -113,6 +115,8 @@ class EpisodesSettingsSheet(
                     downloaded -> presenter.setDownloadedFilter(newState)
                     unread -> presenter.setUnreadFilter(newState)
                     bookmarked -> presenter.setBookmarkedFilter(newState)
+                    fillermarked -> presenter.setFillermarkedFilter(newState)
+                    else -> throw Exception("Unknown Filter")
                 }
 
                 initModels()

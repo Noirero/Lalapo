@@ -340,6 +340,11 @@ class AnimeUpdatesController :
         destroyActionModeIfNeeded()
     }
 
+    private fun fillermarkEpisodes(episodes: List<AnimeUpdatesItem>, fillermarked: Boolean) {
+        presenter.fillermarkEpisodes(episodes, fillermarked)
+        destroyActionModeIfNeeded()
+    }
+
     override fun deleteEpisode(position: Int) {
         val item = adapter?.getItem(position) as? AnimeUpdatesItem ?: return
         deleteEpisodes(listOf(item))
@@ -379,6 +384,8 @@ class AnimeUpdatesController :
         toolbar.findToolbarItem(R.id.action_delete)?.isVisible = episodes.any { it.isDownloaded }
         toolbar.findToolbarItem(R.id.action_bookmark)?.isVisible = episodes.any { !it.bookmark }
         toolbar.findToolbarItem(R.id.action_remove_bookmark)?.isVisible = episodes.all { it.bookmark }
+        toolbar.findToolbarItem(R.id.action_fillermark)?.isVisible = episodes.any { !it.fillermark }
+        toolbar.findToolbarItem(R.id.action_remove_fillermark)?.isVisible = episodes.all { it.fillermark }
         toolbar.findToolbarItem(R.id.action_mark_as_seen)?.isVisible = episodes.any { !it.episode.seen }
         toolbar.findToolbarItem(R.id.action_mark_as_unseen)?.isVisible = episodes.all { it.episode.seen }
     }
@@ -402,6 +409,8 @@ class AnimeUpdatesController :
                     .showDialog(router)
             R.id.action_bookmark -> bookmarkEpisodes(getSelectedEpisodes(), true)
             R.id.action_remove_bookmark -> bookmarkEpisodes(getSelectedEpisodes(), false)
+            R.id.action_fillermark -> fillermarkEpisodes(getSelectedEpisodes(), true)
+            R.id.action_remove_fillermark -> fillermarkEpisodes(getSelectedEpisodes(), false)
             R.id.action_mark_as_seen -> markAsRead(getSelectedEpisodes())
             R.id.action_mark_as_unseen -> markAsUnread(getSelectedEpisodes())
             else -> return false

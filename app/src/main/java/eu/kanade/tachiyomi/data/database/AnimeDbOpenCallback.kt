@@ -20,7 +20,7 @@ class AnimeDbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         /**
          * Version of the database.
          */
-        const val DATABASE_VERSION = 114
+        const val DATABASE_VERSION = 115
     }
 
     override fun onCreate(db: SupportSQLiteDatabase) = with(db) {
@@ -85,8 +85,11 @@ class AnimeDbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
             db.execSQL(AnimeTrackTable.insertFromTempTable)
             db.execSQL(AnimeTrackTable.dropTempTable)
         }
-        if (oldVersion < 14) {
+        if (oldVersion < 114) {
             db.execSQL(EpisodeTable.fixDateUploadIfNeeded)
+        }
+        if (oldVersion < 115) {
+            db.execSQL(EpisodeTable.fillermarkUpdateQuery)
         }
     }
 

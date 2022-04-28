@@ -13,6 +13,8 @@ interface Episode : SEpisode, Serializable {
 
     var bookmark: Boolean
 
+    var fillermark: Boolean
+
     var last_second_seen: Long
 
     var total_seconds: Long
