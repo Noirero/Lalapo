@@ -21,4 +21,7 @@ object AnimeCategoryTable {
             FOREIGN KEY($COL_ANIME_ID) REFERENCES ${AnimeTable.TABLE} (${AnimeTable.COL_ID})
             ON DELETE CASCADE
             )"""
+
+    val renameTableCategoryName: String
+        get() = "ALTER TABLE anime_categories RENAME TO $TABLE"
 }
