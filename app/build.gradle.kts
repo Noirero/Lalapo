@@ -59,9 +59,9 @@ android {
             applicationIdSuffix = ".debug"
         }
         named("release") {
-            isShrinkResources = true
-            isMinifyEnabled = true
-            proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
+            // isShrinkResources = true
+            // isMinifyEnabled = true
+            // proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
         }
         create("preview") {
             initWith(getByName("release"))
