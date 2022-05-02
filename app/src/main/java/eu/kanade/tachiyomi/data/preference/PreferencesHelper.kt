@@ -115,6 +115,8 @@ class PreferencesHelper(val context: Context) {
 
     fun pipEpisodeToasts() = prefs.getBoolean(Keys.pipEpisodeToasts, true)
 
+    fun mpvConf() = prefs.getString(Keys.mpvConf, "")
+
     fun getPlayerSpeed() = prefs.getFloat(Keys.playerSpeed, 1F)
 
     fun setPlayerSpeed(newSpeed: Float) = prefs.edit {
