@@ -264,9 +264,10 @@ class PlayerPresenter(
     }
 
     fun saveEpisodeHistory() {
+        if (incognitoMode) return
         val episode = currentEpisode ?: return
         val history = AnimeHistory.create(episode).apply { last_seen = Date().time }
-        db.updateAnimeHistoryLastSeen(history).asRxCompletable()
+        db.upsertAnimeHistoryLastSeen(history).asRxCompletable()
             .onErrorComplete()
             .subscribeOn(Schedulers.io())
             .subscribe()

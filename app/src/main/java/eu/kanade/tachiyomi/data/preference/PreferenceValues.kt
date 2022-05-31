@@ -3,11 +3,19 @@ package eu.kanade.tachiyomi.data.preference
 import eu.kanade.tachiyomi.R
 
 const val DEVICE_ONLY_ON_WIFI = "wifi"
+const val DEVICE_NETWORK_NOT_METERED = "network_not_metered"
 const val DEVICE_CHARGING = "ac"
+const val DEVICE_BATTERY_NOT_LOW = "battery_not_low"
 
 const val MANGA_NON_COMPLETED = "manga_ongoing"
 const val MANGA_HAS_UNREAD = "manga_fully_read"
 const val MANGA_NON_READ = "manga_started"
+
+const val FLAG_CATEGORIES = "1"
+const val FLAG_CHAPTERS = "2"
+const val FLAG_HISTORY = "4"
+const val FLAG_TRACK = "8"
+const val FLAG_SETTINGS = "10"
 
 /**
  * This class stores the values for the preferences in the application.

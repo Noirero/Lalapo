@@ -268,7 +268,7 @@ class AnilistApi(val client: OkHttpClient, interceptor: AnilistInterceptor) {
 
     private fun jsonToALAnime(struct: JsonObject): ALAnime {
         return ALAnime(
-            struct["id"]!!.jsonPrimitive.int,
+            struct["id"]!!.jsonPrimitive.long,
             struct["title"]!!.jsonObject["userPreferred"]!!.jsonPrimitive.content,
             struct["coverImage"]!!.jsonObject["large"]!!.jsonPrimitive.content,
             struct["description"]!!.jsonPrimitive.contentOrNull,

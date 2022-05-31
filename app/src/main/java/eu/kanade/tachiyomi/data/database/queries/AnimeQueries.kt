@@ -9,7 +9,12 @@ import eu.kanade.tachiyomi.data.database.AnimeDbProvider
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimelibAnime
 import eu.kanade.tachiyomi.data.database.models.SourceIdAnimeCount
-import eu.kanade.tachiyomi.data.database.resolvers.*
+import eu.kanade.tachiyomi.data.database.resolvers.AnimeCoverLastModifiedPutResolver
+import eu.kanade.tachiyomi.data.database.resolvers.AnimeFavoritePutResolver
+import eu.kanade.tachiyomi.data.database.resolvers.AnimeFlagsPutResolver
+import eu.kanade.tachiyomi.data.database.resolvers.AnimeLastUpdatedPutResolver
+import eu.kanade.tachiyomi.data.database.resolvers.AnimelibAnimeGetResolver
+import eu.kanade.tachiyomi.data.database.resolvers.SourceIdAnimeCountGetResolver
 import eu.kanade.tachiyomi.data.database.tables.AnimeCategoryTable
 import eu.kanade.tachiyomi.data.database.tables.AnimeTable
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable
@@ -130,11 +135,6 @@ interface AnimeQueries : AnimeDbProvider {
         .withPutResolver(AnimeFlagsPutResolver(AnimeTable.COL_VIEWER, Anime::viewer_flags))
         .prepare()
 
-    fun updateViewerFlags(anime: List<Anime>) = db.put()
-        .objects(anime)
-        .withPutResolver(AnimeFlagsPutResolver(AnimeTable.COL_VIEWER, Anime::viewer_flags))
-        .prepare()
-
     fun updateLastUpdated(anime: Anime) = db.put()
         .`object`(anime)
         .withPutResolver(AnimeLastUpdatedPutResolver())
@@ -145,19 +145,10 @@ interface AnimeQueries : AnimeDbProvider {
         .withPutResolver(AnimeFavoritePutResolver())
         .prepare()
 
-    fun updateAnimeTitle(anime: Anime) = db.put()
-        .`object`(anime)
-        .withPutResolver(AnimeTitlePutResolver())
-        .prepare()
-
     fun updateAnimeCoverLastModified(anime: Anime) = db.put()
         .`object`(anime)
         .withPutResolver(AnimeCoverLastModifiedPutResolver())
         .prepare()
-
-    fun deleteAnime(anime: Anime) = db.delete().`object`(anime).prepare()
-
-    fun deleteAnimes(animes: List<Anime>) = db.delete().objects(animes).prepare()
 
     fun deleteAnimesNotInLibraryBySourceIds(sourceIds: List<Long>) = db.delete()
         .byQuery(
@@ -169,29 +160,11 @@ interface AnimeQueries : AnimeDbProvider {
         )
         .prepare()
 
-    fun deleteAnimes() = db.delete()
-        .byQuery(
-            DeleteQuery.builder()
-                .table(AnimeTable.TABLE)
-                .build(),
-        )
-        .prepare()
-
     fun getLastSeenAnime() = db.get()
         .listOfObjects(Anime::class.java)
         .withQuery(
             RawQuery.builder()
                 .query(getLastSeenAnimeQuery())
-                .observesTables(AnimeTable.TABLE)
-                .build(),
-        )
-        .prepare()
-
-    fun getTotalEpisodeAnime() = db.get()
-        .listOfObjects(Anime::class.java)
-        .withQuery(
-            RawQuery.builder()
-                .query(getTotalEpisodeAnimeQuery())
                 .observesTables(AnimeTable.TABLE)
                 .build(),
         )

@@ -43,11 +43,10 @@ class BackupRestoreService : Service() {
          * @param context context of application
          * @param uri path of Uri
          */
-        fun start(context: Context, uri: Uri, mode: Int) {
+        fun start(context: Context, uri: Uri) {
             if (!isRunning(context)) {
                 val intent = Intent(context, BackupRestoreService::class.java).apply {
                     putExtra(BackupConst.EXTRA_URI, uri)
-                    putExtra(BackupConst.EXTRA_MODE, mode)
                 }
                 ContextCompat.startForegroundService(context, intent)
             }

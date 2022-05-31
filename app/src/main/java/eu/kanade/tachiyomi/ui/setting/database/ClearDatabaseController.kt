@@ -38,7 +38,6 @@ class ClearDatabaseController :
     private var menu: Menu? = null
 
     private var actionFab: ExtendedFloatingActionButton? = null
-    private var actionFabScrollListener: RecyclerView.OnScrollListener? = null
 
     init {
         setHasOptionsMenu(true)
@@ -148,7 +147,6 @@ class ClearDatabaseController :
 
     override fun cleanupFab(fab: ExtendedFloatingActionButton) {
         actionFab?.setOnClickListener(null)
-        actionFabScrollListener?.let { recycler?.removeOnScrollListener(it) }
         actionFab = null
     }
 

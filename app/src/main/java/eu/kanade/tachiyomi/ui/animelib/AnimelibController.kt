@@ -8,7 +8,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.view.ActionMode
-import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.ControllerChangeType
@@ -27,7 +26,7 @@ import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.base.controller.RootController
 import eu.kanade.tachiyomi.ui.base.controller.SearchableNucleusController
 import eu.kanade.tachiyomi.ui.base.controller.TabbedController
-import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
+import eu.kanade.tachiyomi.ui.base.controller.pushController
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.preference.asImmediateFlow
@@ -210,9 +209,7 @@ class AnimelibController(
 
         binding.btnGlobalSearch.clicks()
             .onEach {
-                router.pushController(
-                    GlobalAnimeSearchController(presenter.query).withFadeTransaction(),
-                )
+                router.pushController(GlobalAnimeSearchController(presenter.query))
             }
             .launchIn(viewScope)
     }
@@ -304,8 +301,10 @@ class AnimelibController(
         onTabsSettingsChanged(firstLaunch = true)
 
         // Delay the scroll position to allow the view to be properly measured.
-        view.doOnAttach {
-            (activity as? MainActivity)?.binding?.tabs?.setScrollPosition(binding.libraryPager.currentItem, 0f, true)
+        view.post {
+            if (isAttached) {
+                (activity as? MainActivity)?.binding?.tabs?.setScrollPosition(binding.libraryPager.currentItem, 0f, true)
+            }
         }
 
         // Send the anime map to child fragments after the adapter is updated.
@@ -494,7 +493,7 @@ class AnimelibController(
         // Notify the presenter a anime is being opened.
         presenter.onOpenAnime()
 
-        router.pushController(AnimeController(anime).withFadeTransaction())
+        router.pushController(AnimeController(anime))
     }
 
     /**

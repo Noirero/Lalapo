@@ -48,8 +48,8 @@ import eu.kanade.tachiyomi.ui.base.controller.FabController
 import eu.kanade.tachiyomi.ui.base.controller.NoAppBarElevationController
 import eu.kanade.tachiyomi.ui.base.controller.RootController
 import eu.kanade.tachiyomi.ui.base.controller.TabbedController
+import eu.kanade.tachiyomi.ui.base.controller.pushController
 import eu.kanade.tachiyomi.ui.base.controller.setRoot
-import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.browse.BrowseController
 import eu.kanade.tachiyomi.ui.browse.animesource.browse.BrowseAnimeSourceController
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchController
@@ -178,7 +178,7 @@ class MainActivity : BaseActivity() {
                 when (id) {
                     R.id.nav_updates -> {
                         if (router.backstackSize == 1) {
-                            router.pushController(AnimeDownloadController().withFadeTransaction())
+                            router.pushController(AnimeDownloadController())
                         }
                     }
                     R.id.nav_animelib -> {
@@ -187,7 +187,7 @@ class MainActivity : BaseActivity() {
                     }
                     R.id.nav_more -> {
                         if (router.backstackSize == 1) {
-                            router.pushController(SettingsMainController().withFadeTransaction())
+                            router.pushController(SettingsMainController())
                         }
                     }
                 }
@@ -197,6 +197,7 @@ class MainActivity : BaseActivity() {
 
         val container: ViewGroup = binding.controllerContainer
         router = Conductor.attachRouter(this, container, savedInstanceState)
+            .setPopRootControllerMode(Router.PopRootControllerMode.NEVER)
         router.addChangeListener(
             object : ControllerChangeHandler.ControllerChangeListener {
                 override fun onChangeStarted(
@@ -418,7 +419,7 @@ class MainActivity : BaseActivity() {
                     router.popToRoot()
                 }
                 setSelectedNavItem(R.id.nav_browse)
-                router.pushController(BrowseController(toExtensions = true).withFadeTransaction())
+                router.pushController(BrowseController(toExtensions = true))
             }
             SHORTCUT_ANIME -> {
                 val extras = intent.extras ?: return false
@@ -434,7 +435,20 @@ class MainActivity : BaseActivity() {
                     router.popToRoot()
                 }
                 setSelectedNavItem(R.id.nav_more)
-                router.pushController(AnimeDownloadController().withFadeTransaction())
+                router.pushController(AnimeDownloadController())
+            }
+            Intent.ACTION_SEARCH, Intent.ACTION_SEND, "com.google.android.gms.actions.SEARCH_ACTION" -> {
+                // If the intent match the "standard" Android search intent
+                // or the Google-specific search intent (triggered by saying or typing "search *query* on *Tachiyomi*" in Google Search/Google Assistant)
+
+                // Get the search query provided in extras, and if not null, perform a global search with it.
+                val query = intent.getStringExtra(SearchManager.QUERY) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (query != null && query.isNotEmpty()) {
+                    if (router.backstackSize > 1) {
+                        router.popToRoot()
+                    }
+                    router.pushController(GlobalSearchController(query))
+                }
             }
             INTENT_ANIMESEARCH -> {
                 val query = intent.getStringExtra(INTENT_SEARCH_QUERY)
@@ -443,7 +457,7 @@ class MainActivity : BaseActivity() {
                     if (router.backstackSize > 1) {
                         router.popToRoot()
                     }
-                    router.pushController(GlobalAnimeSearchController(query, filter).withFadeTransaction())
+                    router.pushController(GlobalAnimeSearchController(query, filter))
                 }
             }
             else -> {
@@ -522,8 +536,33 @@ class MainActivity : BaseActivity() {
     }
 
     fun setSelectedNavItem(itemId: Int) {
+        val newItemId = getNavIdForId(itemId)
         if (!isFinishing) {
-            nav.selectedItemId = itemId
+            if (newItemId != null) {
+                nav.selectedItemId = newItemId
+            } else {
+                nav.selectedItemId = R.id.nav_more
+                router.setRoot(getControllerForId(itemId), itemId)
+            }
+        }
+    }
+
+    private fun getNavIdForId(id: Int): Int? {
+        return when (preferences.bottomNavStyle()) {
+            1 -> startScreenArrayHistory.firstOrNull { it == id }
+            2 -> startScreenArrayNoManga.firstOrNull { it == id }
+            else -> startScreenArrayDefault.firstOrNull { it == id }
+        }
+    }
+
+    private fun getControllerForId(id: Int): Controller {
+        return when (id) {
+            R.id.nav_library -> LibraryController()
+            R.id.nav_updates -> UpdatesTabsController()
+            R.id.nav_history -> HistoryTabsController()
+            R.id.nav_browse -> BrowseController()
+            R.id.nav_more -> MoreController()
+            else -> AnimelibController()
         }
     }
 
@@ -660,5 +699,29 @@ class MainActivity : BaseActivity() {
         const val INTENT_ANIMESEARCH = "eu.kanade.tachiyomi.ANIMESEARCH"
         const val INTENT_SEARCH_QUERY = "query"
         const val INTENT_SEARCH_FILTER = "filter"
+
+        private val startScreenArrayDefault = intArrayOf(
+            R.id.nav_animelib,
+            R.id.nav_animelib,
+            R.id.nav_library,
+            R.id.nav_updates,
+            R.id.nav_browse,
+        )
+
+        private val startScreenArrayHistory = intArrayOf(
+            R.id.nav_animelib,
+            R.id.nav_animelib,
+            R.id.nav_library,
+            R.id.nav_history,
+            R.id.nav_browse,
+        )
+
+        private val startScreenArrayNoManga = intArrayOf(
+            R.id.nav_animelib,
+            R.id.nav_animelib,
+            R.id.nav_updates,
+            R.id.nav_history,
+            R.id.nav_browse,
+        )
     }
 }

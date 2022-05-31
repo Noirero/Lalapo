@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.updater
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -26,11 +27,13 @@ internal class AppUpdateNotifier(private val context: Context) {
         context.notificationManager.notify(id, build())
     }
 
+    @SuppressLint("LaunchActivityFromNotification")
     fun promptUpdate(release: GithubRelease) {
         val intent = Intent(context, AppUpdateService::class.java).apply {
             putExtra(AppUpdateService.EXTRA_DOWNLOAD_URL, release.getDownloadLink())
+            putExtra(AppUpdateService.EXTRA_DOWNLOAD_TITLE, release.version)
         }
-        val updateIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val updateIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val releaseIntent = Intent(Intent.ACTION_VIEW, release.releaseLink.toUri()).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -69,7 +72,7 @@ internal class AppUpdateNotifier(private val context: Context) {
             setContentTitle(context.getString(R.string.update_check_notification_update_available))
             setContentText(context.getString(R.string.update_check_fdroid_migration_info))
             setSmallIcon(R.drawable.ic_ani)
-            setContentIntent(NotificationHandler.openUrl(context, "https://tachiyomi.org/help/guides/troubleshooting/#unable-to-install-the-app-or-extensions"))
+            setContentIntent(NotificationHandler.openUrl(context, "https://aniyomi.jmir.xyz/help/guides/troubleshooting/#how-do-i-migrate-from-the-f-droid-version"))
         }
         notificationBuilder.show()
     }
@@ -116,6 +119,7 @@ internal class AppUpdateNotifier(private val context: Context) {
             setOnlyAlertOnce(false)
             setProgress(0, 0, false)
             setContentIntent(installIntent)
+            setOngoing(true)
 
             clearActions()
             addAction(

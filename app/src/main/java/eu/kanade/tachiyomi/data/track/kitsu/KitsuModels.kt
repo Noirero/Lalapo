@@ -10,12 +10,13 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class KitsuSearchAnime(obj: JsonObject) {
-    val id = obj["id"]!!.jsonPrimitive.int
+    val id = obj["id"]!!.jsonPrimitive.long
     private val canonicalTitle = obj["canonicalTitle"]!!.jsonPrimitive.content
     private val episodeCount = obj["episodeCount"]?.jsonPrimitive?.intOrNull
     val subType = obj["subtype"]?.jsonPrimitive?.contentOrNull
@@ -60,7 +61,7 @@ class KitsuLibAnime(obj: JsonObject, anime: JsonObject) {
     private val startDate = anime["attributes"]!!.jsonObject["startDate"]?.jsonPrimitive?.contentOrNull.orEmpty()
     private val startedAt = obj["attributes"]!!.jsonObject["startedAt"]?.jsonPrimitive?.contentOrNull
     private val finishedAt = obj["attributes"]!!.jsonObject["finishedAt"]?.jsonPrimitive?.contentOrNull
-    private val libraryId = obj["id"]!!.jsonPrimitive.int
+    private val libraryId = obj["id"]!!.jsonPrimitive.long
     val status = obj["attributes"]!!.jsonObject["status"]!!.jsonPrimitive.content
     private val ratingTwenty = obj["attributes"]!!.jsonObject["ratingTwenty"]?.jsonPrimitive?.contentOrNull
     val progress = obj["attributes"]!!.jsonObject["progress"]!!.jsonPrimitive.int

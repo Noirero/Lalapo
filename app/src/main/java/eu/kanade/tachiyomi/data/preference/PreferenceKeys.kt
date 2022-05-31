@@ -19,7 +19,15 @@ object PreferenceKeys {
 
     const val defaultPlayerOrientationType = "pref_default_player_orientation_type_key"
 
+    const val adjustOrientationVideoDimensions = "pref_adjust_orientation_video_dimensions"
+
+    const val defaultPlayerOrientationLandscape = "pref_default_player_orientation_landscape_key"
+
+    const val defaultPlayerOrientationPortrait = "pref_default_player_orientation_portrait_key"
+
     const val playerSpeed = "pref_player_speed"
+
+    const val playerFastSeek = "pref_player_fast_seek"
 
     const val playerViewMode = "pref_player_view_mode"
 
@@ -30,8 +38,6 @@ object PreferenceKeys {
     const val alwaysUseExternalPlayer = "pref_always_use_external_player"
 
     const val externalPlayerPreference = "external_player_preference"
-
-    const val jumpToChapters = "jump_to_chapters"
 
     const val autoUpdateTrack = "pref_auto_update_manga_sync_key"
 
@@ -66,6 +72,8 @@ object PreferenceKeys {
 
     const val migrationSortingMode = "pref_migration_sorting"
     const val migrationSortingDirection = "pref_migration_direction"
+
+    const val bottomNavStyle = "bottom_nav_style"
 
     const val startScreen = "start_screen"
 

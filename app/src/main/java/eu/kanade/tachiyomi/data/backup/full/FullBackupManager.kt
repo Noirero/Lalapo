@@ -1,8 +1,11 @@
 package eu.kanade.tachiyomi.data.backup.full
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
+import androidx.preference.PreferenceManager
 import com.hippo.unifile.UniFile
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.AbstractBackupManager
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY_MASK
@@ -12,6 +15,8 @@ import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY_MASK
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_PREFS
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_PREFS_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_TRACK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_TRACK_MASK
 import eu.kanade.tachiyomi.data.backup.full.models.Backup
@@ -23,12 +28,17 @@ import eu.kanade.tachiyomi.data.backup.full.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.full.models.BackupEpisode
 import eu.kanade.tachiyomi.data.backup.full.models.BackupFull
 import eu.kanade.tachiyomi.data.backup.full.models.BackupSerializer
+import eu.kanade.tachiyomi.data.backup.full.models.BooleanPreferenceValue
+import eu.kanade.tachiyomi.data.backup.full.models.FloatPreferenceValue
+import eu.kanade.tachiyomi.data.backup.full.models.IntPreferenceValue
+import eu.kanade.tachiyomi.data.backup.full.models.LongPreferenceValue
+import eu.kanade.tachiyomi.data.backup.full.models.StringPreferenceValue
+import eu.kanade.tachiyomi.data.backup.full.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimeCategory
 import eu.kanade.tachiyomi.data.database.models.AnimeHistory
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.Episode
-import eu.kanade.tachiyomi.util.system.logcat
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import okio.buffer
@@ -51,14 +61,17 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         // Create root object
         var backup: Backup? = null
 
-        animedatabaseHelper.inTransaction {
+        animedb.inTransaction {
             val databaseAnime = getFavoriteAnime()
+
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
             backup = Backup(
                 backupAnime(databaseAnime, flags),
-                backupCategoriesAnime(),
+                backupCategoriesAnime(flags),
                 emptyList(),
                 backupAnimeExtensionInfo(databaseAnime),
+                backupPreferences(prefs, flags),
             )
         }
 
@@ -92,6 +105,10 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
             }
 
             val byteArray = parser.encodeToByteArray(BackupSerializer, backup!!)
+            if (byteArray.isEmpty()) {
+                throw IllegalStateException(context.getString(R.string.empty_backup_error))
+            }
+
             file.openOutputStream().also {
                 // Force overwrite old file
                 (it as? FileOutputStream)?.channel?.truncate(0)
@@ -126,7 +143,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
     }
 
     /**
-     * Backup the categories of library
+     * Backup the categories of manga library
      *
      * @return list of [BackupCategory] to be backed up
      */
@@ -150,7 +167,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         // Check if user wants chapter information in backup
         if (options and BACKUP_EPISODE_MASK == BACKUP_EPISODE) {
             // Backup all the chapters
-            val episodes = animedatabaseHelper.getEpisodes(anime).executeAsBlocking()
+            val episodes = animedb.getEpisodes(anime).executeAsBlocking()
             if (episodes.isNotEmpty()) {
                 animeObject.episodes = episodes.map { BackupEpisode.copyFrom(it) }
             }
@@ -159,7 +176,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         // Check if user wants category information in backup
         if (options and BACKUP_CATEGORY_MASK == BACKUP_CATEGORY) {
             // Backup categories for this manga
-            val categoriesForAnime = animedatabaseHelper.getCategoriesForAnime(anime).executeAsBlocking()
+            val categoriesForAnime = animedb.getCategoriesForAnime(anime).executeAsBlocking()
             if (categoriesForAnime.isNotEmpty()) {
                 animeObject.categories = categoriesForAnime.mapNotNull { it.order }
             }
@@ -167,7 +184,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
 
         // Check if user wants track information in backup
         if (options and BACKUP_TRACK_MASK == BACKUP_TRACK) {
-            val tracks = animedatabaseHelper.getTracks(anime).executeAsBlocking()
+            val tracks = animedb.getTracks(anime).executeAsBlocking()
             if (tracks.isNotEmpty()) {
                 animeObject.tracking = tracks.map { BackupAnimeTracking.copyFrom(it) }
             }
@@ -175,10 +192,10 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
 
         // Check if user wants history information in backup
         if (options and BACKUP_HISTORY_MASK == BACKUP_HISTORY) {
-            val historyForAnime = animedatabaseHelper.getHistoryByAnimeId(anime.id!!).executeAsBlocking()
+            val historyForAnime = animedb.getHistoryByAnimeId(anime.id!!).executeAsBlocking()
             if (historyForAnime.isNotEmpty()) {
                 val history = historyForAnime.mapNotNull { history ->
-                    val url = animedatabaseHelper.getEpisode(history.episode_id).executeAsBlocking()?.url
+                    val url = animedb.getEpisode(history.episode_id).executeAsBlocking()?.url
                     url?.let { BackupAnimeHistory(url, history.last_seen) }
                 }
                 if (history.isNotEmpty()) {
@@ -188,6 +205,40 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         }
 
         return animeObject
+    }
+
+    private fun backupPreferences(prefs: SharedPreferences, options: Int): List<BackupPreference> {
+        if (options and BACKUP_PREFS_MASK != BACKUP_PREFS) return emptyList()
+        val backupPreferences = mutableListOf<BackupPreference>()
+        for (pref in prefs.all) {
+            val toAdd = when (pref.value) {
+                is Int -> {
+                    BackupPreference(pref.key, IntPreferenceValue(pref.value as Int))
+                }
+                is Long -> {
+                    BackupPreference(pref.key, LongPreferenceValue(pref.value as Long))
+                }
+                is Float -> {
+                    BackupPreference(pref.key, FloatPreferenceValue(pref.value as Float))
+                }
+                is String -> {
+                    BackupPreference(pref.key, StringPreferenceValue(pref.value as String))
+                }
+                is Boolean -> {
+                    BackupPreference(pref.key, BooleanPreferenceValue(pref.value as Boolean))
+                }
+                is Set<*> -> {
+                    (pref.value as? Set<String>)?.let {
+                        BackupPreference(pref.key, StringSetPreferenceValue(it))
+                    } ?: continue
+                }
+                else -> {
+                    continue
+                }
+            }
+            backupPreferences.add(toAdd)
+        }
+        return backupPreferences
     }
 
     fun restoreAnimeNoFetch(anime: Anime, dbAnime: Anime) {
@@ -216,7 +267,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
      */
     internal fun restoreCategoriesAnime(backupCategories: List<BackupCategory>) {
         // Get categories from file and from db
-        val dbCategories = animedatabaseHelper.getCategories().executeAsBlocking()
+        val dbCategories = animedb.getCategories().executeAsBlocking()
 
         // Iterate over them
         backupCategories.map { it.getCategoryImpl() }.forEach { category ->
@@ -236,7 +287,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
             if (!found) {
                 // Let the db assign the id
                 category.id = null
-                val result = animedatabaseHelper.insertCategory(category).executeAsBlocking()
+                val result = animedb.insertCategory(category).executeAsBlocking()
                 category.id = result.insertedId()?.toInt()
             }
         }
@@ -249,7 +300,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
      * @param categories the categories to restore.
      */
     internal fun restoreCategoriesForAnime(anime: Anime, categories: List<Int>, backupCategories: List<BackupCategory>) {
-        val dbCategories = animedatabaseHelper.getCategories().executeAsBlocking()
+        val dbCategories = animedb.getCategories().executeAsBlocking()
         val animeCategoriesToUpdate = ArrayList<AnimeCategory>(categories.size)
         categories.forEach { backupCategoryOrder ->
             backupCategories.firstOrNull {
@@ -265,8 +316,8 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
 
         // Update database
         if (animeCategoriesToUpdate.isNotEmpty()) {
-            animedatabaseHelper.deleteOldAnimesCategories(listOf(anime)).executeAsBlocking()
-            animedatabaseHelper.insertAnimesCategories(animeCategoriesToUpdate).executeAsBlocking()
+            animedb.deleteOldAnimesCategories(listOf(anime)).executeAsBlocking()
+            animedb.insertAnimesCategories(animeCategoriesToUpdate).executeAsBlocking()
         }
     }
 
@@ -279,7 +330,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         // List containing history to be updated
         val historyToBeUpdated = ArrayList<AnimeHistory>(history.size)
         for ((url, lastSeen) in history) {
-            val dbHistory = animedatabaseHelper.getHistoryByEpisodeUrl(url).executeAsBlocking()
+            val dbHistory = animedb.getHistoryByEpisodeUrl(url).executeAsBlocking()
             // Check if history already in database and update
             if (dbHistory != null) {
                 dbHistory.apply {
@@ -288,7 +339,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
                 historyToBeUpdated.add(dbHistory)
             } else {
                 // If not in database create
-                animedatabaseHelper.getEpisode(url).executeAsBlocking()?.let {
+                animedb.getEpisode(url).executeAsBlocking()?.let {
                     val historyToAdd = AnimeHistory.create(it).apply {
                         last_seen = lastSeen
                     }
@@ -296,7 +347,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
                 }
             }
         }
-        animedatabaseHelper.updateAnimeHistoryLastSeen(historyToBeUpdated).executeAsBlocking()
+        animedb.upsertAnimeHistoryLastSeen(historyToBeUpdated).executeAsBlocking()
     }
 
     /**
@@ -310,7 +361,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         tracks.map { it.anime_id = anime.id!! }
 
         // Get tracks from database
-        val dbTracks = animedatabaseHelper.getTracks(anime).executeAsBlocking()
+        val dbTracks = animedb.getTracks(anime).executeAsBlocking()
         val trackToUpdate = mutableListOf<AnimeTrack>()
 
         tracks.forEach { track ->
@@ -338,12 +389,12 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
         }
         // Update database
         if (trackToUpdate.isNotEmpty()) {
-            animedatabaseHelper.insertTracks(trackToUpdate).executeAsBlocking()
+            animedb.insertTracks(trackToUpdate).executeAsBlocking()
         }
     }
 
     internal fun restoreEpisodesForAnime(anime: Anime, episodes: List<Episode>) {
-        val dbEpisodes = animedatabaseHelper.getEpisodes(anime).executeAsBlocking()
+        val dbEpisodes = animedb.getEpisodes(anime).executeAsBlocking()
 
         episodes.forEach { episode ->
             val dbEpisode = dbEpisodes.find { it.url == episode.url }

@@ -116,7 +116,7 @@ class EpisodesSettingsSheet(
                     unread -> presenter.setUnreadFilter(newState)
                     bookmarked -> presenter.setBookmarkedFilter(newState)
                     fillermarked -> presenter.setFillermarkedFilter(newState)
-                    else -> throw Exception("Unknown Filter")
+                    else -> {}
                 }
 
                 initModels()

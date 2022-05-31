@@ -20,11 +20,13 @@ import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.animesource.online.fetchUrlFromVideo
+import eu.kanade.tachiyomi.data.animelib.AnimelibUpdateNotifier
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.download.model.AnimeDownloadQueue
+import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchNow
@@ -312,6 +314,7 @@ class AnimeDownloader(
                         notifier.onWarning(
                             context.getString(R.string.download_queue_size_warning),
                             WARNING_NOTIF_TIMEOUT_MS,
+                            NotificationHandler.openUrl(context, AnimelibUpdateNotifier.HELP_WARNING_URL),
                         )
                     }
                 }
@@ -459,6 +462,7 @@ class AnimeDownloader(
             .onErrorReturn {
                 video.progress = 0
                 video.status = Video.ERROR
+                notifier.onError(it.message, download.episode.name, download.anime.title)
                 video
             }
     }
@@ -666,17 +670,14 @@ class AnimeDownloader(
         val downloadedImages = tmpDir.listFiles().orEmpty().filterNot { it.name!!.endsWith(".tmp") }
 
         download.status = if (downloadedImages.size == 1) {
-            AnimeDownload.State.DOWNLOADED
-        } else {
-            AnimeDownload.State.ERROR
-        }
-
-        // Only rename the directory if it's downloaded.
-        if (download.status == AnimeDownload.State.DOWNLOADED) {
+            // Only rename the directory if it's downloaded.
             tmpDir.renameTo(dirname)
             cache.addEpisode(dirname, animeDir, download.anime)
 
             DiskUtil.createNoMediaFile(tmpDir, context)
+            AnimeDownload.State.DOWNLOADED
+        } else {
+            AnimeDownload.State.ERROR
         }
     }
 

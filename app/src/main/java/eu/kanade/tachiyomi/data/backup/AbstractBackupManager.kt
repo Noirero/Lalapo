@@ -13,38 +13,38 @@ import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.util.episode.syncEpisodesWithSource
-import uy.kohesive.injekt.injectLazy
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 abstract class AbstractBackupManager(protected val context: Context) {
 
-    internal val animedatabaseHelper: AnimeDatabaseHelper by injectLazy()
-    internal val animesourceManager: AnimeSourceManager by injectLazy()
-    internal val trackManager: TrackManager by injectLazy()
-    protected val preferences: PreferencesHelper by injectLazy()
-    protected val customAnimeManager: CustomAnimeManager by injectLazy()
+    internal val animedb: AnimeDatabaseHelper = Injekt.get()
+    internal val animesourceManager: AnimeSourceManager = Injekt.get()
+    internal val trackManager: TrackManager = Injekt.get()
+    protected val preferences: PreferencesHelper = Injekt.get()
 
     abstract fun createBackup(uri: Uri, flags: Int, isAutoBackup: Boolean): String
 
     /**
-     * Returns manga
+     * Returns anime
      *
      * @return [Anime], null if not found
      */
     internal fun getAnimeFromDatabase(anime: Anime): Anime? =
-        animedatabaseHelper.getAnime(anime.url, anime.source).executeAsBlocking()
+        animedb.getAnime(anime.url, anime.source).executeAsBlocking()
 
     /**
-     * Fetches chapter information.
+     * Fetches episode information.
      *
-     * @param source source of manga
+     * @param source source of anime
      * @param anime anime that needs updating
      * @param episodes list of episodes in the backup
-     * @return Updated manga chapters.
+     * @return Updated anime episodes.
      */
     internal suspend fun restoreEpisodes(source: AnimeSource, anime: Anime, episodes: List<Episode>): Pair<List<Episode>, List<Episode>> {
         val fetchedEpisodes = source.getEpisodeList(anime.toAnimeInfo())
             .map { it.toSEpisode() }
-        val syncedEpisodes = syncEpisodesWithSource(animedatabaseHelper, fetchedEpisodes, anime, source)
+        val syncedEpisodes = syncEpisodesWithSource(animedb, fetchedEpisodes, anime, source)
         if (syncedEpisodes.first.isNotEmpty()) {
             episodes.forEach { it.anime_id = anime.id }
             updateEpisodes(episodes)
@@ -58,7 +58,7 @@ abstract class AbstractBackupManager(protected val context: Context) {
      * @return [Anime] from library
      */
     protected fun getFavoriteAnime(): List<Anime> =
-        animedatabaseHelper.getFavoriteAnimes().executeAsBlocking()
+        animedb.getFavoriteAnimes().executeAsBlocking()
 
     /**
      * Inserts anime and returns id
@@ -66,27 +66,27 @@ abstract class AbstractBackupManager(protected val context: Context) {
      * @return id of [Anime], null if not found
      */
     internal fun insertAnime(anime: Anime): Long? =
-        animedatabaseHelper.insertAnime(anime).executeAsBlocking().insertedId()
+        animedb.insertAnime(anime).executeAsBlocking().insertedId()
 
     /**
-     * Inserts list of chapters
+     * Inserts list of episodes
      */
     protected fun insertEpisodes(episodes: List<Episode>) {
-        animedatabaseHelper.insertEpisodes(episodes).executeAsBlocking()
+        animedb.insertEpisodes(episodes).executeAsBlocking()
     }
 
     /**
-     * Updates a list of chapters
+     * Updates a list of episodes
      */
     protected fun updateEpisodes(episodes: List<Episode>) {
-        animedatabaseHelper.updateEpisodesBackup(episodes).executeAsBlocking()
+        animedb.updateEpisodesBackup(episodes).executeAsBlocking()
     }
 
     /**
-     * Updates a list of chapters with known database ids
+     * Updates a list of episodes with known database ids
      */
     protected fun updateKnownEpisodes(episodes: List<Episode>) {
-        animedatabaseHelper.updateKnownEpisodesBackup(episodes).executeAsBlocking()
+        animedb.updateKnownEpisodesBackup(episodes).executeAsBlocking()
     }
 
     /**

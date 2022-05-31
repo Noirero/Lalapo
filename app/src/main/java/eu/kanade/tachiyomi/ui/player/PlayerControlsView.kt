@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.player
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
@@ -63,28 +64,32 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
     override fun onViewAdded(child: View?) {
         binding.pipBtn.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
-        binding.backArrowBtnLandscape.setOnClickListener { activity.onBackPressed() }
-        binding.backArrowBtnPortrait.setOnClickListener { activity.onBackPressed() }
+        binding.backArrowBtn.setOnClickListener { activity.onBackPressed() }
 
         // Lock and Unlock controls
         binding.lockBtn.setOnClickListener { lockControls(true) }
         binding.unlockBtn.setOnClickListener { lockControls(false) }
 
         // Cycle, Long click controls
-        binding.cycleAudioBtnLandscape.setOnLongClickListener { pickAudio(); true }
-        binding.cycleAudioBtnPortrait.setOnLongClickListener { pickAudio(); true }
+        binding.cycleAudioBtn.setOnLongClickListener { pickAudio(); true }
 
         binding.cycleSpeedBtn.setOnLongClickListener { pickSpeed(); true }
 
-        binding.cycleSubsBtnLandscape.setOnLongClickListener { pickSub(); true }
-        binding.cycleSubsBtnPortrait.setOnLongClickListener { pickSub(); true }
+        binding.cycleSubsBtn.setOnLongClickListener { pickSub(); true }
 
         binding.playbackSeekbar.setOnSeekBarChangeListener(seekBarChangeListener)
 
         binding.nextBtn.setOnClickListener { activity.switchEpisode(false) }
         binding.prevBtn.setOnClickListener { activity.switchEpisode(true) }
 
-        binding.settingsBtnPortrait.setOnClickListener { showSettings() }
+        binding.playbackPositionBtn.setOnClickListener {
+            preferences.invertedPlaybackTxt().set(!preferences.invertedPlaybackTxt().get())
+            if (activity.player.timePos != null) updatePlaybackPos(activity.player.timePos!!)
+        }
+
+        binding.toggleAutoplay.setOnCheckedChangeListener { _, isChecked ->
+            activity.toggleAutoplay(isChecked)
+        }
     }
 
     private val animationHandler = Handler(Looper.getMainLooper())
@@ -98,7 +103,7 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
         }
     }
 
-    private fun lockControls(locked: Boolean) {
+    internal fun lockControls(locked: Boolean) {
         activity.isLocked = locked
         toggleControls()
     }
@@ -129,12 +134,18 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
     internal fun hideControls(hide: Boolean) {
         animationHandler.removeCallbacks(controlsViewRunnable)
-        if (hide) binding.controlsView.isVisible = false
-        else showAndFadeControls()
+        if (hide) {
+            binding.controlsView.isVisible = false
+            binding.lockedView.isVisible = false
+        } else showAndFadeControls()
     }
 
+    @SuppressLint("SetTextI18n")
     internal fun updatePlaybackPos(position: Int) {
-        binding.playbackPositionTxt.text = Utils.prettyTime(position)
+        if (preferences.invertedPlaybackTxt().get() && activity.player.duration != null) {
+            binding.playbackPositionTxt.text = "-${ Utils.prettyTime(activity.player.duration!! - position) }"
+        } else binding.playbackPositionTxt.text = Utils.prettyTime(position)
+
         if (!userIsOperatingSeekbar) {
             binding.playbackSeekbar.progress = position
         }
@@ -151,11 +162,10 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
     }
 
     internal fun updateDecoderButton() {
-        if (binding.cycleDecoderBtnLandscape.visibility != View.VISIBLE && binding.cycleDecoderBtnPortrait.visibility != View.VISIBLE) {
+        if (binding.cycleDecoderBtn.visibility != View.VISIBLE && binding.cycleDecoderBtn.visibility != View.VISIBLE) {
             return
         }
-        binding.cycleDecoderBtnLandscape.text = if (activity.player.hwdecActive) "HW" else "SW"
-        binding.cycleDecoderBtnPortrait.text = if (activity.player.hwdecActive) "HW" else "SW"
+        binding.cycleDecoderBtn.text = if (activity.player.hwdecActive) "HW" else "SW"
     }
 
     internal fun updateSpeedButton() {
@@ -295,10 +305,5 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
             show()
         }
         picker.number = MPVLib.getPropertyDouble("speed")
-    }
-
-    private fun showSettings() {
-        if (binding.settingsLayoutPortrait.isVisible) fadeOutView(binding.settingsLayoutPortrait)
-        else fadeInView(binding.settingsLayoutPortrait)
     }
 }

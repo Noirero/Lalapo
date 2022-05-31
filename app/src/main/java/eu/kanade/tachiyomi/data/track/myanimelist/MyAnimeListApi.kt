@@ -21,6 +21,7 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -94,7 +95,7 @@ class MyAnimeListApi(private val client: OkHttpClient, interceptor: MyAnimeListI
                 .let {
                     val obj = it.jsonObject
                     AnimeTrackSearch.create(TrackManager.MYANIMELIST).apply {
-                        media_id = obj["id"]!!.jsonPrimitive.int
+                        media_id = obj["id"]!!.jsonPrimitive.long
                         title = obj["title"]!!.jsonPrimitive.content
                         summary = obj["synopsis"]?.jsonPrimitive?.content ?: ""
                         total_episodes = obj["num_episodes"]!!.jsonPrimitive.int

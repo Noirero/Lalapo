@@ -9,12 +9,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
-import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.media.AudioFocusRequest
@@ -36,11 +33,13 @@ import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.Track
@@ -53,6 +52,7 @@ import eu.kanade.tachiyomi.ui.base.activity.BaseRxActivity
 import eu.kanade.tachiyomi.util.lang.launchUI
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.logcat
+import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.toast
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.Utils
@@ -68,12 +68,17 @@ class PlayerActivity :
     MPVLib.EventObserver {
 
     companion object {
-        fun newIntent(context: Context, anime: Anime, episode: Episode): Intent {
+
+        fun newIntent(context: Context, animeId: Long?, episodeId: Long?): Intent {
             return Intent(context, PlayerActivity::class.java).apply {
-                putExtra("anime", anime.id)
-                putExtra("episode", episode.id)
+                putExtra("anime", animeId)
+                putExtra("episode", episodeId)
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
+        }
+
+        fun newIntent(context: Context, anime: Anime, episode: Episode): Intent {
+            return newIntent(context, anime.id, episode.id)
         }
     }
 
@@ -102,6 +107,8 @@ class PlayerActivity :
     private val langName = LocaleHelper.getSimpleLocaleDisplay(preferences.lang().get())
 
     internal val player get() = binding.player
+
+    private val playerControls get() = binding.playerControls
 
     private var audioManager: AudioManager? = null
     private var fineVolume = 0F
@@ -198,22 +205,23 @@ class PlayerActivity :
         AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
             binding.seekView.startAnimation(fadeAnimation)
             binding.seekView.visibility = View.GONE
+            diffSeekMain = 0
         }
     }
 
     // Fade out Volume Bar
     private val volumeViewRunnable = Runnable {
         AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
-            binding.volumeView.startAnimation(fadeAnimation)
-            binding.volumeView.visibility = View.GONE
+            playerControls.binding.volumeView.startAnimation(fadeAnimation)
+            playerControls.binding.volumeView.visibility = View.GONE
         }
     }
 
     // Fade out Brightness Bar
     private val brightnessViewRunnable = Runnable {
         AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
-            binding.brightnessView.startAnimation(fadeAnimation)
-            binding.brightnessView.visibility = View.GONE
+            playerControls.binding.brightnessView.startAnimation(fadeAnimation)
+            playerControls.binding.brightnessView.visibility = View.GONE
         }
     }
 
@@ -225,16 +233,16 @@ class PlayerActivity :
             "seek" -> {
                 callback = seekTextRunnable
                 itemView = binding.seekView
-                delay = 750L
+                delay = 1000L
             }
             "volume" -> {
                 callback = volumeViewRunnable
-                itemView = binding.volumeView
+                itemView = playerControls.binding.volumeView
                 delay = 750L
             }
             "brightness" -> {
                 callback = brightnessViewRunnable
-                itemView = binding.brightnessView
+                itemView = playerControls.binding.brightnessView
                 delay = 750L
             }
             else -> return
@@ -264,7 +272,7 @@ class PlayerActivity :
     private var hadPreviousAudio = false
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        binding.playerControls.resetControlsFade()
+        playerControls.resetControlsFade()
         return super.dispatchTouchEvent(ev)
     }
 
@@ -278,13 +286,17 @@ class PlayerActivity :
         binding = PlayerActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        this@PlayerActivity.requestedOrientation = preferences.defaultPlayerOrientationType()
+
         window.statusBarColor = 70000000
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             window.navigationBarColor = 70000000
         }
 
         setVisibilities()
-        binding.playerControls.showAndFadeControls()
+
+        playerControls.showAndFadeControls()
+        toggleAutoplay(preferences.autoplayEnabled().get())
 
         setMpvConf()
         player.initialize(applicationContext.filesDir.path)
@@ -365,19 +377,47 @@ class PlayerActivity :
                 if (width <= height) {
                     width = height.also { height = width }
                 }
-                binding.playerControls.binding.controlsTopLandscape.visibility = View.VISIBLE
-                binding.playerControls.binding.controlsTopPortrait.visibility = View.GONE
-                setupGestures()
-                setViewMode()
+
+                playerControls.binding.titleMainTxt.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    rightToLeft = playerControls.binding.toggleAutoplay.id
+                    rightToRight = ConstraintLayout.LayoutParams.UNSET
+                }
+                playerControls.binding.titleSecondaryTxt.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    rightToLeft = playerControls.binding.toggleAutoplay.id
+                    rightToRight = ConstraintLayout.LayoutParams.UNSET
+                }
+                playerControls.binding.qualityBtn.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                    topToBottom = ConstraintLayout.LayoutParams.UNSET
+                }
+                playerControls.binding.toggleAutoplay.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    leftToLeft = ConstraintLayout.LayoutParams.UNSET
+                    leftToRight = playerControls.binding.titleMainTxt.id
+                }
             } else {
                 if (width >= height) {
                     width = height.also { height = width }
                 }
-                binding.playerControls.binding.controlsTopPortrait.visibility = View.VISIBLE
-                binding.playerControls.binding.controlsTopLandscape.visibility = View.GONE
-                setupGestures()
-                setViewMode()
+
+                playerControls.binding.titleMainTxt.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    rightToLeft = ConstraintLayout.LayoutParams.UNSET
+                    rightToRight = ConstraintLayout.LayoutParams.PARENT_ID
+                }
+                playerControls.binding.titleSecondaryTxt.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    rightToLeft = ConstraintLayout.LayoutParams.UNSET
+                    rightToRight = ConstraintLayout.LayoutParams.PARENT_ID
+                }
+                playerControls.binding.qualityBtn.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    topToTop = ConstraintLayout.LayoutParams.UNSET
+                    topToBottom = playerControls.binding.backArrowBtn.id
+                }
+                playerControls.binding.toggleAutoplay.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID
+                    leftToRight = ConstraintLayout.LayoutParams.UNSET
+                }
             }
+            setupGestures()
+            setViewMode()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) player.paused?.let { updatePictureInPictureActions(!it) }
         }
     }
@@ -400,9 +440,9 @@ class PlayerActivity :
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         if (!isPipStarted) {
-            if (newConfig.orientation == ORIENTATION_LANDSCAPE) {
+            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 switchOrientation(true)
-            } else if (newConfig.orientation == ORIENTATION_PORTRAIT) {
+            } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
                 switchOrientation(false)
             }
         }
@@ -423,23 +463,50 @@ class PlayerActivity :
         showLoadingIndicator(true)
 
         val epTxt = switchMethod {
-            if (wasPlayerPaused == false) {
+            if (wasPlayerPaused == false || preferences.autoplayEnabled().get()) {
                 player.paused = false
             }
         }
 
         when {
             epTxt == "Invalid" -> return
-            epTxt == null -> { launchUI { toast(errorRes) }; showLoadingIndicator(false) }
+            epTxt == null -> { if (presenter.anime != null) launchUI { toast(errorRes) }; showLoadingIndicator(false) }
             isInPipMode -> if (preferences.pipEpisodeToasts()) launchUI { toast(epTxt) }
         }
     }
 
-    fun toggleControls() = binding.playerControls.toggleControls()
+    // Fade out Player information text
+    private val playerInformationRunnable = Runnable {
+        AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
+            playerControls.binding.playerInformation.startAnimation(fadeAnimation)
+            playerControls.binding.playerInformation.visibility = View.GONE
+        }
+    }
+
+    internal fun toggleAutoplay(isAutoplay: Boolean) {
+        playerControls.binding.toggleAutoplay.isChecked = isAutoplay
+        playerControls.binding.toggleAutoplay.thumbDrawable = if (isAutoplay) {
+            ContextCompat.getDrawable(playerControls.context, R.drawable.ic_play_circle_filled_24)
+        } else ContextCompat.getDrawable(playerControls.context, R.drawable.ic_pause_circle_filled_24)
+
+        if (isAutoplay) {
+            playerControls.binding.playerInformation.text = getString(R.string.enable_auto_play)
+        } else {
+            playerControls.binding.playerInformation.text = getString(R.string.disable_auto_play)
+        }
+
+        if (!preferences.autoplayEnabled().get() == isAutoplay) {
+            animationHandler.removeCallbacks(playerInformationRunnable)
+            playerControls.binding.playerInformation.visibility = View.VISIBLE
+            animationHandler.postDelayed(playerInformationRunnable, 1000L)
+        }
+        preferences.autoplayEnabled().set(isAutoplay)
+    }
+
+    fun toggleControls() = playerControls.toggleControls()
 
     private fun showLoadingIndicator(visible: Boolean) {
-        if (binding.loadingIndicator.isVisible == visible) return
-        binding.playerControls.binding.playBtn.isVisible = !visible
+        playerControls.binding.playBtn.isVisible = !visible
         binding.loadingIndicator.isVisible = visible
     }
 
@@ -480,17 +547,30 @@ class PlayerActivity :
             2 -> {
                 MPVLib.setOptionString("video-aspect-override", "-1")
                 MPVLib.setOptionString("panscan", "1.0")
+
+                playerControls.binding.playerInformation.text = getString(R.string.video_crop_screen)
             }
             1 -> {
                 MPVLib.setOptionString("video-aspect-override", "-1")
                 MPVLib.setOptionString("panscan", "0.0")
+
+                playerControls.binding.playerInformation.text = getString(R.string.video_fit_screen)
             }
             0 -> {
                 val newAspect = "$width/$height"
                 MPVLib.setOptionString("video-aspect-override", newAspect)
                 MPVLib.setOptionString("panscan", "0.0")
+
+                playerControls.binding.playerInformation.text = getString(R.string.video_stretch_screen)
             }
         }
+        if (playerViewMode != preferences.getPlayerViewMode()) {
+            animationHandler.removeCallbacks(playerInformationRunnable)
+            playerControls.binding.playerInformation.visibility = View.VISIBLE
+            animationHandler.postDelayed(playerInformationRunnable, 1000L)
+        }
+
+        preferences.setPlayerViewMode(playerViewMode)
     }
 
     @Suppress("DEPRECATION")
@@ -511,17 +591,17 @@ class PlayerActivity :
     @Suppress("UNUSED_PARAMETER")
     @SuppressLint("SourceLockedOrientationActivity")
     fun rotatePlayer(view: View) {
-        if (this.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT) {
-            this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            this.requestedOrientation = preferences.defaultPlayerOrientationLandscape()
         } else {
-            this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+            this.requestedOrientation = preferences.defaultPlayerOrientationPortrait()
         }
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun playPause(view: View) {
         player.cyclePause()
-        binding.playerControls.playPause()
+        playerControls.playPause()
     }
 
     private val doubleTapPlayPauseRunnable = Runnable {
@@ -533,9 +613,9 @@ class PlayerActivity :
 
     fun doubleTapPlayPause() {
         animationHandler.removeCallbacks(doubleTapPlayPauseRunnable)
-        playPause(binding.playerControls.binding.playBtn)
+        playPause(playerControls.binding.playBtn)
 
-        if (!binding.playerControls.binding.controlsView.isVisible) {
+        if (!playerControls.binding.controlsView.isVisible) {
             when {
                 player.paused!! -> { binding.playPauseView.setImageResource(R.drawable.ic_pause_80dp) }
                 !player.paused!! -> { binding.playPauseView.setImageResource(R.drawable.ic_play_arrow_80dp) }
@@ -554,17 +634,15 @@ class PlayerActivity :
         val v = if (time < 0) binding.rewBg else binding.ffwdBg
         val w = if (time < 0) width * 0.2F else width * 0.8F
         val x = (event?.x?.toInt() ?: w.toInt()) - v.x.toInt()
-        val y = (event?.y?.toInt() ?: height / 2) - v.y.toInt()
+        val y = (event?.y?.toInt() ?: (height / 2)) - v.y.toInt()
         ViewAnimationUtils.createCircularReveal(v, x, y, 0f, kotlin.math.max(v.height, v.width).toFloat()).setDuration(500).start()
 
         ObjectAnimator.ofFloat(v, "alpha", 0f, 0.2f).setDuration(500).start()
         ObjectAnimator.ofFloat(v, "alpha", 0.2f, 0.2f, 0f).setDuration(1000).start()
         val newPos = (player.timePos ?: 0) + time // only for display
-        MPVLib.command(arrayOf("seek", time.toString(), "relative"))
+        MPVLib.command(arrayOf("seek", time.toString(), "relative+exact"))
 
-        val diffText = Utils.prettyTime(time, true)
-        binding.seekText.text = getString(R.string.ui_seek_distance, Utils.prettyTime(newPos), diffText)
-        showGestureView("seek")
+        editSeekText(newPos, time)
     }
 
     fun verticalScrollLeft(diff: Float) {
@@ -582,10 +660,16 @@ class PlayerActivity :
             binding.brightnessOverlay.isVisible = false
         }
         val finalBrightness = (brightness * 100).roundToInt()
-        binding.brightnessText.text = finalBrightness.toString()
-        binding.brightnessBar.progress = finalBrightness
-        binding.brightnessBar.secondaryProgress = abs(finalBrightness)
-        if (finalBrightness >= 0) { binding.brightnessImg.setImageResource(R.drawable.ic_brightness_positive_24dp); binding.brightnessBar.max = 100 } else { binding.brightnessImg.setImageResource(R.drawable.ic_brightness_negative_24dp); binding.brightnessBar.max = 75 }
+        playerControls.binding.brightnessText.text = finalBrightness.toString()
+        playerControls.binding.brightnessBar.progress = finalBrightness
+        playerControls.binding.brightnessBar.secondaryProgress = abs(finalBrightness)
+        if (finalBrightness >= 0) {
+            playerControls.binding.brightnessImg.setImageResource(R.drawable.ic_brightness_positive_24dp)
+            playerControls.binding.brightnessBar.max = 100
+        } else {
+            playerControls.binding.brightnessImg.setImageResource(R.drawable.ic_brightness_negative_24dp)
+            playerControls.binding.brightnessBar.max = 75
+        }
         showGestureView("brightness")
     }
 
@@ -595,10 +679,10 @@ class PlayerActivity :
         // val newVolumePercent = 100 * newVolume / maxVolume
         audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
 
-        binding.volumeText.text = newVolume.toString()
-        binding.volumeBar.progress = newVolume
-        if (newVolume == 0) binding.volumeImg.setImageResource(R.drawable.ic_volume_off_24dp)
-        else binding.volumeImg.setImageResource(R.drawable.ic_volume_on_24dp)
+        playerControls.binding.volumeText.text = newVolume.toString()
+        playerControls.binding.volumeBar.progress = newVolume
+        if (newVolume == 0) playerControls.binding.volumeImg.setImageResource(R.drawable.ic_volume_none_24dp)
+        else playerControls.binding.volumeImg.setImageResource(R.drawable.ic_volume_high_24dp)
         showGestureView("volume")
     }
 
@@ -655,11 +739,26 @@ class PlayerActivity :
         }
         val newPos = (initialSeek + diff.toInt()).coerceIn(0, duration)
         val newDiff = newPos - initialSeek
-        // seek faster than assigning to timePos but less precise
-        MPVLib.command(arrayOf("seek", newPos.toString(), "absolute+keyframes"))
-        binding.playerControls.updatePlaybackPos(newPos)
 
-        val diffText = Utils.prettyTime(newDiff, true)
+        val seekFlags = if (preferences.getPlayerFastSeek()) "absolute+keyframes" else "absolute"
+
+        MPVLib.command(arrayOf("seek", newPos.toString(), seekFlags))
+        playerControls.updatePlaybackPos(newPos)
+
+        editSeekText(newPos, newDiff, true)
+    }
+
+    private var diffSeekMain = 0
+    private var diffSeekHorizontal = 0
+    private fun editSeekText(newPos: Int, diff: Int, isHorizontalSeek: Boolean = false) {
+        if (isHorizontalSeek) {
+            diffSeekMain += diff - diffSeekHorizontal
+            diffSeekHorizontal = diff
+        } else {
+            diffSeekMain += diff
+            diffSeekHorizontal = 0
+        }
+        val diffText = Utils.prettyTime(diffSeekMain, true)
         binding.seekText.text = getString(R.string.ui_seek_distance, Utils.prettyTime(newPos), diffText)
         showGestureView("seek")
     }
@@ -686,7 +785,6 @@ class PlayerActivity :
             2 -> 0
             else -> 0
         }
-        preferences.setPlayerViewMode(playerViewMode)
         setViewMode()
     }
 
@@ -746,13 +844,13 @@ class PlayerActivity :
     fun switchDecoder(view: View) {
         player.cycleHwdec()
         preferences.getPlayerViewMode()
-        binding.playerControls.updateDecoderButton()
+        playerControls.updateDecoderButton()
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun cycleSpeed(view: View) {
         player.cycleSpeed()
-        binding.playerControls.updateSpeedButton()
+        playerControls.updateSpeedButton()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -764,18 +862,16 @@ class PlayerActivity :
         // forces update of entire UI, used when resuming the activity
         val paused = player.paused ?: return
         updatePlaybackStatus(paused)
-        player.timePos?.let { binding.playerControls.updatePlaybackPos(it) }
-        player.duration?.let { binding.playerControls.updatePlaybackDuration(it) }
+        player.duration?.let { playerControls.updatePlaybackDuration(it) }
+        player.timePos?.let { playerControls.updatePlaybackPos(it) }
         updatePlaylistButtons()
         updateEpisodeText()
         player.loadTracks()
     }
 
     private fun updateEpisodeText() {
-        binding.playerControls.binding.titleMainTxtLandscape.text = presenter.anime?.title
-        binding.playerControls.binding.titleSecondaryTxtLandscape.text = presenter.currentEpisode?.name
-        binding.playerControls.binding.titleMainTxtPortrait.text = presenter.anime?.title
-        binding.playerControls.binding.titleSecondaryTxtPortrait.text = presenter.currentEpisode?.name
+        playerControls.binding.titleMainTxt.text = presenter.anime?.title
+        playerControls.binding.titleSecondaryTxt.text = presenter.currentEpisode?.name
     }
 
     private fun updatePlaylistButtons() {
@@ -784,20 +880,20 @@ class PlayerActivity :
 
         val grey = ContextCompat.getColor(this, R.color.tint_disabled)
         val white = ContextCompat.getColor(this, R.color.tint_normal)
-        with(binding.playerControls.binding.prevBtn) {
+        with(playerControls.binding.prevBtn) {
             this.imageTintList = ColorStateList.valueOf(if (plPos == 0) grey else white)
             this.isClickable = plPos != 0
         }
-        with(binding.playerControls.binding.nextBtn) {
+        with(playerControls.binding.nextBtn) {
             this.imageTintList = ColorStateList.valueOf(if (plPos == plCount - 1) grey else white)
             this.isClickable = plPos != plCount - 1
         }
     }
 
     private fun updatePlaybackStatus(paused: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) updatePictureInPictureActions(!paused)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPipMode) updatePictureInPictureActions(!paused)
         val r = if (paused) R.drawable.ic_play_arrow_80dp else R.drawable.ic_pause_80dp
-        binding.playerControls.binding.playBtn.setImageResource(r)
+        playerControls.binding.playBtn.setImageResource(r)
 
         if (paused) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -828,7 +924,11 @@ class PlayerActivity :
             presenter.saveEpisodeProgress(player.timePos, player.duration)
             player.paused = true
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPipMode) finishAndRemoveTask()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            isInPipMode &&
+            powerManager.isInteractive
+        ) finishAndRemoveTask()
+
         super.onStop()
     }
 
@@ -839,14 +939,15 @@ class PlayerActivity :
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration?) {
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         isInPipMode = isInPictureInPictureMode
         isPipStarted = isInPipMode
+        playerControls.lockControls(isInPipMode)
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
 
         if (isInPictureInPictureMode) {
             // On Android TV it is required to hide controller in this PIP change callback
-            binding.playerControls.hideControls(true)
+            playerControls.hideControls(true)
             binding.loadingIndicator.indicatorSize = binding.loadingIndicator.indicatorSize / 2
             mReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
@@ -871,7 +972,7 @@ class PlayerActivity :
             }
             registerReceiver(mReceiver, IntentFilter(ACTION_MEDIA_CONTROL))
         } else {
-            if (player.paused!!) binding.playerControls.hideControls(false)
+            if (player.paused!!) playerControls.hideControls(false)
             binding.loadingIndicator.indicatorSize = binding.loadingIndicator.indicatorSize * 2
             if (mReceiver != null) {
                 unregisterReceiver(mReceiver)
@@ -884,6 +985,7 @@ class PlayerActivity :
     fun startPiP(view: View) {
         if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             isPipStarted = true
+            playerControls.hideControls(true)
             player.paused?.let { updatePictureInPictureActions(!it) }
                 ?.let { this.enterPictureInPictureMode(it) }
         }
@@ -914,6 +1016,10 @@ class PlayerActivity :
     fun updatePictureInPictureActions(
         playing: Boolean,
     ): PictureInPictureParams {
+        var aspect: Int? = null
+        if (player.videoAspect != null) {
+            aspect = if (player.videoAspect!!.times(10000) >= 23900) 23899 else if (player.videoAspect!!.times(10000) <= 4184) 4185 else player.videoAspect!!.times(10000).toInt()
+        }
         val mPictureInPictureParams = PictureInPictureParams.Builder()
             // Set action items for the picture-in-picture mode. These are the only custom controls
             // available during the picture-in-picture mode.
@@ -951,7 +1057,7 @@ class PlayerActivity :
 
                 ),
             )
-            .setAspectRatio(MPVLib.getPropertyInt("video-params/dw")?.let { width -> MPVLib.getPropertyInt("video-params/dh")?.let { height -> Rational(width, height) } })
+            .setAspectRatio(aspect?.let { Rational(it, 10000) })
             .build()
         setPictureInPictureParams(mPictureInPictureParams)
         return mPictureInPictureParams
@@ -1113,12 +1219,14 @@ class PlayerActivity :
         }
         launchUI {
             showLoadingIndicator(false)
-            if (player.videoW!! / player.videoH!! >= 1) {
-                this@PlayerActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                switchOrientation(true)
-            } else {
-                this@PlayerActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                switchOrientation(false)
+            if (preferences.adjustOrientationVideoDimensions()) {
+                if (player.videoW!! / player.videoH!! >= 1) {
+                    this@PlayerActivity.requestedOrientation = preferences.defaultPlayerOrientationLandscape()
+                    switchOrientation(true)
+                } else {
+                    this@PlayerActivity.requestedOrientation = preferences.defaultPlayerOrientationPortrait()
+                    switchOrientation(false)
+                }
             }
         }
     }
@@ -1127,10 +1235,12 @@ class PlayerActivity :
 
     private fun eventPropertyUi(property: String, value: Long) {
         when (property) {
-            "time-pos" -> binding.playerControls.updatePlaybackPos(value.toInt())
-            "duration" -> binding.playerControls.updatePlaybackDuration(value.toInt())
+            "time-pos" -> playerControls.updatePlaybackPos(value.toInt())
+            "duration" -> playerControls.updatePlaybackDuration(value.toInt())
         }
     }
+
+    private val nextEpisodeRunnable = Runnable { switchEpisode(false) }
 
     @Suppress("DEPRECATION")
     private fun eventPropertyUi(property: String, value: Boolean) {
@@ -1138,6 +1248,15 @@ class PlayerActivity :
             "pause" -> {
                 if (!isFinishing) {
                     setAudioFocus(value)
+
+                    if (player.timePos != null && player.duration != null) {
+                        animationHandler.removeCallbacks(nextEpisodeRunnable)
+                        val isVideoEof = MPVLib.getPropertyBoolean("eof-reached") == true
+                        val isVideoCompleted = isVideoEof || (player.timePos!! >= player.duration!!)
+                        if (isVideoCompleted && preferences.autoplayEnabled().get()) {
+                            animationHandler.postDelayed(nextEpisodeRunnable, 1000L)
+                        }
+                    }
                     updatePlaybackStatus(value)
                 }
             }

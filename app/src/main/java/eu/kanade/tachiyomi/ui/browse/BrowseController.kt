@@ -19,9 +19,12 @@ import eu.kanade.tachiyomi.databinding.PagerControllerBinding
 import eu.kanade.tachiyomi.ui.base.controller.RootController
 import eu.kanade.tachiyomi.ui.base.controller.RxController
 import eu.kanade.tachiyomi.ui.base.controller.TabbedController
-import eu.kanade.tachiyomi.ui.browse.animeextension.AnimeExtensionController
-import eu.kanade.tachiyomi.ui.browse.animesource.AnimeSourceController
+import eu.kanade.tachiyomi.ui.browse.animeextension.AnimeExtensionsController
+import eu.kanade.tachiyomi.ui.browse.animesource.AnimeSourcesController
+import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsController
+import eu.kanade.tachiyomi.ui.browse.migration.animesources.MigrationAnimeSourcesController
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrationSourcesController
+import eu.kanade.tachiyomi.ui.browse.source.SourcesController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import uy.kohesive.injekt.injectLazy
 
@@ -125,9 +128,9 @@ class BrowseController :
         override fun configureRouter(router: Router, position: Int) {
             if (!router.hasRootController()) {
                 val controller: Controller = when (position) {
-                    ANIMESOURCES_CONTROLLER -> AnimeSourceController()
+                    ANIMESOURCES_CONTROLLER -> AnimeSourcesController()
                     ANIMEEXTENSIONS_CONTROLLER -> AnimeExtensionController()
-                    MIGRATION_CONTROLLER -> MigrationSourcesController()
+                    MIGRATION_CONTROLLER_ANIME -> MigrationAnimeSourcesController()
                     else -> error("Wrong position $position")
                 }
                 router.setRoot(RouterTransaction.with(controller))
@@ -144,6 +147,6 @@ class BrowseController :
 
         const val ANIMESOURCES_CONTROLLER = 0
         const val ANIMEEXTENSIONS_CONTROLLER = 1
-        const val MIGRATION_CONTROLLER = 2
+        const val MIGRATION_CONTROLLER_ANIME = 2
     }
 }

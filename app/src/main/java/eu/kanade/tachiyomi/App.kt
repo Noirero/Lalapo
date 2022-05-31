@@ -24,6 +24,7 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.disk.DiskCache
 import coil.util.DebugLogger
+import eu.kanade.domain.DomainModule
 import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -49,7 +50,7 @@ import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import java.security.Security
 
-open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
+class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
     private val preferences: PreferencesHelper by injectLazy()
 
@@ -71,6 +72,7 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         }
 
         Injekt.importModule(AppModule(this))
+        Injekt.importModule(DomainModule())
 
         // setupAcra()
         setupNotificationChannels()
@@ -93,7 +95,7 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
                             this@App,
                             0,
                             Intent(ACTION_DISABLE_INCOGNITO_MODE),
-                            PendingIntent.FLAG_ONE_SHOT,
+                            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
                         )
                         setContentIntent(pendingIntent)
                     }
@@ -150,14 +152,22 @@ open class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
     }
 
     override fun getPackageName(): String {
-        try {
-            // Override the value passed as X-Requested-With in WebView requests
-            val stackTrace = Looper.getMainLooper().thread.stackTrace
-            val chromiumElement = stackTrace.find { it.className.equals("org.chromium.base.BuildInfo", ignoreCase = true) }
-            if (chromiumElement?.methodName.equals("getAll", ignoreCase = true)) {
-                return WebViewUtil.SPOOF_PACKAGE_NAME
+        // This causes freezes in Android 6/7 for some reason
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                // Override the value passed as X-Requested-With in WebView requests
+                val stackTrace = Looper.getMainLooper().thread.stackTrace
+                val chromiumElement = stackTrace.find {
+                    it.className.equals(
+                        "org.chromium.base.BuildInfo",
+                        ignoreCase = true,
+                    )
+                }
+                if (chromiumElement?.methodName.equals("getAll", ignoreCase = true)) {
+                    return WebViewUtil.SPOOF_PACKAGE_NAME
+                }
+            } catch (e: Exception) {
             }
-        } catch (e: Exception) {
         }
         return super.getPackageName()
     }

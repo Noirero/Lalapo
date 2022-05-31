@@ -11,7 +11,10 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.animelib.AnimelibUpdateJob
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Category
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.preference.DEVICE_BATTERY_NOT_LOW
 import eu.kanade.tachiyomi.data.preference.DEVICE_CHARGING
+import eu.kanade.tachiyomi.data.preference.DEVICE_NETWORK_NOT_METERED
 import eu.kanade.tachiyomi.data.preference.DEVICE_ONLY_ON_WIFI
 import eu.kanade.tachiyomi.data.preference.MANGA_HAS_UNREAD
 import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
@@ -20,7 +23,8 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.databinding.PrefLibraryColumnsBinding
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
-import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
+import eu.kanade.tachiyomi.ui.base.controller.pushController
+import eu.kanade.tachiyomi.ui.category.CategoryController
 import eu.kanade.tachiyomi.util.preference.bindTo
 import eu.kanade.tachiyomi.util.preference.defaultValue
 import eu.kanade.tachiyomi.util.preference.entriesRes
@@ -95,7 +99,7 @@ class SettingsLibraryController : SettingsController() {
                 summary = context.resources.getQuantityString(R.plurals.num_categories, catCount, catCount)
 
                 onClick {
-                    router.pushController(AnimeCategoryController().withFadeTransaction())
+                    router.pushController(AnimeCategoryController())
                 }
             }
 
@@ -151,8 +155,8 @@ class SettingsLibraryController : SettingsController() {
             multiSelectListPreference {
                 bindTo(preferences.libraryUpdateDeviceRestriction())
                 titleRes = R.string.pref_library_update_restriction
-                entriesRes = arrayOf(R.string.connected_to_wifi, R.string.charging)
-                entryValues = arrayOf(DEVICE_ONLY_ON_WIFI, DEVICE_CHARGING)
+                entriesRes = arrayOf(R.string.connected_to_wifi, R.string.network_not_metered, R.string.charging, R.string.battery_not_low)
+                entryValues = arrayOf(DEVICE_ONLY_ON_WIFI, DEVICE_NETWORK_NOT_METERED, DEVICE_CHARGING, DEVICE_BATTERY_NOT_LOW)
 
                 visibleIf(preferences.libraryUpdateInterval()) { it > 0 }
 
@@ -168,7 +172,9 @@ class SettingsLibraryController : SettingsController() {
                         .map {
                             when (it) {
                                 DEVICE_ONLY_ON_WIFI -> context.getString(R.string.connected_to_wifi)
+                                DEVICE_NETWORK_NOT_METERED -> context.getString(R.string.network_not_metered)
                                 DEVICE_CHARGING -> context.getString(R.string.charging)
+                                DEVICE_BATTERY_NOT_LOW -> context.getString(R.string.battery_not_low)
                                 else -> it
                             }
                         }

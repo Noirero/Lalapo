@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.util.preference.multiSelectListPreference
 import eu.kanade.tachiyomi.util.preference.onClick
 import eu.kanade.tachiyomi.util.preference.preference
 import eu.kanade.tachiyomi.util.preference.preferenceCategory
+import eu.kanade.tachiyomi.util.preference.summaryRes
 import eu.kanade.tachiyomi.util.preference.switchPreference
 import eu.kanade.tachiyomi.util.preference.titleRes
 import eu.kanade.tachiyomi.util.system.toast
@@ -73,6 +74,12 @@ class SettingsDownloadController : SettingsController() {
             bindTo(preferences.saveChaptersAsCBZ())
             titleRes = R.string.save_as_cbz
         }
+        switchPreference {
+            bindTo(preferences.splitTallImages())
+            titleRes = R.string.split_tall_images
+            summaryRes = R.string.split_tall_images_summary
+        }
+
         preferenceCategory {
             titleRes = R.string.pref_category_delete_episodes
 
@@ -126,7 +133,7 @@ class SettingsDownloadController : SettingsController() {
             titleRes = R.string.pref_category_auto_download
 
             switchPreference {
-                bindTo(preferences.downloadNew())
+                bindTo(preferences.downloadNewChapter())
                 titleRes = R.string.pref_download_new
             }
             preference {
@@ -136,10 +143,10 @@ class SettingsDownloadController : SettingsController() {
                     DownloadAnimeCategoriesDialog().showDialog(router)
                 }
 
-                visibleIf(preferences.downloadNew()) { it }
+                visibleIf(preferences.downloadNewChapter()) { it }
 
                 fun updateSummary() {
-                    val selectedCategories = preferences.downloadNewCategoriesAnime().get()
+                    val selectedCategories = preferences.downloadNewEpisodeCategories().get()
                         .mapNotNull { id -> animeCategories.find { it.id == id.toInt() } }
                         .sortedBy { it.order }
                     val includedItemsText = if (selectedCategories.isEmpty()) {
@@ -148,7 +155,7 @@ class SettingsDownloadController : SettingsController() {
                         selectedCategories.joinToString { it.name }
                     }
 
-                    val excludedCategories = preferences.downloadNewCategoriesAnimeExclude().get()
+                    val excludedCategories = preferences.downloadNewEpisodeCategoriesExclude().get()
                         .mapNotNull { id -> animeCategories.find { it.id == id.toInt() } }
                         .sortedBy { it.order }
                     val excludedItemsText = if (excludedCategories.isEmpty()) {
@@ -164,10 +171,10 @@ class SettingsDownloadController : SettingsController() {
                     }
                 }
 
-                preferences.downloadNewCategoriesAnime().asFlow()
+                preferences.downloadNewEpisodeCategories().asFlow()
                     .onEach { updateSummary() }
                     .launchIn(viewScope)
-                preferences.downloadNewCategoriesAnimeExclude().asFlow()
+                preferences.downloadNewEpisodeCategoriesExclude().asFlow()
                     .onEach { updateSummary() }
                     .launchIn(viewScope)
             }
@@ -288,8 +295,8 @@ class SettingsDownloadController : SettingsController() {
             var selected = categories
                 .map {
                     when (it.id.toString()) {
-                        in preferences.downloadNewCategoriesAnime().get() -> QuadStateTextView.State.CHECKED.ordinal
-                        in preferences.downloadNewCategoriesAnimeExclude().get() -> QuadStateTextView.State.INVERSED.ordinal
+                        in preferences.downloadNewEpisodeCategories().get() -> QuadStateTextView.State.CHECKED.ordinal
+                        in preferences.downloadNewEpisodeCategoriesExclude().get() -> QuadStateTextView.State.INVERSED.ordinal
                         else -> QuadStateTextView.State.UNCHECKED.ordinal
                     }
                 }
@@ -316,8 +323,8 @@ class SettingsDownloadController : SettingsController() {
                         .map { categories[it].id.toString() }
                         .toSet()
 
-                    preferences.downloadNewCategoriesAnime().set(included)
-                    preferences.downloadNewCategoriesAnimeExclude().set(excluded)
+                    preferences.downloadNewEpisodeCategories().set(included)
+                    preferences.downloadNewEpisodeCategoriesExclude().set(excluded)
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
