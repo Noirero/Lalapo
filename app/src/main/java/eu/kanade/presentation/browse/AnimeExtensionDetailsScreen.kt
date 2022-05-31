@@ -21,14 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -326,5 +319,22 @@ private fun SourceSwitchPreference(
                 Switch(checked = source.enabled, onCheckedChange = null)
             }
         },
+    )
+}
+
+@Composable
+fun NsfwWarningDialog(
+    onClickConfirm: () -> Unit,
+) {
+    AlertDialog(
+        text = {
+            Text(text = stringResource(R.string.ext_nsfw_warning))
+        },
+        confirmButton = {
+            TextButton(onClick = onClickConfirm) {
+                Text(text = stringResource(android.R.string.ok))
+            }
+        },
+        onDismissRequest = onClickConfirm,
     )
 }

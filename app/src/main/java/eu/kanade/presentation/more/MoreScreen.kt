@@ -5,10 +5,8 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.Settings
@@ -29,29 +27,25 @@ import eu.kanade.presentation.components.ScrollbarLazyColumn
 import eu.kanade.presentation.components.SwitchPreference
 import eu.kanade.presentation.util.quantityStringResource
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
 import eu.kanade.tachiyomi.ui.more.MoreController
 import eu.kanade.tachiyomi.ui.more.MorePresenter
-import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 @Composable
 fun MoreScreen(
     nestedScrollInterop: NestedScrollConnection,
     presenter: MorePresenter,
-    onClickHistory: () -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickAnimeCategories: () -> Unit,
-    onClickCategories: () -> Unit,
     onClickBackupAndRestore: () -> Unit,
     onClickSettings: () -> Unit,
     onClickAbout: () -> Unit,
+    onClickUpdates: () -> Unit,
+    onClickHistory: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val downloadQueueState by presenter.downloadQueueState.collectAsState()
-
-    val preferences: PreferencesHelper = Injekt.get()
 
     ScrollbarLazyColumn(
         modifier = Modifier.nestedScroll(nestedScrollInterop),
@@ -80,24 +74,25 @@ fun MoreScreen(
 
         item { Divider() }
 
-        item {
-            val bottomNavStyle = preferences.bottomNavStyle()
-            val titleRes = when (preferences.bottomNavStyle()) {
-                1 -> R.string.label_recent_updates
-                2 -> R.string.label_manga
-                else -> R.string.label_recent_manga
+        if (!presenter.showNavUpdates.value) {
+            item {
+                PreferenceRow(
+                    title = stringResource(R.string.label_recent_updates),
+                    painter = painterResource(R.drawable.ic_updates_outline_24dp),
+                    onClick = onClickUpdates,
+                )
             }
-            val painter = when (bottomNavStyle) {
-                1 -> painterResource(R.drawable.ic_updates_outline_24dp)
-                2 -> rememberVectorPainter(Icons.Outlined.CollectionsBookmark)
-                else -> rememberVectorPainter(Icons.Outlined.History)
-            }
-            PreferenceRow(
-                title = stringResource(titleRes),
-                painter = painter,
-                onClick = onClickHistory,
-            )
         }
+        if (!presenter.showNavHistory.value) {
+            item {
+                PreferenceRow(
+                    title = stringResource(R.string.label_recent_history),
+                    painter = painterResource(R.drawable.ic_history_24dp),
+                    onClick = onClickHistory,
+                )
+            }
+        }
+
         item {
             PreferenceRow(
                 title = stringResource(R.string.label_download_queue),
@@ -122,16 +117,9 @@ fun MoreScreen(
         }
         item {
             PreferenceRow(
-                title = stringResource(R.string.anime_categories),
-                painter = rememberVectorPainter(Icons.Outlined.Label),
-                onClick = onClickAnimeCategories,
-            )
-        }
-        item {
-            PreferenceRow(
                 title = stringResource(R.string.categories),
                 painter = rememberVectorPainter(Icons.Outlined.Label),
-                onClick = onClickCategories,
+                onClick = onClickAnimeCategories,
             )
         }
         item {

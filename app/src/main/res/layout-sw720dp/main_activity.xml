@@ -70,7 +70,7 @@
 
         </FrameLayout>
 
-        <eu.kanade.tachiyomi.widget.TachiyomiNavigationRailView
+        <com.google.android.material.navigationrail.NavigationRailView
             android:id="@+id/side_nav"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"

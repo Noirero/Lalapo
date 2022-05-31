@@ -1,5 +1,6 @@
 package eu.kanade.presentation.browse
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,13 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -39,6 +35,7 @@ import eu.kanade.presentation.browse.components.BaseBrowseItem
 import eu.kanade.presentation.browse.components.ExtensionIcon
 import eu.kanade.presentation.components.ScrollbarLazyColumn
 import eu.kanade.presentation.components.SwipeRefreshIndicator
+import eu.kanade.presentation.theme.header
 import eu.kanade.presentation.util.horizontalPadding
 import eu.kanade.presentation.util.plus
 import eu.kanade.presentation.util.topPaddingValues
@@ -357,4 +354,65 @@ fun ExtensionItemActions(
             }
         }
     }
+}
+
+@Composable
+fun ExtensionHeader(
+    @StringRes textRes: Int,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    ExtensionHeader(
+        text = stringResource(id = textRes),
+        modifier = modifier,
+        action = action,
+    )
+}
+
+@Composable
+fun ExtensionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier = modifier.padding(horizontal = horizontalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .weight(1f),
+            style = MaterialTheme.typography.header,
+        )
+        action()
+    }
+}
+
+@Composable
+fun ExtensionTrustDialog(
+    onClickConfirm: () -> Unit,
+    onClickDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(text = stringResource(R.string.untrusted_extension))
+        },
+        text = {
+            Text(text = stringResource(R.string.untrusted_extension_message))
+        },
+        confirmButton = {
+            TextButton(onClick = onClickConfirm) {
+                Text(text = stringResource(R.string.ext_trust))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClickDismiss) {
+                Text(text = stringResource(R.string.ext_uninstall))
+            }
+        },
+        onDismissRequest = onDismissRequest,
+    )
 }

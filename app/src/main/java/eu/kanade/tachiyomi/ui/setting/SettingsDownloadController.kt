@@ -25,7 +25,6 @@ import eu.kanade.tachiyomi.util.preference.multiSelectListPreference
 import eu.kanade.tachiyomi.util.preference.onClick
 import eu.kanade.tachiyomi.util.preference.preference
 import eu.kanade.tachiyomi.util.preference.preferenceCategory
-import eu.kanade.tachiyomi.util.preference.summaryRes
 import eu.kanade.tachiyomi.util.preference.switchPreference
 import eu.kanade.tachiyomi.util.preference.titleRes
 import eu.kanade.tachiyomi.util.system.toast
@@ -69,15 +68,6 @@ class SettingsDownloadController : SettingsController() {
             key = Keys.downloadOnlyOverWifi
             titleRes = R.string.connected_to_wifi
             defaultValue = true
-        }
-        switchPreference {
-            bindTo(preferences.saveChaptersAsCBZ())
-            titleRes = R.string.save_as_cbz
-        }
-        switchPreference {
-            bindTo(preferences.splitTallImages())
-            titleRes = R.string.split_tall_images
-            summaryRes = R.string.split_tall_images_summary
         }
 
         preferenceCategory {
@@ -133,17 +123,17 @@ class SettingsDownloadController : SettingsController() {
             titleRes = R.string.pref_category_auto_download
 
             switchPreference {
-                bindTo(preferences.downloadNewChapter())
+                bindTo(preferences.downloadNewEpisode())
                 titleRes = R.string.pref_download_new
             }
             preference {
-                bindTo(preferences.downloadNewCategoriesAnime())
+                bindTo(preferences.downloadNewEpisodeCategories())
                 titleRes = R.string.categories
                 onClick {
                     DownloadAnimeCategoriesDialog().showDialog(router)
                 }
 
-                visibleIf(preferences.downloadNewChapter()) { it }
+                visibleIf(preferences.downloadNewEpisode()) { it }
 
                 fun updateSummary() {
                     val selectedCategories = preferences.downloadNewEpisodeCategories().get()

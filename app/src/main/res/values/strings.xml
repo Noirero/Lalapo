@@ -199,7 +199,6 @@
     <string name="pref_relative_time_short">Short (Today, Yesterday)</string>
     <string name="pref_relative_time_long">Long (Short+, n days ago)</string>
     <string name="pref_date_format">Date format</string>
-    <string name="pref_bottom_nav_style">Bottom navigation style</string>
     <string name="pref_start_screen">Start screen</string>
 
     <string name="pref_confirm_exit">Confirm exit</string>
@@ -339,6 +338,7 @@
     <string name="pref_skip_10">10s</string>
     <string name="pref_skip_5">5s</string>
     <string name="pref_skip_disable">Disable</string>
+    <string name="rotation_free">Free</string>
     <string name="rotation_portrait">Portrait</string>
     <string name="rotation_reverse_portrait">Reverse portrait</string>
     <string name="rotation_landscape">Landscape</string>
@@ -416,7 +416,6 @@
     <string name="backup_restore_invalid_uri">Error: empty URI</string>
     <string name="backup_created">Backup created</string>
     <string name="invalid_backup_file">Invalid backup file</string>
-    <string name="invalid_backup_file_missing_data">File is missing data.</string>
     <string name="invalid_backup_file_missing_anime">Backup does not contain any anime.</string>
     <string name="backup_restore_missing_sources">Missing sources:</string>
     <string name="backup_restore_missing_trackers">Trackers not logged into:</string>
@@ -468,8 +467,8 @@
     <string name="pref_refresh_library_tracking">Refresh tracking</string>
     <string name="pref_reset_viewer_flags">Reset per-series reader settings</string>
     <string name="pref_reset_viewer_flags_summary">Resets reading mode and orientation of all series</string>
-    <string name="pref_reset_viewer_flags_success">All reader settings reset</string>
-    <string name="pref_reset_viewer_flags_error">Couldn\'t reset reader settings</string>
+    <string name="pref_reset_viewer_flags_success">All player settings reset</string>
+    <string name="pref_reset_viewer_flags_error">Couldn\'t reset player settings</string>
     <string name="pref_dump_crash_logs">Dump crash logs</string>
     <string name="pref_dump_crash_logs_summary">Saves error logs to a file for sharing with the developers</string>
     <string name="crash_log_saved">Crash logs saved</string>

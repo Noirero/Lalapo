@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.animeextension
 
 import android.os.Bundle
-import eu.kanade.domain.extension.interactor.GetExtensionLanguages
-import eu.kanade.domain.source.interactor.ToggleLanguage
+import eu.kanade.domain.animeextension.interactor.GetAnimeExtensionLanguages
+import eu.kanade.domain.animesource.interactor.ToggleLanguage
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.util.lang.launchIO
@@ -15,7 +15,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class AnimeExtensionFilterPresenter(
-    private val getExtensionLanguages: GetExtensionLanguages = Injekt.get(),
+    private val getExtensionLanguages: GetAnimeExtensionLanguages = Injekt.get(),
     private val toggleLanguage: ToggleLanguage = Injekt.get(),
     private val preferences: PreferencesHelper = Injekt.get(),
 ) : BasePresenter<AnimeExtensionFilterController>() {

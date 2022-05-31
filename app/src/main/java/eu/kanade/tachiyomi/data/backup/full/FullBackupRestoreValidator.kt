@@ -7,7 +7,6 @@ import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.data.backup.AbstractBackupRestoreValidator
 import eu.kanade.tachiyomi.data.backup.full.models.BackupSerializer
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.source.SourceManager
 import okio.buffer
 import okio.gzip
 import okio.source
@@ -16,7 +15,6 @@ import uy.kohesive.injekt.api.get
 
 class FullBackupRestoreValidator : AbstractBackupRestoreValidator() {
 
-    private val sourceManager: SourceManager = Injekt.get()
     private val animesourceManager: AnimeSourceManager = Injekt.get()
     private val trackManager: TrackManager = Injekt.get()
 
@@ -39,7 +37,7 @@ class FullBackupRestoreValidator : AbstractBackupRestoreValidator() {
         }
 
         if (backup.backupAnime.isEmpty()) {
-            throw IllegalStateException(context.getString(R.string.invalid_backup_file_missing_manga))
+            throw IllegalStateException(context.getString(R.string.invalid_backup_file_missing_anime))
         }
 
         val animesources = backup.backupAnimeSources.associate { it.sourceId to it.name }

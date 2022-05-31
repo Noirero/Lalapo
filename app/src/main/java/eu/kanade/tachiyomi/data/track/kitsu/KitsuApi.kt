@@ -243,7 +243,7 @@ class KitsuApi(private val client: OkHttpClient, interceptor: KitsuInterceptor) 
         private const val algoliaFilterAnime =
             "&facetFilters=%5B%22kind%3Aanime%22%5D&attributesToRetrieve=%5B%22synopsis%22%2C%22canonicalTitle%22%2C%22episodeCount%22%2C%22posterImage%22%2C%22startDate%22%2C%22subtype%22%2C%22endDate%22%2C%20%22id%22%5D"
 
-        fun animeUrl(remoteId: Int): String {
+        fun animeUrl(remoteId: Long): String {
             return baseAnimeUrl + remoteId
         }
 

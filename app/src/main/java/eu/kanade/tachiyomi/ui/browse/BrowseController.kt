@@ -21,10 +21,7 @@ import eu.kanade.tachiyomi.ui.base.controller.RxController
 import eu.kanade.tachiyomi.ui.base.controller.TabbedController
 import eu.kanade.tachiyomi.ui.browse.animeextension.AnimeExtensionsController
 import eu.kanade.tachiyomi.ui.browse.animesource.AnimeSourcesController
-import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsController
 import eu.kanade.tachiyomi.ui.browse.migration.animesources.MigrationAnimeSourcesController
-import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrationSourcesController
-import eu.kanade.tachiyomi.ui.browse.source.SourcesController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import uy.kohesive.injekt.injectLazy
 
@@ -129,7 +126,7 @@ class BrowseController :
             if (!router.hasRootController()) {
                 val controller: Controller = when (position) {
                     ANIMESOURCES_CONTROLLER -> AnimeSourcesController()
-                    ANIMEEXTENSIONS_CONTROLLER -> AnimeExtensionController()
+                    ANIMEEXTENSIONS_CONTROLLER -> AnimeExtensionsController()
                     MIGRATION_CONTROLLER_ANIME -> MigrationAnimeSourcesController()
                     else -> error("Wrong position $position")
                 }

@@ -119,6 +119,7 @@ class AnimeSearchPresenter(
                         if (prevEpisode != null) {
                             episode.date_fetch = prevEpisode.date_fetch
                             episode.bookmark = prevEpisode.bookmark
+                            episode.fillermark = prevEpisode.fillermark
                         }
                         if (episode.episode_number <= maxEpisodeRead) {
                             episode.seen = true

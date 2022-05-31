@@ -33,7 +33,7 @@ class AddDuplicateAnimeDialog(bundle: Bundle? = null) : DialogController(bundle)
         val source = sourceManager.getOrStub(libraryAnime.source)
 
         return MaterialAlertDialogBuilder(activity!!)
-            .setMessage(activity?.getString(R.string.confirm_manga_add_duplicate, source.name))
+            .setMessage(activity?.getString(R.string.confirm_item_add_duplicate, source.name))
             .setPositiveButton(activity?.getString(R.string.action_add)) { _, _ ->
                 onAddToLibrary()
             }

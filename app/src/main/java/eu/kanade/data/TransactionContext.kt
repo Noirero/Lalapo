@@ -17,48 +17,8 @@ import kotlin.coroutines.resume
 /**
  * Returns the transaction dispatcher if we are on a transaction, or the database dispatchers.
  */
-internal suspend fun AndroidDatabaseHandler.getCurrentDatabaseContext(): CoroutineContext {
-    return coroutineContext[TransactionElement]?.transactionDispatcher ?: queryDispatcher
-}
-
-/**
- * Returns the transaction dispatcher if we are on a transaction, or the database dispatchers.
- */
 internal suspend fun AndroidAnimeDatabaseHandler.getCurrentDatabaseContext(): CoroutineContext {
     return coroutineContext[TransactionElement]?.transactionDispatcher ?: queryDispatcher
-}
-
-/**
- * Calls the specified suspending [block] in a database transaction. The transaction will be
- * marked as successful unless an exception is thrown in the suspending [block] or the coroutine
- * is cancelled.
- *
- * SQLDelight will only perform at most one transaction at a time, additional transactions are queued
- * and executed on a first come, first serve order.
- *
- * Performing blocking database operations is not permitted in a coroutine scope other than the
- * one received by the suspending block. It is recommended that all [Dao] function invoked within
- * the [block] be suspending functions.
- *
- * The dispatcher used to execute the given [block] will utilize threads from SQLDelight's query executor.
- */
-internal suspend fun <T> AndroidDatabaseHandler.withTransaction(block: suspend () -> T): T {
-    // Use inherited transaction context if available, this allows nested suspending transactions.
-    val transactionContext =
-        coroutineContext[TransactionElement]?.transactionDispatcher ?: createTransactionContext()
-    return withContext(transactionContext) {
-        val transactionElement = coroutineContext[TransactionElement]!!
-        transactionElement.acquire()
-        try {
-            db.transactionWithResult {
-                runBlocking(transactionContext) {
-                    block()
-                }
-            }
-        } finally {
-            transactionElement.release()
-        }
-    }
 }
 
 internal suspend fun <T> AndroidAnimeDatabaseHandler.withTransaction(block: suspend () -> T): T {
@@ -98,22 +58,6 @@ internal suspend fun <T> AndroidAnimeDatabaseHandler.withTransaction(block: susp
  * if a blocking DAO method is invoked within the transaction coroutine. Never assign meaning to
  * this value, for now all we care is if its present or not.
  */
-private suspend fun AndroidDatabaseHandler.createTransactionContext(): CoroutineContext {
-    val controlJob = Job()
-    // make sure to tie the control job to this context to avoid blocking the transaction if
-    // context get cancelled before we can even start using this job. Otherwise, the acquired
-    // transaction thread will forever wait for the controlJob to be cancelled.
-    // see b/148181325
-    coroutineContext[Job]?.invokeOnCompletion {
-        controlJob.cancel()
-    }
-
-    val dispatcher = transactionDispatcher.acquireTransactionThread(controlJob)
-    val transactionElement = TransactionElement(controlJob, dispatcher)
-    val threadLocalElement =
-        suspendingTransactionId.asContextElement(System.identityHashCode(controlJob))
-    return dispatcher + transactionElement + threadLocalElement
-}
 
 private suspend fun AndroidAnimeDatabaseHandler.createTransactionContext(): CoroutineContext {
     val controlJob = Job()

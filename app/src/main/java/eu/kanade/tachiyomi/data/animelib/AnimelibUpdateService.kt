@@ -24,9 +24,9 @@ import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.AnimeDownloadService
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.data.preference.MANGA_HAS_UNREAD
-import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
-import eu.kanade.tachiyomi.data.preference.MANGA_NON_READ
+import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
@@ -310,13 +310,13 @@ class AnimelibUpdateService(
                                 ) { animeWithNotif ->
                                     try {
                                         when {
-                                            MANGA_NON_COMPLETED in restrictions && animeWithNotif.status == SAnime.COMPLETED -> {
+                                            ANIME_NON_COMPLETED in restrictions && animeWithNotif.status == SAnime.COMPLETED -> {
                                                 skippedUpdates.add(animeWithNotif to getString(R.string.skipped_reason_completed))
                                             }
-                                            MANGA_HAS_UNREAD in restrictions && animeWithNotif.unseenCount != 0 -> {
+                                            ANIME_HAS_UNSEEN in restrictions && animeWithNotif.unseenCount != 0 -> {
                                                 skippedUpdates.add(animeWithNotif to getString(R.string.skipped_reason_not_caught_up))
                                             }
-                                            MANGA_NON_READ in restrictions && animeWithNotif.totalEpisodes > 0 && !animeWithNotif.hasStarted -> {
+                                            ANIME_NON_SEEN in restrictions && animeWithNotif.totalEpisodes > 0 && !animeWithNotif.hasStarted -> {
                                                 skippedUpdates.add(animeWithNotif to getString(R.string.skipped_reason_not_started))
                                             }
                                             else -> {

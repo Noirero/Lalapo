@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.ui.browse.migration.animesources
 
 import android.os.Bundle
 import eu.kanade.domain.animesource.interactor.GetAnimeSourcesWithFavoriteCount
+import eu.kanade.domain.animesource.interactor.SetMigrateSorting
 import eu.kanade.domain.animesource.model.AnimeSource
-import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.util.lang.launchIO
 import kotlinx.coroutines.flow.MutableStateFlow

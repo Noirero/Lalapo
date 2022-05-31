@@ -3,8 +3,6 @@ package eu.kanade.tachiyomi.ui.more
 import android.os.Bundle
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.AnimeDownloadService
-import eu.kanade.tachiyomi.data.download.DownloadManager
-import eu.kanade.tachiyomi.data.download.DownloadService
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.util.lang.launchIO
@@ -19,7 +17,6 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class MorePresenter(
-    private val downloadManager: DownloadManager = Injekt.get(),
     private val animedownloadManager: AnimeDownloadManager = Injekt.get(),
     preferencesHelper: PreferencesHelper = Injekt.get(),
 ) : BasePresenter<MoreController>() {
@@ -27,15 +24,14 @@ class MorePresenter(
     val downloadedOnly = preferencesHelper.downloadedOnly().asState()
     val incognitoMode = preferencesHelper.incognitoMode().asState()
 
+    val showNavUpdates = preferencesHelper.showNavUpdates().asState()
+    val showNavHistory = preferencesHelper.showNavHistory().asState()
+
     private var _state: MutableStateFlow<DownloadQueueState> = MutableStateFlow(DownloadQueueState.Stopped)
     val downloadQueueState: StateFlow<DownloadQueueState> = _state.asStateFlow()
 
-    private var isDownloading: Boolean = false
     private var isDownloadingAnime: Boolean = false
-    private var isDownloadingManga: Boolean = false
-    private var downloadQueueSize: Int = 0
     private var downloadQueueSizeAnime: Int = 0
-    private var downloadQueueSizeManga: Int = 0
     private var untilDestroySubscriptions = CompositeSubscription()
 
     override fun onCreate(savedState: Bundle?) {
@@ -55,28 +51,11 @@ class MorePresenter(
 
     private fun initDownloadQueueSummary() {
         // Handle running/paused status change
-        DownloadService.runningRelay
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeUntilDestroy { isRunning ->
-                isDownloadingManga = isRunning
-                isDownloading = isDownloadingManga || isDownloadingAnime
-                updateDownloadQueueState()
-            }
 
         AnimeDownloadService.runningRelay
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeUntilDestroy { isRunning ->
                 isDownloadingAnime = isRunning
-                isDownloading = isDownloadingManga || isDownloadingAnime
-                updateDownloadQueueState()
-            }
-
-        // Handle queue progress updating
-        downloadManager.queue.getUpdatedObservable()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeUntilDestroy {
-                downloadQueueSizeManga = it.size
-                downloadQueueSize = downloadQueueSizeManga + downloadQueueSizeAnime
                 updateDownloadQueueState()
             }
 
@@ -84,19 +63,18 @@ class MorePresenter(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeUntilDestroy {
                 downloadQueueSizeAnime = it.size
-                downloadQueueSize = downloadQueueSizeManga + downloadQueueSizeAnime
                 updateDownloadQueueState()
             }
     }
 
     private fun updateDownloadQueueState() {
         presenterScope.launchIO {
-            val pendingDownloadExists = downloadQueueSize != 0
+            val pendingDownloadExists = downloadQueueSizeAnime != 0
             _state.value = when {
                 !pendingDownloadExists -> DownloadQueueState.Stopped
-                !isDownloading && !pendingDownloadExists -> DownloadQueueState.Paused(0)
-                !isDownloading && pendingDownloadExists -> DownloadQueueState.Paused(downloadQueueSize)
-                else -> DownloadQueueState.Downloading(downloadQueueSize)
+                !isDownloadingAnime && !pendingDownloadExists -> DownloadQueueState.Paused(0)
+                !isDownloadingAnime && pendingDownloadExists -> DownloadQueueState.Paused(downloadQueueSizeAnime)
+                else -> DownloadQueueState.Downloading(downloadQueueSizeAnime)
             }
         }
     }

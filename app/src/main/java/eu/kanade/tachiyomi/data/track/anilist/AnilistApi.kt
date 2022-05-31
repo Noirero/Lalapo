@@ -329,7 +329,7 @@ class AnilistApi(val client: OkHttpClient, interceptor: AnilistInterceptor) {
         private const val baseUrl = "https://anilist.co/api/v2/"
         private const val baseAnimeUrl = "https://anilist.co/anime/"
 
-        fun animeUrl(mediaId: Int): String {
+        fun animeUrl(mediaId: Long): String {
             return baseAnimeUrl + mediaId
         }
 

@@ -13,15 +13,15 @@ import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.util.episode.syncEpisodesWithSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 
 abstract class AbstractBackupManager(protected val context: Context) {
 
-    internal val animedb: AnimeDatabaseHelper = Injekt.get()
-    internal val animesourceManager: AnimeSourceManager = Injekt.get()
-    internal val trackManager: TrackManager = Injekt.get()
-    protected val preferences: PreferencesHelper = Injekt.get()
+    internal val animedb: AnimeDatabaseHelper by injectLazy()
+    internal val animesourceManager: AnimeSourceManager by injectLazy()
+    internal val trackManager: TrackManager by injectLazy()
+    protected val preferences: PreferencesHelper by injectLazy()
+    protected val customAnimeManager: CustomAnimeManager by injectLazy()
 
     abstract fun createBackup(uri: Uri, flags: Int, isAutoBackup: Boolean): String
 

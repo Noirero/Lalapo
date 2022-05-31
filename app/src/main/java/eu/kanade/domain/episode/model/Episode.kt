@@ -5,6 +5,7 @@ data class Episode(
     val animeId: Long,
     val seen: Boolean,
     val bookmark: Boolean,
+    val fillermark: Boolean,
     val lastSecondSeen: Long,
     val totalSeconds: Long,
     val dateFetch: Long,

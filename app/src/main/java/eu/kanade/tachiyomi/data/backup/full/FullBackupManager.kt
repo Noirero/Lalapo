@@ -27,6 +27,7 @@ import eu.kanade.tachiyomi.data.backup.full.models.BackupAnimeTracking
 import eu.kanade.tachiyomi.data.backup.full.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.full.models.BackupEpisode
 import eu.kanade.tachiyomi.data.backup.full.models.BackupFull
+import eu.kanade.tachiyomi.data.backup.full.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.full.models.BackupSerializer
 import eu.kanade.tachiyomi.data.backup.full.models.BooleanPreferenceValue
 import eu.kanade.tachiyomi.data.backup.full.models.FloatPreferenceValue
@@ -39,6 +40,7 @@ import eu.kanade.tachiyomi.data.database.models.AnimeCategory
 import eu.kanade.tachiyomi.data.database.models.AnimeHistory
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.Episode
+import eu.kanade.tachiyomi.util.system.logcat
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import okio.buffer
@@ -147,10 +149,15 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
      *
      * @return list of [BackupCategory] to be backed up
      */
-    private fun backupCategoriesAnime(): List<BackupCategory> {
-        return animedatabaseHelper.getCategories()
-            .executeAsBlocking()
-            .map { BackupCategory.copyFrom(it) }
+    private fun backupCategoriesAnime(options: Int): List<BackupCategory> {
+        // Check if user wants category information in backup
+        return if (options and BACKUP_CATEGORY_MASK == BACKUP_CATEGORY) {
+            animedb.getCategories()
+                .executeAsBlocking()
+                .map { BackupCategory.copyFrom(it) }
+        } else {
+            emptyList()
+        }
     }
 
     /**
@@ -161,7 +168,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
      * @return [BackupAnime] containing anime in a serializable form
      */
     private fun backupAnimeObject(anime: Anime, options: Int): BackupAnime {
-        // Entry for this manga
+        // Entry for this anime
         val animeObject = BackupAnime.copyFrom(anime, if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) customAnimeManager else null)
 
         // Check if user wants chapter information in backup

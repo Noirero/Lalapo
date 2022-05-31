@@ -55,7 +55,7 @@ fun Anime.updateCoverLastModified(db: AnimeDatabaseHelper) {
 fun Anime.shouldDownloadNewEpisodes(db: AnimeDatabaseHelper, prefs: PreferencesHelper): Boolean {
     if (!favorite) return false
 
-    val downloadNewChapter = prefs.downloadNewChapter().get()
+    val downloadNewChapter = prefs.downloadNewEpisode().get()
     if (!downloadNewChapter) return false
 
     val includedCategories = prefs.downloadNewEpisodeCategories().get().map(String::toInt)

@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.setting
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
-import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.util.preference.bindTo
@@ -36,23 +35,6 @@ class SettingsGeneralController : SettingsController() {
             entryValues = arrayOf("1", "2", "3", "4")
             defaultValue = "1"
             summary = "%s"
-        }
-
-        intListPreference {
-            key = Keys.bottomNavStyle
-            titleRes = R.string.pref_bottom_nav_style
-            entriesRes = arrayOf(
-                R.string.label_default,
-                R.string.pref_bottom_nav_history,
-                R.string.pref_bottom_nav_no_manga,
-            )
-            entryValues = arrayOf("0", "1", "2")
-            defaultValue = "0"
-            summary = "%s"
-            onChange {
-                activity?.let { ActivityCompat.recreate(it) }
-                true
-            }
         }
 
         switchPreference {

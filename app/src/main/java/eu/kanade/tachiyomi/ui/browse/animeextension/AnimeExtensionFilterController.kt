@@ -8,7 +8,7 @@ import eu.kanade.tachiyomi.ui.base.controller.ComposeController
 
 class AnimeExtensionFilterController : ComposeController<AnimeExtensionFilterPresenter>() {
 
-    override fun getTitle() = resources?.getString(R.string.label_animeextensions)
+    override fun getTitle() = resources?.getString(R.string.label_extensions)
 
     override fun createPresenter(): AnimeExtensionFilterPresenter = AnimeExtensionFilterPresenter()
 

@@ -5,14 +5,10 @@ import androidx.core.content.ContextCompat
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.squareup.sqldelight.android.AndroidSqliteDriver
-import data.History
-import data.Mangas
 import dataanime.Animehistory
 import dataanime.Animes
 import eu.kanade.data.AndroidAnimeDatabaseHandler
-import eu.kanade.data.AndroidDatabaseHandler
 import eu.kanade.data.AnimeDatabaseHandler
-import eu.kanade.data.DatabaseHandler
 import eu.kanade.data.dateAdapter
 import eu.kanade.data.listOfStringsAdapter
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
@@ -21,15 +17,12 @@ import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.AnimeDbOpenCallback
-import eu.kanade.tachiyomi.data.database.DatabaseHelper
-import eu.kanade.tachiyomi.data.database.DbOpenCallback
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.job.DelayedTrackingStore
 import eu.kanade.tachiyomi.extension.AnimeExtensionManager
-import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.mi.AnimeDatabase
 import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.serialization.json.Json
@@ -45,14 +38,6 @@ class AppModule(val app: Application) : InjektModule {
         addSingleton(app)
 
         // This is used to allow incremental migration from Storio
-        val openHelperManga = FrameworkSQLiteOpenHelperFactory().create(
-            SupportSQLiteOpenHelper.Configuration.builder(app)
-                .callback(DbOpenCallback())
-                .name(DbOpenCallback.DATABASE_NAME)
-                .noBackupDirectory(false)
-                .build(),
-        )
-
         val openHelperAnime = FrameworkSQLiteOpenHelperFactory().create(
             SupportSQLiteOpenHelper.Configuration.builder(app)
                 .callback(AnimeDbOpenCallback())
@@ -61,21 +46,7 @@ class AppModule(val app: Application) : InjektModule {
                 .build(),
         )
 
-        val sqlDriverManga = AndroidSqliteDriver(openHelper = openHelperManga)
-
         val sqlDriverAnime = AndroidSqliteDriver(openHelper = openHelperAnime)
-
-        addSingletonFactory {
-            Database(
-                driver = sqlDriverManga,
-                historyAdapter = History.Adapter(
-                    last_readAdapter = dateAdapter,
-                ),
-                mangasAdapter = Mangas.Adapter(
-                    genreAdapter = listOfStringsAdapter,
-                ),
-            )
-        }
 
         addSingletonFactory {
             AnimeDatabase(
@@ -88,8 +59,6 @@ class AppModule(val app: Application) : InjektModule {
                 ),
             )
         }
-
-        addSingletonFactory<DatabaseHandler> { AndroidDatabaseHandler(get(), sqlDriverManga) }
 
         addSingletonFactory<AnimeDatabaseHandler> { AndroidAnimeDatabaseHandler(get(), sqlDriverAnime) }
 

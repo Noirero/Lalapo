@@ -29,7 +29,7 @@ class AnimeSourcesController : SearchableComposeController<AnimeSourcesPresenter
         setHasOptionsMenu(true)
     }
 
-    override fun getTitle(): String? = resources?.getString(R.string.label_animesources)
+    override fun getTitle(): String? = resources?.getString(R.string.label_sources)
 
     override fun createPresenter(): AnimeSourcesPresenter =
         AnimeSourcesPresenter()

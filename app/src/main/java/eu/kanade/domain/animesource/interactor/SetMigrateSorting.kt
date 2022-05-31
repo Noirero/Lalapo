@@ -1,4 +1,4 @@
-package eu.kanade.domain.source.interactor
+package eu.kanade.domain.animesource.interactor
 
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 

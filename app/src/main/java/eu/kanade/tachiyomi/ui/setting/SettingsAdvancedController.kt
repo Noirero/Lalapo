@@ -10,12 +10,9 @@ import androidx.core.net.toUri
 import androidx.preference.PreferenceScreen
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import eu.kanade.domain.anime.repository.AnimeRepository
-import eu.kanade.domain.manga.repository.MangaRepository
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.animelib.AnimelibUpdateService
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService.Target
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -58,7 +55,6 @@ import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 
 class SettingsAdvancedController(
     private val animeRepository: AnimeRepository = Injekt.get(),
-    private val mangaRepository: MangaRepository = Injekt.get(),
 ) : SettingsController() {
 
     private val network: NetworkHelper by injectLazy()
@@ -69,14 +65,14 @@ class SettingsAdvancedController(
     override fun setupPreferenceScreen(screen: PreferenceScreen) = screen.apply {
         titleRes = R.string.pref_category_advanced
 
-       /** if (isDevFlavor.not()) {
-            switchPreference {
-                key = "acra.enable"
-                titleRes = R.string.pref_enable_acra
-                summaryRes = R.string.pref_acra_summary
-                defaultValue = true
-            }
-        } */
+        /** if (isDevFlavor.not()) {
+         switchPreference {
+         key = "acra.enable"
+         titleRes = R.string.pref_enable_acra
+         summaryRes = R.string.pref_acra_summary
+         defaultValue = true
+         }
+         } */
 
         preference {
             key = "dump_crash_logs"
@@ -336,7 +332,7 @@ class SettingsAdvancedController(
     private fun resetViewerFlags() {
         val activity = activity ?: return
         launchIO {
-            val success = mangaRepository.resetViewerFlags() && animeRepository.resetViewerFlags()
+            val success = animeRepository.resetViewerFlags()
             withUIContext {
                 val message = if (success) {
                     R.string.pref_reset_viewer_flags_success

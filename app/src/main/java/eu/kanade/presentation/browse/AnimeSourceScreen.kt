@@ -1,13 +1,10 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.animesource.model.AnimeSource
@@ -38,10 +35,13 @@ import eu.kanade.domain.animesource.model.Pin
 import eu.kanade.presentation.browse.components.BaseAnimeSourceItem
 import eu.kanade.presentation.components.EmptyScreen
 import eu.kanade.presentation.components.LoadingScreen
+import eu.kanade.presentation.theme.header
+import eu.kanade.presentation.util.horizontalPadding
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.source.LocalSource
+import eu.kanade.tachiyomi.animesource.LocalAnimeSource
 import eu.kanade.tachiyomi.ui.browse.animesource.AnimeSourceState
 import eu.kanade.tachiyomi.ui.browse.animesource.AnimeSourcesPresenter
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 
 @Composable
 fun AnimeSourcesScreen(
@@ -141,6 +141,20 @@ fun AnimeSourceList(
 }
 
 @Composable
+fun SourceHeader(
+    modifier: Modifier = Modifier,
+    language: String,
+) {
+    val context = LocalContext.current
+    Text(
+        text = LocaleHelper.getSourceDisplayName(language, context),
+        modifier = modifier
+            .padding(horizontal = horizontalPadding, vertical = 8.dp),
+        style = MaterialTheme.typography.header,
+    )
+}
+
+@Composable
 fun AnimeSourceItem(
     modifier: Modifier = Modifier,
     source: AnimeSource,
@@ -171,29 +185,6 @@ fun AnimeSourceItem(
             )
         },
     )
-}
-
-@Composable
-fun AnimeSourceIcon(
-    source: AnimeSource,
-) {
-    val icon = source.icon
-    val modifier = Modifier
-        .height(40.dp)
-        .aspectRatio(1f)
-    if (icon != null) {
-        Image(
-            bitmap = icon,
-            contentDescription = "",
-            modifier = modifier,
-        )
-    } else {
-        Image(
-            painter = painterResource(id = R.mipmap.ic_local_source),
-            contentDescription = "",
-            modifier = modifier,
-        )
-    }
 }
 
 @Composable
@@ -233,7 +224,7 @@ fun AnimeSourceOptionsDialog(
                         .fillMaxWidth()
                         .padding(vertical = 16.dp),
                 )
-                if (source.id != LocalSource.ID) {
+                if (source.id != LocalAnimeSource.ID) {
                     Text(
                         text = stringResource(id = R.string.action_disable),
                         modifier = Modifier

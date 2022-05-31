@@ -84,7 +84,9 @@ class PlayerPresenter(
                                 anime.downloadedFilter == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(it, anime) ||
                                 anime.downloadedFilter == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it, anime) ||
                                 anime.bookmarkedFilter == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
-                                anime.bookmarkedFilter == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark
+                                anime.bookmarkedFilter == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
+                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
+                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
                         }
                         else -> false
                     }

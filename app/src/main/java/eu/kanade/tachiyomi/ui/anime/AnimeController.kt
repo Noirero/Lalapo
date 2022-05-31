@@ -159,7 +159,6 @@ class AnimeController :
     val fromSource = args.getBoolean(FROM_SOURCE_EXTRA, false)
 
     private val coverCache: AnimeCoverCache by injectLazy()
-    private val sourceManager: AnimeSourceManager by injectLazy()
 
     private var animeInfoAdapter: AnimeInfoHeaderAdapter? = null
     private var episodesHeaderAdapter: AnimeEpisodesHeaderAdapter? = null
@@ -618,24 +617,9 @@ class AnimeController :
         }
     }
 
-        if (source != null) {
-            presenter.trackList
-                .map { it.service }
-                .filterNot { it is MangaTrackService }
-                .filterIsInstance<EnhancedTrackService>()
-                .filter { it.accept(source!!) }
-                .forEach { service ->
-                    launchIO {
-                        try {
-                            service.match(newAnime)?.let { track ->
-                                presenter.registerTracking(track, service as TrackService)
-                            }
-                        } catch (e: Exception) {
-                            logcat(LogPriority.WARN, e) { "Could not match anime: ${newAnime.title} with service $service" }
-                        }
-                    }
-                }
-        }
+    fun setRefreshing() {
+        isRefreshingInfo = true
+        updateRefreshing()
     }
 
     /**

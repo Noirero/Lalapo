@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.main
 
 import android.animation.ValueAnimator
+import android.app.SearchManager
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
@@ -251,10 +252,6 @@ class MainActivity : BaseActivity() {
             .onEach { setUnreadUpdatesBadge() }
             .launchIn(lifecycleScope)
 
-        preferences.extensionUpdatesCount()
-            .asImmediateFlow { setExtensionsBadge() }
-            .launchIn(lifecycleScope)
-
         preferences.animeextensionUpdatesCount()
             .asImmediateFlow { setExtensionsBadge() }
             .launchIn(lifecycleScope)
@@ -447,7 +444,7 @@ class MainActivity : BaseActivity() {
                     if (router.backstackSize > 1) {
                         router.popToRoot()
                     }
-                    router.pushController(GlobalSearchController(query))
+                    router.pushController(GlobalAnimeSearchController(query))
                 }
             }
             INTENT_ANIMESEARCH -> {
@@ -536,30 +533,15 @@ class MainActivity : BaseActivity() {
     }
 
     fun setSelectedNavItem(itemId: Int) {
-        val newItemId = getNavIdForId(itemId)
         if (!isFinishing) {
-            if (newItemId != null) {
-                nav.selectedItemId = newItemId
-            } else {
-                nav.selectedItemId = R.id.nav_more
-                router.setRoot(getControllerForId(itemId), itemId)
-            }
-        }
-    }
-
-    private fun getNavIdForId(id: Int): Int? {
-        return when (preferences.bottomNavStyle()) {
-            1 -> startScreenArrayHistory.firstOrNull { it == id }
-            2 -> startScreenArrayNoManga.firstOrNull { it == id }
-            else -> startScreenArrayDefault.firstOrNull { it == id }
+            nav.selectedItemId = itemId
         }
     }
 
     private fun getControllerForId(id: Int): Controller {
         return when (id) {
-            R.id.nav_library -> LibraryController()
-            R.id.nav_updates -> UpdatesTabsController()
-            R.id.nav_history -> HistoryTabsController()
+            R.id.nav_updates -> AnimeUpdatesController()
+            R.id.nav_history -> AnimeHistoryController()
             R.id.nav_browse -> BrowseController()
             R.id.nav_more -> MoreController()
             else -> AnimelibController()
@@ -699,29 +681,5 @@ class MainActivity : BaseActivity() {
         const val INTENT_ANIMESEARCH = "eu.kanade.tachiyomi.ANIMESEARCH"
         const val INTENT_SEARCH_QUERY = "query"
         const val INTENT_SEARCH_FILTER = "filter"
-
-        private val startScreenArrayDefault = intArrayOf(
-            R.id.nav_animelib,
-            R.id.nav_animelib,
-            R.id.nav_library,
-            R.id.nav_updates,
-            R.id.nav_browse,
-        )
-
-        private val startScreenArrayHistory = intArrayOf(
-            R.id.nav_animelib,
-            R.id.nav_animelib,
-            R.id.nav_library,
-            R.id.nav_history,
-            R.id.nav_browse,
-        )
-
-        private val startScreenArrayNoManga = intArrayOf(
-            R.id.nav_animelib,
-            R.id.nav_animelib,
-            R.id.nav_updates,
-            R.id.nav_history,
-            R.id.nav_browse,
-        )
     }
 }

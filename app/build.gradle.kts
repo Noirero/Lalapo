@@ -149,11 +149,6 @@ android {
     }
 
     sqldelight {
-        database("Database") {
-            packageName = "eu.kanade.tachiyomi"
-            dialect = "sqlite:3.24"
-            sourceFolders = listOf("sqldelight")
-        }
         database("AnimeDatabase") {
             packageName = "eu.kanade.tachiyomi.mi"
             dialect = "sqlite:3.24"

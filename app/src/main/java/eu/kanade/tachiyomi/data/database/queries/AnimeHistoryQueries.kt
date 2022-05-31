@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.data.database.queries
 
 import com.pushtorefresh.storio.sqlite.queries.RawQuery
-import eu.kanade.tachiyomi.data.database.DbProvider
+import eu.kanade.tachiyomi.data.database.AnimeDbProvider
 import eu.kanade.tachiyomi.data.database.models.AnimeHistory
 import eu.kanade.tachiyomi.data.database.resolvers.AnimeHistoryUpsertResolver
 import eu.kanade.tachiyomi.data.database.tables.AnimeHistoryTable
 
-interface AnimeHistoryQueries : DbProvider {
+interface AnimeHistoryQueries : AnimeDbProvider {
 
     fun getHistoryByAnimeId(animeId: Long) = db.get()
         .listOfObjects(AnimeHistory::class.java)

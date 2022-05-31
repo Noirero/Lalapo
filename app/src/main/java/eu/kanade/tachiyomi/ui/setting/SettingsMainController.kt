@@ -5,7 +5,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChromeReaderMode
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Palette

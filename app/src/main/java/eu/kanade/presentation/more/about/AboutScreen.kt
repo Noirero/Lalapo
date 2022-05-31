@@ -85,13 +85,6 @@ fun AboutScreen(
 
         item {
             PreferenceRow(
-                title = stringResource(R.string.help_translate),
-                onClick = { uriHandler.openUri("https://aniyomi.jmir.xyz/help/contribution/#translation") },
-            )
-        }
-
-        item {
-            PreferenceRow(
                 title = stringResource(R.string.licenses),
                 onClick = onClickLicenses,
             )

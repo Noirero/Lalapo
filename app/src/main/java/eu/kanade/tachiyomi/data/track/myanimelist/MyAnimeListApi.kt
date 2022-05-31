@@ -252,7 +252,7 @@ class MyAnimeListApi(private val client: OkHttpClient, interceptor: MyAnimeListI
             .appendQueryParameter("response_type", "code")
             .build()
 
-        fun animeUrl(id: Int): Uri = "$baseApiUrl/anime".toUri().buildUpon()
+        fun animeUrl(id: Long): Uri = "$baseApiUrl/anime".toUri().buildUpon()
             .appendPath(id.toString())
             .appendPath("my_list_status")
             .build()

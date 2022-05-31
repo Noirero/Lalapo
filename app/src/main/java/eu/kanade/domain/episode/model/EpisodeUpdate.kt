@@ -5,6 +5,7 @@ data class EpisodeUpdate(
     val animeId: Long? = null,
     val seen: Boolean? = null,
     val bookmark: Boolean? = null,
+    val fillermark: Boolean? = null,
     val lastSecondSeen: Long? = null,
     val dateFetch: Long? = null,
     val sourceOrder: Long? = null,

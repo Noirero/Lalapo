@@ -21,6 +21,7 @@ class EpisodeRepositoryImpl(
                     episodeUpdate.scanlator,
                     episodeUpdate.seen?.toLong(),
                     episodeUpdate.bookmark?.toLong(),
+                    episodeUpdate.fillermark?.toLong(),
                     episodeUpdate.lastSecondSeen,
                     episodeUpdate.episodeNumber?.toDouble(),
                     episodeUpdate.sourceOrder,

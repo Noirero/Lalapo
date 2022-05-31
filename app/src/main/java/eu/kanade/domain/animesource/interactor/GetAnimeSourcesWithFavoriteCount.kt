@@ -2,7 +2,6 @@ package eu.kanade.domain.animesource.interactor
 
 import eu.kanade.domain.animesource.model.AnimeSource
 import eu.kanade.domain.animesource.repository.AnimeSourceRepository
-import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

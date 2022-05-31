@@ -3,8 +3,8 @@ package eu.kanade.tachiyomi.ui.browse.animesource
 import android.os.Bundle
 import eu.kanade.domain.animesource.interactor.GetLanguagesWithAnimeSources
 import eu.kanade.domain.animesource.interactor.ToggleAnimeSource
+import eu.kanade.domain.animesource.interactor.ToggleLanguage
 import eu.kanade.domain.animesource.model.AnimeSource
-import eu.kanade.domain.source.interactor.ToggleLanguage
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.util.lang.launchIO
