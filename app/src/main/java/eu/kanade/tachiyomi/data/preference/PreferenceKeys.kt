@@ -7,15 +7,9 @@ object PreferenceKeys {
 
     const val confirmExit = "pref_confirm_exit"
 
-    const val showReadingMode = "pref_show_reading_mode"
-
-    const val defaultReadingMode = "pref_default_reading_mode_key"
-
     const val pipEpisodeToasts = "pref_pip_episode_toasts"
 
     const val mpvConf = "pref_mpv_conf"
-
-    const val defaultOrientationType = "pref_default_orientation_type_key"
 
     const val defaultPlayerOrientationType = "pref_default_player_orientation_type_key"
 
@@ -47,10 +41,6 @@ object PreferenceKeys {
 
     const val downloadOnlyOverWifi = "pref_download_only_over_wifi_key"
 
-    const val folderPerManga = "create_folder_per_manga"
-
-    const val folderPerAnime = "create_folder_per_anime"
-
     const val removeAfterReadSlots = "remove_after_read_slots"
 
     const val removeAfterMarkedAsRead = "pref_remove_after_marked_as_read_key"
@@ -81,11 +71,10 @@ object PreferenceKeys {
 
     const val autoUpdateTrackers = "auto_update_trackers"
 
-    const val downloadNew = "download_new"
+    const val downloadNewEpisode = "download_new_episode"
 
     const val dateFormat = "app_date_format"
 
-    const val defaultCategory = "default_category"
     const val defaultAnimeCategory = "default_anime_category"
 
     const val skipRead = "skip_read"
@@ -96,19 +85,7 @@ object PreferenceKeys {
 
     const val dohProvider = "doh_provider"
 
-    const val defaultChapterFilterByRead = "default_chapter_filter_by_read"
-
-    const val defaultChapterFilterByDownloaded = "default_chapter_filter_by_downloaded"
-
-    const val defaultChapterFilterByBookmarked = "default_chapter_filter_by_bookmarked"
-
-    const val defaultChapterSortBySourceOrNumber = "default_chapter_sort_by_source_or_number" // and upload date
-
-    const val defaultChapterSortByAscendingOrDescending = "default_chapter_sort_by_ascending_or_descending"
-
-    const val defaultChapterDisplayByNameOrNumber = "default_chapter_display_by_name_or_number"
-
-    const val defaultEpisodeFilterByRead = "default_episode_filter_by_read"
+    const val defaultEpisodeFilterBySeen = "default_episode_filter_by_seen"
 
     const val defaultEpisodeFilterByDownloaded = "default_episode_filter_by_downloaded"
 

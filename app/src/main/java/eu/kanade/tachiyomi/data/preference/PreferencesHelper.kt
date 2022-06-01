@@ -249,7 +249,7 @@ class PreferencesHelper(val context: Context) {
 
     fun pinnedAnimeSources() = flowPrefs.getStringSet("pinned_anime_catalogues", emptySet())
 
-    fun downloadNewEpisode() = flowPrefs.getBoolean("download_new", false)
+    fun downloadNewEpisode() = flowPrefs.getBoolean(Keys.downloadNewEpisode, false)
 
     fun downloadNewEpisodeCategories() = flowPrefs.getStringSet("download_new_categories_anime", emptySet())
 
@@ -273,7 +273,7 @@ class PreferencesHelper(val context: Context) {
 
     fun lastSearchQuerySearchSettings() = flowPrefs.getString("last_search_query", "")
 
-    fun filterEpisodeBySeen() = prefs.getInt(Keys.defaultEpisodeFilterByRead, Anime.SHOW_ALL)
+    fun filterEpisodeBySeen() = prefs.getInt(Keys.defaultEpisodeFilterBySeen, Anime.SHOW_ALL)
 
     fun filterEpisodeByDownloaded() = prefs.getInt(Keys.defaultEpisodeFilterByDownloaded, Anime.SHOW_ALL)
 
@@ -308,7 +308,7 @@ class PreferencesHelper(val context: Context) {
 
     fun setEpisodeSettingsDefault(anime: Anime) {
         prefs.edit {
-            putInt(Keys.defaultEpisodeFilterByRead, anime.seenFilter)
+            putInt(Keys.defaultEpisodeFilterBySeen, anime.seenFilter)
             putInt(Keys.defaultEpisodeFilterByDownloaded, anime.downloadedFilter)
             putInt(Keys.defaultEpisodeFilterByBookmarked, anime.bookmarkedFilter)
             putInt(Keys.defaultEpisodeFilterByFillermarked, anime.fillermarkedFilter)
