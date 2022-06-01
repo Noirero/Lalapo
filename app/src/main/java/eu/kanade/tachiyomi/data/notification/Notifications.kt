@@ -47,7 +47,7 @@ object Notifications {
     /**
      * Notification channel and ids used by the library updater.
      */
-    const val CHANNEL_NEW_CHAPTERS = "new_chapters_channel"
+    const val CHANNEL_NEW_CHAPTERS_EPISODES = "new_chapters_episodes_channel"
     const val ID_NEW_CHAPTERS = -301
     const val ID_NEW_EPISODES = -1301
     const val GROUP_NEW_CHAPTERS = "eu.kanade.tachiyomi.NEW_CHAPTERS"
