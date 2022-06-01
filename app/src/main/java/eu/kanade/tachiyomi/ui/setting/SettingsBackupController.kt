@@ -24,7 +24,12 @@ import eu.kanade.tachiyomi.data.backup.BackupCreatorJob
 import eu.kanade.tachiyomi.data.backup.BackupRestoreService
 import eu.kanade.tachiyomi.data.backup.full.FullBackupRestoreValidator
 import eu.kanade.tachiyomi.data.backup.full.models.BackupFull
-import eu.kanade.tachiyomi.data.preference.*
+import eu.kanade.tachiyomi.data.preference.FLAG_CATEGORIES
+import eu.kanade.tachiyomi.data.preference.FLAG_CUSTOM_INFORMATION
+import eu.kanade.tachiyomi.data.preference.FLAG_EPISODES
+import eu.kanade.tachiyomi.data.preference.FLAG_HISTORY
+import eu.kanade.tachiyomi.data.preference.FLAG_SETTINGS
+import eu.kanade.tachiyomi.data.preference.FLAG_TRACK
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.ui.base.controller.requestPermissionsSafe
 import eu.kanade.tachiyomi.util.preference.bindTo
