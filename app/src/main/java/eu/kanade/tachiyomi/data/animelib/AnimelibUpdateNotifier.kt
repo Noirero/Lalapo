@@ -164,8 +164,8 @@ class AnimelibUpdateNotifier(private val context: Context) {
         NotificationManagerCompat.from(context).apply {
             // Parent group notification
             notify(
-                Notifications.ID_NEW_CHAPTERS,
-                context.notification(Notifications.CHANNEL_NEW_CHAPTERS_EPISODES) {
+                Notifications.ID_NEW_EPISODES,
+                context.notification(Notifications.CHANNEL_NEW_EPISODES) {
                     setContentTitle(context.getString(R.string.notification_new_episodes))
                     if (updates.size == 1 && !preferences.hideNotificationContent()) {
                         setContentText(updates.first().first.title.chop(NOTIF_TITLE_MAX_LEN))
@@ -186,7 +186,7 @@ class AnimelibUpdateNotifier(private val context: Context) {
                     setSmallIcon(R.drawable.ic_ani)
                     setLargeIcon(notificationBitmap)
 
-                    setGroup(Notifications.GROUP_NEW_CHAPTERS)
+                    setGroup(Notifications.GROUP_NEW_EPISODES)
                     setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
                     setGroupSummary(true)
                     priority = NotificationCompat.PRIORITY_HIGH
@@ -209,7 +209,7 @@ class AnimelibUpdateNotifier(private val context: Context) {
 
     private suspend fun createNewEpisodesNotification(anime: Anime, episodes: Array<Episode>): Notification {
         val icon = getAnimeIcon(anime)
-        return context.notification(Notifications.CHANNEL_NEW_CHAPTERS_EPISODES) {
+        return context.notification(Notifications.CHANNEL_NEW_EPISODES) {
             setContentTitle(anime.title)
 
             val description = getNewEpisodesDescription(episodes)
@@ -261,7 +261,7 @@ class AnimelibUpdateNotifier(private val context: Context) {
                         context,
                         anime,
                         episodes,
-                        Notifications.ID_NEW_CHAPTERS,
+                        Notifications.ID_NEW_EPISODES,
                     ),
                 )
             }

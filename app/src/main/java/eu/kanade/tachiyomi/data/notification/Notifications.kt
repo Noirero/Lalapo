@@ -37,20 +37,17 @@ object Notifications {
      */
     private const val GROUP_DOWNLOADER = "group_downloader"
     const val CHANNEL_DOWNLOADER_PROGRESS = "downloader_progress_channel"
-    const val ID_DOWNLOAD_CHAPTER_PROGRESS = -201
     const val ID_DOWNLOAD_EPISODE_PROGRESS = -204
     const val CHANNEL_DOWNLOADER_COMPLETE = "downloader_complete_channel"
-    const val ID_DOWNLOAD_CHAPTER_COMPLETE = -203
+    const val ID_DOWNLOAD_EPISODE_COMPLETE = -203
     const val CHANNEL_DOWNLOADER_ERROR = "downloader_error_channel"
-    const val ID_DOWNLOAD_CHAPTER_ERROR = -202
+    const val ID_DOWNLOAD_EPISODE_ERROR = -202
 
     /**
      * Notification channel and ids used by the library updater.
      */
-    const val CHANNEL_NEW_CHAPTERS_EPISODES = "new_chapters_episodes_channel"
-    const val ID_NEW_CHAPTERS = -301
+    const val CHANNEL_NEW_EPISODES = "new_episodes_channel"
     const val ID_NEW_EPISODES = -1301
-    const val GROUP_NEW_CHAPTERS = "eu.kanade.tachiyomi.NEW_CHAPTERS"
     const val GROUP_NEW_EPISODES = "eu.kanade.tachiyomi.NEW_EPISODES"
 
     /**
@@ -143,7 +140,7 @@ object Notifications {
                     setGroup(GROUP_LIBRARY)
                     setShowBadge(false)
                 },
-                buildNotificationChannel(CHANNEL_NEW_CHAPTERS, IMPORTANCE_DEFAULT) {
+                buildNotificationChannel(CHANNEL_NEW_EPISODES, IMPORTANCE_DEFAULT) {
                     setName(context.getString(R.string.channel_new_episodes))
                 },
                 buildNotificationChannel(CHANNEL_DOWNLOADER_PROGRESS, IMPORTANCE_LOW) {

@@ -127,7 +127,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
     fun onPaused() {
         with(progressNotificationBuilder) {
             setContentTitle(context.getString(R.string.download_paused))
-            setContentText(context.getString(R.string.download_notifier_download_paused))
+            setContentText(context.getString(R.string.download_notifier_download_paused_episodes))
             setSmallIcon(R.drawable.ic_pause_24dp)
             setProgress(0, 0, false)
             setOngoing(false)
@@ -171,7 +171,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 setContentIntent(NotificationHandler.openAnimeDownloadManagerPendingActivity(context))
                 setProgress(0, 0, false)
 
-                show(Notifications.ID_DOWNLOAD_CHAPTER_COMPLETE)
+                show(Notifications.ID_DOWNLOAD_EPISODE_COMPLETE)
             }
         }
 
@@ -197,7 +197,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             timeout?.let { setTimeoutAfter(it) }
             contentIntent?.let { setContentIntent(it) }
 
-            show(Notifications.ID_DOWNLOAD_CHAPTER_ERROR)
+            show(Notifications.ID_DOWNLOAD_EPISODE_ERROR)
         }
 
         // Reset download information
@@ -223,7 +223,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             setContentIntent(NotificationHandler.openAnimeDownloadManagerPendingActivity(context))
             setProgress(0, 0, false)
 
-            show(Notifications.ID_DOWNLOAD_CHAPTER_ERROR)
+            show(Notifications.ID_DOWNLOAD_EPISODE_ERROR)
         }
 
         // Reset download information
