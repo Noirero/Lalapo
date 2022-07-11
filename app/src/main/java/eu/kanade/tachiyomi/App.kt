@@ -27,6 +27,8 @@ import coil.util.DebugLogger
 import eu.kanade.domain.DomainModule
 import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
+import eu.kanade.tachiyomi.data.coil.AnimeKeyer
+import eu.kanade.tachiyomi.data.coil.DomainAnimeKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
@@ -135,7 +137,10 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
                 }
                 add(TachiyomiImageDecoder.Factory())
                 add(AnimeCoverFetcher.Factory(lazy(callFactoryInit), lazy(diskCacheInit)))
-                add(AnimeCoverKeyer())
+                add(AnimeCoverFetcher.DomainAnimeFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
+                add(AnimeCoverFetcher.AnimeCoverFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
+                add(AnimeKeyer())
+                add(DomainAnimeKeyer())
             }
             callFactory(callFactoryInit)
             diskCache(diskCacheInit)

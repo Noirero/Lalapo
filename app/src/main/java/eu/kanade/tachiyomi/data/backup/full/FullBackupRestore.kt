@@ -32,6 +32,7 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
     override suspend fun performRestore(uri: Uri): Boolean {
         backupManager = FullBackupManager(context)
 
+        @Suppress("BlockingMethodInNonBlockingContext")
         val backupString = context.contentResolver.openInputStream(uri)!!.source().gzip().buffer().use { it.readByteArray() }
         val backup = backupManager.parser.decodeFromByteArray(BackupSerializer, backupString)
 
@@ -86,19 +87,17 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         return true
     }
 
-    private fun restoreCategoriesAnime(backupCategories: List<BackupCategory>) {
-        animedb.inTransaction {
-            backupManager.restoreCategoriesAnime(backupCategories)
-        }
+    private suspend fun restoreCategoriesAnime(backupCategories: List<BackupCategory>) {
+        backupManager.restoreCategoriesAnime(backupCategories)
 
         restoreProgress += 1
-        showRestoreProgress(restoreProgress, restoreAmount, context.getString(R.string.categories))
+        showRestoreProgress(restoreProgress, restoreAmount, context.getString(R.string.anime_categories))
     }
 
-    private fun restoreAnime(backupAnime: BackupAnime, backupCategories: List<BackupCategory>) {
+    private suspend fun restoreAnime(backupAnime: BackupAnime, backupCategories: List<BackupCategory>) {
         val anime = backupAnime.getAnimeImpl()
         val episodes = backupAnime.getEpisodesImpl()
-        val categories = backupAnime.categories
+        val categories = backupAnime.categories.map { it.toInt() }
         val history = backupAnime.brokenHistory.map { BackupAnimeHistory(it.url, it.lastSeen) } + backupAnime.history
         val tracks = backupAnime.getTrackingImpl()
         val customAnime = backupAnime.getCustomAnimeInfo()
@@ -115,15 +114,15 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
     }
 
     /**
-     * Returns a manga restore observable
+     * Returns an anime restore observable
      *
-     * @param anime manga data from json
-     * @param episodes chapters data from json
+     * @param anime anime data from json
+     * @param episodes episodes data from json
      * @param categories categories data from json
      * @param history history data from json
      * @param tracks tracking data from json
      */
-    private fun restoreAnimeData(
+    private suspend fun restoreAnimeData(
         anime: Anime,
         episodes: List<Episode>,
         categories: List<Int>,
@@ -132,18 +131,16 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         backupCategories: List<BackupCategory>,
         customAnime: CustomAnimeManager.AnimeJson?,
     ) {
-        animedb.inTransaction {
-            val dbAnime = backupManager.getAnimeFromDatabase(anime)
-            if (dbAnime == null) {
-                // Manga not in database
-                restoreAnimeFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
-            } else {
-                // Manga in database
-                // Copy information from manga already in database
-                backupManager.restoreAnimeNoFetch(anime, dbAnime)
-                // Fetch rest of manga information
-                restoreAnimeNoFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
-            }
+        val dbAnime = backupManager.getAnimeFromDatabase(anime.url, anime.source)
+        if (dbAnime == null) {
+            // Anime not in database
+            restoreAnimeFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
+        } else {
+            // Anime in database
+            // Copy information from anime already in database
+            backupManager.restoreAnimeNoFetch(anime, dbAnime)
+            // Fetch rest of anime information
+            restoreAnimeNoFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
         }
     }
 
@@ -154,7 +151,7 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
      * @param episodes episodes of anime that needs updating
      * @param categories categories that need updating
      */
-    private fun restoreAnimeFetch(
+    private suspend fun restoreAnimeFetch(
         anime: Anime,
         episodes: List<Episode>,
         categories: List<Int>,
@@ -175,7 +172,7 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         }
     }
 
-    private fun restoreAnimeNoFetch(
+    private suspend fun restoreAnimeNoFetch(
         backupAnime: Anime,
         episodes: List<Episode>,
         categories: List<Int>,
@@ -189,14 +186,7 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         restoreExtraForAnime(backupAnime, categories, history, tracks, backupCategories, customAnime)
     }
 
-    private fun restoreExtraForAnime(
-        anime: Anime,
-        categories: List<Int>,
-        history: List<BackupAnimeHistory>,
-        tracks: List<AnimeTrack>,
-        backupCategories: List<BackupCategory>,
-        customAnime: CustomAnimeManager.AnimeJson?,
-    ) {
+    private suspend fun restoreExtraForAnime(anime: Anime, categories: List<Int>, history: List<BackupAnimeHistory>, tracks: List<AnimeTrack>, backupCategories: List<BackupCategory>, customAnime: CustomAnimeManager.AnimeJson?) {
         // Restore categories
         backupManager.restoreCategoriesForAnime(anime, categories, backupCategories)
 

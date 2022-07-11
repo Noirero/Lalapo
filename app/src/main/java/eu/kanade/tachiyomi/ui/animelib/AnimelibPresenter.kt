@@ -2,29 +2,39 @@ package eu.kanade.tachiyomi.ui.animelib
 
 import android.os.Bundle
 import com.jakewharton.rxrelay.BehaviorRelay
+import eu.kanade.core.util.asObservable
+import eu.kanade.data.AnimeDatabaseHandler
+import eu.kanade.domain.anime.interactor.GetAnimelibAnime
+import eu.kanade.domain.anime.interactor.UpdateAnime
+import eu.kanade.domain.anime.model.Anime
+import eu.kanade.domain.anime.model.AnimeUpdate
+import eu.kanade.domain.anime.model.isLocal
+import eu.kanade.domain.animetrack.interactor.GetAnimeTracks
+import eu.kanade.domain.category.interactor.GetCategoriesAnime
+import eu.kanade.domain.category.interactor.SetAnimeCategories
+import eu.kanade.domain.category.model.Category
+import eu.kanade.domain.episode.interactor.GetEpisodeByAnimeId
+import eu.kanade.domain.episode.interactor.SetSeenStatus
+import eu.kanade.domain.episode.interactor.UpdateEpisode
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.AnimeCategory
-import eu.kanade.tachiyomi.data.database.models.Category
-import eu.kanade.tachiyomi.data.database.models.Episode
+import eu.kanade.tachiyomi.data.database.models.toDomainAnime
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.ui.animelib.setting.SortDirectionSetting
 import eu.kanade.tachiyomi.ui.animelib.setting.SortModeSetting
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
-import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.lang.combineLatest
 import eu.kanade.tachiyomi.util.lang.isNullOrUnsubscribed
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.nullIfBlank
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
+import kotlinx.coroutines.runBlocking
 import rx.Observable
 import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers
@@ -34,6 +44,7 @@ import uy.kohesive.injekt.api.get
 import java.text.Collator
 import java.util.Collections
 import java.util.Locale
+import eu.kanade.tachiyomi.data.database.models.Anime as DbAnime
 
 /**
  * Class containing animelib information.
@@ -43,13 +54,21 @@ private data class Animelib(val categories: List<Category>, val animeMap: Animel
 /**
  * Typealias for the animelib anime, using the category as keys, and list of anime as values.
  */
-private typealias AnimelibMap = Map<Int, List<AnimelibItem>>
+typealias AnimelibMap = Map<Long, List<AnimelibItem>>
 
 /**
  * Presenter of [AnimelibController].
  */
 class AnimelibPresenter(
-    private val db: AnimeDatabaseHelper = Injekt.get(),
+    private val handler: AnimeDatabaseHandler = Injekt.get(),
+    private val getAnimelibAnime: GetAnimelibAnime = Injekt.get(),
+    private val getTracks: GetAnimeTracks = Injekt.get(),
+    private val getCategories: GetCategoriesAnime = Injekt.get(),
+    private val getEpisodeByAnimeId: GetEpisodeByAnimeId = Injekt.get(),
+    private val setSeenStatus: SetSeenStatus = Injekt.get(),
+    private val updateEpisode: UpdateEpisode = Injekt.get(),
+    private val updateAnime: UpdateAnime = Injekt.get(),
+    private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
     private val preferences: PreferencesHelper = Injekt.get(),
     private val coverCache: AnimeCoverCache = Injekt.get(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
@@ -95,6 +114,7 @@ class AnimelibPresenter(
      * Subscribes to animelib if needed.
      */
     fun subscribeAnimelib() {
+        // TODO: Move this to a coroutine world
         if (animelibSubscription.isNullOrUnsubscribed()) {
             animelibSubscription = getAnimelibObservable()
                 .combineLatest(badgeTriggerRelay.observeOn(Schedulers.io())) { lib, _ ->
@@ -118,7 +138,7 @@ class AnimelibPresenter(
      *
      * @param map the map to filter.
      */
-    private fun applyFilters(map: AnimelibMap, trackMap: Map<Long, Map<Int, Boolean>>): AnimelibMap {
+    private fun applyFilters(map: AnimelibMap, trackMap: Map<Long, Map<Long, Boolean>>): AnimelibMap {
         val downloadedOnly = preferences.downloadedOnly().get()
         val filterDownloaded = preferences.filterDownloaded().get()
         val filterUnseen = preferences.filterUnread().get()
@@ -126,16 +146,16 @@ class AnimelibPresenter(
         val filterCompleted = preferences.filterCompleted().get()
         val loggedInServices = trackManager.services.filter { trackService -> trackService.isLogged }
             .associate { trackService ->
-                Pair(trackService.id, preferences.filterTracking(trackService.id).get())
+                Pair(trackService.id, preferences.filterTracking(trackService.id.toInt()).get())
             }
         val isNotAnyLoggedIn = !loggedInServices.values.any()
 
         val filterFnDownloaded: (AnimelibItem) -> Boolean = downloaded@{ item ->
             if (!downloadedOnly && filterDownloaded == State.IGNORE.value) return@downloaded true
             val isDownloaded = when {
-                item.anime.isLocal() -> true
+                item.anime.toDomainAnime()!!.isLocal() -> true
                 item.downloadCount != -1 -> item.downloadCount > 0
-                else -> downloadManager.getDownloadCount(item.anime) > 0
+                else -> downloadManager.getDownloadCount(item.anime.toDomainAnime()!!) > 0
             }
 
             return@downloaded if (downloadedOnly || filterDownloaded == State.INCLUDE.value) isDownloaded
@@ -218,7 +238,7 @@ class AnimelibPresenter(
         for ((_, itemList) in map) {
             for (item in itemList) {
                 item.downloadCount = if (showDownloadBadges) {
-                    downloadManager.getDownloadCount(item.anime)
+                    downloadManager.getDownloadCount(item.anime.toDomainAnime()!!)
                 } else {
                     // Unset download count if not enabled
                     -1
@@ -232,7 +252,7 @@ class AnimelibPresenter(
                 }
 
                 item.isLocal = if (showLocalBadges) {
-                    item.anime.isLocal()
+                    item.anime.toDomainAnime()!!.isLocal()
                 } else {
                     // Hide / Unset local badge if not enabled
                     false
@@ -254,28 +274,40 @@ class AnimelibPresenter(
      * @param map the map to sort.
      */
     private fun applySort(categories: List<Category>, map: AnimelibMap): AnimelibMap {
-        val lastReadAnime by lazy {
+        val lastSeenAnime by lazy {
             var counter = 0
-            // Result comes as newest to oldest so it's reversed
-            db.getLastSeenAnime().executeAsBlocking().reversed().associate { it.id!! to counter++ }
+            // TODO: Make [applySort] a suspended function
+            runBlocking {
+                handler.awaitList {
+                    animesQueries.getLastSeen()
+                }.associate { it._id to counter++ }
+            }
         }
-        val latestChapterAnime by lazy {
+        val latestEpisodeAnime by lazy {
             var counter = 0
-            // Result comes as newest to oldest so it's reversed
-            db.getLatestEpisodeAnime().executeAsBlocking().reversed().associate { it.id!! to counter++ }
+            // TODO: Make [applySort] a suspended function
+            runBlocking {
+                handler.awaitList {
+                    animesQueries.getLatestByEpisodeUploadDate()
+                }.associate { it._id to counter++ }
+            }
         }
         val chapterFetchDateAnime by lazy {
             var counter = 0
-            // Result comes as newest to oldest so it's reversed
-            db.getEpisodeFetchDateAnime().executeAsBlocking().reversed().associate { it.id!! to counter++ }
+            // TODO: Make [applySort] a suspended function
+            runBlocking {
+                handler.awaitList {
+                    animesQueries.getLatestByEpisodeFetchDate()
+                }.associate { it._id to counter++ }
+            }
         }
 
         val sortingModes = categories.associate { category ->
-            (category.id ?: 0) to SortModeSetting.get(preferences, category)
+            category.id to SortModeSetting.get(preferences, category)
         }
 
         val sortDirections = categories.associate { category ->
-            (category.id ?: 0) to SortDirectionSetting.get(preferences, category)
+            category.id to SortDirectionSetting.get(preferences, category)
         }
 
         val locale = Locale.getDefault()
@@ -283,15 +315,15 @@ class AnimelibPresenter(
             strength = Collator.PRIMARY
         }
         val sortFn: (AnimelibItem, AnimelibItem) -> Int = { i1, i2 ->
-            val sortingMode = sortingModes[i1.anime.category]!!
-            val sortAscending = sortDirections[i1.anime.category]!! == SortDirectionSetting.ASCENDING
+            val sortingMode = sortingModes[i1.anime.category.toLong()]!!
+            val sortAscending = sortDirections[i1.anime.category.toLong()]!! == SortDirectionSetting.ASCENDING
             when (sortingMode) {
                 SortModeSetting.ALPHABETICAL -> {
                     collator.compare(i1.anime.title.lowercase(locale), i2.anime.title.lowercase(locale))
                 }
                 SortModeSetting.LAST_READ -> {
-                    val anime1LastRead = lastReadAnime[i1.anime.id!!] ?: 0
-                    val anime2LastRead = lastReadAnime[i2.anime.id!!] ?: 0
+                    val anime1LastRead = lastSeenAnime[i1.anime.id!!] ?: 0
+                    val anime2LastRead = lastSeenAnime[i2.anime.id!!] ?: 0
                     anime1LastRead.compareTo(anime2LastRead)
                 }
                 SortModeSetting.LAST_MANGA_UPDATE -> {
@@ -308,10 +340,10 @@ class AnimelibPresenter(
                     i1.anime.totalEpisodes.compareTo(i2.anime.totalEpisodes)
                 }
                 SortModeSetting.LATEST_CHAPTER -> {
-                    val anime1latestEpisode = latestChapterAnime[i1.anime.id!!]
-                        ?: latestChapterAnime.size
-                    val anime2latestEpisode = latestChapterAnime[i2.anime.id!!]
-                        ?: latestChapterAnime.size
+                    val anime1latestEpisode = latestEpisodeAnime[i1.anime.id!!]
+                        ?: latestEpisodeAnime.size
+                    val anime2latestEpisode = latestEpisodeAnime[i2.anime.id!!]
+                        ?: latestEpisodeAnime.size
                     anime1latestEpisode.compareTo(anime2latestEpisode)
                 }
                 SortModeSetting.CHAPTER_FETCH_DATE -> {
@@ -347,7 +379,7 @@ class AnimelibPresenter(
     private fun getAnimelibObservable(): Observable<Animelib> {
         return Observable.combineLatest(getCategoriesObservable(), getAnimelibAnimesObservable()) { dbCategories, animelibAnime ->
             val categories = if (animelibAnime.containsKey(0)) {
-                arrayListOf(Category.createDefault(context)) + dbCategories
+                arrayListOf(Category.default(context)) + dbCategories
             } else {
                 dbCategories
             }
@@ -370,7 +402,7 @@ class AnimelibPresenter(
      * @return an observable of the categories.
      */
     private fun getCategoriesObservable(): Observable<List<Category>> {
-        return db.getCategories().asRxObservable()
+        return getCategories.subscribe().asObservable()
     }
 
     /**
@@ -382,7 +414,8 @@ class AnimelibPresenter(
     private fun getAnimelibAnimesObservable(): Observable<AnimelibMap> {
         val defaultLibraryDisplayMode = preferences.libraryDisplayMode()
         val shouldSetFromCategory = preferences.categorizedDisplaySettings()
-        return db.getAnimelibAnimes().asRxObservable()
+
+        return getAnimelibAnime.subscribe().asObservable()
             .map { list ->
                 list.map { animelibAnime ->
                     // Display mode based on user preference: take it from global library setting or category
@@ -391,7 +424,7 @@ class AnimelibPresenter(
                         shouldSetFromCategory,
                         defaultLibraryDisplayMode,
                     )
-                }.groupBy { it.anime.category }
+                }.groupBy { it.anime.category.toLong() }
             }
     }
 
@@ -400,7 +433,7 @@ class AnimelibPresenter(
      *
      * @return an observable of tracked anime.
      */
-    private fun getFilterObservable(): Observable<Map<Long, Map<Int, Boolean>>> {
+    private fun getFilterObservable(): Observable<Map<Long, Map<Long, Boolean>>> {
         return getTracksObservable().combineLatest(filterTriggerRelay.observeOn(Schedulers.io())) { tracks, _ -> tracks }
     }
 
@@ -409,16 +442,20 @@ class AnimelibPresenter(
      *
      * @return an observable of tracked anime.
      */
-    private fun getTracksObservable(): Observable<Map<Long, Map<Int, Boolean>>> {
-        return db.getTracks().asRxObservable().map { tracks ->
-            tracks.groupBy { it.anime_id }
-                .mapValues { tracksForAnimeId ->
-                    // Check if any of the trackers is logged in for the current anime id
-                    tracksForAnimeId.value.associate {
-                        Pair(it.sync_id, trackManager.getService(it.sync_id)?.isLogged ?: false)
+    private fun getTracksObservable(): Observable<Map<Long, Map<Long, Boolean>>> {
+        // TODO: Move this to domain/data layer
+        return getTracks.subscribe()
+            .asObservable().map { tracks ->
+                tracks
+                    .groupBy { it.animeId }
+                    .mapValues { tracksForAnimeId ->
+                        // Check if any of the trackers is logged in for the current manga id
+                        tracksForAnimeId.value.associate {
+                            Pair(it.syncId, trackManager.getService(it.syncId)?.isLogged ?: false)
+                        }
                     }
-                }
-        }.observeOn(Schedulers.io())
+            }
+            .observeOn(Schedulers.io())
     }
 
     /**
@@ -455,11 +492,11 @@ class AnimelibPresenter(
      *
      * @param animes the list of anime.
      */
-    fun getCommonCategories(animes: List<Anime>): Collection<Category> {
+    suspend fun getCommonCategories(animes: List<Anime>): Collection<Category> {
         if (animes.isEmpty()) return emptyList()
         return animes.toSet()
-            .map { db.getCategoriesForAnime(it).executeAsBlocking() }
-            .reduce { set1: Iterable<Category>, set2 -> set1.intersect(set2).toMutableList() }
+            .map { getCategories.await(it.id) }
+            .reduce { set1, set2 -> set1.intersect(set2).toMutableList() }
     }
 
     /**
@@ -467,9 +504,9 @@ class AnimelibPresenter(
      *
      * @param animes the list of anime.
      */
-    fun getMixCategories(animes: List<Anime>): Collection<Category> {
+    suspend fun getMixCategories(animes: List<Anime>): Collection<Category> {
         if (animes.isEmpty()) return emptyList()
-        val animeCategories = animes.toSet().map { db.getCategoriesForAnime(it).executeAsBlocking() }
+        val animeCategories = animes.toSet().map { getCategories.await(it.id) }
         val common = animeCategories.reduce { set1, set2 -> set1.intersect(set2).toMutableList() }
         return animeCategories.flatten().distinct().subtract(common).toMutableList()
     }
@@ -482,7 +519,7 @@ class AnimelibPresenter(
     fun downloadUnseenEpisodes(animes: List<Anime>) {
         animes.forEach { anime ->
             launchIO {
-                val episodes = db.getEpisodes(anime).executeAsBlocking()
+                val episodes = getEpisodeByAnimeId.await(anime.id)
                     .filter { !it.seen }
 
                 downloadManager.downloadEpisodes(anime, episodes)
@@ -525,52 +562,41 @@ class AnimelibPresenter(
     fun markSeenStatus(animes: List<Anime>, seen: Boolean) {
         animes.forEach { anime ->
             launchIO {
-                val episodes = db.getEpisodes(anime).executeAsBlocking()
-                episodes.forEach {
-                    it.seen = seen
-                    if (!seen) {
-                        it.last_second_seen = 0
-                    }
-                }
-                db.updateEpisodesProgress(episodes).executeAsBlocking()
-
-                if (seen && preferences.removeAfterMarkedAsRead()) {
-                    deleteEpisodes(anime, episodes)
-                }
+                setSeenStatus.await(
+                    anime = anime,
+                    seen = seen,
+                )
             }
-        }
-    }
-
-    private fun deleteEpisodes(anime: Anime, episodes: List<Episode>) {
-        sourceManager.get(anime.source)?.let { source ->
-            downloadManager.deleteEpisodes(episodes, anime, source)
         }
     }
 
     /**
      * Remove the selected anime.
      *
-     * @param animes the list of anime to delete.
+     * @param animeList the list of anime to delete.
      * @param deleteFromAnimelib whether to delete anime from animelib.
      * @param deleteEpisodes whether to delete downloaded episodes.
      */
-    fun removeAnimes(animes: List<Anime>, deleteFromAnimelib: Boolean, deleteEpisodes: Boolean) {
+    fun removeAnimes(animeList: List<DbAnime>, deleteFromAnimelib: Boolean, deleteEpisodes: Boolean) {
         launchIO {
-            val animeToDelete = animes.distinctBy { it.id }
+            val animeToDelete = animeList.distinctBy { it.id }
 
             if (deleteFromAnimelib) {
-                animeToDelete.forEach {
-                    it.favorite = false
+                val toDelete = animeToDelete.map {
                     it.removeCovers(coverCache)
+                    AnimeUpdate(
+                        favorite = false,
+                        id = it.id!!,
+                    )
                 }
-                db.insertAnimes(animeToDelete).executeAsBlocking()
+                updateAnime.awaitAll(toDelete)
             }
 
             if (deleteEpisodes) {
                 animeToDelete.forEach { anime ->
                     val source = sourceManager.get(anime.source) as? AnimeHttpSource
                     if (source != null) {
-                        downloadManager.deleteAnime(anime, source)
+                        downloadManager.deleteAnime(anime.toDomainAnime()!!, source)
                     }
                 }
             }
@@ -578,35 +604,21 @@ class AnimelibPresenter(
     }
 
     /**
-     * Move the given list of anime to categories.
+     * Bulk update categories of anime using old and new common categories.
      *
-     * @param categories the selected categories.
-     * @param animes the list of anime to move.
-     */
-    fun moveAnimesToCategories(categories: List<Category>, animes: List<Anime>) {
-        val mc = mutableListOf<AnimeCategory>()
-
-        for (anime in animes) {
-            categories.mapTo(mc) { AnimeCategory.create(anime, it) }
-        }
-
-        db.setAnimeCategories(mc, animes)
-    }
-
-    /**
-     * Bulk update categories of animes using old and new common categories.
-     *
-     * @param animes the list of anime to move.
+     * @param animeList the list of anime to move.
      * @param addCategories the categories to add for all animes.
      * @param removeCategories the categories to remove in all animes.
      */
-    fun updateAnimesToCategories(animes: List<Anime>, addCategories: List<Category>, removeCategories: List<Category>) {
-        val animeCategories = animes.map { anime ->
-            val categories = db.getCategoriesForAnime(anime).executeAsBlocking()
-                .subtract(removeCategories).plus(addCategories).distinct()
-            categories.map { AnimeCategory.create(anime, it) }
-        }.flatten()
-
-        db.setAnimeCategories(animeCategories, animes)
+    fun setAnimeCategories(animeList: List<Anime>, addCategories: List<Category>, removeCategories: List<Category>) {
+        presenterScope.launchIO {
+            animeList.map { anime ->
+                val categoryIds = getCategories.await(anime.id)
+                    .subtract(removeCategories)
+                    .plus(addCategories)
+                    .map { it.id }
+                setAnimeCategories.await(anime.id, categoryIds)
+            }
+        }
     }
 }

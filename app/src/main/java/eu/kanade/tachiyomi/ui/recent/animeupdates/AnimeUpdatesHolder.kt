@@ -26,13 +26,7 @@ class AnimeUpdatesHolder(private val view: View, private val adapter: AnimeUpdat
             adapter.coverClickListener.onCoverClick(bindingAdapterPosition)
         }
 
-        binding.download.setOnClickListener {
-            onAnimeDownloadClick(it, bindingAdapterPosition)
-        }
-        binding.download.setOnLongClickListener {
-            onAnimeDownloadLongClick(it, bindingAdapterPosition)
-            true
-        }
+        binding.download.listener = downloadActionListener
     }
 
     fun bind(item: AnimeUpdatesItem) {
@@ -49,7 +43,6 @@ class AnimeUpdatesHolder(private val view: View, private val adapter: AnimeUpdat
         } else {
             binding.mangaTitle.setTextColor(adapter.unseenColor)
             binding.chapterTitle.setTextColor(
-
                 if (item.bookmark) {
                     adapter.bookmarkedColor
                 } else {
@@ -63,10 +56,10 @@ class AnimeUpdatesHolder(private val view: View, private val adapter: AnimeUpdat
         }
 
         // Set bookmark status
-        binding.bookmarkIcon.isVisible = item.bookmark
+        binding.bookmarkIcon.isVisible = item.episode.bookmark
 
         // Set fillermark status
-        binding.fillermarkIcon.isVisible = item.fillermark
+        binding.fillermarkIcon.isVisible = item.episode.fillermark
 
         // Set episode status
         binding.download.isVisible = item.anime.source != LocalAnimeSource.ID

@@ -180,6 +180,7 @@
     <string name="pref_app_theme">App theme</string>
     <string name="theme_monet">Dynamic</string>
     <string name="theme_greenapple">Green Apple</string>
+    <string name="theme_lavender">Lavender</string>
     <string name="theme_midnightdusk">Midnight Dusk</string>
     <string name="theme_strawberrydaiquiri">Strawberry Daiquiri</string>
     <string name="theme_tako">Tako</string>
@@ -203,6 +204,7 @@
 
     <string name="pref_confirm_exit">Confirm exit</string>
     <string name="pref_manage_notifications">Manage notifications</string>
+    <string name="pref_app_language">App language</string>
 
     <string name="pref_category_security">Security</string>
     <string name="lock_with_biometrics">Require unlock</string>
@@ -364,6 +366,15 @@
     <string name="pref_progress_100">100%</string>
     <string name="playertitle">%1$s - %2$s</string>
 
+    <string name="screenshot_header">Take screenshot</string>
+    <string name="screenshot_show_subs">Show subtitles in screenshot</string>
+    <string name="stats_header">Show statistics</string>
+    <string name="toggle_stats">Toggle stats</string>
+    <string name="stats_page">Stats page</string>
+    <string name="stats_page_1">Page 1</string>
+    <string name="stats_page_2">Page 2</string>
+    <string name="stats_page_3">Page 3</string>
+
       <!-- Downloads section -->
     <string name="episode_download_progress">%1$d%%</string>
     <string name="pref_download_directory">Download location</string>
@@ -381,7 +392,7 @@
     <string name="fourth_to_last">Fourth to last seen episode</string>
     <string name="fifth_to_last">Fifth to last seen episode</string>
     <string name="pref_category_auto_download">Auto-download</string>
-    <string name="pref_category_download">downloads</string>
+    <string name="pref_category_external_downloader">External downloader</string>
     <string name="pref_use_external_downloader">Always use external downloader for anime</string>
     <string name="pref_external_downloader_selection">Downloader app preference</string>
     <string name="pref_download_new">Download new episodess</string>
@@ -583,7 +594,7 @@
     <string name="clipboard_copy_error">Failed to copy to clipboard</string>
     <string name="source_not_installed">Source not installed: %1$s</string>
     <string name="snack_add_to_animelib">Add anime to library?</string>
-    <string name="loader_not_implemented_error">Source not found</string>
+    <string name="description_placeholder">No description</string>
 
     <!-- Anime episodes fragment -->
     <string name="display_mode_episode">Episode %1$s</string>
@@ -604,6 +615,7 @@
     <string name="download_custom">Custom</string>
     <string name="download_all">All</string>
     <string name="download_unseen">Unseen</string>
+    <string name="custom_cover">Custom cover</string>
     <string name="anime_cover">Cover</string>
     <string name="cover_saved">Cover saved</string>
     <string name="error_saving_cover">Error saving cover</string>
@@ -624,6 +636,7 @@
     <string name="tracker_bangumi" translatable="false">Bangumi</string>
     <string name="tracker_shikimori" translatable="false">Shikimori</string>
     <string name="tracking_tab">Tracking</string>
+    <string name="tracker_simkl" translatable="false">Simkl</string>
     <plurals name="num_trackers">
         <item quantity="one">%d tracker</item>
         <item quantity="other">%d trackers</item>
@@ -634,6 +647,7 @@
     <string name="currently_watching">Currently watching</string>
     <string name="completed">Completed</string>
     <string name="dropped">Dropped</string>
+    <string name="not_interesting">Not interesting</string>
     <string name="on_hold">On hold</string>
     <string name="paused">Paused</string>
     <string name="plan_to_watch">Plan to watch</string>
@@ -692,6 +706,7 @@
     <string name="migrate">Migrate</string>
     <string name="copy">Copy</string>
     <string name="empty_screen">Well, this is awkward</string>
+    <string name="not_installed">Not installed</string>
 
     <!-- Downloads activity and service -->
     <string name="download_queue_error">Couldn\'t download episodes. You can try again in the downloads section</string>
@@ -801,7 +816,13 @@
 
     <!-- S Pen actions -->
 
-    <string name="player_controls_skip_intro_text">+85 s</string>
+    <string name="player_controls_skip_intro_text">+%1$d s</string>
+
+    <plurals name="seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+
     <string name="no_next_episode">Next Episode not found!</string>
     <string name="no_previous_episode">Previous Episode not found!</string>
     <string name="anime_description_cover">Cover of Anime</string>
@@ -816,11 +837,14 @@
     
     <string name="playback_speed_dialog_title">Change playback speed:</string>
     <string name="playback_speed_dialog_reset">Reset</string>
-    <string name="playback_quality_dialog_title">Change video quality:</string>
+    <string name="quality_dialog_header">Change video quality:</string>
+    <string name="subtitle_dialog_header">Change subtitle track:</string>
+    <string name="audio_dialog_header">Change audio track:</string>
     <string name="playback_options_speed">Playback speed</string>
     <string name="playback_options_quality">Video quality</string>
     <string name="playback_options_title">Playback options</string>
 
     <string name="pref_navigate_pan">Navigate to pan</string>
     <string name="pref_landscape_zoom">Zoom landscape image</string>
+    <string name="cant_open_last_read_chapter">Unable to open last read chapter</string>
 </resources>

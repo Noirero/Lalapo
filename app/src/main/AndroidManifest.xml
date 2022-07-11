@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="eu.kanade.tachiyomi">
+    xmlns:tools="http://schemas.android.com/tools" >
 
     <!-- Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -171,6 +170,21 @@
                 <data
                     android:host="bangumi-auth"
                     android:scheme="animiru" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.setting.track.SimklLoginActivity"
+            android:label="Simkl"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="simkl-auth"
+                    android:scheme="aniyomi" />
             </intent-filter>
         </activity>
 

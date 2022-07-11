@@ -5,15 +5,19 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
-import com.arthenica.ffmpegkit.ExecuteCallback
 import com.arthenica.ffmpegkit.FFmpegKitConfig
 import com.arthenica.ffmpegkit.FFmpegSession
+import com.arthenica.ffmpegkit.FFprobeSession
+import com.arthenica.ffmpegkit.Level
 import com.arthenica.ffmpegkit.LogCallback
 import com.arthenica.ffmpegkit.SessionState
 import com.arthenica.ffmpegkit.StatisticsCallback
 import com.hippo.unifile.UniFile
 import com.jakewharton.rxrelay.BehaviorRelay
 import com.jakewharton.rxrelay.PublishRelay
+import eu.kanade.domain.anime.model.Anime
+import eu.kanade.domain.episode.model.Episode
+import eu.kanade.domain.episode.model.toDbEpisode
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.UnmeteredSource
@@ -22,8 +26,6 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.animesource.online.fetchUrlFromVideo
 import eu.kanade.tachiyomi.data.animelib.AnimelibUpdateNotifier
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.download.model.AnimeDownloadQueue
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
@@ -34,6 +36,7 @@ import eu.kanade.tachiyomi.util.lang.plusAssign
 import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.saveTo
+import eu.kanade.tachiyomi.util.storage.toFFmpegString
 import eu.kanade.tachiyomi.util.system.ImageUtil
 import eu.kanade.tachiyomi.util.system.logcat
 import kotlinx.coroutines.async
@@ -199,8 +202,8 @@ class AnimeDownloader(
             queue
                 .filter { it.status == AnimeDownload.State.QUEUE }
                 .forEach {
-                    val animeDir = provider.getAnimeDir(it.anime, it.source)
-                    val episodeDirname = provider.getEpisodeDirName(it.episode)
+                    val animeDir = provider.getAnimeDir(it.anime.title, it.source)
+                    val episodeDirname = provider.getEpisodeDirName(it.episode.name, it.episode.scanlator)
                     val tmpDir = animeDir.findFile(episodeDirname + TMP_DIR_SUFFIX)
                     tmpDir?.delete()
                     it.status = AnimeDownload.State.NOT_DOWNLOADED
@@ -255,9 +258,8 @@ class AnimeDownloader(
 
         isFFmpegRunning = false
         FFmpegKitConfig.getSessions().filter {
-            it.state == SessionState.CREATED || it.state == SessionState.RUNNING
+            it.isFFmpeg && (it.state == SessionState.CREATED || it.state == SessionState.RUNNING)
         }.forEach {
-            it.executeCallback.apply(it)
             it.cancel()
         }
 
@@ -278,9 +280,9 @@ class AnimeDownloader(
         val episodesWithoutDir = async {
             episodes
                 // Filter out those already downloaded.
-                .filter { provider.findEpisodeDir(it, anime, source) == null }
+                .filter { provider.findEpisodeDir(it.name, it.scanlator, anime.title, source) == null }
                 // Add episodes to queue from the start.
-                .sortedByDescending { it.source_order }
+                .sortedByDescending { it.sourceOrder }
         }
 
         // Runs in main thread (synchronization needed).
@@ -304,7 +306,8 @@ class AnimeDownloader(
                 val maxDownloadsFromSource = queue
                     .groupBy { it.source }
                     .filterKeys { it !is UnmeteredSource }
-                    .maxOf { it.value.size }
+                    .maxOfOrNull { it.value.size }
+                    ?: 0
                 // TODO: show warnings in stable
                 if (
                     queuedDownloads > DOWNLOADS_QUEUED_WARNING_THRESHOLD ||
@@ -329,7 +332,7 @@ class AnimeDownloader(
      * @param download the episode to be downloaded.
      */
     private fun downloadEpisode(download: AnimeDownload): Observable<AnimeDownload> = Observable.defer {
-        val animeDir = provider.getAnimeDir(download.anime, download.source)
+        val animeDir = provider.getAnimeDir(download.anime.title, download.source)
 
         val availSpace = DiskUtil.getAvailableStorageSpace(animeDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
@@ -338,13 +341,13 @@ class AnimeDownloader(
             return@defer Observable.just(download)
         }
 
-        val episodeDirname = provider.getEpisodeDirName(download.episode)
+        val episodeDirname = provider.getEpisodeDirName(download.episode.name, download.episode.scanlator)
         val tmpDir = animeDir.createDirectory(episodeDirname + TMP_DIR_SUFFIX)
         notifier.onProgressChange(download)
 
         val videoObservable = if (download.video == null) {
             // Pull video from network and add them to download object
-            download.source.fetchVideoList(download.episode).map { it.first() }
+            download.source.fetchVideoList(download.episode.toDbEpisode()).map { it.first() }
                 .doOnNext { video ->
                     if (video == null) {
                         throw Exception(context.getString(R.string.video_list_empty_error))
@@ -495,19 +498,18 @@ class AnimeDownloader(
         return video.videoUrl?.toHttpUrl()?.encodedPath?.endsWith(".m3u8") ?: false
     }
 
-    private fun hlsObservable(video: Video, source: AnimeHttpSource, tmpDir: UniFile, filename: String): Observable<UniFile> {
+    private fun hlsObservable(video: Video, download: AnimeDownload, tmpDir: UniFile, filename: String): Observable<UniFile> {
         isFFmpegRunning = true
-        val escapedFilename = "${tmpDir.filePath}/$filename.mp4".replace("\"", "\\\"")
-        val headers = video.headers ?: source.headers
+        val headers = video.headers ?: download.source.headers
         val headerOptions = headers.joinToString("", "-headers '", "'") { "${it.first}: ${it.second}\r\n" }
-        // TODO: Support other file formats here as well (ffprobe or something, idk)
-        val ffmpegOptions = FFmpegKitConfig.parseArguments(headerOptions + " -i '${video.videoUrl}' -c copy \"$escapedFilename\"")
-        val executeCallback = ExecuteCallback {
-            if (it.state != SessionState.COMPLETED) {
-                tmpDir.findFile("$filename.mp4")?.delete()
-                it.failStackTrace?.let { trace -> logcat(LogPriority.ERROR) { trace } }
-            }
+        val videoFile = tmpDir.findFile("$filename.mp4")
+            ?: tmpDir.createFile("$filename.mp4")!!
+        val ffmpegFilename = { videoFile.uri.toFFmpegString(context) }
+        val ffmpegOptions = FFmpegKitConfig.parseArguments(headerOptions + " -i '${video.videoUrl}' -c copy \"${ffmpegFilename()}\" -y")
+        val ffprobeCommand = { file: String, ffprobeHeaders: String? ->
+            FFmpegKitConfig.parseArguments("${ffprobeHeaders?.plus(" ") ?: ""}-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"$file\"")
         }
+
         var duration = 0L
         var nextLineIsDuration = false
         val logCallback = LogCallback { log ->
@@ -516,19 +518,36 @@ class AnimeDownloader(
                 nextLineIsDuration = false
             }
             if (log.message == "  Duration: ") nextLineIsDuration = true
+            if (log.level <= Level.AV_LOG_WARNING) log.message?.let { logcat { it } }
         }
         val statisticsCallback = StatisticsCallback {
             if (duration > 0L) {
                 video.progress = (100 * it.time.toLong() / duration).toInt()
             }
         }
-        val session = FFmpegSession(ffmpegOptions, executeCallback, logCallback, statisticsCallback)
+        val session = FFmpegSession(ffmpegOptions, {}, logCallback, statisticsCallback)
 
+        val inputDuration = getDuration(ffprobeCommand(video.videoUrl!!, headerOptions)) ?: 0F
         FFmpegKitConfig.ffmpegExecute(session)
+        val outputDuration = getDuration(ffprobeCommand(ffmpegFilename(), null)) ?: 0F
+        // allow for slight errors
+        if (inputDuration > outputDuration * 1.01F) {
+            tmpDir.findFile("$filename.mp4")?.delete()
+        }
+        session.failStackTrace?.let { trace ->
+            logcat(LogPriority.ERROR) { trace }
+            throw Exception("Error in ffmpeg!")
+        }
         return Observable.just(session)
             .map {
                 tmpDir.findFile("$filename.mp4") ?: throw Exception("Downloaded file not found")
             }
+    }
+
+    private fun getDuration(ffprobeCommand: Array<String>): Float? {
+        val session = FFprobeSession(ffprobeCommand)
+        FFmpegKitConfig.ffprobeExecute(session)
+        return session.allLogsAsString.trim().toFloatOrNull()
     }
 
     /**
@@ -549,7 +568,7 @@ class AnimeDownloader(
     }
 
     private fun newObservable(video: Video, download: AnimeDownload, tmpDir: UniFile, filename: String): Observable<UniFile> {
-        return if (isHls(video)) hlsObservable(video, download.source, tmpDir, filename)
+        return if (isHls(video)) hlsObservable(video, download, tmpDir, filename)
         else download.source.fetchVideo(video)
             .map { response ->
                 val file = tmpDir.findFile("$filename.tmp") ?: tmpDir.createFile("$filename.tmp")

@@ -88,7 +88,11 @@ fun Context.copyToClipboard(label: String, content: String) {
         val clipboard = getSystemService<ClipboardManager>()!!
         clipboard.setPrimaryClip(ClipData.newPlainText(label, content))
 
-        toast(getString(R.string.copied_to_clipboard, content.truncateCenter(50)))
+        // Android 13 and higher shows a visual confirmation of copied contents
+        // https://developer.android.com/about/versions/13/features/copy-paste
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            toast(getString(R.string.copied_to_clipboard, content.truncateCenter(50)))
+        }
     } catch (e: Throwable) {
         logcat(LogPriority.ERROR, e)
         toast(R.string.clipboard_copy_error)
@@ -256,7 +260,7 @@ fun Context.openInBrowser(uri: Uri, forceDefaultBrowser: Boolean = false) {
 }
 
 fun Context.defaultBrowserPackageName(): String? {
-    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("http://"))
+    val browserIntent = Intent(Intent.ACTION_VIEW, "http://".toUri())
     return packageManager.resolveActivity(browserIntent, PackageManager.MATCH_DEFAULT_ONLY)
         ?.activityInfo?.packageName
         ?.takeUnless { it in DeviceUtil.invalidDefaultBrowsers }

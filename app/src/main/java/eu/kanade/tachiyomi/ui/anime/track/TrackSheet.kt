@@ -10,9 +10,8 @@ import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
+import eu.kanade.domain.anime.model.toDbAnime
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.animesource.AnimeSourceManager
-import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.databinding.TrackControllerBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.base.controller.openInBrowser
@@ -20,14 +19,10 @@ import eu.kanade.tachiyomi.util.lang.toLocalCalendar
 import eu.kanade.tachiyomi.util.lang.toUtcCalendar
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.widget.sheet.BaseBottomSheetDialog
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class TrackSheet(
     val controller: AnimeController,
-    val anime: Anime,
-    val fragmentManager: FragmentManager,
-    private val sourceManager: AnimeSourceManager = Injekt.get(),
+    private val fragmentManager: FragmentManager,
 ) : BaseBottomSheetDialog(controller.activity!!),
     TrackAdapter.OnClickListener,
     SetTrackStatusDialog.Listener,
@@ -76,9 +71,11 @@ class TrackSheet(
 
     override fun onSetClick(position: Int) {
         val item = adapter.getItem(position) ?: return
+        val anime = controller.presenter.anime?.toDbAnime() ?: return
+        val source = controller.presenter.source ?: return
 
         TrackSearchDialog(controller, item.service, item.track?.tracking_url)
-            .showDialog(controller.router, TAG_SEARCH_CONTROLLER)
+                .showDialog(controller.router, TAG_SEARCH_CONTROLLER)
     }
 
     override fun onTitleLongClick(position: Int) {

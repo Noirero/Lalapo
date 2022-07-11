@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.animesource
 
 import android.graphics.drawable.Drawable
+import eu.kanade.domain.animesource.model.AnimeSourceData
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
@@ -9,6 +10,7 @@ import eu.kanade.tachiyomi.animesource.model.toEpisodeInfo
 import eu.kanade.tachiyomi.animesource.model.toSAnime
 import eu.kanade.tachiyomi.animesource.model.toSEpisode
 import eu.kanade.tachiyomi.animesource.model.toVideoUrl
+import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.extension.AnimeExtensionManager
 import eu.kanade.tachiyomi.util.lang.awaitSingle
 import rx.Observable
@@ -101,3 +103,22 @@ interface AnimeSource : tachiyomi.animesource.AnimeSource {
 fun AnimeSource.icon(): Drawable? = Injekt.get<AnimeExtensionManager>().getAppIconForSource(this)
 
 fun AnimeSource.getPreferenceKey(): String = "source_$id"
+
+fun AnimeSource.toAnimeSourceData(): AnimeSourceData = AnimeSourceData(id = id, lang = lang, name = name)
+
+fun AnimeSource.getNameForAnimeInfo(): String {
+    val preferences = Injekt.get<PreferencesHelper>()
+    val enabledLanguages = preferences.enabledLanguages().get()
+        .filterNot { it in listOf("all", "other") }
+    val hasOneActiveLanguages = enabledLanguages.size == 1
+    val isInEnabledLanguages = lang in enabledLanguages
+    return when {
+        // For edge cases where user disables a source they got manga of in their library.
+        hasOneActiveLanguages && !isInEnabledLanguages -> toString()
+        // Hide the language tag when only one language is used.
+        hasOneActiveLanguages && isInEnabledLanguages -> name
+        else -> toString()
+    }
+}
+
+fun AnimeSource.isLocalOrStub(): Boolean = id == LocalAnimeSource.ID || this is AnimeSourceManager.StubSource

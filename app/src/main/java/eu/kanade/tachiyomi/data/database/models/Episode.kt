@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.database.models
 
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import java.io.Serializable
+import eu.kanade.domain.episode.model.Episode as DomainEpisode
 
 interface Episode : SEpisode, Serializable {
 
@@ -23,13 +24,28 @@ interface Episode : SEpisode, Serializable {
 
     var source_order: Int
 
-    val isRecognizedNumber: Boolean
-        get() = episode_number >= 0f
-
     companion object {
-
         fun create(): Episode = EpisodeImpl().apply {
             episode_number = -1f
         }
     }
+}
+
+fun Episode.toDomainEpisode(): DomainEpisode? {
+    if (id == null || anime_id == null) return null
+    return DomainEpisode(
+        id = id!!,
+        animeId = anime_id!!,
+        seen = seen,
+        bookmark = bookmark,
+        lastSecondSeen = last_second_seen,
+        totalSeconds = total_seconds,
+        dateFetch = date_fetch,
+        sourceOrder = source_order.toLong(),
+        url = url,
+        name = name,
+        dateUpload = date_upload,
+        episodeNumber = episode_number,
+        scanlator = scanlator,
+    )
 }

@@ -22,6 +22,7 @@ import java.io.File
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
+import eu.kanade.domain.anime.model.Anime as DomainAnime
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 import eu.kanade.tachiyomi.data.preference.PreferenceValues as Values
 
@@ -76,9 +77,17 @@ class PreferencesHelper(val context: Context) {
 
     fun pipEpisodeToasts() = prefs.getBoolean(Keys.pipEpisodeToasts, true)
 
+    fun pipOnExit() = prefs.getBoolean(Keys.pipOnExit, false)
+
+    fun playerBrightnessValue() = flowPrefs.getFloat("player_brightness_value", -1.0F)
+
+    fun playerVolumeValue() = flowPrefs.getFloat("player_volume_value", -1.0F)
+
     fun autoplayEnabled() = flowPrefs.getBoolean("pref_auto_play_enabled", false)
 
     fun invertedPlaybackTxt() = flowPrefs.getBoolean("pref_invert_playback_txt", false)
+
+    fun invertedDurationTxt() = flowPrefs.getBoolean("pref_invert_duration_txt", false)
 
     fun mpvConf() = prefs.getString(Keys.mpvConf, "")
 
@@ -96,7 +105,7 @@ class PreferencesHelper(val context: Context) {
         putFloat(Keys.playerSpeed, newSpeed)
     }
 
-    fun getPlayerFastSeek() = prefs.getBoolean(Keys.playerFastSeek, false)
+    fun getPlayerSmoothSeek() = prefs.getBoolean(Keys.playerSmoothSeek, false)
 
     fun getPlayerViewMode() = prefs.getInt(Keys.playerViewMode, 1)
 
@@ -106,11 +115,17 @@ class PreferencesHelper(val context: Context) {
         putInt(Keys.playerViewMode, newMode)
     }
 
+    fun hideControls() = prefs.getBoolean("player_hide_controls", false)
+
+    fun screenshotSubtitles() = flowPrefs.getBoolean("pref_screenshot_subtitles", false)
+
     fun alwaysUseExternalPlayer() = prefs.getBoolean(Keys.alwaysUseExternalPlayer, false)
 
     fun externalPlayerPreference() = prefs.getString(Keys.externalPlayerPreference, "")
 
     fun progressPreference() = prefs.getString(Keys.progressPreference, "0.85F")!!.toFloat()
+
+    fun introLengthPreference() = prefs.getString(Keys.introLengthPreference, "85")!!.toInt()
 
     fun skipLengthPreference() = prefs.getString(Keys.skipLengthPreference, "10")!!.toInt()
 
@@ -273,19 +288,19 @@ class PreferencesHelper(val context: Context) {
 
     fun lastSearchQuerySearchSettings() = flowPrefs.getString("last_search_query", "")
 
-    fun filterEpisodeBySeen() = prefs.getInt(Keys.defaultEpisodeFilterBySeen, Anime.SHOW_ALL)
+    fun filterEpisodeBySeen() = prefs.getInt(Keys.defaultEpisodeFilterByRead, DomainAnime.SHOW_ALL.toInt())
 
-    fun filterEpisodeByDownloaded() = prefs.getInt(Keys.defaultEpisodeFilterByDownloaded, Anime.SHOW_ALL)
+    fun filterEpisodeByDownloaded() = prefs.getInt(Keys.defaultEpisodeFilterByDownloaded, DomainAnime.SHOW_ALL.toInt())
 
-    fun filterEpisodeByBookmarked() = prefs.getInt(Keys.defaultEpisodeFilterByBookmarked, Anime.SHOW_ALL)
+    fun filterEpisodeByBookmarked() = prefs.getInt(Keys.defaultEpisodeFilterByBookmarked, DomainAnime.SHOW_ALL.toInt())
 
-    fun filterEpisodeByFillermarked() = prefs.getInt(Keys.defaultEpisodeFilterByFillermarked, Anime.SHOW_ALL)
+    fun filterEpisodeByFillermarked() = prefs.getInt(Keys.defaultEpisodeFilterByFillermarked,  DomainAnime.SHOW_ALL.toInt())
 
-    fun sortEpisodeBySourceOrNumber() = prefs.getInt(Keys.defaultEpisodeSortBySourceOrNumber, Anime.EPISODE_SORTING_SOURCE)
+    fun sortEpisodeBySourceOrNumber() = prefs.getInt(Keys.defaultEpisodeSortBySourceOrNumber, DomainAnime.EPISODE_SORTING_SOURCE.toInt())
 
-    fun displayEpisodeByNameOrNumber() = prefs.getInt(Keys.defaultEpisodeDisplayByNameOrNumber, Anime.EPISODE_DISPLAY_NAME)
+    fun displayEpisodeByNameOrNumber() = prefs.getInt(Keys.defaultEpisodeDisplayByNameOrNumber, DomainAnime.EPISODE_DISPLAY_NAME.toInt())
 
-    fun sortEpisodeByAscendingOrDescending() = prefs.getInt(Keys.defaultEpisodeSortByAscendingOrDescending, Anime.EPISODE_SORT_DESC)
+    fun sortEpisodeByAscendingOrDescending() = prefs.getInt(Keys.defaultEpisodeSortByAscendingOrDescending, DomainAnime.EPISODE_SORT_DESC.toInt())
 
     fun incognitoMode() = flowPrefs.getBoolean("incognito_mode", false)
 
@@ -316,7 +331,7 @@ class PreferencesHelper(val context: Context) {
             putInt(Keys.defaultEpisodeDisplayByNameOrNumber, anime.displayMode)
             putInt(
                 Keys.defaultEpisodeSortByAscendingOrDescending,
-                if (anime.sortDescending()) Anime.EPISODE_SORT_DESC else Anime.EPISODE_SORT_ASC,
+                if (anime.sortDescending()) DomainAnime.EPISODE_SORT_DESC.toInt() else DomainAnime.EPISODE_SORT_ASC.toInt(),
             )
         }
     }

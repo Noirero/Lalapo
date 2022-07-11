@@ -373,8 +373,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * @param episode the episode to be added.
      * @param anime the anime of the episode.
      */
-    open fun prepareNewEpisode(episode: SEpisode, anime: SAnime) {
-    }
+    open fun prepareNewEpisode(episode: SEpisode, anime: SAnime) {}
 
     /**
      * Returns the list of filters for the source.
@@ -382,6 +381,6 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
     override fun getFilterList() = AnimeFilterList()
 
     companion object {
-        const val DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36 Edg/88.0.705.63"
+        const val DEFAULT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.44"
     }
 }

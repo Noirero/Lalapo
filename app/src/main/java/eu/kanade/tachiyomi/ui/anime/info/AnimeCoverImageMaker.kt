@@ -16,6 +16,7 @@ import androidx.annotation.AttrRes
 import androidx.annotation.CallSuper
 import androidx.annotation.StyleRes
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.os.postDelayed
 import androidx.core.view.isVisible
 import coil.dispose
 import coil.imageLoader
@@ -109,7 +110,7 @@ open class AnimeCoverImageMaker @JvmOverloads constructor(
 
     private fun SubsamplingScaleImageView.landscapeZoom(forward: Boolean) {
         if (config != null && config!!.landscapeZoom && config!!.minimumScaleType == SCALE_TYPE_CENTER_INSIDE && sWidth > sHeight && scale == minScale) {
-            handler?.postDelayed({
+            handler?.postDelayed(500) {
                 val point = when (config!!.zoomStartPosition) {
                     ZoomStartPosition.LEFT -> if (forward) PointF(0F, 0F) else PointF(sWidth.toFloat(), 0F)
                     ZoomStartPosition.RIGHT -> if (forward) PointF(sWidth.toFloat(), 0F) else PointF(0F, 0F)
@@ -122,7 +123,7 @@ open class AnimeCoverImageMaker @JvmOverloads constructor(
                     .withEasing(EASE_IN_OUT_QUAD)
                     .withInterruptible(true)
                     .start()
-            }, 500,)
+            }
         }
     }
 
@@ -307,7 +308,7 @@ open class AnimeCoverImageMaker @JvmOverloads constructor(
                             return true
                         }
 
-                        override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+                        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                             this@AnimeCoverImageMaker.onViewClicked()
                             return super.onSingleTapConfirmed(e)
                         }

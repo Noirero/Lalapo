@@ -7,10 +7,13 @@ object PreferenceKeys {
 
     const val confirmExit = "pref_confirm_exit"
 
+    const val preserveWatchingPosition = "pref_preserve_watching_position"
+
     const val pipEpisodeToasts = "pref_pip_episode_toasts"
 
-    const val mpvConf = "pref_mpv_conf"
+    const val pipOnExit = "pref_pip_on_exit"
 
+    const val mpvConf = "pref_mpv_conf"
     const val defaultPlayerOrientationType = "pref_default_player_orientation_type_key"
 
     const val adjustOrientationVideoDimensions = "pref_adjust_orientation_video_dimensions"
@@ -21,11 +24,13 @@ object PreferenceKeys {
 
     const val playerSpeed = "pref_player_speed"
 
-    const val playerFastSeek = "pref_player_fast_seek"
+    const val playerSmoothSeek = "pref_player_smooth_seek"
 
     const val playerViewMode = "pref_player_view_mode"
 
     const val progressPreference = "pref_progress_preference"
+
+    const val introLengthPreference = "pref_intro_length_preference"
 
     const val skipLengthPreference = "pref_skip_length_preference"
 
@@ -103,9 +108,9 @@ object PreferenceKeys {
 
     const val autoClearChapterCache = "auto_clear_chapter_cache"
 
-    fun trackUsername(syncId: Int) = "pref_mangasync_username_$syncId"
+    fun trackUsername(syncId: Long) = "pref_mangasync_username_$syncId"
 
-    fun trackPassword(syncId: Int) = "pref_mangasync_password_$syncId"
+    fun trackPassword(syncId: Long) = "pref_mangasync_password_$syncId"
 
-    fun trackToken(syncId: Int) = "track_token_$syncId"
+    fun trackToken(syncId: Long) = "track_token_$syncId"
 }

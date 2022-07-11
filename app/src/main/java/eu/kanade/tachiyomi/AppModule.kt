@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi
 
 import android.app.Application
+import android.os.Build
 import androidx.core.content.ContextCompat
-import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import dataanime.Animehistory
@@ -15,8 +15,6 @@ import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
-import eu.kanade.tachiyomi.data.database.AnimeDbOpenCallback
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.saver.ImageSaver
@@ -25,6 +23,7 @@ import eu.kanade.tachiyomi.data.track.job.DelayedTrackingStore
 import eu.kanade.tachiyomi.extension.AnimeExtensionManager
 import eu.kanade.tachiyomi.mi.AnimeDatabase
 import eu.kanade.tachiyomi.network.NetworkHelper
+import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
@@ -37,16 +36,17 @@ class AppModule(val app: Application) : InjektModule {
     override fun InjektRegistrar.registerInjectables() {
         addSingleton(app)
 
-        // This is used to allow incremental migration from Storio
-        val openHelperAnime = FrameworkSQLiteOpenHelperFactory().create(
-            SupportSQLiteOpenHelper.Configuration.builder(app)
-                .callback(AnimeDbOpenCallback())
-                .name(AnimeDbOpenCallback.DATABASE_NAME)
-                .noBackupDirectory(false)
-                .build(),
+        val sqlDriverAnime = AndroidSqliteDriver(
+            schema = AnimeDatabase.Schema,
+            context = app,
+            name = "tachiyomi.animedb",
+            factory = if (BuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Support database inspector in Android Studio
+                FrameworkSQLiteOpenHelperFactory()
+            } else {
+                RequerySQLiteOpenHelperFactory()
+            },
         )
-
-        val sqlDriverAnime = AndroidSqliteDriver(openHelper = openHelperAnime)
 
         addSingletonFactory {
             AnimeDatabase(
@@ -65,8 +65,6 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { Json { ignoreUnknownKeys = true } }
 
         addSingletonFactory { PreferencesHelper(app) }
-
-        addSingletonFactory { AnimeDatabaseHelper(openHelperAnime) }
 
         addSingletonFactory { EpisodeCache(app) }
 
@@ -97,8 +95,6 @@ class AppModule(val app: Application) : InjektModule {
             get<AnimeSourceManager>()
 
             get<AnimeDatabase>()
-
-            get<AnimeDatabaseHelper>()
 
             get<AnimeDownloadManager>()
 

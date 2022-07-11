@@ -1,43 +1,72 @@
 package eu.kanade.tachiyomi.ui.player
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
 import android.os.Bundle
+import eu.kanade.domain.anime.interactor.GetAnime
+import eu.kanade.domain.anime.model.isLocal
+import eu.kanade.domain.anime.model.toDbAnime
+import eu.kanade.domain.animehistory.interactor.UpsertAnimeHistory
+import eu.kanade.domain.animehistory.model.AnimeHistoryUpdate
+import eu.kanade.domain.animetrack.interactor.GetAnimeTracks
+import eu.kanade.domain.animetrack.interactor.InsertAnimeTrack
+import eu.kanade.domain.animetrack.model.toDbTrack
+import eu.kanade.domain.episode.interactor.GetEpisodeByAnimeId
+import eu.kanade.domain.episode.interactor.UpdateEpisode
+import eu.kanade.domain.episode.model.EpisodeUpdate
+import eu.kanade.domain.episode.model.toDbEpisode
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
-import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.AnimeHistory
 import eu.kanade.tachiyomi.data.database.models.Episode
+import eu.kanade.tachiyomi.data.database.models.toDomainAnime
+import eu.kanade.tachiyomi.data.database.models.toDomainEpisode
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.tachiyomi.data.saver.Image
+import eu.kanade.tachiyomi.data.saver.ImageSaver
+import eu.kanade.tachiyomi.data.saver.Location
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.job.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.job.DelayedTrackingUpdateJob
-import eu.kanade.tachiyomi.ui.anime.episode.EpisodeItem
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
+import eu.kanade.tachiyomi.ui.reader.SaveImageNotifier
+import eu.kanade.tachiyomi.util.editCover
 import eu.kanade.tachiyomi.util.episode.getEpisodeSort
+import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.lang.launchIO
+import eu.kanade.tachiyomi.util.lang.launchUI
+import eu.kanade.tachiyomi.util.lang.takeBytes
+import eu.kanade.tachiyomi.util.lang.withUIContext
+import eu.kanade.tachiyomi.util.storage.DiskUtil
+import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.system.isOnline
 import eu.kanade.tachiyomi.util.system.logcat
+import `is`.xyz.mpv.Utils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import java.util.Date
+import eu.kanade.domain.anime.model.Anime as DomainAnime
 
 class PlayerPresenter(
-    private val db: AnimeDatabaseHelper = Injekt.get(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
-    private val coverCache: AnimeCoverCache = Injekt.get(),
     private val preferences: PreferencesHelper = Injekt.get(),
     private val delayedTrackingStore: DelayedTrackingStore = Injekt.get(),
+    private val getAnime: GetAnime = Injekt.get(),
+    private val getEpisodeByAnimeId: GetEpisodeByAnimeId = Injekt.get(),
+    private val getTracks: GetAnimeTracks = Injekt.get(),
+    private val insertTrack: InsertAnimeTrack = Injekt.get(),
+    private val upsertHistory: UpsertAnimeHistory = Injekt.get(),
+    private val updateEpisode: UpdateEpisode = Injekt.get(),
 ) : BasePresenter<PlayerActivity>() {
     /**
      * The ID of the anime loaded in the player.
@@ -60,6 +89,8 @@ class PlayerPresenter(
 
     private var currentVideoList: List<Video>? = null
 
+    private val imageSaver: ImageSaver by injectLazy()
+
     /**
      * Episode list for the active anime. It's retrieved lazily and should be accessed for the first
      * time in a background thread to avoid blocking the UI.
@@ -68,25 +99,25 @@ class PlayerPresenter(
 
     private fun initEpisodeList(): List<Episode> {
         val anime = anime!!
-        val dbEpisodes = db.getEpisodes(anime).executeAsBlocking()
+        val episodes = runBlocking { getEpisodeByAnimeId.await(anime.id!!) }
 
-        val selectedEpisode = dbEpisodes.find { it.id == episodeId }
+        val selectedEpisode = episodes.find { it.id == episodeId }
             ?: error("Requested episode of id $episodeId not found in episode list")
 
         val episodesForPlayer = when {
             preferences.skipRead() || preferences.skipFiltered() -> {
-                val filteredEpisodes = dbEpisodes.filterNot {
+                val filteredEpisodes = episodes.filterNot {
                     when {
                         preferences.skipRead() && it.seen -> true
                         preferences.skipFiltered() -> {
-                            anime.seenFilter == Anime.EPISODE_SHOW_SEEN && !it.seen ||
-                                anime.seenFilter == Anime.EPISODE_SHOW_UNSEEN && it.seen ||
-                                anime.downloadedFilter == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(it, anime) ||
-                                anime.downloadedFilter == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it, anime) ||
-                                anime.bookmarkedFilter == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
-                                anime.bookmarkedFilter == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
-                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
-                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
+                            anime.seenFilter == DomainAnime.EPISODE_SHOW_SEEN.toInt() && !it.seen ||
+                                anime.seenFilter == DomainAnime.EPISODE_SHOW_UNSEEN.toInt() && it.seen ||
+                                anime.downloadedFilter == DomainAnime.EPISODE_SHOW_DOWNLOADED.toInt() && !downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source) ||
+                                anime.downloadedFilter == DomainAnime.EPISODE_SHOW_NOT_DOWNLOADED.toInt() && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source) ||
+                                anime.bookmarkedFilter == DomainAnime.EPISODE_SHOW_BOOKMARKED.toInt() && !it.bookmark ||
+                                anime.bookmarkedFilter == DomainAnime.EPISODE_SHOW_NOT_BOOKMARKED.toInt() && it.bookmark ||
+                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_FILLERMARKED.toInt() && !it.fillermark ||
+                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_NOT_FILLERMARKED.toInt() && it.fillermark
                         }
                         else -> false
                     }
@@ -98,11 +129,12 @@ class PlayerPresenter(
                     filteredEpisodes + listOf(selectedEpisode)
                 }
             }
-            else -> dbEpisodes
+            else -> episodes
         }
 
         return episodesForPlayer
-            .sortedWith(getEpisodeSort(anime, sortDescending = false))
+            .sortedWith(getEpisodeSort(anime.toDomainAnime()!!, sortDescending = false))
+            .map { it.toDbEpisode() }
     }
 
     fun getCurrentEpisodeIndex(): Int {
@@ -110,10 +142,9 @@ class PlayerPresenter(
     }
 
     private var hasTrackers: Boolean = false
-    private val checkTrackers: (Anime) -> Unit = { anime ->
-        val tracks = db.getTracks(anime).executeAsBlocking()
-
-        hasTrackers = tracks.size > 0
+    private val checkTrackers: (DomainAnime) -> Unit = { anime ->
+        val tracks = runBlocking { getTracks.await(anime.id) }
+        hasTrackers = tracks.isNotEmpty()
     }
 
     private val incognitoMode = preferences.incognitoMode().get()
@@ -147,16 +178,16 @@ class PlayerPresenter(
     fun init(animeId: Long, initialEpisodeId: Long) {
         if (!needsInit()) return
 
-        db.getAnime(animeId).asRxObservable()
-            .first()
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext { init(it, initialEpisodeId) }
-            .subscribeFirst(
-                { _, _ ->
-                    // Ignore onNext event
-                },
-                PlayerActivity::setInitialEpisodeError,
-            )
+        launchIO {
+            try {
+                val anime = getAnime.await(animeId)
+                withUIContext {
+                    anime?.let { init(it.toDbAnime(), initialEpisodeId) }
+                }
+            } catch (e: Throwable) {
+                view?.setInitialEpisodeError(e)
+            }
+        }
     }
 
     /**
@@ -169,7 +200,7 @@ class PlayerPresenter(
         this.anime = anime
         if (initialEpisodeId != -1L) episodeId = initialEpisodeId
 
-        checkTrackers(anime)
+        checkTrackers(anime.toDomainAnime()!!)
 
         source = sourceManager.getOrStub(anime.source)
 
@@ -205,7 +236,7 @@ class PlayerPresenter(
         return source is AnimeHttpSource && !EpisodeLoader.isDownloaded(currentEpisode, anime)
     }
 
-    fun nextEpisode(callback: () -> Unit): String? {
+    fun nextEpisode(callback: () -> Unit, fromStart: Boolean = false): String? {
         val anime = anime ?: return null
         val source = sourceManager.getOrStub(anime.source)
 
@@ -220,7 +251,7 @@ class PlayerPresenter(
                         { activity, it ->
                             currentVideoList = it
                             if (it.isNotEmpty()) {
-                                activity.setVideoList(it)
+                                activity.setVideoList(it, fromStart)
                                 callback()
                             } else {
                                 activity.setInitialEpisodeError(Exception("Video list is empty."))
@@ -265,20 +296,16 @@ class PlayerPresenter(
         return anime.title + " - " + episodeList[index - 1].name
     }
 
-    fun saveEpisodeHistory() {
+    suspend fun saveEpisodeHistory() {
         if (incognitoMode) return
-        val episode = currentEpisode ?: return
-        val history = AnimeHistory.create(episode).apply { last_seen = Date().time }
-        db.upsertAnimeHistoryLastSeen(history).asRxCompletable()
-            .onErrorComplete()
-            .subscribeOn(Schedulers.io())
-            .subscribe()
+        upsertHistory.await(
+            AnimeHistoryUpdate(episodeId, Date()),
+        )
     }
 
-    fun saveEpisodeProgress(pos: Int?, duration: Int?) {
+    suspend fun saveEpisodeProgress(pos: Int?, duration: Int?) {
         if (incognitoMode) return
         val episode = currentEpisode ?: return
-        val anime = anime ?: return
         val seconds = (pos ?: return) * 1000L
         val totalSeconds = (duration ?: return) * 1000L
         if (totalSeconds > 0L) {
@@ -286,45 +313,38 @@ class PlayerPresenter(
             episode.total_seconds = totalSeconds
             val progress = preferences.progressPreference()
             if (!episode.seen) episode.seen = episode.last_second_seen >= episode.total_seconds * progress
-            val episodes = listOf(EpisodeItem(episode, anime))
-            launchIO {
-                db.updateEpisodesProgress(episodes).executeAsBlocking()
-                if (preferences.autoUpdateTrack() && episode.seen) {
-                    updateTrackEpisodeSeen(episode)
-                }
-                if (episode.seen) {
-                    deleteEpisodeIfNeeded(episode)
-                    deleteEpisodeFromDownloadQueue(episode)
-                }
+            updateEpisode.await(
+                EpisodeUpdate(
+                    id = episode.id!!,
+                    seen = episode.seen,
+                    lastSecondSeen = episode.last_second_seen,
+                    totalSeconds = episode.total_seconds,
+                ),
+            )
+            if (preferences.autoUpdateTrack() && episode.seen) {
+                updateTrackEpisodeSeen(episode)
+            }
+            if (episode.seen) {
+                deleteEpisodeIfNeeded(episode)
+                deleteEpisodeFromDownloadQueue(episode)
             }
         }
     }
 
     private fun deleteEpisodeFromDownloadQueue(episode: Episode) {
-        downloadManager.getEpisodeDownloadOrNull(episode)?.let { download ->
+        downloadManager.getEpisodeDownloadOrNull(episode.toDomainEpisode()!!)?.let { download ->
             downloadManager.deletePendingDownload(download)
         }
     }
 
-    private fun deleteEpisodeIfNeeded(episode: Episode) {
-        val anime = anime ?: return
-        // Determine which chapter should be deleted and enqueue
-        val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
-            Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.source_order.compareTo(c1.source_order) }
-            Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episode_number.compareTo(c2.episode_number) }
-            Anime.EPISODE_SORTING_UPLOAD_DATE -> { c1, c2 -> c1.date_upload.compareTo(c2.date_upload) }
-            else -> throw NotImplementedError("Unknown sorting method")
-        }
+    private fun deleteEpisodeIfNeeded(currentEpisode: Episode) {
+        // Determine which episode should be deleted and enqueue
+        val currentEpisodePosition = episodeList.indexOf(currentEpisode)
+        val removeAfterSeenSlots = preferences.removeAfterReadSlots()
+        val episodeToDelete = episodeList.getOrNull(currentEpisodePosition - removeAfterSeenSlots)
 
-        val episodes = db.getEpisodes(anime).executeAsBlocking()
-            .sortedWith { e1, e2 -> sortFunction(e1, e2) }
-
-        val currentEpisodePosition = episodes.indexOf(episode)
-        val removeAfterReadSlots = preferences.removeAfterReadSlots()
-        val episodeToDelete = episodes.getOrNull(currentEpisodePosition - removeAfterReadSlots)
-
-        // Check if deleting option is enabled and chapter exists
-        if (removeAfterReadSlots != -1 && episodeToDelete != null) {
+        // Check if deleting option is enabled and episode exists
+        if (removeAfterSeenSlots != -1 && episodeToDelete != null) {
             enqueueDeleteSeenEpisodes(episodeToDelete)
         }
     }
@@ -334,7 +354,7 @@ class PlayerPresenter(
         if (!episode.seen) return
 
         launchIO {
-            downloadManager.enqueueDeleteEpisodes(listOf(episode), anime)
+            downloadManager.enqueueDeleteEpisodes(listOf(episode.toDomainEpisode()!!), anime.toDomainAnime()!!)
         }
     }
 
@@ -342,27 +362,27 @@ class PlayerPresenter(
         if (!preferences.autoUpdateTrack()) return
         val anime = anime ?: return
 
-        val episodeSeen = episode.episode_number
+        val episodeSeen = episode.episode_number.toDouble()
 
         val trackManager = Injekt.get<TrackManager>()
         val context = Injekt.get<Application>()
 
         launchIO {
-            db.getTracks(anime).executeAsBlocking()
+            getTracks.await(anime.id!!)
                 .mapNotNull { track ->
-                    val service = trackManager.getService(track.sync_id)
-                    if (service != null && service.isLogged && episodeSeen > track.last_episode_seen) {
-                        track.last_episode_seen = episodeSeen
+                    val service = trackManager.getService(track.syncId)
+                    if (service != null && service.isLogged && episodeSeen > track.lastEpisodeSeen) {
+                        val updatedTrack = track.copy(lastEpisodeSeen = episodeSeen)
 
                         // We want these to execute even if the presenter is destroyed and leaks
                         // for a while. The view can still be garbage collected.
                         async {
                             runCatching {
                                 if (context.isOnline()) {
-                                    service.update(track, true)
-                                    db.insertTrack(track).executeAsBlocking()
+                                    service.update(updatedTrack.toDbTrack(), true)
+                                    insertTrack.await(updatedTrack)
                                 } else {
-                                    delayedTrackingStore.addItem(track)
+                                    delayedTrackingStore.addItem(updatedTrack)
                                     DelayedTrackingUpdateJob.setupTask(context)
                                 }
                             }
@@ -386,4 +406,136 @@ class PlayerPresenter(
             downloadManager.deletePendingEpisodes()
         }
     }
+
+    /**
+     * Saves the screenshot on the pictures directory and notifies the UI of the result.
+     * There's also a notification to allow sharing the image somewhere else or deleting it.
+     */
+    fun saveImage() {
+        val anime = anime ?: return
+
+        val context = Injekt.get<Application>()
+        val notifier = SaveImageNotifier(context)
+        notifier.onClear()
+
+        val seconds = view?.player?.timePos?.let { Utils.prettyTime(it) } ?: return
+        val filename = generateFilename(anime, seconds) ?: return
+        val imageStream = { view!!.takeScreenshot()!! }
+
+        // Pictures directory.
+        val relativePath = if (preferences.folderPerManga()) DiskUtil.buildValidFilename(anime.title) else ""
+
+        // Copy file in background.
+        try {
+            presenterScope.launchIO {
+                val uri = imageSaver.save(
+                    image = Image.Page(
+                        inputStream = imageStream,
+                        name = filename,
+                        location = Location.Pictures.create(relativePath),
+                    ),
+                )
+                launchUI {
+                    notifier.onComplete(uri)
+                    view!!.onSaveImageResult(SaveImageResult.Success(uri))
+                }
+            }
+        } catch (e: Throwable) {
+            notifier.onError(e.message)
+            view!!.onSaveImageResult(SaveImageResult.Error(e))
+        }
+    }
+
+    /**
+     * Shares the screenshot and notifies the UI with the path of the file to share.
+     * The image must be first copied to the internal partition because there are many possible
+     * formats it can come from, like a zipped chapter, in which case it's not possible to directly
+     * get a path to the file and it has to be decompressed somewhere first. Only the last shared
+     * image will be kept so it won't be taking lots of internal disk space.
+     */
+    fun shareImage() {
+        val anime = anime ?: return
+
+        val context = Injekt.get<Application>()
+        val destDir = context.cacheImageDir
+
+        val seconds = view?.player?.timePos?.let { Utils.prettyTime(it) } ?: return
+        val filename = generateFilename(anime, seconds) ?: return
+        val imageStream = { view!!.takeScreenshot()!! }
+
+        try {
+            presenterScope.launchIO {
+                destDir.deleteRecursively()
+                val uri = imageSaver.save(
+                    image = Image.Page(
+                        inputStream = imageStream,
+                        name = filename,
+                        location = Location.Cache,
+                    ),
+                )
+                launchUI {
+                    view!!.onShareImageResult(uri, seconds)
+                }
+            }
+        } catch (e: Throwable) {
+            logcat(LogPriority.ERROR, e)
+        }
+    }
+
+    /**
+     * Sets the screenshot as cover and notifies the UI of the result.
+     */
+    fun setAsCover(context: Context) {
+        val anime = anime?.toDomainAnime() ?: return
+        val imageStream = view?.takeScreenshot() ?: return
+
+        presenterScope.launchIO {
+            val result = try {
+                anime.editCover(context, imageStream)
+            } catch (e: Exception) {
+                false
+            }
+            launchUI {
+                val resultResult = if (!result) {
+                    SetAsCoverResult.Error
+                } else if (anime.isLocal() || anime.favorite) {
+                    SetAsCoverResult.Success
+                } else {
+                    SetAsCoverResult.AddToLibraryFirst
+                }
+                view?.onSetAsCoverResult(resultResult)
+            }
+        }
+    }
+
+    /**
+     * Results of the set as cover feature.
+     */
+    enum class SetAsCoverResult {
+        Success, AddToLibraryFirst, Error
+    }
+
+    /**
+     * Results of the save image feature.
+     */
+    sealed class SaveImageResult {
+        class Success(val uri: Uri) : SaveImageResult()
+        class Error(val error: Throwable) : SaveImageResult()
+    }
+
+    /**
+     * Generate a filename for the given [anime] and [timePos]
+     */
+    private fun generateFilename(
+        anime: Anime,
+        timePos: String,
+    ): String? {
+        val episode = currentEpisode ?: return null
+        val filenameSuffix = " - $timePos"
+        return DiskUtil.buildValidFilename(
+            "${anime.title} - ${episode.name}".takeBytes(MAX_FILE_NAME_BYTES - filenameSuffix.byteSize()),
+        ) + filenameSuffix
+    }
 }
+
+private const val MAX_FILE_NAME_BYTES = 250

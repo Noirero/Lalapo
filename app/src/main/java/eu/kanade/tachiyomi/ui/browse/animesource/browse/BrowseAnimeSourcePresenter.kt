@@ -2,6 +2,18 @@ package eu.kanade.tachiyomi.ui.browse.animesource.browse
 
 import android.os.Bundle
 import eu.davidea.flexibleadapter.items.IFlexible
+import eu.kanade.domain.anime.interactor.GetAnime
+import eu.kanade.domain.anime.interactor.GetDuplicateLibraryAnime
+import eu.kanade.domain.anime.interactor.InsertAnime
+import eu.kanade.domain.anime.interactor.UpdateAnime
+import eu.kanade.domain.anime.model.toAnimeUpdate
+import eu.kanade.domain.anime.model.toDbAnime
+import eu.kanade.domain.animetrack.interactor.InsertAnimeTrack
+import eu.kanade.domain.animetrack.model.toDomainTrack
+import eu.kanade.domain.category.interactor.GetCategoriesAnime
+import eu.kanade.domain.category.interactor.SetAnimeCategories
+import eu.kanade.domain.episode.interactor.GetEpisodeByAnimeId
+import eu.kanade.domain.episode.interactor.SyncEpisodesWithTrackServiceTwoWay
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
@@ -9,11 +21,9 @@ import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.toSAnime
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.AnimeCategory
-import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
+import eu.kanade.tachiyomi.data.database.models.toDomainAnime
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
@@ -40,8 +50,10 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers
@@ -49,14 +61,24 @@ import rx.schedulers.Schedulers
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Date
+import eu.kanade.domain.anime.model.Anime as DomainAnime
+import eu.kanade.domain.category.model.Category as DomainCategory
 
 open class BrowseAnimeSourcePresenter(
     private val sourceId: Long,
     searchQuery: String? = null,
     private val sourceManager: AnimeSourceManager = Injekt.get(),
-    private val db: AnimeDatabaseHelper = Injekt.get(),
     private val prefs: PreferencesHelper = Injekt.get(),
     private val coverCache: AnimeCoverCache = Injekt.get(),
+    private val getAnime: GetAnime = Injekt.get(),
+    private val getDuplicateLibraryAnime: GetDuplicateLibraryAnime = Injekt.get(),
+    private val getCategories: GetCategoriesAnime = Injekt.get(),
+    private val getEpisodeByAnimeId: GetEpisodeByAnimeId = Injekt.get(),
+    private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
+    private val insertAnime: InsertAnime = Injekt.get(),
+    private val updateAnime: UpdateAnime = Injekt.get(),
+    private val insertTrack: InsertAnimeTrack = Injekt.get(),
+    private val syncEpisodesWithTrackServiceTwoWay: SyncEpisodesWithTrackServiceTwoWay = Injekt.get(),
 ) : BasePresenter<BrowseAnimeSourceController>() {
 
     /**
@@ -141,7 +163,7 @@ open class BrowseAnimeSourcePresenter(
         pagerSubscription?.let { remove(it) }
         pagerSubscription = pager.results()
             .observeOn(Schedulers.io())
-            .map { (first, second) -> first to second.map { networkToLocalAnime(it, sourceId) } }
+            .map { (first, second) -> first to second.map { networkToLocalAnime(it, sourceId).toDomainAnime()!! } }
             .doOnNext { initializeAnimes(it.second) }
             .map { (first, second) -> first to second.map { AnimeSourceItem(it, sourceDisplayMode) } }
             .observeOn(AndroidSchedulers.mainThread())
@@ -189,19 +211,22 @@ open class BrowseAnimeSourcePresenter(
      * @return a anime from the database.
      */
     private fun networkToLocalAnime(sAnime: SAnime, sourceId: Long): Anime {
-        var localAnime = db.getAnime(sAnime.url, sourceId).executeAsBlocking()
+        var localAnime = runBlocking { getAnime.await(sAnime.url, sourceId) }
         if (localAnime == null) {
             val newAnime = Anime.create(sAnime.url, sAnime.title, sourceId)
             newAnime.copyFrom(sAnime)
-            val result = db.insertAnime(newAnime).executeAsBlocking()
-            newAnime.id = result.insertedId()
-            localAnime = newAnime
+            newAnime.id = -1
+            val result = runBlocking {
+                val id = insertAnime.await(newAnime.toDomainAnime()!!)
+                getAnime.await(id!!)
+            }
+            localAnime = result
         } else if (!localAnime.favorite) {
             // if the anime isn't a favorite, set its display title from source
             // if it later becomes a favorite, updated title will go to db
-            localAnime.title = sAnime.title
+            localAnime = localAnime.copy(title = sAnime.title)
         }
-        return localAnime
+        return localAnime?.toDbAnime()!!
     }
 
     /**
@@ -209,15 +234,15 @@ open class BrowseAnimeSourcePresenter(
      *
      * @param animes the list of anime to initialize.
      */
-    fun initializeAnimes(animes: List<Anime>) {
+    fun initializeAnimes(animes: List<DomainAnime>) {
         presenterScope.launchIO {
             animes.asFlow()
-                .filter { it.thumbnail_url == null && !it.initialized }
-                .map { getAnimeDetails(it) }
+                .filter { it.thumbnailUrl == null && !it.initialized }
+                .map { getAnimeDetails(it.toDbAnime()) }
                 .onEach {
                     withUIContext {
                         @Suppress("DEPRECATION")
-                        view?.onAnimeInitialized(it)
+                        view?.onAnimeInitialized(it.toDomainAnime()!!)
                     }
                 }
                 .catch { e -> logcat(LogPriority.ERROR, e) }
@@ -236,7 +261,11 @@ open class BrowseAnimeSourcePresenter(
             val networkAnime = source.getAnimeDetails(anime.toAnimeInfo())
             anime.copyFrom(networkAnime.toSAnime())
             anime.initialized = true
-            db.insertAnime(anime).executeAsBlocking()
+            updateAnime.await(
+                anime
+                    .toDomainAnime()
+                    ?.toAnimeUpdate()!!,
+            )
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
         }
@@ -258,10 +287,18 @@ open class BrowseAnimeSourcePresenter(
         if (!anime.favorite) {
             anime.removeCovers(coverCache)
         } else {
-            EpisodeSettingsHelper.applySettingDefaults(anime)
+            EpisodeSettingsHelper.applySettingDefaults(anime.toDomainAnime()!!)
+
+            autoAddTrack(anime)
         }
 
-        db.insertAnime(anime).executeAsBlocking()
+        runBlocking {
+            updateAnime.await(
+                anime
+                    .toDomainAnime()
+                    ?.toAnimeUpdate()!!,
+            )
+        }
     }
 
     /**
@@ -318,12 +355,12 @@ open class BrowseAnimeSourcePresenter(
      *
      * @return List of categories, not including the default category
      */
-    fun getCategories(): List<Category> {
-        return db.getCategories().executeAsBlocking()
+    suspend fun getCategories(): List<DomainCategory> {
+        return getCategories.subscribe().firstOrNull() ?: emptyList()
     }
 
-    fun getDuplicateAnimelibAnime(anime: Anime): Anime? {
-        return db.getDuplicateAnimelibAnime(anime).executeAsBlocking()
+    suspend fun getDuplicateLibraryAnime(anime: DomainAnime): DomainAnime? {
+        return getDuplicateLibraryAnime.await(anime.title, anime.source)
     }
 
     /**
@@ -332,9 +369,10 @@ open class BrowseAnimeSourcePresenter(
      * @param anime the anime to get categories from.
      * @return Array of category ids the anime is in, if none returns default id
      */
-    fun getAnimeCategoryIds(anime: Anime): Array<Int?> {
-        val categories = db.getCategoriesForAnime(anime).executeAsBlocking()
-        return categories.mapNotNull { it.id }.toTypedArray()
+    fun getAnimeCategoryIds(anime: DomainAnime): Array<Long?> {
+        return runBlocking { getCategories.await(anime.id) }
+            .map { it.id }
+            .toTypedArray()
     }
 
     /**
@@ -343,9 +381,13 @@ open class BrowseAnimeSourcePresenter(
      * @param categories the selected categories.
      * @param anime the anime to move.
      */
-    private fun moveAnimeToCategories(anime: Anime, categories: List<Category>) {
-        val mc = categories.filter { it.id != 0 }.map { AnimeCategory.create(anime, it) }
-        db.setAnimeCategories(mc, listOf(anime))
+    private fun moveAnimeToCategories(anime: Anime, categories: List<DomainCategory>) {
+        presenterScope.launchIO {
+            setAnimeCategories.await(
+                animeId = anime.id!!,
+                categoryIds = categories.filter { it.id != 0L }.map { it.id },
+            )
+        }
     }
 
     /**
@@ -354,7 +396,7 @@ open class BrowseAnimeSourcePresenter(
      * @param category the selected category.
      * @param anime the anime to move.
      */
-    fun moveAnimeToCategory(anime: Anime, category: Category?) {
+    fun moveAnimeToCategory(anime: Anime, category: DomainCategory?) {
         moveAnimeToCategories(anime, listOfNotNull(category))
     }
 
@@ -364,7 +406,7 @@ open class BrowseAnimeSourcePresenter(
      * @param anime needed to change
      * @param selectedCategories selected categories
      */
-    fun updateAnimeCategories(anime: Anime, selectedCategories: List<Category>) {
+    fun updateAnimeCategories(anime: Anime, selectedCategories: List<DomainCategory>) {
         if (!anime.favorite) {
             changeAnimeFavorite(anime)
         }

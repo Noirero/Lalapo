@@ -7,10 +7,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.text.buildSpannedString
 import androidx.preference.PreferenceScreen
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import eu.kanade.domain.category.interactor.GetCategories
+import eu.kanade.domain.category.interactor.GetCategoriesAnime
+import eu.kanade.domain.category.model.Category
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.animelib.AnimelibUpdateJob
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
-import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
 import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
 import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
@@ -40,6 +41,7 @@ import eu.kanade.tachiyomi.widget.materialdialogs.setQuadStateMultiChoiceItems
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -48,14 +50,14 @@ import eu.kanade.tachiyomi.ui.animecategory.CategoryController as AnimeCategoryC
 
 class SettingsLibraryController : SettingsController() {
 
-    private val adb: AnimeDatabaseHelper = Injekt.get()
+    private val getCategoriesAnime: GetCategoriesAnime by injectLazy()
     private val trackManager: TrackManager by injectLazy()
 
     override fun setupPreferenceScreen(screen: PreferenceScreen) = screen.apply {
         titleRes = R.string.pref_category_library
 
-        val dbCategoriesAnime = adb.getCategories().executeAsBlocking()
-        val categoriesAnime = listOf(Category.createDefault(context)) + dbCategoriesAnime
+        val dbCategoriesAnime = runBlocking { getCategoriesAnime.await() }
+        val categoriesAnime = listOf(Category.default(context)) + dbCategoriesAnime
 
         preferenceCategory {
             titleRes = R.string.pref_category_display
@@ -110,12 +112,12 @@ class SettingsLibraryController : SettingsController() {
                 entryValues = arrayOf("-1") + categoriesAnime.map { it.id.toString() }.toTypedArray()
                 defaultValue = "-1"
 
-                val selectedCategory = categoriesAnime.find { it.id == preferences.defaultAnimeCategory() }
+                val selectedCategory = categoriesAnime.find { it.id == preferences.defaultAnimeCategory().toLong() }
                 summary = selectedCategory?.name
                     ?: context.getString(R.string.default_category_summary)
                 onChange { newValue ->
                     summary = categoriesAnime.find {
-                        it.id == (newValue as String).toInt()
+                        it.id == (newValue as String).toLong()
                     }?.name ?: context.getString(R.string.default_category_summary)
                     true
                 }
@@ -228,10 +230,10 @@ class SettingsLibraryController : SettingsController() {
 
                 fun updateSummary() {
                     val includedCategories = preferences.animelibUpdateCategories().get()
-                        .mapNotNull { id -> categoriesAnime.find { it.id == id.toInt() } }
+                        .mapNotNull { id -> categoriesAnime.find { it.id == id.toLong() } }
                         .sortedBy { it.order }
                     val excludedCategories = preferences.animelibUpdateCategoriesExclude().get()
-                        .mapNotNull { id -> categoriesAnime.find { it.id == id.toInt() } }
+                        .mapNotNull { id -> categoriesAnime.find { it.id == id.toLong() } }
                         .sortedBy { it.order }
 
                     val allExcluded = excludedCategories.size == categoriesAnime.size
@@ -327,11 +329,11 @@ class SettingsLibraryController : SettingsController() {
     class AnimelibGlobalUpdateCategoriesDialog : DialogController() {
 
         private val preferences: PreferencesHelper = Injekt.get()
-        private val db: AnimeDatabaseHelper = Injekt.get()
+        private val getCategories: GetCategoriesAnime = Injekt.get()
 
         override fun onCreateDialog(savedViewState: Bundle?): Dialog {
-            val dbCategories = db.getCategories().executeAsBlocking()
-            val categories = listOf(Category.createDefault(activity!!)) + dbCategories
+            val dbCategories = runBlocking { getCategories.await() }
+            val categories = listOf(Category.default(activity!!)) + dbCategories
 
             val items = categories.map { it.name }
             var selected = categories

@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.full.models
 
 import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.AnimeImpl
 import eu.kanade.tachiyomi.data.database.models.AnimeTrackImpl
 import eu.kanade.tachiyomi.data.database.models.EpisodeImpl
 import kotlinx.serialization.Serializable
@@ -28,7 +26,7 @@ data class BackupAnime(
     @ProtoNumber(13) var dateAdded: Long = 0,
     // @ProtoNumber(15) val flags: Int = 0, 1.x value, not used in 0.x
     @ProtoNumber(16) var episodes: List<BackupEpisode> = emptyList(),
-    @ProtoNumber(17) var categories: List<Int> = emptyList(),
+    @ProtoNumber(17) var categories: List<Long> = emptyList(),
     @ProtoNumber(18) var tracking: List<BackupAnimeTracking> = emptyList(),
     // Bump by 100 for values that are not saved/implemented in 1.x but are used in 0.x
     @ProtoNumber(100) var favorite: Boolean = true,
@@ -103,14 +101,14 @@ data class BackupAnime(
                 artist = anime.originalArtist,
                 author = anime.originalAuthor,
                 description = anime.originalDescription,
-                genre = anime.getOriginalGenres() ?: emptyList(),
-                status = anime.originalStatus,
-                thumbnailUrl = anime.thumbnail_url,
+                genre = anime.originalGenre ?: emptyList(),
+                status = anime.originalStatus.toInt(),
+                thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite,
                 source = anime.source,
-                dateAdded = anime.date_added,
-                viewer_flags = anime.viewer_flags,
-                episodeFlags = anime.episode_flags,
+                dateAdded = anime.dateAdded,
+                viewer_flags = anime.viewerFlags.toInt(),
+                episodeFlags = anime.episodeFlags.toInt(),
             ).also { backupAnime ->
                 customAnimeManager?.getAnime(anime)?.let {
                     backupAnime.customTitle = it.title

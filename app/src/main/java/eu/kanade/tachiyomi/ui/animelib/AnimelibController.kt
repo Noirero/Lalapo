@@ -15,11 +15,13 @@ import com.fredporciuncula.flow.preferences.Preference
 import com.google.android.material.tabs.TabLayout
 import com.jakewharton.rxrelay.BehaviorRelay
 import com.jakewharton.rxrelay.PublishRelay
+import eu.kanade.domain.anime.model.Anime
+import eu.kanade.domain.anime.model.toDbAnime
+import eu.kanade.domain.category.model.Category
+import eu.kanade.domain.category.model.toDbCategory
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.LocalAnimeSource
 import eu.kanade.tachiyomi.data.animelib.AnimelibUpdateService
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.LibraryControllerBinding
 import eu.kanade.tachiyomi.ui.anime.AnimeController
@@ -29,6 +31,8 @@ import eu.kanade.tachiyomi.ui.base.controller.TabbedController
 import eu.kanade.tachiyomi.ui.base.controller.pushController
 import eu.kanade.tachiyomi.ui.browse.animesource.globalsearch.GlobalAnimeSearchController
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.util.lang.launchIO
+import eu.kanade.tachiyomi.util.lang.launchUI
 import eu.kanade.tachiyomi.util.preference.asImmediateFlow
 import eu.kanade.tachiyomi.util.system.getResourceColor
 import eu.kanade.tachiyomi.util.system.openInBrowser
@@ -36,6 +40,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.widget.ActionModeWithToolbar
 import eu.kanade.tachiyomi.widget.EmptyView
 import eu.kanade.tachiyomi.widget.materialdialogs.QuadStateTextView
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -91,12 +96,12 @@ class AnimelibController(
     /**
      * Relay to notify the animelib's viewpager to select all anime
      */
-    val selectAllRelay: PublishRelay<Int> = PublishRelay.create()
+    val selectAllRelay: PublishRelay<Long> = PublishRelay.create()
 
     /**
      * Relay to notify the animelib's viewpager to select the inverse
      */
-    val selectInverseRelay: PublishRelay<Int> = PublishRelay.create()
+    val selectInverseRelay: PublishRelay<Long> = PublishRelay.create()
 
     /**
      * Number of anime per row in grid mode.
@@ -226,6 +231,7 @@ class AnimelibController(
         destroyActionModeIfNeeded()
         adapter?.onDestroy()
         adapter = null
+        settingsSheet?.sheetScope?.cancel()
         settingsSheet = null
         tabsVisibilitySubscription?.unsubscribe()
         tabsVisibilitySubscription = null
@@ -258,14 +264,14 @@ class AnimelibController(
     fun showSettingsSheet() {
         if (adapter?.categories?.isNotEmpty() == true) {
             adapter?.categories?.get(binding.libraryPager.currentItem)?.let { category ->
-                settingsSheet?.show(category)
+                settingsSheet?.show(category.toDbCategory())
             }
         } else {
             settingsSheet?.show()
         }
     }
 
-    fun onNextAnimelibUpdate(categories: List<Category>, animeMap: Map<Int, List<AnimelibItem>>) {
+    fun onNextAnimelibUpdate(categories: List<Category>, animeMap: AnimelibMap) {
         val view = view ?: return
         val adapter = adapter ?: return
 
@@ -340,7 +346,7 @@ class AnimelibController(
         if (!firstLaunch) {
             animeCountVisibilityRelay.call(preferences.animeCategoryNumberOfItems().get())
         }
-        tabsVisibilityRelay.call(preferences.animeCategoryTabs().get() && adapter?.categories?.size ?: 0 > 1)
+        tabsVisibilityRelay.call(preferences.animeCategoryTabs().get() && (adapter?.categories?.size ?: 0) > 1)
         updateTitle()
     }
 
@@ -386,7 +392,7 @@ class AnimelibController(
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         createOptionsMenu(menu, inflater, R.menu.library, R.id.action_search)
         // Mutate the filter icon because it needs to be tinted and the resource is shared.
-        menu.findItem(R.id.action_filter).icon.mutate()
+        menu.findItem(R.id.action_filter).icon?.mutate()
     }
 
     fun search(query: String) {
@@ -412,7 +418,7 @@ class AnimelibController(
         // Tint icon if there's a filter active
         if (settingsSheet.filters.hasActiveFilters()) {
             val filterColor = activity!!.getResourceColor(R.attr.colorFilterActive)
-            filterItem.icon.setTint(filterColor)
+            filterItem.icon?.setTint(filterColor)
         }
     }
 
@@ -467,7 +473,7 @@ class AnimelibController(
 
     override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_move_to_category -> showChangeAnimeCategoriesDialog()
+            R.id.action_move_to_category -> showAnimeCategoriesDialog()
             R.id.action_download_unseen -> downloadUnseenEpisodes()
             R.id.action_mark_as_seen -> markSeenStatus(true)
             R.id.action_mark_as_unseen -> markSeenStatus(false)
@@ -482,7 +488,7 @@ class AnimelibController(
     override fun onDestroyActionMode(mode: ActionMode) {
         // Clear all the anime selections and notify child views.
         selectedAnimes.clear()
-        selectionRelay.call(AnimelibSelectionEvent.Cleared())
+        selectionRelay.call(AnimelibSelectionEvent.Cleared)
 
         (activity as? MainActivity)?.showBottomNav(true)
 
@@ -493,7 +499,7 @@ class AnimelibController(
         // Notify the presenter a anime is being opened.
         presenter.onOpenAnime()
 
-        router.pushController(AnimeController(anime))
+        router.pushController(AnimeController(anime.id))
     }
 
     /**
@@ -533,33 +539,37 @@ class AnimelibController(
      */
     fun clearSelection() {
         selectedAnimes.clear()
-        selectionRelay.call(AnimelibSelectionEvent.Cleared())
+        selectionRelay.call(AnimelibSelectionEvent.Cleared)
         invalidateActionMode()
     }
 
     /**
      * Move the selected anime to a list of categories.
      */
-    private fun showChangeAnimeCategoriesDialog() {
-        // Create a copy of selected anime
-        val animes = selectedAnimes.toList()
+    private fun showAnimeCategoriesDialog() {
+        viewScope.launchIO {
+            // Create a copy of selected anime
+            val animes = selectedAnimes.toList()
 
-        // Hide the default category because it has a different behavior than the ones from db.
-        val categories = presenter.categories.filter { it.id != 0 }
+            // Hide the default category because it has a different behavior than the ones from db.
+            val categories = presenter.categories.filter { it.id != 0L }
 
-        // Get indexes of the common categories to preselect.
-        val common = presenter.getCommonCategories(animes)
-        // Get indexes of the mix categories to preselect.
-        val mix = presenter.getMixCategories(animes)
-        val preselected = categories.map {
-            when (it) {
-                in common -> QuadStateTextView.State.CHECKED.ordinal
-                in mix -> QuadStateTextView.State.INDETERMINATE.ordinal
-                else -> QuadStateTextView.State.UNCHECKED.ordinal
+            // Get indexes of the common categories to preselect.
+            val common = presenter.getCommonCategories(animes)
+            // Get indexes of the mix categories to preselect.
+            val mix = presenter.getMixCategories(animes)
+            val preselected = categories.map {
+                when (it) {
+                    in common -> QuadStateTextView.State.CHECKED.ordinal
+                    in mix -> QuadStateTextView.State.INDETERMINATE.ordinal
+                    else -> QuadStateTextView.State.UNCHECKED.ordinal
+                }
+            }.toIntArray()
+            launchUI {
+                ChangeAnimeCategoriesDialog(this@AnimelibController, animes, categories, preselected)
+                    .showDialog(router)
             }
-        }.toIntArray()
-        ChangeAnimeCategoriesDialog(this, animes, categories, preselected)
-            .showDialog(router)
+        }
     }
 
     private fun downloadUnseenEpisodes() {
@@ -579,12 +589,12 @@ class AnimelibController(
     }
 
     override fun updateCategoriesForAnimes(animes: List<Anime>, addCategories: List<Category>, removeCategories: List<Category>) {
-        presenter.updateAnimesToCategories(animes, addCategories, removeCategories)
+        presenter.setAnimeCategories(animes, addCategories, removeCategories)
         destroyActionModeIfNeeded()
     }
 
     override fun deleteAnimes(animes: List<Anime>, deleteFromAnimelib: Boolean, deleteEpisodes: Boolean) {
-        presenter.removeAnimes(animes, deleteFromAnimelib, deleteEpisodes)
+        presenter.removeAnimes(animes.map { it.toDbAnime() }, deleteFromAnimelib, deleteEpisodes)
         destroyActionModeIfNeeded()
     }
 

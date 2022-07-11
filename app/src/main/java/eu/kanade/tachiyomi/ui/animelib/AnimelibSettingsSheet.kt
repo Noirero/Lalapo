@@ -4,10 +4,13 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import com.bluelinelabs.conductor.Router
+import eu.kanade.domain.category.interactor.UpdateCategoryAnime
+import eu.kanade.domain.category.model.CategoryUpdate
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Category
+import eu.kanade.tachiyomi.data.database.models.toDomainCategory
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.tachiyomi.data.track.MangaTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
@@ -16,6 +19,9 @@ import eu.kanade.tachiyomi.ui.animelib.setting.SortModeSetting
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import eu.kanade.tachiyomi.widget.sheet.TabbedBottomSheetDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -23,13 +29,15 @@ import uy.kohesive.injekt.injectLazy
 class AnimelibSettingsSheet(
     router: Router,
     private val trackManager: TrackManager = Injekt.get(),
+    private val updateCategory: UpdateCategoryAnime = Injekt.get(),
     onGroupClickListener: (ExtendedNavigationView.Group) -> Unit,
 ) : TabbedBottomSheetDialog(router.activity!!) {
 
     val filters: Filter
     private val sort: Sort
     private val display: Display
-    private val db: AnimeDatabaseHelper by injectLazy()
+
+    val sheetScope = CoroutineScope(Job() + Dispatchers.IO)
 
     init {
         filters = Filter(router.activity!!)
@@ -91,24 +99,25 @@ class AnimelibSettingsSheet(
             private val unseen = Item.TriStateGroup(R.string.action_filter_unseen, this)
             private val started = Item.TriStateGroup(R.string.action_filter_started, this)
             private val completed = Item.TriStateGroup(R.string.completed, this)
-            private val trackFilters: Map<Int, Item.TriStateGroup>
+            private val trackFilters: Map<Long, Item.TriStateGroup>
 
             override val header = null
             override val items: List<Item>
             override val footer = null
 
             init {
-                trackManager.services.filter { service -> service.isLogged }
-                    .also { services ->
-                        val size = services.size
-                        trackFilters = services.associate { service ->
-                            Pair(service.id, Item.TriStateGroup(getServiceResId(service, size), this))
-                        }
-                        val list: MutableList<Item> = mutableListOf(downloaded, unseen, started, completed)
-                        if (size > 1) list.add(Item.Header(R.string.action_filter_tracked))
-                        list.addAll(trackFilters.values)
-                        items = list
+                trackManager.services.filter { service ->
+                    service.isLogged && service !is MangaTrackService
+                }.also { services ->
+                    val size = services.size
+                    trackFilters = services.associate { service ->
+                        Pair(service.id, Item.TriStateGroup(getServiceResId(service, size), this))
                     }
+                    val list: MutableList<Item> = mutableListOf(downloaded, unseen, started, completed)
+                    if (size > 1) list.add(Item.Header(R.string.action_filter_tracked))
+                    list.addAll(trackFilters.values)
+                    items = list
+                }
             }
 
             private fun getServiceResId(service: TrackService, size: Int): Int {
@@ -127,7 +136,7 @@ class AnimelibSettingsSheet(
                 completed.state = preferences.filterCompleted().get()
 
                 trackFilters.forEach { trackFilter ->
-                    trackFilter.value.state = preferences.filterTracking(trackFilter.key).get()
+                    trackFilter.value.state = preferences.filterTracking(trackFilter.key.toInt()).get()
                 }
             }
 
@@ -148,7 +157,7 @@ class AnimelibSettingsSheet(
                     else -> {
                         trackFilters.forEach { trackFilter ->
                             if (trackFilter.value == item) {
-                                preferences.filterTracking(trackFilter.key).set(newState)
+                                preferences.filterTracking(trackFilter.key.toInt()).set(newState)
                             }
                         }
                     }
@@ -194,8 +203,8 @@ class AnimelibSettingsSheet(
             override val footer = null
 
             override fun initModels() {
-                val sorting = SortModeSetting.get(preferences, currentCategory)
-                val order = if (SortDirectionSetting.get(preferences, currentCategory) == SortDirectionSetting.ASCENDING) {
+                val sorting = SortModeSetting.get(preferences, currentCategory?.toDomainCategory())
+                val order = if (SortDirectionSetting.get(preferences, currentCategory?.toDomainCategory()) == SortDirectionSetting.ASCENDING) {
                     Item.MultiSort.SORT_ASC
                 } else {
                     Item.MultiSort.SORT_DESC
@@ -249,9 +258,16 @@ class AnimelibSettingsSheet(
                 }
 
                 if (preferences.categorizedDisplaySettings().get() && currentCategory != null && currentCategory?.id != 0) {
-                    currentCategory?.sortDirection = flag.flag
+                    currentCategory?.sortDirection = flag.flag.toInt()
 
-                    db.insertCategory(currentCategory!!).executeAsBlocking()
+                    sheetScope.launchIO {
+                        updateCategory.await(
+                            CategoryUpdate(
+                                id = currentCategory!!.id?.toLong()!!,
+                                flags = currentCategory!!.flags.toLong(),
+                            ),
+                        )
+                    }
                 } else {
                     preferences.librarySortingAscending().set(flag)
                 }
@@ -271,9 +287,16 @@ class AnimelibSettingsSheet(
                 }
 
                 if (preferences.categorizedDisplaySettings().get() && currentCategory != null && currentCategory?.id != 0) {
-                    currentCategory?.sortMode = flag.flag
+                    currentCategory?.sortMode = flag.flag.toInt()
 
-                    db.insertCategory(currentCategory!!).executeAsBlocking()
+                    sheetScope.launchIO {
+                        updateCategory.await(
+                            CategoryUpdate(
+                                id = currentCategory!!.id?.toLong()!!,
+                                flags = currentCategory!!.flags.toLong(),
+                            ),
+                        )
+                    }
                 } else {
                     preferences.librarySortingMode().set(flag)
                 }
@@ -308,7 +331,7 @@ class AnimelibSettingsSheet(
         // Gets user preference of currently selected display mode at current category
         private fun getDisplayModePreference(): DisplayModeSetting {
             return if (preferences.categorizedDisplaySettings().get() && currentCategory != null && currentCategory?.id != 0) {
-                DisplayModeSetting.fromFlag(currentCategory?.displayMode)
+                DisplayModeSetting.fromFlag(currentCategory?.displayMode?.toLong())
             } else {
                 preferences.libraryDisplayMode().get()
             }
@@ -360,9 +383,16 @@ class AnimelibSettingsSheet(
                 }
 
                 if (preferences.categorizedDisplaySettings().get() && currentCategory != null && currentCategory?.id != 0) {
-                    currentCategory?.displayMode = flag.flag
+                    currentCategory?.displayMode = flag.flag.toInt()
 
-                    db.insertCategory(currentCategory!!).executeAsBlocking()
+                    sheetScope.launchIO {
+                        updateCategory.await(
+                            CategoryUpdate(
+                                id = currentCategory!!.id?.toLong()!!,
+                                flags = currentCategory!!.flags.toLong(),
+                            ),
+                        )
+                    }
                 } else {
                     preferences.libraryDisplayMode().set(flag)
                 }

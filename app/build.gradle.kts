@@ -19,6 +19,7 @@ shortcutHelper.setFilePath("./shortcuts.xml")
 val SUPPORTED_ABIS = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
 android {
+    namespace = "eu.kanade.tachiyomi"
     compileSdk = AndroidConfig.compileSdk
     ndkVersion = AndroidConfig.ndk
 
@@ -27,7 +28,7 @@ android {
         minSdk = AndroidConfig.minSdk
         targetSdk = AndroidConfig.targetSdk
         versionCode = 81
-        versionName = "0.13.2.4"
+        versionName = "0.13.5.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -136,7 +137,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = compose.versions.compose.get()
+        kotlinCompilerExtensionVersion = compose.versions.compiler.get()
     }
 
     compileOptions {
@@ -162,17 +163,21 @@ dependencies {
     implementation(compose.activity)
     implementation(compose.foundation)
     implementation(compose.material3.core)
+    implementation(compose.material3.windowsizeclass)
     implementation(compose.material3.adapter)
     implementation(compose.material.icons)
     implementation(compose.animation)
+    implementation(compose.animation.graphics)
     implementation(compose.ui.tooling)
     implementation(compose.ui.util)
     implementation(compose.accompanist.webview)
     implementation(compose.accompanist.swiperefresh)
+    implementation(compose.accompanist.flowlayout)
 
     implementation(androidx.paging.runtime)
     implementation(androidx.paging.compose)
 
+    implementation(libs.bundles.sqlite)
     implementation(androidx.sqlite)
     implementation(libs.sqldelight.android.driver)
     implementation(libs.sqldelight.coroutines)
@@ -225,11 +230,6 @@ dependencies {
     implementation(libs.disklrucache)
     implementation(libs.unifile)
     implementation(libs.junrar)
-
-    // Database
-    implementation(libs.bundles.sqlite)
-    implementation("com.github.inorichi.storio:storio-common:8be19de@aar")
-    implementation("com.github.inorichi.storio:storio-sqlite:8be19de@aar")
 
     // Preferences
     implementation(libs.preferencektx)
@@ -320,7 +320,9 @@ tasks {
             "-opt-in=coil.annotation.ExperimentalCoilApi",
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
             "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
-            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi"
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+            "-opt-in=androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi",
+            "-opt-in=androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi",
         )
     }
 

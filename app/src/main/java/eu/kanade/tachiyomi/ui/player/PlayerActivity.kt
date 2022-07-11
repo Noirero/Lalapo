@@ -30,7 +30,9 @@ import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.WindowManager
 import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -45,27 +47,29 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
 import eu.kanade.tachiyomi.ui.base.activity.BaseRxActivity
+import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.powerManager
+import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.Utils
 import logcat.LogPriority
 import nucleus.factory.RequiresPresenter
 import java.io.File
+import java.io.InputStream
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @RequiresPresenter(PlayerPresenter::class)
 class PlayerActivity :
     BaseRxActivity<PlayerPresenter>(),
-    MPVLib.EventObserver {
+    MPVLib.EventObserver,
+    MPVLib.LogObserver {
 
     companion object {
 
@@ -76,10 +80,6 @@ class PlayerActivity :
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
         }
-
-        fun newIntent(context: Context, anime: Anime, episode: Episode): Intent {
-            return newIntent(context, anime.id, episode.id)
-        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -89,8 +89,10 @@ class PlayerActivity :
             finish()
             return
         }
-        presenter.saveEpisodeProgress(player.timePos, player.duration)
-        presenter.saveEpisodeHistory()
+        launchIO {
+            presenter.saveEpisodeProgress(player.timePos, player.duration)
+            presenter.saveEpisodeHistory()
+        }
 
         presenter.anime = null
         presenter.init(anime, episode)
@@ -99,6 +101,9 @@ class PlayerActivity :
 
     private var isInPipMode: Boolean = false
     private var isPipStarted: Boolean = false
+    internal var deviceSupportsPip: Boolean = false
+
+    internal var isDoubleTapSeeking: Boolean = false
 
     private var mReceiver: BroadcastReceiver? = null
 
@@ -108,7 +113,7 @@ class PlayerActivity :
 
     internal val player get() = binding.player
 
-    private val playerControls get() = binding.playerControls
+    val playerControls get() = binding.playerControls
 
     private var audioManager: AudioManager? = null
     private var fineVolume = 0F
@@ -194,38 +199,34 @@ class PlayerActivity :
         }
     }
 
-    private var initialSeek = -1
+    internal var initialSeek = -1
 
     private lateinit var mDetector: GestureDetectorCompat
 
     private val animationHandler = Handler(Looper.getMainLooper())
 
     // Fade out seek text
-    private val seekTextRunnable = Runnable {
-        AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
-            binding.seekView.startAnimation(fadeAnimation)
-            binding.seekView.visibility = View.GONE
-            diffSeekMain = 0
-        }
+    internal val seekTextRunnable = Runnable {
+        binding.seekView.visibility = View.GONE
     }
 
-    // Fade out Volume Bar
-    private val volumeViewRunnable = Runnable {
-        AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
-            playerControls.binding.volumeView.startAnimation(fadeAnimation)
+    // Slide out Volume Bar
+    internal val volumeViewRunnable = Runnable {
+        AnimationUtils.loadAnimation(this, R.anim.player_exit_left).also { slideAnimation ->
+            if (!playerControls.shouldHideUiForSeek) playerControls.binding.volumeView.startAnimation(slideAnimation)
             playerControls.binding.volumeView.visibility = View.GONE
         }
     }
 
-    // Fade out Brightness Bar
-    private val brightnessViewRunnable = Runnable {
-        AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
-            playerControls.binding.brightnessView.startAnimation(fadeAnimation)
+    // Slide out Brightness Bar
+    internal val brightnessViewRunnable = Runnable {
+        AnimationUtils.loadAnimation(this, R.anim.player_exit_right).also { slideAnimation ->
+            if (!playerControls.shouldHideUiForSeek) playerControls.binding.brightnessView.startAnimation(slideAnimation)
             playerControls.binding.brightnessView.visibility = View.GONE
         }
     }
 
-    private fun showGestureView(type: String) {
+    internal fun showGestureView(type: String) {
         val callback: Runnable
         val itemView: LinearLayout
         val delay: Long
@@ -233,17 +234,19 @@ class PlayerActivity :
             "seek" -> {
                 callback = seekTextRunnable
                 itemView = binding.seekView
-                delay = 1000L
+                delay = 0L
             }
             "volume" -> {
                 callback = volumeViewRunnable
                 itemView = playerControls.binding.volumeView
                 delay = 750L
+                if (!itemView.isVisible) itemView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.player_enter_left))
             }
             "brightness" -> {
                 callback = brightnessViewRunnable
                 itemView = playerControls.binding.brightnessView
                 delay = 750L
+                if (!itemView.isVisible) itemView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.player_enter_right))
             }
             else -> return
         }
@@ -259,15 +262,15 @@ class PlayerActivity :
 
     private var playerIsDestroyed = true
 
-    internal var subTracks: Array<Track> = emptyArray()
+    private var subTracks: Array<Track> = emptyArray()
 
-    internal var selectedSub = 0
+    private var selectedSub = 0
 
     private var hadPreviousSubs = false
 
-    internal var audioTracks: Array<Track> = emptyArray()
+    private var audioTracks: Array<Track> = emptyArray()
 
-    internal var selectedAudio = 0
+    private var selectedAudio = 0
 
     private var hadPreviousAudio = false
 
@@ -283,9 +286,10 @@ class PlayerActivity :
         Utils.copyAssets(this)
         super.onCreate(savedInstanceState)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) deviceSupportsPip = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
         binding = PlayerActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         this@PlayerActivity.requestedOrientation = preferences.defaultPlayerOrientationType()
 
         window.statusBarColor = 70000000
@@ -295,12 +299,19 @@ class PlayerActivity :
 
         setVisibilities()
 
-        playerControls.showAndFadeControls()
+        if (preferences.hideControls()) {
+            playerControls.hideControls(true)
+        } else {
+            playerControls.showAndFadeControls()
+        }
         toggleAutoplay(preferences.autoplayEnabled().get())
 
         setMpvConf()
-        player.initialize(applicationContext.filesDir.path)
+        val logLevel = if (preferences.verboseLogging()) "info" else "warn"
+        player.initialize(applicationContext.filesDir.path, logLevel)
         MPVLib.setOptionString("keep-open", "always")
+        MPVLib.setOptionString("ytdl", "no")
+        MPVLib.addLogObserver(this)
         player.addObserver(this)
 
         Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
@@ -310,10 +321,14 @@ class PlayerActivity :
         }
 
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        fineVolume = audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+        fineVolume = if (preferences.playerVolumeValue().get() == -1.0F) audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()else preferences.playerVolumeValue().get()
+        verticalScrollRight(0F)
         maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        playerControls.binding.volumeBar.max = maxVolume
+        playerControls.binding.volumeBar.secondaryProgress = maxVolume
 
-        brightness = Utils.getScreenBrightness(this) ?: 0.5F
+        brightness = if (preferences.playerBrightnessValue().get() == -1.0F) Utils.getScreenBrightness(this) ?: 0.5F else preferences.playerBrightnessValue().get()
+        verticalScrollLeft(0F)
 
         volumeControlStream = AudioManager.STREAM_MUSIC
 
@@ -386,7 +401,7 @@ class PlayerActivity :
                     rightToLeft = playerControls.binding.toggleAutoplay.id
                     rightToRight = ConstraintLayout.LayoutParams.UNSET
                 }
-                playerControls.binding.qualityBtn.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                playerControls.binding.playerOverflow.updateLayoutParams<ConstraintLayout.LayoutParams> {
                     topToTop = ConstraintLayout.LayoutParams.PARENT_ID
                     topToBottom = ConstraintLayout.LayoutParams.UNSET
                 }
@@ -407,7 +422,7 @@ class PlayerActivity :
                     rightToLeft = ConstraintLayout.LayoutParams.UNSET
                     rightToRight = ConstraintLayout.LayoutParams.PARENT_ID
                 }
-                playerControls.binding.qualityBtn.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                playerControls.binding.playerOverflow.updateLayoutParams<ConstraintLayout.LayoutParams> {
                     topToTop = ConstraintLayout.LayoutParams.UNSET
                     topToBottom = playerControls.binding.backArrowBtn.id
                 }
@@ -418,7 +433,7 @@ class PlayerActivity :
             }
             setupGestures()
             setViewMode()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) player.paused?.let { updatePictureInPictureActions(!it) }
+            if (deviceSupportsPip && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) player.paused?.let { updatePictureInPictureActions(!it) }
         }
     }
 
@@ -452,32 +467,47 @@ class PlayerActivity :
      * Switches to the previous episode if [previous] is true,
      * to the next episode if [previous] is false
      */
-    internal fun switchEpisode(previous: Boolean) {
-        val switchMethod = if (previous) presenter::previousEpisode else presenter::nextEpisode
+    internal fun switchEpisode(previous: Boolean, autoPlay: Boolean = false) {
+        val switchMethod = if (previous && !autoPlay) {
+            { callback: () -> Unit -> presenter.previousEpisode(callback) }
+        } else {
+            { callback: () -> Unit -> presenter.nextEpisode(callback, autoPlay) }
+        }
         val errorRes = if (previous) R.string.no_previous_episode else R.string.no_next_episode
 
-        presenter.saveEpisodeProgress(player.timePos, player.duration)
-        presenter.saveEpisodeHistory()
+        launchIO {
+            presenter.saveEpisodeProgress(player.timePos, player.duration)
+            presenter.saveEpisodeHistory()
+        }
         val wasPlayerPaused = player.paused
         player.paused = true
         showLoadingIndicator(true)
 
         val epTxt = switchMethod {
-            if (wasPlayerPaused == false || preferences.autoplayEnabled().get()) {
+            if (wasPlayerPaused == false || autoPlay) {
                 player.paused = false
             }
         }
 
         when {
             epTxt == "Invalid" -> return
-            epTxt == null -> { if (presenter.anime != null) launchUI { toast(errorRes) }; showLoadingIndicator(false) }
-            isInPipMode -> if (preferences.pipEpisodeToasts()) launchUI { toast(epTxt) }
+            epTxt == null -> {
+                if (presenter.anime != null && !autoPlay) {
+                    launchUI { toast(errorRes) }
+                }
+                showLoadingIndicator(false)
+            }
+            isInPipMode -> {
+                if (preferences.pipEpisodeToasts()) {
+                    launchUI { toast(epTxt) }
+                }
+            }
         }
     }
 
     // Fade out Player information text
     private val playerInformationRunnable = Runnable {
-        AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
+        AnimationUtils.loadAnimation(this, R.anim.fade_out_short).also { fadeAnimation ->
             playerControls.binding.playerInformation.startAnimation(fadeAnimation)
             playerControls.binding.playerInformation.visibility = View.GONE
         }
@@ -510,7 +540,13 @@ class PlayerActivity :
         binding.loadingIndicator.isVisible = visible
     }
 
-    internal fun setSub(index: Int) {
+    private fun isSeeking(seeking: Boolean) {
+        val position = player.timePos ?: return
+        val cachePosition = MPVLib.getPropertyInt("demuxer-cache-time") ?: -1
+        showLoadingIndicator(position >= cachePosition && seeking)
+    }
+
+    private fun setSub(index: Int) {
         if (selectedSub == index || selectedSub > subTracks.lastIndex) return
         selectedSub = index
         if (index == 0) {
@@ -526,7 +562,7 @@ class PlayerActivity :
             ?: MPVLib.command(arrayOf("sub-add", subTracks[index].url, "select", subTracks[index].url))
     }
 
-    internal fun setAudio(index: Int) {
+    private fun setAudio(index: Int) {
         if (selectedAudio == index || selectedAudio > audioTracks.lastIndex) return
         selectedAudio = index
         if (index == 0) {
@@ -574,13 +610,14 @@ class PlayerActivity :
     }
 
     @Suppress("DEPRECATION")
-    private fun setVisibilities() {
+    fun setVisibilities() {
         binding.root.systemUiVisibility =
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
             View.SYSTEM_UI_FLAG_LOW_PROFILE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && preferences.playerFullscreen()) {
             window.attributes.layoutInDisplayCutoutMode =
@@ -605,7 +642,7 @@ class PlayerActivity :
     }
 
     private val doubleTapPlayPauseRunnable = Runnable {
-        AnimationUtils.loadAnimation(this, R.anim.fade_out_medium).also { fadeAnimation ->
+        AnimationUtils.loadAnimation(this, R.anim.player_fade_out).also { fadeAnimation ->
             binding.playPauseView.startAnimation(fadeAnimation)
             binding.playPauseView.visibility = View.GONE
         }
@@ -617,11 +654,11 @@ class PlayerActivity :
 
         if (!playerControls.binding.controlsView.isVisible) {
             when {
-                player.paused!! -> { binding.playPauseView.setImageResource(R.drawable.ic_pause_80dp) }
-                !player.paused!! -> { binding.playPauseView.setImageResource(R.drawable.ic_play_arrow_80dp) }
+                player.paused!! -> { binding.playPauseView.setImageResource(R.drawable.ic_pause_72dp) }
+                !player.paused!! -> { binding.playPauseView.setImageResource(R.drawable.ic_play_arrow_72dp) }
             }
 
-            AnimationUtils.loadAnimation(this, R.anim.fade_in_medium).also { fadeAnimation ->
+            AnimationUtils.loadAnimation(this, R.anim.player_fade_in).also { fadeAnimation ->
                 binding.playPauseView.startAnimation(fadeAnimation)
                 binding.playPauseView.visibility = View.VISIBLE
             }
@@ -630,23 +667,71 @@ class PlayerActivity :
         } else binding.playPauseView.visibility = View.GONE
     }
 
-    fun doubleTapSeek(time: Int, event: MotionEvent? = null) {
-        val v = if (time < 0) binding.rewBg else binding.ffwdBg
+    private lateinit var doubleTapBg: ImageView
+
+    private val doubleTapSeekRunnable = Runnable {
+        isDoubleTapSeeking = false
+        binding.secondsView.isVisible = false
+        doubleTapBg.isVisible = false
+        binding.secondsView.seconds = 0
+        binding.secondsView.stop()
+    }
+
+    fun doubleTapSeek(time: Int, event: MotionEvent? = null, isDoubleTap: Boolean = true) {
+        if (!isDoubleTapSeeking) doubleTapBg = if (time < 0) binding.rewBg else binding.ffwdBg
+        val v = if (time < 0) binding.rewTap else binding.ffwdTap
         val w = if (time < 0) width * 0.2F else width * 0.8F
         val x = (event?.x?.toInt() ?: w.toInt()) - v.x.toInt()
         val y = (event?.y?.toInt() ?: (height / 2)) - v.y.toInt()
+
+        isDoubleTapSeeking = isDoubleTap
+        binding.secondsView.isVisible = true
+        animationHandler.removeCallbacks(doubleTapSeekRunnable)
+        animationHandler.postDelayed(doubleTapSeekRunnable, 750L)
+
+        if (time < 0) {
+            binding.secondsView.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                rightToRight = ConstraintLayout.LayoutParams.UNSET
+                leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID
+            }
+            binding.secondsView.isForward = false
+
+            if (doubleTapBg != binding.rewBg) {
+                doubleTapBg.isVisible = false
+                binding.secondsView.seconds = 0
+                doubleTapBg = binding.rewBg
+            }
+            doubleTapBg.isVisible = true
+
+            binding.secondsView.seconds -= time
+        } else {
+            binding.secondsView.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                rightToRight = ConstraintLayout.LayoutParams.PARENT_ID
+                leftToLeft = ConstraintLayout.LayoutParams.UNSET
+            }
+            binding.secondsView.isForward = true
+
+            if (doubleTapBg != binding.ffwdBg) {
+                doubleTapBg.isVisible = false
+                binding.secondsView.seconds = 0
+                doubleTapBg = binding.ffwdBg
+            }
+            doubleTapBg.isVisible = true
+
+            binding.secondsView.seconds += time
+        }
+        playerControls.hideUiForSeek()
+        binding.secondsView.start()
         ViewAnimationUtils.createCircularReveal(v, x, y, 0f, kotlin.math.max(v.height, v.width).toFloat()).setDuration(500).start()
 
-        ObjectAnimator.ofFloat(v, "alpha", 0f, 0.2f).setDuration(500).start()
-        ObjectAnimator.ofFloat(v, "alpha", 0.2f, 0.2f, 0f).setDuration(1000).start()
-        val newPos = (player.timePos ?: 0) + time // only for display
-        MPVLib.command(arrayOf("seek", time.toString(), "relative+exact"))
+        ObjectAnimator.ofFloat(v, "alpha", 0f, 0.15f).setDuration(500).start()
+        ObjectAnimator.ofFloat(v, "alpha", 0.15f, 0.15f, 0f).setDuration(1000).start()
 
-        editSeekText(newPos, time)
+        MPVLib.command(arrayOf("seek", time.toString(), "relative+exact"))
     }
 
     fun verticalScrollLeft(diff: Float) {
-        brightness = (brightness + diff).coerceIn(-0.75F, 1F)
+        if (diff != 0F) brightness = (brightness + diff).coerceIn(-0.75F, 1F)
         window.attributes = window.attributes.apply {
             // value of 0 and 0.01 is broken somehow
             screenBrightness = brightness.coerceAtLeast(0.02F)
@@ -661,20 +746,21 @@ class PlayerActivity :
         }
         val finalBrightness = (brightness * 100).roundToInt()
         playerControls.binding.brightnessText.text = finalBrightness.toString()
-        playerControls.binding.brightnessBar.progress = finalBrightness
-        playerControls.binding.brightnessBar.secondaryProgress = abs(finalBrightness)
+        playerControls.binding.brightnessBar.progress = abs(finalBrightness)
         if (finalBrightness >= 0) {
             playerControls.binding.brightnessImg.setImageResource(R.drawable.ic_brightness_positive_24dp)
             playerControls.binding.brightnessBar.max = 100
+            playerControls.binding.brightnessBar.secondaryProgress = 100
         } else {
             playerControls.binding.brightnessImg.setImageResource(R.drawable.ic_brightness_negative_24dp)
             playerControls.binding.brightnessBar.max = 75
+            playerControls.binding.brightnessBar.secondaryProgress = 75
         }
-        showGestureView("brightness")
+        if (diff != 0F) showGestureView("brightness")
     }
 
     fun verticalScrollRight(diff: Float) {
-        fineVolume = (fineVolume + (diff * maxVolume)).coerceIn(0F, maxVolume.toFloat())
+        if (diff != 0F) fineVolume = (fineVolume + (diff * maxVolume)).coerceIn(0F, maxVolume.toFloat())
         val newVolume = fineVolume.toInt()
         // val newVolumePercent = 100 * newVolume / maxVolume
         audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
@@ -683,7 +769,7 @@ class PlayerActivity :
         playerControls.binding.volumeBar.progress = newVolume
         if (newVolume == 0) playerControls.binding.volumeImg.setImageResource(R.drawable.ic_volume_off_24dp)
         else playerControls.binding.volumeImg.setImageResource(R.drawable.ic_volume_on_24dp)
-        showGestureView("volume")
+        if (diff != 0F) showGestureView("volume")
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -731,7 +817,7 @@ class PlayerActivity :
         initialSeek = player.timePos ?: -1
     }
 
-    fun horizontalScroll(diff: Float) {
+    fun horizontalScroll(diff: Float, final: Boolean = false) {
         // disable seeking when timePos is not available
         val duration = player.duration ?: 0
         if (duration == 0 || initialSeek < 0) {
@@ -740,41 +826,13 @@ class PlayerActivity :
         val newPos = (initialSeek + diff.toInt()).coerceIn(0, duration)
         val newDiff = newPos - initialSeek
 
-        val seekFlags = if (preferences.getPlayerFastSeek()) "absolute+keyframes" else "absolute"
-
-        MPVLib.command(arrayOf("seek", newPos.toString(), seekFlags))
+        playerControls.hideUiForSeek()
+        if (preferences.getPlayerSmoothSeek() && final) player.timePos = newPos else MPVLib.command(arrayOf("seek", newPos.toString(), "absolute+keyframes"))
         playerControls.updatePlaybackPos(newPos)
 
-        editSeekText(newPos, newDiff, true)
-    }
-
-    private var diffSeekMain = 0
-    private var diffSeekHorizontal = 0
-    private fun editSeekText(newPos: Int, diff: Int, isHorizontalSeek: Boolean = false) {
-        if (isHorizontalSeek) {
-            diffSeekMain += diff - diffSeekHorizontal
-            diffSeekHorizontal = diff
-        } else {
-            diffSeekMain += diff
-            diffSeekHorizontal = 0
-        }
-        val diffText = Utils.prettyTime(diffSeekMain, true)
+        val diffText = Utils.prettyTime(newDiff, true)
         binding.seekText.text = getString(R.string.ui_seek_distance, Utils.prettyTime(newPos), diffText)
         showGestureView("seek")
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun cycleAudio(view: View) {
-        if (audioTracks.isEmpty()) return
-        setAudio(if (selectedAudio < audioTracks.lastIndex) selectedAudio + 1 else 0)
-        toast("Audio: ${audioTracks[selectedAudio].lang}")
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun cycleSub(view: View) {
-        if (subTracks.isEmpty()) return
-        setSub(if (selectedSub < subTracks.lastIndex) selectedSub + 1 else 0)
-        toast("Sub: ${subTracks[selectedSub].lang}")
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -788,47 +846,172 @@ class PlayerActivity :
         setViewMode()
     }
 
+    @Suppress("UNUSED_PARAMETER")
+    fun pickAudio(view: View) {
+        val audioTracks = audioTracks.takeUnless { it.isEmpty() } ?: return
+
+        playerControls.hideControls(true)
+        PlayerTracksSheet(
+            this,
+            R.string.audio_dialog_header,
+            ::setAudio,
+            audioTracks,
+            selectedAudio,
+        ).show()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun pickSub(view: View) {
+        val subTracks = subTracks.takeUnless { it.isEmpty() } ?: return
+
+        playerControls.hideControls(true)
+        PlayerTracksSheet(
+            this,
+            R.string.subtitle_dialog_header,
+            ::setSub,
+            subTracks,
+            selectedSub,
+        ).show()
+    }
+
     private var currentQuality = 0
 
     @Suppress("UNUSED_PARAMETER")
-    fun openQuality(view: View) {
-        if (currentVideoList?.isNotEmpty() != true) return
-        val qualityAlert = HideBarsMaterialAlertDialogBuilder(this)
+    fun pickQuality(view: View) {
+        val videoTracks = currentVideoList?.map {
+            Track("", it.quality)
+        }?.toTypedArray()?.takeUnless { it.isEmpty() } ?: return
 
-        qualityAlert.setTitle(R.string.playback_quality_dialog_title)
-
-        var requestedQuality = 0
-        val qualities = currentVideoList!!.map { it.quality }.toTypedArray()
-        qualityAlert.setSingleChoiceItems(
-            qualities,
+        playerControls.hideControls(true)
+        PlayerTracksSheet(
+            this,
+            R.string.quality_dialog_header,
+            ::changeQuality,
+            videoTracks,
             currentQuality,
-        ) { qualityDialog, selectedQuality ->
-            if (selectedQuality > qualities.lastIndex) {
-                qualityDialog.cancel()
-            } else {
-                requestedQuality = selectedQuality
+        ).show()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun openOptions(view: View) {
+        playerControls.hideControls(true)
+        PlayerOptionsSheet(this).show()
+    }
+
+    var stats: Boolean = false
+    var statsPage: Int = 0
+        set(value) {
+            val newValue = when (value) {
+                0 -> 1
+                1 -> 2
+                2 -> 3
+                else -> 1
+            }
+            if (!stats) toggleStats()
+            MPVLib.command(arrayOf("script-binding", "stats/display-page-$newValue"))
+            field = newValue - 1
+        }
+
+    fun toggleStats() {
+        MPVLib.command(arrayOf("script-binding", "stats/display-stats-toggle"))
+        stats = !stats
+    }
+
+    var screenshotSubs: Boolean = preferences.screenshotSubtitles().get()
+        set(value) {
+            preferences.screenshotSubtitles().set(value)
+            field = value
+        }
+
+    fun takeScreenshot(): InputStream? {
+        val filename = cacheDir.path + "/${System.currentTimeMillis()}_mpv_screenshot_tmp.png"
+        val subtitleFlag = if (screenshotSubs) {
+            "subtitles"
+        } else {
+            "video"
+        }
+        MPVLib.command(arrayOf("screenshot-to-file", filename, subtitleFlag))
+        val tempFile = File(filename).takeIf { it.exists() } ?: return null
+        val newFile = File(cacheDir.path + "/mpv_screenshot.png")
+        newFile.delete()
+        tempFile.renameTo(newFile)
+        return newFile.takeIf { it.exists() }?.inputStream()
+    }
+
+    /**
+     * Called from the options sheet. It delegates the call to the presenter to do some IO, which
+     * will call [onShareImageResult] with the path the image was saved on when it's ready.
+     */
+    fun shareImage() {
+        presenter.shareImage()
+    }
+
+    /**
+     * Called from the presenter when a screenshot is ready to be shared. It shows Android's
+     * default sharing tool.
+     */
+    fun onShareImageResult(uri: Uri, seconds: String) {
+        val anime = presenter.anime ?: return
+        val episode = presenter.currentEpisode ?: return
+
+        val intent = uri.toShareIntent(
+            context = applicationContext,
+            message = getString(R.string.share_screenshot_info, anime.title, episode.name, seconds),
+        )
+        startActivity(Intent.createChooser(intent, getString(R.string.action_share)))
+    }
+
+    /**
+     * Called from the options sheet. It delegates saving the screenshot on
+     * external storage to the presenter.
+     */
+    fun saveImage() {
+        presenter.saveImage()
+    }
+
+    /**
+     * Called from the presenter when a screenshot is saved or fails. It shows a message
+     * or logs the event depending on the [result].
+     */
+    fun onSaveImageResult(result: PlayerPresenter.SaveImageResult) {
+        when (result) {
+            is PlayerPresenter.SaveImageResult.Success -> {
+                toast(R.string.picture_saved)
+            }
+            is PlayerPresenter.SaveImageResult.Error -> {
+                logcat(LogPriority.ERROR, result.error)
             }
         }
+    }
 
-        qualityAlert.setPositiveButton(android.R.string.ok) { qualityDialog, _ ->
-            if (requestedQuality != currentQuality) {
-                currentQuality = requestedQuality
-                changeQuality(requestedQuality)
-            }
-            qualityDialog.dismiss()
-        }
+    /**
+     * Called from the options sheet. It delegates setting the screenshot
+     * as the cover to the presenter.
+     */
+    fun setAsCover() {
+        presenter.setAsCover(this)
+    }
 
-        qualityAlert.setNegativeButton(android.R.string.cancel) { qualityDialog, _ ->
-            qualityDialog.cancel()
-        }
-
-        qualityAlert.show()
+    /**
+     * Called from the presenter when a screenshot is set as cover or fails.
+     * It shows a different message depending on the [result].
+     */
+    fun onSetAsCoverResult(result: PlayerPresenter.SetAsCoverResult) {
+        toast(
+            when (result) {
+                PlayerPresenter.SetAsCoverResult.Success -> R.string.cover_updated
+                PlayerPresenter.SetAsCoverResult.AddToLibraryFirst -> R.string.notification_first_add_to_library
+                PlayerPresenter.SetAsCoverResult.Error -> R.string.notification_cover_update_failed
+            },
+        )
     }
 
     private fun changeQuality(quality: Int) {
         if (playerIsDestroyed) return
+        if (currentQuality == quality) return
         logcat(LogPriority.INFO) { "changing quality" }
         currentVideoList?.getOrNull(quality)?.let {
+            currentQuality = quality
             setHttpOptions(it)
             player.timePos?.let {
                 MPVLib.command(arrayOf("set", "start", "${player.timePos}"))
@@ -855,7 +1038,8 @@ class PlayerActivity :
 
     @Suppress("UNUSED_PARAMETER")
     fun skipIntro(view: View) {
-        doubleTapSeek(85)
+        doubleTapSeek(preferences.introLengthPreference(), isDoubleTap = false)
+        playerControls.resetControlsFade()
     }
 
     private fun refreshUi() {
@@ -891,8 +1075,8 @@ class PlayerActivity :
     }
 
     private fun updatePlaybackStatus(paused: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPipMode) updatePictureInPictureActions(!paused)
-        val r = if (paused) R.drawable.ic_play_arrow_80dp else R.drawable.ic_pause_80dp
+        if (deviceSupportsPip && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPipMode) updatePictureInPictureActions(!paused)
+        val r = if (paused) R.drawable.ic_play_arrow_72dp else R.drawable.ic_pause_72dp
         playerControls.binding.playBtn.setImageResource(r)
 
         if (paused) {
@@ -903,7 +1087,10 @@ class PlayerActivity :
     }
 
     override fun onDestroy() {
+        preferences.playerVolumeValue().set(fineVolume)
+        preferences.playerBrightnessValue().set(brightness)
         presenter.deletePendingEpisodes()
+        MPVLib.removeLogObserver(this)
         if (!playerIsDestroyed) {
             playerIsDestroyed = true
             player.removeObserver(this)
@@ -914,18 +1101,34 @@ class PlayerActivity :
     }
 
     override fun onBackPressed() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) finishAndRemoveTask()
-        super.onBackPressed()
+        if (deviceSupportsPip) {
+            if (player.paused == false && preferences.pipOnExit()) startPiP()
+            else {
+                finishAndRemoveTask()
+                super.onBackPressed()
+            }
+        } else {
+            finishAndRemoveTask()
+            super.onBackPressed()
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        if (player.paused == false && preferences.pipOnExit()) startPiP()
+        super.onUserLeaveHint()
     }
 
     override fun onStop() {
-        presenter.saveEpisodeHistory()
+        launchIO {
+            presenter.saveEpisodeHistory()
+        }
         if (!playerIsDestroyed) {
-            presenter.saveEpisodeProgress(player.timePos, player.duration)
+            launchIO {
+                presenter.saveEpisodeProgress(player.timePos, player.duration)
+            }
             player.paused = true
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-            isInPipMode &&
+        if (deviceSupportsPip && isInPipMode &&
             powerManager.isInteractive
         ) finishAndRemoveTask()
 
@@ -935,7 +1138,7 @@ class PlayerActivity :
     override fun onResume() {
         super.onResume()
         setVisibilities()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) player.paused?.let { updatePictureInPictureActions(!it) }
+        if (deviceSupportsPip && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) player.paused?.let { updatePictureInPictureActions(!it) }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -981,9 +1184,10 @@ class PlayerActivity :
         }
     }
 
-    @Suppress("DEPRECATION", "UNUSED_PARAMETER")
-    fun startPiP(view: View) {
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    @Suppress("DEPRECATION")
+    fun startPiP() {
+        if (isInPipMode) return
+        if (deviceSupportsPip && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             isPipStarted = true
             playerControls.hideControls(true)
             player.paused?.let { updatePictureInPictureActions(!it) }
@@ -1073,14 +1277,14 @@ class PlayerActivity :
         finish()
     }
 
-    fun setVideoList(videos: List<Video>) {
+    fun setVideoList(videos: List<Video>, fromStart: Boolean = false) {
         if (playerIsDestroyed) return
         currentVideoList = videos
         currentVideoList?.firstOrNull()?.let {
             setHttpOptions(it)
-            presenter.currentEpisode?.last_second_seen?.let { pos ->
-                val intPos = pos / 1000F
-                MPVLib.command(arrayOf("set", "start", "$intPos"))
+            presenter.currentEpisode?.let { episode ->
+                if ((episode.seen && !preferences.preserveWatchingPosition()) || fromStart) episode.last_second_seen = 1L
+                MPVLib.command(arrayOf("set", "start", "${episode.last_second_seen / 1000F}"))
             }
             subTracks = arrayOf(Track("nothing", "Off")) + it.subtitleTracks.toTypedArray()
             audioTracks = arrayOf(Track("nothing", "Off")) + it.audioTracks.toTypedArray()
@@ -1165,11 +1369,11 @@ class PlayerActivity :
         MPVLib.setPropertyDouble("speed", preferences.getPlayerSpeed().toDouble())
         clearTracks()
         player.loadTracks()
-        subTracks += player.tracks.getValue("sub")
+        subTracks += player.tracks.getOrElse("sub") { emptyList() }
             .drop(1).map { track ->
                 Track(track.mpvId.toString(), track.name)
             }.toTypedArray()
-        audioTracks += player.tracks.getValue("audio")
+        audioTracks += player.tracks.getOrElse("audio") { emptyList() }
             .drop(1).map { track ->
                 Track(track.mpvId.toString(), track.name)
             }.toTypedArray()
@@ -1190,7 +1394,8 @@ class PlayerActivity :
                         MPVLib.command(arrayOf("sub-add", sub.url, "select", sub.url))
                     }
                 } ?: run {
-                val mpvSub = player.tracks.getValue("sub").first { player.sid == it.mpvId }
+                val mpvSub = player.tracks.getOrElse("sub") { emptyList() }
+                    .first { player.sid == it.mpvId }
                 selectedSub = subTracks.indexOfFirst { it.url == mpvSub.mpvId.toString() }
                     .coerceAtLeast(0)
             }
@@ -1212,7 +1417,8 @@ class PlayerActivity :
                         MPVLib.command(arrayOf("audio-add", audio.url, "select", audio.url))
                     }
                 } ?: run {
-                val mpvAudio = player.tracks.getValue("audio").first { player.aid == it.mpvId }
+                val mpvAudio = player.tracks.getOrElse("audio") { emptyList() }
+                    .first { player.aid == it.mpvId }
                 selectedAudio = audioTracks.indexOfFirst { it.url == mpvAudio.mpvId.toString() }
                     .coerceAtLeast(0)
             }
@@ -1235,31 +1441,36 @@ class PlayerActivity :
 
     private fun eventPropertyUi(property: String, value: Long) {
         when (property) {
-            "time-pos" -> playerControls.updatePlaybackPos(value.toInt())
+            "demuxer-cache-time" -> playerControls.updateBufferPosition(value.toInt())
+            "time-pos" -> {
+                playerControls.updatePlaybackPos(value.toInt())
+                if (preferences.invertedDurationTxt().get()) playerControls.updatePlaybackDuration(value.toInt())
+            }
             "duration" -> playerControls.updatePlaybackDuration(value.toInt())
         }
     }
 
-    private val nextEpisodeRunnable = Runnable { switchEpisode(false) }
+    private val nextEpisodeRunnable = Runnable { switchEpisode(previous = false, autoPlay = true) }
 
     @Suppress("DEPRECATION")
     private fun eventPropertyUi(property: String, value: Boolean) {
         when (property) {
+            "seeking" -> isSeeking(value)
+            "paused-for-cache" -> showLoadingIndicator(value)
             "pause" -> {
                 if (!isFinishing) {
                     setAudioFocus(value)
-
-                    if (player.timePos != null && player.duration != null) {
-                        animationHandler.removeCallbacks(nextEpisodeRunnable)
-                        val isVideoEof = MPVLib.getPropertyBoolean("eof-reached") == true
-                        val isVideoCompleted = isVideoEof || (player.timePos!! >= player.duration!!)
-                        if (isVideoCompleted && preferences.autoplayEnabled().get()) {
-                            animationHandler.postDelayed(nextEpisodeRunnable, 1000L)
-                        }
-                    }
                     updatePlaybackStatus(value)
                 }
             }
+            "eof-reached" -> endFile(value)
+        }
+    }
+
+    private fun endFile(eofReached: Boolean) {
+        animationHandler.removeCallbacks(nextEpisodeRunnable)
+        if (eofReached && preferences.autoplayEnabled().get()) {
+            animationHandler.postDelayed(nextEpisodeRunnable, 1000L)
         }
     }
 
@@ -1278,6 +1489,35 @@ class PlayerActivity :
     override fun event(eventId: Int) {
         when (eventId) {
             MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> fileLoaded()
+            MPVLib.mpvEventId.MPV_EVENT_START_FILE -> launchUI { refreshUi() }
+        }
+    }
+
+    override fun efEvent(err: String?) {
+        var errorMessage = err ?: "Error: File ended"
+        if (!httpError.isNullOrEmpty()) {
+            errorMessage += ": $httpError"
+            httpError = null
+        }
+        logcat(LogPriority.ERROR) { errorMessage }
+        runOnUiThread {
+            showLoadingIndicator(false)
+            toast(errorMessage, Toast.LENGTH_LONG)
+        }
+    }
+
+    private var httpError: String? = null
+
+    override fun logMessage(prefix: String, level: Int, text: String) {
+        val logPriority = when (level) {
+            MPVLib.mpvLogLevel.MPV_LOG_LEVEL_FATAL, MPVLib.mpvLogLevel.MPV_LOG_LEVEL_ERROR -> LogPriority.ERROR
+            MPVLib.mpvLogLevel.MPV_LOG_LEVEL_WARN -> LogPriority.WARN
+            MPVLib.mpvLogLevel.MPV_LOG_LEVEL_INFO -> LogPriority.INFO
+            else -> null
+        }
+        if (logPriority != null) {
+            if (text.contains("HTTP error")) httpError = text
+            logcat.logcat("mpv/$prefix", logPriority) { text }
         }
     }
 }

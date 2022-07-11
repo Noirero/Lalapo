@@ -50,6 +50,12 @@ class SettingsPlayerController : SettingsController() {
             summary = "%s"
         }
 
+        switchPreference {
+            key = Keys.preserveWatchingPosition
+            titleRes = R.string.pref_preserve_watching_position
+            defaultValue = false
+        }
+
         preferenceCategory {
             titleRes = R.string.pref_category_player_orientation
 
@@ -129,6 +135,25 @@ class SettingsPlayerController : SettingsController() {
             titleRes = R.string.pref_category_internal_player
 
             listPreference {
+                key = Keys.introLengthPreference
+                titleRes = R.string.pref_intro_length
+
+                entriesRes = arrayOf(
+                    R.string.pref_skip_85,
+                    R.string.pref_skip_55,
+                    R.string.pref_skip_25,
+                )
+                entryValues = arrayOf(
+                    "85",
+                    "55",
+                    "25",
+                )
+                defaultValue = "85"
+
+                summary = "%s"
+            }
+
+            listPreference {
                 key = Keys.skipLengthPreference
                 titleRes = R.string.pref_skip_length
 
@@ -152,10 +177,10 @@ class SettingsPlayerController : SettingsController() {
             }
 
             switchPreference {
-                key = Keys.playerFastSeek
-                titleRes = R.string.pref_player_fast_seek
+                key = Keys.playerSmoothSeek
+                titleRes = R.string.pref_player_smooth_seek
                 defaultValue = false
-                summaryRes = R.string.pref_player_fast_seek_summary
+                summaryRes = R.string.pref_player_smooth_seek_summary
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -166,11 +191,23 @@ class SettingsPlayerController : SettingsController() {
                 }
             }
 
+            switchPreference {
+                key = "player_hide_controls"
+                titleRes = R.string.pref_player_hide_controls
+                defaultValue = false
+            }
+
             if (context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 switchPreference {
                     key = Keys.pipEpisodeToasts
                     titleRes = R.string.pref_pip_episode_toasts
                     defaultValue = true
+                }
+
+                switchPreference {
+                    key = Keys.pipOnExit
+                    titleRes = R.string.pref_pip_on_exit
+                    defaultValue = false
                 }
             }
 

@@ -2,15 +2,17 @@ package eu.kanade.tachiyomi.data.backup
 
 import android.content.Context
 import android.net.Uri
+import eu.kanade.data.AnimeDatabaseHandler
+import eu.kanade.data.DatabaseHandler
+import eu.kanade.data.chapter.NoChaptersException
+import eu.kanade.data.episode.NoEpisodesException
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
-import eu.kanade.tachiyomi.data.database.AnimeDatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.util.episode.NoEpisodesException
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.Job
 import uy.kohesive.injekt.injectLazy
@@ -21,7 +23,7 @@ import java.util.Locale
 
 abstract class AbstractBackupRestore<T : AbstractBackupManager>(protected val context: Context, protected val notifier: BackupNotifier) {
 
-    protected val animedb: AnimeDatabaseHelper by injectLazy()
+    protected val animehandler: AnimeDatabaseHandler by injectLazy()
     protected val trackManager: TrackManager by injectLazy()
 
     protected val customAnimeManager: CustomAnimeManager by injectLazy()
@@ -85,16 +87,31 @@ abstract class AbstractBackupRestore<T : AbstractBackupManager>(protected val co
     /**
      * Refreshes tracking information.
      *
-     * @param anime manga that needs updating.
+     * @param anime that needs updating.
      * @param tracks list containing tracks from restore file.
      */
     internal suspend fun updateAnimeTracking(anime: Anime, tracks: List<AnimeTrack>) {
         tracks.forEach { track ->
-            val service = trackManager.getService(track.sync_id)
+            val service = trackManager.getService(track.sync_id.toLong())
             if (service != null && service.isLogged) {
                 try {
                     val updatedTrack = service.refresh(track)
-                    animedb.insertTrack(updatedTrack).executeAsBlocking()
+                    animehandler.await {
+                        anime_syncQueries.insert(
+                            updatedTrack.anime_id,
+                            updatedTrack.sync_id.toLong(),
+                            updatedTrack.media_id,
+                            updatedTrack.library_id,
+                            updatedTrack.title,
+                            updatedTrack.last_episode_seen.toDouble(),
+                            updatedTrack.total_episodes.toLong(),
+                            updatedTrack.status.toLong(),
+                            updatedTrack.score,
+                            updatedTrack.tracking_url,
+                            updatedTrack.started_watching_date,
+                            updatedTrack.finished_watching_date,
+                        )
+                    }
                 } catch (e: Exception) {
                     errors.add(Date() to "${anime.title} - ${e.message}")
                 }

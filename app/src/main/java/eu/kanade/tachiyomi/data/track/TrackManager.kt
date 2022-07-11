@@ -6,30 +6,29 @@ import eu.kanade.tachiyomi.data.track.bangumi.Bangumi
 import eu.kanade.tachiyomi.data.track.kitsu.Kitsu
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
+import eu.kanade.tachiyomi.data.track.simkl.Simkl
 
 class TrackManager(context: Context) {
 
     companion object {
-        const val MYANIMELIST = 1
-        const val ANILIST = 2
-        const val KITSU = 3
-        const val SHIKIMORI = 4
-        const val BANGUMI = 5
+        const val MYANIMELIST = 1L
+        const val ANILIST = 2L
+        const val KITSU = 3L
+        const val SHIKIMORI = 4L
+        const val BANGUMI = 5L
+        const val SIMKL = 101L
     }
 
     val myAnimeList = MyAnimeList(context, MYANIMELIST)
-
     val aniList = Anilist(context, ANILIST)
-
     val kitsu = Kitsu(context, KITSU)
-
     val shikimori = Shikimori(context, SHIKIMORI)
-
     val bangumi = Bangumi(context, BANGUMI)
+    val simkl = Simkl(context, SIMKL)
 
-    val services = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi)
+    val services = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi, simkl)
 
-    fun getService(id: Int) = services.find { it.id == id }
+    fun getService(id: Long) = services.find { it.id == id }
 
-    fun hasLoggedServices() = services.any { it.isLogged }
+    fun hasLoggedAnimeServices() = services.any { it.isLogged }
 }

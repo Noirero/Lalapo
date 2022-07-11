@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
 import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
+import eu.kanade.tachiyomi.data.track.simkl.SimklApi
 import eu.kanade.tachiyomi.ui.setting.track.TrackLoginDialog
 import eu.kanade.tachiyomi.ui.setting.track.TrackLogoutDialog
 import eu.kanade.tachiyomi.util.preference.add
@@ -62,6 +63,9 @@ class SettingsTrackingController :
             trackPreference(trackManager.shikimori) {
                 activity?.openInBrowser(ShikimoriApi.authUrl(), forceDefaultBrowser = true)
             }
+            trackPreference(trackManager.simkl) {
+                activity?.openInBrowser(SimklApi.authUrl(), forceDefaultBrowser = true)
+            }
             trackPreference(trackManager.bangumi) {
                 activity?.openInBrowser(BangumiApi.authUrl(), forceDefaultBrowser = true)
             }
@@ -105,6 +109,7 @@ class SettingsTrackingController :
         updatePreference(trackManager.aniList.id)
         updatePreference(trackManager.shikimori.id)
         updatePreference(trackManager.bangumi.id)
+        updatePreference(trackManager.simkl.id)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -118,7 +123,7 @@ class SettingsTrackingController :
         return super.onOptionsItemSelected(item)
     }
 
-    private fun updatePreference(id: Int) {
+    private fun updatePreference(id: Long) {
         val pref = findPreference(Keys.trackUsername(id)) as? TrackerPreference
         pref?.notifyChanged()
     }

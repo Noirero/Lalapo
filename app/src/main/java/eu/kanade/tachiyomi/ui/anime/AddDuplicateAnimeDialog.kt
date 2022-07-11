@@ -4,9 +4,9 @@ import android.app.Dialog
 import android.os.Bundle
 import com.bluelinelabs.conductor.Controller
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import eu.kanade.domain.anime.model.Anime
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
-import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.ui.base.controller.pushController
 import uy.kohesive.injekt.injectLazy
@@ -40,7 +40,7 @@ class AddDuplicateAnimeDialog(bundle: Bundle? = null) : DialogController(bundle)
             .setNegativeButton(android.R.string.cancel, null)
             .setNeutralButton(activity?.getString(R.string.action_show_anime)) { _, _ ->
                 dismissDialog()
-                router.pushController(AnimeController(libraryAnime))
+                router.pushController(AnimeController(libraryAnime.id!!))
             }
             .setCancelable(true)
             .create()

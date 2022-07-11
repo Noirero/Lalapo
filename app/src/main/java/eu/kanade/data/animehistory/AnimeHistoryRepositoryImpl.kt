@@ -19,14 +19,19 @@ class AnimeHistoryRepositoryImpl(
     override fun getHistory(query: String): PagingSource<Long, AnimeHistoryWithRelations> {
         return handler.subscribeToPagingSource(
             countQuery = { animehistoryViewQueries.countHistory(query) },
-            transacter = { animehistoryViewQueries },
             queryProvider = { limit, offset ->
                 animehistoryViewQueries.animehistory(query, limit, offset, animehistoryWithRelationsMapper)
             },
         )
     }
 
-    override suspend fun getNextEpisodeForAnime(animeId: Long, episodeId: Long): Episode? {
+    override suspend fun getLastHistory(): AnimeHistoryWithRelations? {
+        return handler.awaitOneOrNull {
+            animehistoryViewQueries.getLatestAnimeHistory(animehistoryWithRelationsMapper)
+        }
+    }
+
+    override suspend fun getNextEpisode(animeId: Long, episodeId: Long): Episode? {
         val episode = handler.awaitOne { episodesQueries.getEpisodeById(episodeId, episodeMapper) }
         val anime = handler.awaitOne { animesQueries.getAnimeById(animeId, animeMapper) }
 
@@ -41,7 +46,7 @@ class AnimeHistoryRepositoryImpl(
             else -> throw NotImplementedError("Unknown sorting method")
         }
 
-        val episodes = handler.awaitList { episodesQueries.getEpisodeByAnimeId(animeId, episodeMapper) }
+        val episodes = handler.awaitList { episodesQueries.getEpisodesByAnimeId(animeId, episodeMapper) }
             .sortedWith(sortFunction)
 
         val currEpisodeIndex = episodes.indexOfFirst { episode.id == it.id }

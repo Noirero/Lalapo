@@ -6,33 +6,58 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.core.view.isVisible
 import com.bluelinelabs.conductor.Router
+import eu.kanade.domain.anime.model.Anime
+import eu.kanade.domain.anime.model.toTriStateGroupState
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.ui.anime.AnimePresenter
+import eu.kanade.tachiyomi.ui.anime.AnimeScreenState
 import eu.kanade.tachiyomi.util.view.popupMenu
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import eu.kanade.tachiyomi.widget.sheet.TabbedBottomSheetDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.launch
 
 class EpisodesSettingsSheet(
     private val router: Router,
     private val presenter: AnimePresenter,
-    private val onGroupClickListener: (ExtendedNavigationView.Group) -> Unit,
 ) : TabbedBottomSheetDialog(router.activity!!) {
 
-    val filters = Filter(router.activity!!)
-    private val sort = Sort(router.activity!!)
-    private val display = Display(router.activity!!)
+    private lateinit var scope: CoroutineScope
+
+    private var anime: Anime? = null
+
+    val filters = Filter(context)
+    private val sort = Sort(context)
+    private val display = Display(context)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        filters.onGroupClicked = onGroupClickListener
-        sort.onGroupClicked = onGroupClickListener
-        display.onGroupClicked = onGroupClickListener
-
         binding.menu.isVisible = true
         binding.menu.setOnClickListener { it.post { showPopupMenu(it) } }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        scope = MainScope()
+        scope.launch {
+            presenter.state
+                .filterIsInstance<AnimeScreenState.Success>()
+                .collectLatest {
+                    anime = it.anime
+                    getTabViews().forEach { settings -> (settings as Settings).updateView() }
+                }
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        scope.cancel()
     }
 
     override fun getTabViews(): List<View> = listOf(
@@ -53,7 +78,7 @@ class EpisodesSettingsSheet(
             onMenuItemClick = {
                 when (itemId) {
                     R.id.set_as_default -> {
-                        SetEpisodeSettingsDialog(presenter.anime).showDialog(router)
+                        SetEpisodeSettingsDialog(presenter.anime!!).showDialog(router)
                     }
                 }
             },
@@ -79,27 +104,37 @@ class EpisodesSettingsSheet(
             return filterGroup.items.any { it.state != State.IGNORE.value }
         }
 
+        override fun updateView() {
+            filterGroup.updateModels()
+        }
+
         inner class FilterGroup : Group {
 
             private val downloaded = Item.TriStateGroup(R.string.action_filter_downloaded, this)
-            private val unread = Item.TriStateGroup(R.string.action_filter_unseen, this)
+            private val unseen = Item.TriStateGroup(R.string.action_filter_unseen, this)
             private val bookmarked = Item.TriStateGroup(R.string.action_filter_bookmarked, this)
             private val fillermarked = Item.TriStateGroup(R.string.action_filter_fillermarked, this)
 
-            override val header = null
-            override val items = listOf(downloaded, unread, bookmarked, fillermarked)
-            override val footer = null
+            override val header: Item? = null
+            override val items = listOf(downloaded, unseen, bookmarked, fillermarked)
+            override val footer: Item? = null
 
             override fun initModels() {
-                if (presenter.forceDownloaded()) {
+                val anime = anime ?: return
+                if (anime.forceDownloaded()) {
                     downloaded.state = State.INCLUDE.value
                     downloaded.enabled = false
                 } else {
-                    downloaded.state = presenter.onlyDownloaded().value
+                    downloaded.state = anime.downloadedFilter.toTriStateGroupState().value
                 }
-                unread.state = presenter.onlyUnread().value
-                bookmarked.state = presenter.onlyBookmarked().value
-                fillermarked.state = presenter.onlyFillermarked().value
+                unseen.state = anime.unseenFilter.toTriStateGroupState().value
+                bookmarked.state = anime.bookmarkedFilter.toTriStateGroupState().value
+                fillermarked.state = anime.fillermarkedFilter.toTriStateGroupState().value
+            }
+
+            fun updateModels() {
+                initModels()
+                adapter.notifyItemRangeChanged(0, 3)
             }
 
             override fun onItemClicked(item: Item) {
@@ -110,17 +145,13 @@ class EpisodesSettingsSheet(
                     State.EXCLUDE.value -> State.IGNORE
                     else -> throw Exception("Unknown State")
                 }
-                item.state = newState.value
                 when (item) {
                     downloaded -> presenter.setDownloadedFilter(newState)
-                    unread -> presenter.setUnreadFilter(newState)
+                    unseen -> presenter.setUnseenFilter(newState)
                     bookmarked -> presenter.setBookmarkedFilter(newState)
                     fillermarked -> presenter.setFillermarkedFilter(newState)
                     else -> {}
                 }
-
-                initModels()
-                adapter.notifyItemChanged(items.indexOf(item), item)
             }
         }
     }
@@ -131,23 +162,30 @@ class EpisodesSettingsSheet(
     inner class Sort @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
         Settings(context, attrs) {
 
+        private val group = SortGroup()
+
         init {
-            setGroups(listOf(SortGroup()))
+            setGroups(listOf(group))
+        }
+
+        override fun updateView() {
+            group.updateModels()
         }
 
         inner class SortGroup : Group {
 
             private val source = Item.MultiSort(R.string.sort_by_source, this)
-            private val episodeNum = Item.MultiSort(R.string.sort_by_episode_number, this)
+            private val episodeNum = Item.MultiSort(R.string.sort_by_number, this)
             private val uploadDate = Item.MultiSort(R.string.sort_by_upload_date, this)
 
-            override val header = null
+            override val header: Item? = null
             override val items = listOf(source, uploadDate, episodeNum)
-            override val footer = null
+            override val footer: Item? = null
 
             override fun initModels() {
-                val sorting = presenter.anime.sorting
-                val order = if (presenter.anime.sortDescending()) {
+                val anime = anime ?: return
+                val sorting = anime.sorting
+                val order = if (anime.sortDescending()) {
                     Item.MultiSort.SORT_DESC
                 } else {
                     Item.MultiSort.SORT_ASC
@@ -161,29 +199,18 @@ class EpisodesSettingsSheet(
                     if (sorting == Anime.EPISODE_SORTING_UPLOAD_DATE) order else Item.MultiSort.SORT_NONE
             }
 
-            override fun onItemClicked(item: Item) {
-                items.forEachIndexed { i, multiSort ->
-                    multiSort.state = if (multiSort == item) {
-                        when (item.state) {
-                            Item.MultiSort.SORT_NONE -> Item.MultiSort.SORT_ASC
-                            Item.MultiSort.SORT_ASC -> Item.MultiSort.SORT_DESC
-                            Item.MultiSort.SORT_DESC -> Item.MultiSort.SORT_ASC
-                            else -> throw Exception("Unknown state")
-                        }
-                    } else {
-                        Item.MultiSort.SORT_NONE
-                    }
-                    adapter.notifyItemChanged(i, multiSort)
-                }
+            fun updateModels() {
+                initModels()
+                adapter.notifyItemRangeChanged(0, 3)
+            }
 
+            override fun onItemClicked(item: Item) {
                 when (item) {
                     source -> presenter.setSorting(Anime.EPISODE_SORTING_SOURCE)
                     episodeNum -> presenter.setSorting(Anime.EPISODE_SORTING_NUMBER)
                     uploadDate -> presenter.setSorting(Anime.EPISODE_SORTING_UPLOAD_DATE)
                     else -> throw Exception("Unknown sorting")
                 }
-
-                presenter.reverseSortOrder()
             }
         }
     }
@@ -194,8 +221,14 @@ class EpisodesSettingsSheet(
     inner class Display @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
         Settings(context, attrs) {
 
+        private val group = DisplayGroup()
+
         init {
-            setGroups(listOf(DisplayGroup()))
+            setGroups(listOf(group))
+        }
+
+        override fun updateView() {
+            group.updateModels()
         }
 
         inner class DisplayGroup : Group {
@@ -203,24 +236,24 @@ class EpisodesSettingsSheet(
             private val displayTitle = Item.Radio(R.string.show_title, this)
             private val displayEpisodeNum = Item.Radio(R.string.show_episode_number, this)
 
-            override val header = null
+            override val header: Item? = null
             override val items = listOf(displayTitle, displayEpisodeNum)
-            override val footer = null
+            override val footer: Item? = null
 
             override fun initModels() {
-                val mode = presenter.anime.displayMode
+                val mode = anime?.displayMode ?: return
                 displayTitle.checked = mode == Anime.EPISODE_DISPLAY_NAME
                 displayEpisodeNum.checked = mode == Anime.EPISODE_DISPLAY_NUMBER
+            }
+
+            fun updateModels() {
+                initModels()
+                adapter.notifyItemRangeChanged(0, 2)
             }
 
             override fun onItemClicked(item: Item) {
                 item as Item.Radio
                 if (item.checked) return
-
-                items.forEachIndexed { index, radio ->
-                    radio.checked = item == radio
-                    adapter.notifyItemChanged(index, radio)
-                }
 
                 when (item) {
                     displayTitle -> presenter.setDisplayMode(Anime.EPISODE_DISPLAY_NAME)
@@ -247,6 +280,9 @@ class EpisodesSettingsSheet(
 
             groups.forEach { it.initModels() }
             addView(recycler)
+        }
+
+        open fun updateView() {
         }
 
         /**

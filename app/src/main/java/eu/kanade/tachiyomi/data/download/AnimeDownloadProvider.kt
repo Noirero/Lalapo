@@ -3,10 +3,10 @@ package eu.kanade.tachiyomi.data.download
 import android.content.Context
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
+import eu.kanade.domain.anime.model.Anime
+import eu.kanade.domain.episode.model.Episode
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.logcat
@@ -46,14 +46,14 @@ class AnimeDownloadProvider(private val context: Context) {
     /**
      * Returns the download directory for a anime. For internal use only.
      *
-     * @param anime the anime to query.
+     * @param animeTitle the title of the anime to query.
      * @param source the source of the anime.
      */
-    internal fun getAnimeDir(anime: Anime, source: AnimeSource): UniFile {
+    internal fun getAnimeDir(animeTitle: String, source: AnimeSource): UniFile {
         try {
             return downloadsDir
                 .createDirectory(getSourceDirName(source))
-                .createDirectory(getAnimeDirName(anime))
+                .createDirectory(getAnimeDirName(animeTitle))
         } catch (e: Throwable) {
             logcat(LogPriority.ERROR, e) { "Invalid download directory" }
             throw Exception(context.getString(R.string.invalid_download_dir))
@@ -72,24 +72,25 @@ class AnimeDownloadProvider(private val context: Context) {
     /**
      * Returns the download directory for a anime if it exists.
      *
-     * @param anime the anime to query.
+     * @param animeTitle the title of the anime to query.
      * @param source the source of the anime.
      */
-    fun findAnimeDir(anime: Anime, source: AnimeSource): UniFile? {
+    fun findAnimeDir(animeTitle: String, source: AnimeSource): UniFile? {
         val sourceDir = findSourceDir(source)
-        return sourceDir?.findFile(getAnimeDirName(anime), true)
+        return sourceDir?.findFile(getAnimeDirName(animeTitle), true)
     }
 
     /**
      * Returns the download directory for a episode if it exists.
      *
-     * @param episode the episode to query.
-     * @param anime the anime of the episode.
+     * @param episodeName the name of the episode to query.
+     * @param chapterScanlator scanlator of the chapter to query
+     * @param animeTitle the title of the anime to query.
      * @param source the source of the episode.
      */
-    fun findEpisodeDir(episode: Episode, anime: Anime, source: AnimeSource): UniFile? {
-        val animeDir = findAnimeDir(anime, source)
-        return getValidEpisodeDirNames(episode).asSequence()
+    fun findEpisodeDir(episodeName: String, chapterScanlator: String?, animeTitle: String, source: AnimeSource): UniFile? {
+        val animeDir = findAnimeDir(animeTitle, source)
+        return getValidEpisodeDirNames(episodeName, chapterScanlator).asSequence()
             .mapNotNull { animeDir?.findFile(it, true) }
             .firstOrNull()
     }
@@ -102,9 +103,9 @@ class AnimeDownloadProvider(private val context: Context) {
      * @param source the source of the episode.
      */
     fun findEpisodeDirs(episodes: List<Episode>, anime: Anime, source: AnimeSource): List<UniFile> {
-        val animeDir = findAnimeDir(anime, source) ?: return emptyList()
+        val animeDir = findAnimeDir(anime.title, source) ?: return emptyList()
         return episodes.mapNotNull { episode ->
-            getValidEpisodeDirNames(episode).asSequence()
+            getValidEpisodeDirNames(episode.name, episode.scanlator).asSequence()
                 .mapNotNull { animeDir.findFile(it) }
                 .firstOrNull()
         }
@@ -122,7 +123,7 @@ class AnimeDownloadProvider(private val context: Context) {
     /**
      * Returns the download directory name for a anime.
      *
-     * @param anime the anime to query.
+     * @param animeTitle the title of the anime to query.
      */
     fun getAnimeDirName(anime: Anime): String {
         return DiskUtil.buildValidFilename(anime.originalTitle)
@@ -131,13 +132,14 @@ class AnimeDownloadProvider(private val context: Context) {
     /**
      * Returns the episode directory name for a episode.
      *
-     * @param episode the episode to query.
+     * @param episodeName the name of the episode to query.
+     * @param chapterScanlator scanlator of the chapter to query
      */
-    fun getEpisodeDirName(episode: Episode): String {
+    fun getEpisodeDirName(episodeName: String, chapterScanlator: String?): String {
         return DiskUtil.buildValidFilename(
             when {
-                episode.scanlator != null -> "${episode.scanlator}_${episode.name}"
-                else -> episode.name
+                chapterScanlator != null -> "${chapterScanlator}_$episodeName"
+                else -> episodeName
             },
         )
     }
@@ -145,14 +147,11 @@ class AnimeDownloadProvider(private val context: Context) {
     /**
      * Returns valid downloaded episode directory names.
      *
-     * @param episode the episode to query.
+     * @param episodeName the name of the episode to query.
+     * @param chapterScanlator scanlator of the chapter to query
      */
-    fun getValidEpisodeDirNames(episode: Episode): List<String> {
-        return listOf(
-            getEpisodeDirName(episode),
-            // TODO: remove this
-            // Legacy episode directory name used in v0.9.2 and before
-            DiskUtil.buildValidFilename(episode.name),
-        )
+    fun getValidEpisodeDirNames(episodeName: String, chapterScanlator: String?): List<String> {
+        val episodeDirName = getEpisodeDirName(episodeName, chapterScanlator)
+        return listOf(episodeDirName)
     }
 }
