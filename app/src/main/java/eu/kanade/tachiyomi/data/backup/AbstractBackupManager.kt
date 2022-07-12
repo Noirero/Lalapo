@@ -3,14 +3,13 @@ package eu.kanade.tachiyomi.data.backup
 import android.content.Context
 import android.net.Uri
 import eu.kanade.data.AnimeDatabaseHandler
-import eu.kanade.data.DatabaseHandler
 import eu.kanade.data.toLong
 import eu.kanade.domain.episode.interactor.SyncEpisodesWithSource
 import eu.kanade.domain.episode.model.toDbEpisode
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.toSEpisode
-import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
+import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
 import eu.kanade.tachiyomi.data.database.models.toDomainAnime
@@ -28,7 +27,6 @@ abstract class AbstractBackupManager(protected val context: Context) {
     internal val animesourceManager: AnimeSourceManager = Injekt.get()
     internal val trackManager: TrackManager = Injekt.get()
     protected val preferences: PreferencesHelper = Injekt.get()
-    protected val customAnimeManager: CustomAnimeManager by injectLazy()
     private val getFavoritesAnime: GetFavoritesAnime = Injekt.get()
     private val syncEpisodesWithSource: SyncEpisodesWithSource = Injekt.get()
 

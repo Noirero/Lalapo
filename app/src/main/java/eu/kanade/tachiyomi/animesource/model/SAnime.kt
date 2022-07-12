@@ -24,36 +24,23 @@ interface SAnime : Serializable {
 
     var initialized: Boolean
 
-    val originalTitle: String
-        get() = (this as? AnimeImpl)?.ogTitle ?: title
-    val originalAuthor: String?
-        get() = (this as? AnimeImpl)?.ogAuthor ?: author
-    val originalArtist: String?
-        get() = (this as? AnimeImpl)?.ogArtist ?: artist
-    val originalDescription: String?
-        get() = (this as? AnimeImpl)?.ogDesc ?: description
-    val originalGenre: String?
-        get() = (this as? AnimeImpl)?.ogGenre ?: genre
-    val originalStatus: Int
-        get() = (this as? AnimeImpl)?.ogStatus ?: status
-
     fun copyFrom(other: SAnime) {
-        title = other.originalTitle
+        title = other.title
 
         if (other.author != null) {
-            author = other.originalAuthor
+            author = other.author
         }
 
         if (other.artist != null) {
-            artist = other.originalArtist
+            artist = other.artist
         }
 
         if (other.description != null) {
-            description = other.originalDescription
+            description = other.description
         }
 
         if (other.genre != null) {
-            genre = other.originalGenre
+            genre = other.genre
         }
 
         if (other.thumbnail_url != null) {

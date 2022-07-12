@@ -11,7 +11,6 @@ import androidx.core.text.buildSpannedString
 import androidx.preference.PreferenceScreen
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hippo.unifile.UniFile
-import eu.kanade.domain.category.interactor.GetCategories
 import eu.kanade.domain.category.interactor.GetCategoriesAnime
 import eu.kanade.domain.category.model.Category
 import eu.kanade.tachiyomi.R
@@ -43,7 +42,7 @@ import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 class SettingsDownloadController : SettingsController() {
 
     private val getCategoriesAnime: GetCategoriesAnime by injectLazy()
-    
+
     override fun setupPreferenceScreen(screen: PreferenceScreen) = screen.apply {
         titleRes = R.string.pref_category_downloads
 

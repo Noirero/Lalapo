@@ -68,8 +68,6 @@ import eu.kanade.presentation.components.ExtendedFloatingActionButton
 import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.components.SwipeRefreshIndicator
 import eu.kanade.presentation.components.VerticalFastScroller
-import eu.kanade.presentation.manga.DownloadAction
-import eu.kanade.presentation.manga.EpisodeDownloadAction
 import eu.kanade.presentation.util.ExitUntilCollapsedScrollBehavior
 import eu.kanade.presentation.util.isScrolledToEnd
 import eu.kanade.presentation.util.isScrollingUp
@@ -79,7 +77,6 @@ import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.getNameForAnimeInfo
 import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.ui.anime.AnimeScreenState
 import eu.kanade.tachiyomi.ui.anime.EpisodeItem
 import eu.kanade.tachiyomi.util.lang.toRelativeString
@@ -125,6 +122,7 @@ fun AnimeScreen(
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
@@ -150,6 +148,7 @@ fun AnimeScreen(
             onEditCategoryClicked = onEditCategoryClicked,
             onMigrateClicked = onMigrateClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
+            onMultiFillermarkClicked = onMultiFillermarkClicked,
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
             onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
@@ -176,6 +175,7 @@ fun AnimeScreen(
             onEditCategoryClicked = onEditCategoryClicked,
             onMigrateClicked = onMigrateClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
+            onMultiFillermarkClicked = onMultiFillermarkClicked,
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
             onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
@@ -210,6 +210,7 @@ private fun AnimeScreenSmallImpl(
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<Episode>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
@@ -285,7 +286,7 @@ private fun AnimeScreenSmallImpl(
                     tagsProvider = { state.anime.genre },
                     coverDataProvider = { state.anime },
                     sourceName = remember { state.source.getNameForAnimeInfo() },
-                    isStubSource = remember { state.source is SourceManager.StubSource },
+                    isStubSource = remember { state.source is AnimeSourceManager.StubSource },
                     favorite = state.anime.favorite,
                     status = state.anime.status,
                     trackingCount = state.trackingCount,
@@ -325,6 +326,7 @@ private fun AnimeScreenSmallImpl(
                     selected = selected,
                     onEpisodeClicked = onEpisodeClicked,
                     onMultiBookmarkClicked = onMultiBookmarkClicked,
+                    onMultiFillermarkClicked = onMultiFillermarkClicked,
                     onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                     onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
                     onDownloadEpisode = onDownloadEpisode,
@@ -412,6 +414,7 @@ fun AnimeScreenLargeImpl(
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<Episode>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
@@ -487,6 +490,7 @@ fun AnimeScreenLargeImpl(
                         selected = selected,
                         onEpisodeClicked = onEpisodeClicked,
                         onMultiBookmarkClicked = onMultiBookmarkClicked,
+                        onMultiFillermarkClicked = onMultiFillermarkClicked,
                         onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                         onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
                         onDownloadEpisode = onDownloadEpisode,
@@ -591,6 +595,7 @@ private fun SharedAnimeBottomActionMenu(
     selected: SnapshotStateList<EpisodeItem>,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -609,6 +614,14 @@ private fun SharedAnimeBottomActionMenu(
             onMultiBookmarkClicked.invoke(selected.map { it.episode }, false)
             selected.clear()
         }.takeIf { selected.all { it.episode.bookmark } },
+        onFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected.map { it.episode }, true)
+            selected.clear()
+        }.takeIf { selected.any { !it.episode.fillermark } },
+        onRemoveFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected.map { it.episode }, false)
+            selected.clear()
+        }.takeIf { selected.all { it.episode.fillermark } },
         onMarkAsSeenClicked = {
             onMultiMarkAsSeenClicked(selected.map { it.episode }, true)
             selected.clear()
@@ -704,6 +717,7 @@ private fun LazyListScope.sharedEpisodeItems(
             scanlator = scanlator,
             seen = episode.seen,
             bookmark = episode.bookmark,
+            fillermark = episode.fillermark,
             selected = selected.contains(episodeItem),
             downloadState = downloadState,
             downloadProgress = downloadProgress,

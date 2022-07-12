@@ -263,6 +263,7 @@ class ExternalIntents(val anime: Anime, val source: AnimeSource) {
                         id = episode.id!!,
                         seen = episode.seen,
                         bookmark = episode.bookmark,
+                        fillermark = episode.fillermark,
                         lastSecondSeen = episode.last_second_seen,
                         totalSeconds = episode.total_seconds,
                     ),

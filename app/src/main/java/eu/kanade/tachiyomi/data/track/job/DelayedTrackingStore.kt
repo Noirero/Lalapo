@@ -26,9 +26,6 @@ class DelayedTrackingStore(context: Context) {
     }
 
     fun clear() {
-        preferences.edit {
-            clear()
-        }
         animePreferences.edit {
             clear()
         }

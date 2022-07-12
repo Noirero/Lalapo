@@ -54,7 +54,9 @@ fun AnimeBottomActionMenu(
     visible: Boolean,
     modifier: Modifier = Modifier,
     onBookmarkClicked: (() -> Unit)?,
+    onFillermarkClicked: (() -> Unit)?,
     onRemoveBookmarkClicked: (() -> Unit)?,
+    onRemoveFillermarkClicked: (() -> Unit)?,
     onMarkAsSeenClicked: (() -> Unit)?,
     onMarkAsUnseenClicked: (() -> Unit)?,
     onMarkPreviousAsSeenClicked: (() -> Unit)?,
@@ -93,7 +95,7 @@ fun AnimeBottomActionMenu(
             ) {
                 if (onBookmarkClicked != null) {
                     Button(
-                        title = stringResource(R.string.action_bookmark_episode),
+                        title = stringResource(R.string.action_bookmark),
                         icon = Icons.Default.BookmarkAdd,
                         toConfirm = confirm[0],
                         onLongClick = { onLongClickItem(0) },
@@ -102,11 +104,29 @@ fun AnimeBottomActionMenu(
                 }
                 if (onRemoveBookmarkClicked != null) {
                     Button(
-                        title = stringResource(R.string.action_remove_bookmark_episode),
+                        title = stringResource(R.string.action_remove_bookmark),
                         icon = Icons.Default.BookmarkRemove,
                         toConfirm = confirm[1],
                         onLongClick = { onLongClickItem(1) },
                         onClick = onRemoveBookmarkClicked,
+                    )
+                }
+                if (onFillermarkClicked != null) {
+                    Button(
+                        title = stringResource(R.string.action_fillermark),
+                        icon = ImageVector.vectorResource(R.drawable.ic_fillermark_24dp),
+                        toConfirm = confirm[0],
+                        onLongClick = { onLongClickItem(0) },
+                        onClick = onFillermarkClicked,
+                    )
+                }
+                if (onRemoveFillermarkClicked != null) {
+                    Button(
+                        title = stringResource(R.string.action_remove_fillermark),
+                        icon = ImageVector.vectorResource(R.drawable.ic_fillermark_border_24dp),
+                        toConfirm = confirm[1],
+                        onLongClick = { onLongClickItem(1) },
+                        onClick = onRemoveFillermarkClicked,
                     )
                 }
                 if (onMarkAsSeenClicked != null) {

@@ -74,7 +74,6 @@ import com.google.accompanist.flowlayout.FlowRow
 import eu.kanade.domain.anime.model.Anime
 import eu.kanade.presentation.components.MangaCover
 import eu.kanade.presentation.components.TextButton
-import eu.kanade.presentation.manga.components.DotSeparatorText
 import eu.kanade.presentation.util.clickableNoIndication
 import eu.kanade.presentation.util.quantityStringResource
 import eu.kanade.presentation.util.secondaryItemAlpha
@@ -184,7 +183,7 @@ fun AnimeInfoHeader(
             if (onTrackingClicked != null) {
                 AnimeActionButton(
                     title = if (trackingCount == 0) {
-                        stringResource(R.string.manga_tracking_tab)
+                        stringResource(R.string.tracking_tab)
                     } else {
                         quantityStringResource(id = R.plurals.num_trackers, quantity = trackingCount, trackingCount)
                     },

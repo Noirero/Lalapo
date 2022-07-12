@@ -33,7 +33,6 @@ import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.job.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.job.DelayedTrackingUpdateJob
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
-import eu.kanade.tachiyomi.ui.reader.SaveImageNotifier
 import eu.kanade.tachiyomi.util.editCover
 import eu.kanade.tachiyomi.util.episode.getEpisodeSort
 import eu.kanade.tachiyomi.util.lang.byteSize
@@ -116,8 +115,8 @@ class PlayerPresenter(
                                 anime.downloadedFilter == DomainAnime.EPISODE_SHOW_NOT_DOWNLOADED.toInt() && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source) ||
                                 anime.bookmarkedFilter == DomainAnime.EPISODE_SHOW_BOOKMARKED.toInt() && !it.bookmark ||
                                 anime.bookmarkedFilter == DomainAnime.EPISODE_SHOW_NOT_BOOKMARKED.toInt() && it.bookmark ||
-                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_FILLERMARKED.toInt() && !it.fillermark ||
-                                anime.fillermarkedFilter == Anime.EPISODE_SHOW_NOT_FILLERMARKED.toInt() && it.fillermark
+                                anime.fillermarkedFilter == DomainAnime.EPISODE_SHOW_FILLERMARKED.toInt() && !it.fillermark ||
+                                anime.fillermarkedFilter == DomainAnime.EPISODE_SHOW_NOT_FILLERMARKED.toInt() && it.fillermark
                         }
                         else -> false
                     }
@@ -423,7 +422,7 @@ class PlayerPresenter(
         val imageStream = { view!!.takeScreenshot()!! }
 
         // Pictures directory.
-        val relativePath = if (preferences.folderPerManga()) DiskUtil.buildValidFilename(anime.title) else ""
+        val relativePath = DiskUtil.buildValidFilename(anime.title)
 
         // Copy file in background.
         try {

@@ -75,7 +75,7 @@ class TrackSheet(
         val source = controller.presenter.source ?: return
 
         TrackSearchDialog(controller, item.service, item.track?.tracking_url)
-                .showDialog(controller.router, TAG_SEARCH_CONTROLLER)
+            .showDialog(controller.router, TAG_SEARCH_CONTROLLER)
     }
 
     override fun onTitleLongClick(position: Int) {

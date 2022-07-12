@@ -70,7 +70,7 @@ object EpisodeRecognition {
         }
 
         // Remove anime title from episode title.
-        val nameWithoutAnime = name.replace(anime.originalTitle.lowercase(), "").trim()
+        val nameWithoutAnime = name.replace(animeTitle.lowercase(), "").trim()
 
         // Check if first value is number after title remove.
         getEpisodeNumberFromMatch(withoutAnime.find(nameWithoutAnime))?.let { return it }

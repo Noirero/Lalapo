@@ -75,6 +75,8 @@ class PreferencesHelper(val context: Context) {
 
     fun themeDarkAmoled() = flowPrefs.getBoolean("pref_theme_dark_amoled_key", false)
 
+    fun preserveWatchingPosition() = prefs.getBoolean(Keys.preserveWatchingPosition, false)
+
     fun pipEpisodeToasts() = prefs.getBoolean(Keys.pipEpisodeToasts, true)
 
     fun pipOnExit() = prefs.getBoolean(Keys.pipOnExit, false)
@@ -288,13 +290,13 @@ class PreferencesHelper(val context: Context) {
 
     fun lastSearchQuerySearchSettings() = flowPrefs.getString("last_search_query", "")
 
-    fun filterEpisodeBySeen() = prefs.getInt(Keys.defaultEpisodeFilterByRead, DomainAnime.SHOW_ALL.toInt())
+    fun filterEpisodeBySeen() = prefs.getInt(Keys.defaultEpisodeFilterBySeen, DomainAnime.SHOW_ALL.toInt())
 
     fun filterEpisodeByDownloaded() = prefs.getInt(Keys.defaultEpisodeFilterByDownloaded, DomainAnime.SHOW_ALL.toInt())
 
     fun filterEpisodeByBookmarked() = prefs.getInt(Keys.defaultEpisodeFilterByBookmarked, DomainAnime.SHOW_ALL.toInt())
 
-    fun filterEpisodeByFillermarked() = prefs.getInt(Keys.defaultEpisodeFilterByFillermarked,  DomainAnime.SHOW_ALL.toInt())
+    fun filterEpisodeByFillermarked() = prefs.getInt(Keys.defaultEpisodeFilterByFillermarked, DomainAnime.SHOW_ALL.toInt())
 
     fun sortEpisodeBySourceOrNumber() = prefs.getInt(Keys.defaultEpisodeSortBySourceOrNumber, DomainAnime.EPISODE_SORTING_SOURCE.toInt())
 

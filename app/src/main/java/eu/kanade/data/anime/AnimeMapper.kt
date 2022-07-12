@@ -27,8 +27,8 @@ val animeMapper: (Long, Long, String, String?, String?, String?, List<String>?, 
         )
     }
 
-val animeEpisodeMapper: (Long, Long, String, String?, String?, String?, List<String>?, String, Long, String?, Boolean, Long?, Long?, Boolean, Long, Long, Long, Long, Long, Long, String, String, String?, Boolean, Boolean, Long, Long, Float, Long, Long, Long) -> Pair<Anime, Episode> =
-    { _id, source, url, artist, author, description, genre, title, status, thumbnailUrl, favorite, lastUpdate, next_update, initialized, viewerFlags, episodeFlags, coverLastModified, dateAdded, episodeId, animeId, chapterUrl, name, scanlator, seen, bookmark, lastSecondSeen, totalSeconds, episodeNumber, sourceOrder, dateFetch, dateUpload ->
+val animeEpisodeMapper: (Long, Long, String, String?, String?, String?, List<String>?, String, Long, String?, Boolean, Long?, Long?, Boolean, Long, Long, Long, Long, Long, Long, String, String, String?, Boolean, Boolean, Boolean, Long, Long, Float, Long, Long, Long) -> Pair<Anime, Episode> =
+    { _id, source, url, artist, author, description, genre, title, status, thumbnailUrl, favorite, lastUpdate, next_update, initialized, viewerFlags, episodeFlags, coverLastModified, dateAdded, episodeId, animeId, chapterUrl, name, scanlator, seen, bookmark, fillermark, lastSecondSeen, totalSeconds, episodeNumber, sourceOrder, dateFetch, dateUpload ->
         Anime(
             id = _id,
             source = source,
@@ -52,6 +52,7 @@ val animeEpisodeMapper: (Long, Long, String, String?, String?, String?, List<Str
             animeId = animeId,
             seen = seen,
             bookmark = bookmark,
+            fillermark = fillermark,
             lastSecondSeen = lastSecondSeen,
             totalSeconds = totalSeconds,
             dateFetch = dateFetch,

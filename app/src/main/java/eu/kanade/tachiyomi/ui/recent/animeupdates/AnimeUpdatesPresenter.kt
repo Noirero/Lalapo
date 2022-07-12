@@ -227,15 +227,16 @@ class AnimeUpdatesPresenter : BasePresenter<AnimeUpdatesController>() {
      * @param items list of selected episodes
      * @param fillermarked fillermark status
      */
-    fun fillermarkEpisodes(items: List<AnimeUpdatesItem>, fillermarked: Boolean) {
-        val episodes = items.map { it.episode }
-        episodes.forEach {
-            it.fillermark = fillermarked
+    fun fillermarkEpisodes(items: List<AnimeUpdatesItem>, fillermark: Boolean) {
+        presenterScope.launchIO {
+            val toUpdate = items.map {
+                EpisodeUpdate(
+                    fillermark = fillermark,
+                    id = it.episode.id,
+                )
+            }
+            updateEpisode.awaitAll(toUpdate)
         }
-
-        Observable.fromCallable { db.updateEpisodesProgress(episodes).executeAsBlocking() }
-            .subscribeOn(Schedulers.io())
-            .subscribe()
     }
 
     /**

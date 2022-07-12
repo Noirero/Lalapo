@@ -29,8 +29,8 @@ import eu.kanade.domain.anime.model.toDbAnime
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.episode.model.toDbEpisode
 import eu.kanade.presentation.anime.AnimeScreen
-import eu.kanade.presentation.manga.DownloadAction
-import eu.kanade.presentation.manga.EpisodeDownloadAction
+import eu.kanade.presentation.anime.DownloadAction
+import eu.kanade.presentation.anime.EpisodeDownloadAction
 import eu.kanade.presentation.util.calculateWindowWidthSizeClass
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.isLocalOrStub
@@ -78,14 +78,15 @@ import eu.kanade.domain.anime.model.Anime as DomainAnime
 import eu.kanade.domain.episode.model.Episode as DomainEpisode
 
 class AnimeController :
-    NucleusController<AnimeControllerBinding, AnimePresenter>,
-    FabController,
-    ActionModeWithToolbar.Callback,
-    FlexibleAdapter.OnItemClickListener,
-    FlexibleAdapter.OnItemLongClickListener,
-    BaseEpisodesAdapter.OnEpisodeClickListener,
-    ChangeAnimeCoverDialog.Listener,
+    FullComposeController<AnimePresenter>,
+    ChangeAnimeCategoriesDialog.Listener,
+    DownloadCustomEpisodesDialog.Listener {
+
+    @Suppress("unused")
+    constructor(bundle: Bundle) : this(bundle.getLong(ANIME_EXTRA))
+
     constructor(
+        animeId: Long,
         fromSource: Boolean = false,
     ) : super(bundleOf(ANIME_EXTRA to animeId, FROM_SOURCE_EXTRA to fromSource)) {
         this.animeId = animeId
@@ -104,7 +105,6 @@ class AnimeController :
     private val snackbarHostState = SnackbarHostState()
 
     private val preferences: PreferencesHelper = Injekt.get()
-    private var editAnimeDialog: EditAnimeDialog? = null
 
     override fun onChangeStarted(handler: ControllerChangeHandler, type: ControllerChangeType) {
         super.onChangeStarted(handler, type)
@@ -149,7 +149,7 @@ class AnimeController :
                 onDownloadActionClicked = this::runDownloadEpisodeAction.takeIf { !successState.source.isLocalOrStub() },
                 onEditCategoryClicked = this::onCategoriesClick.takeIf { successState.anime.favorite },
                 onMigrateClicked = this::migrateAnime.takeIf { successState.anime.favorite },
-                // fillermark and edit anime info dialog
+                onMultiFillermarkClicked = presenter::fillermarkEpisodes,
                 onMultiBookmarkClicked = presenter::bookmarkEpisodes,
                 onMultiMarkAsSeenClicked = presenter::markEpisodesSeen,
                 onMarkPreviousAsSeenClicked = presenter::markPreviousEpisodeSeen,
@@ -218,7 +218,7 @@ class AnimeController :
     private fun onFavoriteClick(checkDuplicate: Boolean = true) {
         presenter.toggleFavorite(
             onRemoved = this::onFavoriteRemoved,
-            onAdded = { activity?.toast(activity?.getString(R.string.manga_added_library)) },
+            onAdded = { activity?.toast(activity?.getString(R.string.item_added_library)) },
             onDuplicateExists = if (checkDuplicate) {
                 {
                     AddDuplicateAnimeDialog(
@@ -244,7 +244,7 @@ class AnimeController :
 
     private fun onFavoriteRemoved() {
         val context = activity ?: return
-        context.toast(activity?.getString(R.string.manga_removed_library))
+        context.toast(activity?.getString(R.string.item_removed_library))
         viewScope.launch {
             if (!presenter.hasDownloads()) return@launch
             val result = snackbarHostState.showSnackbar(
@@ -504,15 +504,15 @@ class AnimeController :
 
     private fun runDownloadEpisodeAction(action: DownloadAction) {
         val episodesToDownload = when (action) {
-            DownloadAction.NEXT_1_CHAPTER -> presenter.getUnseenEpisodesSorted().take(1)
-            DownloadAction.NEXT_5_CHAPTERS -> presenter.getUnseenEpisodesSorted().take(5)
-            DownloadAction.NEXT_10_CHAPTERS -> presenter.getUnseenEpisodesSorted().take(10)
+            DownloadAction.NEXT_1_EPISODES -> presenter.getUnseenEpisodesSorted().take(1)
+            DownloadAction.NEXT_5_EPISODES -> presenter.getUnseenEpisodesSorted().take(5)
+            DownloadAction.NEXT_10_EPISODES -> presenter.getUnseenEpisodesSorted().take(10)
             DownloadAction.CUSTOM -> {
                 showCustomDownloadDialog()
                 return
             }
-            DownloadAction.UNREAD_CHAPTERS -> presenter.getUnseenEpisodes()
-            DownloadAction.ALL_CHAPTERS -> {
+            DownloadAction.UNSEEN_EPISODES -> presenter.getUnseenEpisodes()
+            DownloadAction.ALL_EPISODES -> {
                 (presenter.state.value as? AnimeScreenState.Success)?.episodes?.map { it.episode }
             }
         }

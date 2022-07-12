@@ -228,7 +228,7 @@ class SettingsAdvancedController(
                 }
             }
 
-            if (trackManager.hasLoggedServices()) {
+            if (trackManager.hasLoggedAnimeServices()) {
                 preference {
                     key = "pref_refresh_library_tracking"
                     titleRes = R.string.pref_refresh_library_tracking

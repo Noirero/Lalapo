@@ -24,14 +24,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.kanade.presentation.anime.EpisodeDownloadAction
 import eu.kanade.presentation.components.EpisodeDownloadIndicator
-import eu.kanade.presentation.manga.EpisodeDownloadAction
-import eu.kanade.presentation.manga.components.DotSeparatorText
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 
@@ -44,6 +45,7 @@ fun AnimeEpisodeListItem(
     scanlator: String?,
     seen: Boolean,
     bookmark: Boolean,
+    fillermark: Boolean,
     selected: Boolean,
     downloadState: AnimeDownload.State,
     downloadProgress: Int,
@@ -61,15 +63,30 @@ fun AnimeEpisodeListItem(
             .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            val textColor = if (bookmark && !seen) {
-                MaterialTheme.colorScheme.primary
+            val textColor = if (fillermark && !bookmark && !seen) {
+                MaterialTheme.colorScheme.tertiary
             } else {
-                MaterialTheme.colorScheme.onSurface
+                if (bookmark && !seen) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
             }
+
             val textAlpha = remember(seen) { if (seen) SeenItemAlpha else 1f }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 var textHeight by remember { mutableStateOf(0) }
+                if (fillermark) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_fillermark_24dp),
+                        contentDescription = stringResource(R.string.action_filter_fillermarked),
+                        modifier = Modifier
+                            .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
+                        tint = MaterialTheme.colorScheme.tertiary,
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                }
                 if (bookmark) {
                     Icon(
                         imageVector = Icons.Default.Bookmark,

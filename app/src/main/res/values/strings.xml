@@ -43,7 +43,7 @@
     <string name="action_filter">Filter</string>
     <string name="action_filter_downloaded">Downloaded</string>
     <string name="action_filter_bookmarked">Bookmarked</string>
-    <string name="action_filter_fillermarked">Marked as filler</string>
+    <string name="action_filter_fillermarked">Fillermarked</string>
     <string name="action_filter_tracked">Tracked</string>
     <string name="action_filter_unseen">Unseen</string>
     <string name="action_filter_started">Started</string>
@@ -102,6 +102,7 @@
     <string name="action_resume">Resume</string>
     <string name="action_open_in_browser">Open in browser</string>
     <string name="action_show_anime">Show anime</string>
+    <string name="set_as_cover">Set as cover</string>
 
     <!-- Do not translate "WebView" -->
     <string name="action_open_in_web_view">Open in WebView</string>
@@ -328,13 +329,25 @@
     <string name="pref_category_player">Player</string>
     <string name="pref_category_progress">Progress</string>
     <string name="pref_progress_mark_as_seen">At what point to mark the episode as seen</string>
+    <string name="pref_progress_70">70%</string>
+    <string name="pref_progress_75">75%</string>
+    <string name="pref_progress_80">80%</string>
+    <string name="pref_progress_85">85%</string>
+    <string name="pref_progress_90">90%</string>
+    <string name="pref_progress_95">95%</string>
+    <string name="pref_progress_100">100%</string>
+    <string name="pref_preserve_watching_position">Preserve watch position on seen episodes</string>
     <string name="pref_category_player_orientation">Orientation</string>
     <string name="pref_default_player_orientation">Default orientation</string>
     <string name="pref_adjust_orientation_video_dimensions">Adjust the orientation based on a video\'s dimensions</string>
     <string name="pref_default_portrait_orientation">Default portrait</string>
     <string name="pref_default_landscape_orientation">Default landscape</string>
     <string name="pref_category_internal_player">Internal player</string>
+    <string name="pref_intro_length">Skip intro length</string>
     <string name="pref_skip_length">Double tap to skip length</string>
+    <string name="pref_skip_85">85s</string>
+    <string name="pref_skip_55">55s</string>
+    <string name="pref_skip_25">25s</string>
     <string name="pref_skip_30">30s</string>
     <string name="pref_skip_20">20s</string>
     <string name="pref_skip_10">10s</string>
@@ -349,31 +362,30 @@
     <string name="rotation_sensor_landscape">Sensor Landscape</string>
     <string name="rotation_force_portrait">Locked portrait</string>
     <string name="rotation_force_landscape">Locked landscape</string>
-    <string name="pref_player_fast_seek">Enable faster horizontal seeking</string>
-    <string name="pref_player_fast_seek_summary">Horizontal scroll will focus on keyframes, leading to faster but less precise seeking</string>
+    <string name="pref_player_smooth_seek">Enable precise seeking</string>
+    <string name="pref_player_smooth_seek_summary">When enabled, seeking will not focus on keyframes, leading to slower but precise seeking</string>
     <string name="pref_player_fullscreen">Show content in display cutout</string>
+    <string name="pref_player_hide_controls">Hide player controls when opening the player</string>
     <string name="pref_pip_episode_toasts">Show episode toasts when switching episodes in PiP mode</string>
+    <string name="pref_pip_on_exit">Automatically switch to PiP mode on exiting the player</string>
     <string name="pref_mpv_conf">Edit MPV configuration file for further player settings</string>
     <string name="pref_category_external_player">External player</string>
     <string name="pref_always_use_external_player">Always use external player</string>
     <string name="pref_external_player_preference">External player preference</string>
-    <string name="pref_progress_70">70%</string>
-    <string name="pref_progress_75">75%</string>
-    <string name="pref_progress_80">80%</string>
-    <string name="pref_progress_85">85%</string>
-    <string name="pref_progress_90">90%</string>
-    <string name="pref_progress_95">95%</string>
-    <string name="pref_progress_100">100%</string>
     <string name="playertitle">%1$s - %2$s</string>
 
     <string name="screenshot_header">Take screenshot</string>
     <string name="screenshot_show_subs">Show subtitles in screenshot</string>
+    <string name="share_screenshot_info">%1$s: %2$s, %3$s</string>
+    <string name="confirm_set_image_as_cover">Use this image as cover art?</string>
     <string name="stats_header">Show statistics</string>
     <string name="toggle_stats">Toggle stats</string>
     <string name="stats_page">Stats page</string>
     <string name="stats_page_1">Page 1</string>
     <string name="stats_page_2">Page 2</string>
     <string name="stats_page_3">Page 3</string>
+
+    <string name="loader_not_implemented_error">Source not found</string>
 
       <!-- Downloads section -->
     <string name="episode_download_progress">%1$d%%</string>
@@ -448,7 +460,6 @@
     <string name="restoring_backup_error">Restoring backup failed</string>
     <string name="restoring_backup_canceled">Canceled restore</string>
     <string name="backup_info">Automatic backups are highly recommended. You should keep copies in other places as well.</string>
-    <string name="custom_anime_info">Custom anime info</string>
 
       <!-- Advanced section -->
     <string name="label_network">Network</string>
@@ -589,6 +600,7 @@
         <item quantity="other">%1$s episodes</item>
     </plurals>
     <string name="episode_progress">Progress: %1$s/%2$s</string>
+    <string name="episode_progress_no_total">Progress: %1$s</string>
     <string name="delete_downloads_for_anime">Delete downloaded episodes?</string>
     <string name="copied_to_clipboard">Copied to clipboard:\n%1$s</string>
     <string name="clipboard_copy_error">Failed to copy to clipboard</string>

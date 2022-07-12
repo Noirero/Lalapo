@@ -10,12 +10,12 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.database.models.toDomainCategory
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.data.track.MangaTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
 import eu.kanade.tachiyomi.ui.animelib.setting.SortDirectionSetting
 import eu.kanade.tachiyomi.ui.animelib.setting.SortModeSetting
+import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import eu.kanade.tachiyomi.widget.sheet.TabbedBottomSheetDialog
@@ -107,7 +107,7 @@ class AnimelibSettingsSheet(
 
             init {
                 trackManager.services.filter { service ->
-                    service.isLogged && service !is MangaTrackService
+                    service.isLogged
                 }.also { services ->
                     val size = services.size
                     trackFilters = services.associate { service ->

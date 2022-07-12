@@ -18,9 +18,7 @@ import eu.kanade.domain.animetrack.model.toDbTrack
 import eu.kanade.domain.animetrack.model.toDomainTrack
 import eu.kanade.domain.category.interactor.GetCategoriesAnime
 import eu.kanade.domain.category.model.Category
-import eu.kanade.domain.episode.interactor.GetEpisodeByAnimeId
 import eu.kanade.domain.episode.interactor.SyncEpisodesWithSource
-import eu.kanade.domain.episode.interactor.SyncEpisodesWithTrackServiceTwoWay
 import eu.kanade.domain.episode.model.Episode
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
@@ -43,8 +41,6 @@ import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
-import eu.kanade.tachiyomi.util.episode.NoEpisodesException
-import eu.kanade.tachiyomi.util.episode.syncEpisodesWithSource
 import eu.kanade.tachiyomi.util.lang.withIOContext
 import eu.kanade.tachiyomi.util.prepUpdateCover
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
@@ -93,12 +89,10 @@ class AnimelibUpdateService(
     private val getAnimelibAnime: GetAnimelibAnime = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
     private val updateAnime: UpdateAnime = Injekt.get(),
-    private val getEpisodeByAnimeId: GetEpisodeByAnimeId = Injekt.get(),
     private val getCategories: GetCategoriesAnime = Injekt.get(),
     private val syncEpisodesWithSource: SyncEpisodesWithSource = Injekt.get(),
     private val getTracks: GetAnimeTracks = Injekt.get(),
     private val insertTrack: InsertAnimeTrack = Injekt.get(),
-    private val syncEpisodesWithTrackServiceTwoWay: SyncEpisodesWithTrackServiceTwoWay = Injekt.get(),
 ) : Service() {
 
     private lateinit var wakeLock: PowerManager.WakeLock
@@ -310,7 +304,7 @@ class AnimelibUpdateService(
         val skippedUpdates = CopyOnWriteArrayList<Pair<Anime, String?>>()
         val failedUpdates = CopyOnWriteArrayList<Pair<Anime, String?>>()
         val hasDownloads = AtomicBoolean(false)
-        val loggedServices by lazy { trackManager.services.filter { it.isLogged && it !is MangaTrackService } }
+        val loggedServices by lazy { trackManager.services.filter { it.isLogged } }
         val currentUnseenUpdatesCount = preferences.unseenUpdatesCount().get()
         val restrictions = preferences.libraryUpdateMangaRestriction().get()
 
@@ -506,7 +500,7 @@ class AnimelibUpdateService(
      */
     private suspend fun updateTrackings() {
         var progressCount = 0
-        val loggedServices = trackManager.services.filter { it.isLogged && it !is MangaTrackService }
+        val loggedServices = trackManager.services.filter { it.isLogged }
 
         animeToUpdate.forEach { anime ->
             if (updateJob?.isActive != true) {

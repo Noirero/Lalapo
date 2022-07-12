@@ -37,12 +37,12 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import eu.kanade.domain.animehistory.model.AnimeHistoryWithRelations
+import eu.kanade.presentation.animehistory.components.AnimeHistoryItem
+import eu.kanade.presentation.animehistory.components.HistoryHeader
+import eu.kanade.presentation.animehistory.components.HistoryItemShimmer
 import eu.kanade.presentation.components.EmptyScreen
 import eu.kanade.presentation.components.LoadingScreen
 import eu.kanade.presentation.components.ScrollbarLazyColumn
-import eu.kanade.presentation.history.components.AnimeHistoryItem
-import eu.kanade.presentation.history.components.HistoryHeader
-import eu.kanade.presentation.history.components.HistoryItemShimmer
 import eu.kanade.presentation.util.plus
 import eu.kanade.presentation.util.shimmerGradient
 import eu.kanade.presentation.util.topPaddingValues

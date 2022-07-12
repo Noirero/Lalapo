@@ -22,7 +22,7 @@
     <item
         android:id="@+id/action_fillermark"
         android:icon="@drawable/ic_fillermark_border_24dp"
-        android:title="@string/action_bookmark"
+        android:title="@string/action_fillermark"
         app:iconTint="?attr/colorOnSurface"
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />
@@ -30,7 +30,7 @@
     <item
         android:id="@+id/action_remove_fillermark"
         android:icon="@drawable/ic_fillermark_24dp"
-        android:title="@string/action_remove_bookmark"
+        android:title="@string/action_remove_fillermark"
         app:iconTint="?attr/colorOnSurface"
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />

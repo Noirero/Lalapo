@@ -5,11 +5,9 @@ import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
-import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -36,10 +34,6 @@ class Simkl(private val context: Context, id: Long) : TrackService(id), AnimeTra
 
     override fun getScoreList(): List<String> {
         return IntRange(0, 10).map(Int::toString)
-    }
-
-    override fun displayScore(track: Track): String {
-        return track.score.toInt().toString()
     }
 
     override fun displayScore(track: AnimeTrack): String {
@@ -152,12 +146,4 @@ class Simkl(private val context: Context, id: Long) : TrackService(id), AnimeTra
         preferences.trackToken(this).delete()
         interceptor.newAuth(null)
     }
-
-    override fun getReadingStatus(): Int = WATCHING
-    override fun getRereadingStatus(): Int = 0
-    override fun getStatusList(): List<Int> = throw NotImplementedError()
-    override suspend fun update(track: Track, didReadChapter: Boolean): Track = throw NotImplementedError()
-    override suspend fun bind(track: Track, hasReadChapters: Boolean): Track = throw NotImplementedError()
-    override suspend fun search(query: String): List<TrackSearch> = throw NotImplementedError()
-    override suspend fun refresh(track: Track): Track = throw NotImplementedError()
 }

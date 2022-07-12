@@ -10,6 +10,8 @@ fun String.removeArticles(): String {
     return replace(articleRegex, "")
 }
 
+fun <C : Collection<R>, R> C.nullIfEmpty() = ifEmpty { null }
+
 fun String.trimOrNull(): String? {
     val trimmed = trim()
     return trimmed.ifBlank { null }

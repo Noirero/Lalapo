@@ -47,7 +47,7 @@ object AnimeMigrationFlags {
     }
 
     fun titles(anime: Anime?): Array<Int> {
-        val titles = arrayOf(R.string.episodes, R.string.anime_categories).toMutableList()
+        val titles = arrayOf(R.string.episodes, R.string.categories).toMutableList()
         if (anime != null) {
             if (runBlocking { getTracks.await(anime.id) }.isNotEmpty()) {
                 titles.add(R.string.track)

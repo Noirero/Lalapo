@@ -39,25 +39,6 @@ data class BackupEpisode(
             source_order = this@BackupEpisode.sourceOrder.toInt()
         }
     }
-
-    companion object {
-        fun copyFrom(episode: Episode): BackupEpisode {
-            return BackupEpisode(
-                url = episode.url,
-                name = episode.name,
-                episodeNumber = episode.episode_number,
-                scanlator = episode.scanlator,
-                seen = episode.seen,
-                bookmark = episode.bookmark,
-                fillermark = episode.fillermark,
-                lastSecondSeen = episode.last_second_seen,
-                totalSeconds = episode.total_seconds,
-                dateFetch = episode.date_fetch,
-                dateUpload = episode.date_upload,
-                sourceOrder = episode.source_order,
-            )
-        }
-    }
 }
 
 val backupEpisodeMapper = {
@@ -82,7 +63,7 @@ val backupEpisodeMapper = {
         scanlator = scanlator,
         seen = seen,
         bookmark = bookmark,
-        fillermark = fillermark, 
+        fillermark = fillermark,
         lastSecondSeen = lastSecondSeen,
         totalSeconds = totalSeconds,
         dateFetch = dateFetch,

@@ -156,7 +156,7 @@ class AnimeDownloadPendingDeleter(context: Context) {
      * Returns a anime entry from a anime model.
      */
     private fun Anime.toEntry(): AnimeEntry {
-        return AnimeEntry(id, url, originalTitle, source)
+        return AnimeEntry(id, url, title, source)
     }
 
     /**

@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.anime.episode.base
 
 import android.view.View
 import eu.davidea.viewholders.FlexibleViewHolder
-import eu.kanade.presentation.manga.EpisodeDownloadAction
+import eu.kanade.presentation.anime.EpisodeDownloadAction
 
 open class BaseEpisodeHolder(
     view: View,

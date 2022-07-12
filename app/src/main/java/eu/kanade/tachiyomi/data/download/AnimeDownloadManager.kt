@@ -364,7 +364,7 @@ class AnimeDownloadManager(
 
     private fun getEpisodesToDelete(episodes: List<Episode>, anime: Anime): List<Episode> {
         // Retrieve the categories that are set to exclude from being deleted on read
-        val categoriesToExclude = preferences.removeExcludeCategories().get().map(String::toInt)
+        val categoriesToExclude = preferences.removeExcludeAnimeCategories().get().map(String::toInt)
 
         val categoriesForAnime = runBlocking { getCategories.await(anime.id) }
             .map { it.id }

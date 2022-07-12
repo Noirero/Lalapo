@@ -5,18 +5,13 @@ import android.content.SharedPreferences
 import android.net.Uri
 import androidx.preference.PreferenceManager
 import com.hippo.unifile.UniFile
-import data.Manga_sync
-import data.Mangas
 import dataanime.Anime_sync
 import dataanime.Animes
 import eu.kanade.domain.animehistory.model.AnimeHistoryUpdate
-import eu.kanade.domain.history.model.HistoryUpdate
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.AbstractBackupManager
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY_MASK
-import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO
-import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY
@@ -41,9 +36,7 @@ import eu.kanade.tachiyomi.data.backup.full.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.full.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.backup.full.models.backupAnimeTrackMapper
 import eu.kanade.tachiyomi.data.backup.full.models.backupCategoryMapper
-import eu.kanade.tachiyomi.data.backup.full.models.backupChapterMapper
 import eu.kanade.tachiyomi.data.backup.full.models.backupEpisodeMapper
-import eu.kanade.tachiyomi.data.backup.full.models.backupTrackMapper
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.Episode
@@ -57,7 +50,6 @@ import java.io.FileOutputStream
 import java.util.Date
 import kotlin.math.max
 import eu.kanade.domain.anime.model.Anime as DomainAnime
-import eu.kanade.domain.manga.model.Manga as DomainManga
 
 class FullBackupManager(context: Context) : AbstractBackupManager(context) {
 
@@ -175,7 +167,7 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
      */
     private suspend fun backupAnimeObject(anime: DomainAnime, options: Int): BackupAnime {
         // Entry for this anime
-        val animeObject = BackupAnime.copyFrom(anime, if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) customAnimeManager else null)
+        val animeObject = BackupAnime.copyFrom(anime)
 
         // Check if user wants chapter information in backup
         if (options and BACKUP_EPISODE_MASK == BACKUP_EPISODE) {

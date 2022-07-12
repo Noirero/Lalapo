@@ -43,10 +43,10 @@ class AnimeUpdatesHolder(private val view: View, private val adapter: AnimeUpdat
         } else {
             binding.mangaTitle.setTextColor(adapter.unseenColor)
             binding.chapterTitle.setTextColor(
-                if (item.bookmark) {
+                if (item.episode.bookmark) {
                     adapter.bookmarkedColor
                 } else {
-                    if (item.fillermark) {
+                    if (item.episode.fillermark) {
                         adapter.fillermarkedColor
                     } else {
                         adapter.unseenColorSecondary

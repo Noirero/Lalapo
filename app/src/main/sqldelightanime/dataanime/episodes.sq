@@ -46,8 +46,8 @@ DELETE FROM episodes
 WHERE _id IN :episodeIds;
 
 insert:
-INSERT INTO episodes(anime_id,url,name,scanlator,seen,bookmark,last_second_seen,total_seconds,episode_number,source_order,date_fetch,date_upload)
-VALUES (:animeId,:url,:name,:scanlator,:seen,:bookmark,:lastSecondSeen,:totalSeconds,:episodeNumber,:sourceOrder,:dateFetch,:dateUpload);
+INSERT INTO episodes(anime_id,url,name,scanlator,seen,bookmark,fillermark,last_second_seen,total_seconds,episode_number,source_order,date_fetch,date_upload)
+VALUES (:animeId,:url,:name,:scanlator,:seen,:bookmark,:fillermark,:lastSecondSeen,:totalSeconds,:episodeNumber,:sourceOrder,:dateFetch,:dateUpload);
 
 update:
 UPDATE episodes

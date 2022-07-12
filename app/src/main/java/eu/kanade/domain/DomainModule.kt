@@ -94,6 +94,11 @@ class DomainModule : InjektModule {
         addFactory { UpdateCategoryAnime(get()) }
         addFactory { DeleteCategoryAnime(get()) }
 
+        addSingletonFactory<AnimeTrackRepository> { AnimeTrackRepositoryImpl(get()) }
+        addFactory { DeleteAnimeTrack(get()) }
+        addFactory { GetAnimeTracks(get()) }
+        addFactory { InsertAnimeTrack(get()) }
+
         addSingletonFactory<AnimeHistoryRepository> { AnimeHistoryRepositoryImpl(get()) }
         addFactory { DeleteAnimeHistoryTable(get()) }
         addFactory { GetAnimeHistory(get()) }
@@ -120,8 +125,5 @@ class DomainModule : InjektModule {
 
         addFactory { SetMigrateSorting(get()) }
         addFactory { ToggleLanguage(get()) }
-        addFactory { ToggleSource(get()) }
-        addFactory { ToggleSourcePin(get()) }
-        addFactory { UpsertSourceData(get()) }
     }
 }

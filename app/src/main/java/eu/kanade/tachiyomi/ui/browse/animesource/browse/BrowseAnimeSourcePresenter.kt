@@ -8,12 +8,8 @@ import eu.kanade.domain.anime.interactor.InsertAnime
 import eu.kanade.domain.anime.interactor.UpdateAnime
 import eu.kanade.domain.anime.model.toAnimeUpdate
 import eu.kanade.domain.anime.model.toDbAnime
-import eu.kanade.domain.animetrack.interactor.InsertAnimeTrack
-import eu.kanade.domain.animetrack.model.toDomainTrack
 import eu.kanade.domain.category.interactor.GetCategoriesAnime
 import eu.kanade.domain.category.interactor.SetAnimeCategories
-import eu.kanade.domain.episode.interactor.GetEpisodeByAnimeId
-import eu.kanade.domain.episode.interactor.SyncEpisodesWithTrackServiceTwoWay
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
@@ -73,12 +69,9 @@ open class BrowseAnimeSourcePresenter(
     private val getAnime: GetAnime = Injekt.get(),
     private val getDuplicateLibraryAnime: GetDuplicateLibraryAnime = Injekt.get(),
     private val getCategories: GetCategoriesAnime = Injekt.get(),
-    private val getEpisodeByAnimeId: GetEpisodeByAnimeId = Injekt.get(),
     private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
     private val insertAnime: InsertAnime = Injekt.get(),
     private val updateAnime: UpdateAnime = Injekt.get(),
-    private val insertTrack: InsertAnimeTrack = Injekt.get(),
-    private val syncEpisodesWithTrackServiceTwoWay: SyncEpisodesWithTrackServiceTwoWay = Injekt.get(),
 ) : BasePresenter<BrowseAnimeSourceController>() {
 
     /**
@@ -288,8 +281,6 @@ open class BrowseAnimeSourcePresenter(
             anime.removeCovers(coverCache)
         } else {
             EpisodeSettingsHelper.applySettingDefaults(anime.toDomainAnime()!!)
-
-            autoAddTrack(anime)
         }
 
         runBlocking {

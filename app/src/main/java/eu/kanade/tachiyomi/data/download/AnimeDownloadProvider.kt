@@ -125,8 +125,8 @@ class AnimeDownloadProvider(private val context: Context) {
      *
      * @param animeTitle the title of the anime to query.
      */
-    fun getAnimeDirName(anime: Anime): String {
-        return DiskUtil.buildValidFilename(anime.originalTitle)
+    fun getAnimeDirName(animeTitle: String): String {
+        return DiskUtil.buildValidFilename(animeTitle)
     }
 
     /**

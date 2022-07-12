@@ -191,9 +191,6 @@ class MainActivity : BaseActivity() {
                         if (router.backstackSize == 1) {
                             try {
                                 when (router.backstack[0].controller) {
-                                    is HistoryController -> {
-                                        (router.backstack[0].controller as HistoryController).resumeLastChapterRead()
-                                    }
                                     is AnimeHistoryController -> {
                                         (router.backstack[0].controller as AnimeHistoryController).resumeLastEpisodeSeen()
                                     }

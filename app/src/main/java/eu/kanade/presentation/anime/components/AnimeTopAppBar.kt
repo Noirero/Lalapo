@@ -13,7 +13,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import eu.kanade.domain.anime.model.Anime
-import eu.kanade.presentation.manga.DownloadAction
+import eu.kanade.presentation.anime.DownloadAction
 import kotlin.math.roundToInt
 
 @Composable

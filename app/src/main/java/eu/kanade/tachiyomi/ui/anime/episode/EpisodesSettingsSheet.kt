@@ -134,7 +134,7 @@ class EpisodesSettingsSheet(
 
             fun updateModels() {
                 initModels()
-                adapter.notifyItemRangeChanged(0, 3)
+                adapter.notifyItemRangeChanged(0, 4)
             }
 
             override fun onItemClicked(item: Item) {
@@ -175,7 +175,7 @@ class EpisodesSettingsSheet(
         inner class SortGroup : Group {
 
             private val source = Item.MultiSort(R.string.sort_by_source, this)
-            private val episodeNum = Item.MultiSort(R.string.sort_by_number, this)
+            private val episodeNum = Item.MultiSort(R.string.sort_by_episode_number, this)
             private val uploadDate = Item.MultiSort(R.string.sort_by_upload_date, this)
 
             override val header: Item? = null

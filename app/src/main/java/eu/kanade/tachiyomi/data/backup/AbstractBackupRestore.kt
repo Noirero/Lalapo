@@ -3,12 +3,9 @@ package eu.kanade.tachiyomi.data.backup
 import android.content.Context
 import android.net.Uri
 import eu.kanade.data.AnimeDatabaseHandler
-import eu.kanade.data.DatabaseHandler
-import eu.kanade.data.chapter.NoChaptersException
 import eu.kanade.data.episode.NoEpisodesException
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
-import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.Episode
@@ -25,8 +22,6 @@ abstract class AbstractBackupRestore<T : AbstractBackupManager>(protected val co
 
     protected val animehandler: AnimeDatabaseHandler by injectLazy()
     protected val trackManager: TrackManager by injectLazy()
-
-    protected val customAnimeManager: CustomAnimeManager by injectLazy()
 
     var job: Job? = null
 

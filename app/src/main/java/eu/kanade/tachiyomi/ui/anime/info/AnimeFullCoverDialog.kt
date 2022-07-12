@@ -24,8 +24,8 @@ import eu.kanade.domain.anime.interactor.GetAnime
 import eu.kanade.domain.anime.interactor.UpdateAnime
 import eu.kanade.domain.anime.model.Anime
 import eu.kanade.domain.anime.model.hasCustomCover
+import eu.kanade.presentation.anime.EditCoverAction
 import eu.kanade.presentation.anime.components.AnimeCoverDialog
-import eu.kanade.presentation.manga.EditCoverAction
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.saver.Image

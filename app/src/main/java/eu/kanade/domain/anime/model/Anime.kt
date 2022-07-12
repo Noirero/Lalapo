@@ -1,11 +1,11 @@
 package eu.kanade.domain.anime.model
 
 import eu.kanade.data.listOfStringsAdapter
+import eu.kanade.tachiyomi.animesource.LocalAnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.database.models.AnimeImpl
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 import tachiyomi.animesource.model.AnimeInfo
 import uy.kohesive.injekt.Injekt
@@ -48,6 +48,9 @@ data class Anime(
     val bookmarkedFilterRaw: Long
         get() = episodeFlags and EPISODE_BOOKMARKED_MASK
 
+    val fillermarkedFilterRaw: Long
+        get() = episodeFlags and EPISODE_FILLERMARKED_MASK
+
     val unseenFilter: TriStateFilter
         get() = when (unseenFilterRaw) {
             EPISODE_SHOW_UNSEEN -> TriStateFilter.ENABLED_IS
@@ -72,10 +75,18 @@ data class Anime(
             else -> TriStateFilter.DISABLED
         }
 
+    val fillermarkedFilter: TriStateFilter
+        get() = when (fillermarkedFilterRaw) {
+            EPISODE_SHOW_FILLERMARKED -> TriStateFilter.ENABLED_IS
+            EPISODE_SHOW_NOT_FILLERMARKED -> TriStateFilter.ENABLED_NOT
+            else -> TriStateFilter.DISABLED
+        }
+
     fun episodesFiltered(): Boolean {
         return unseenFilter != TriStateFilter.DISABLED ||
             downloadedFilter != TriStateFilter.DISABLED ||
-            bookmarkedFilter != TriStateFilter.DISABLED
+            bookmarkedFilter != TriStateFilter.DISABLED ||
+            fillermarkedFilter != TriStateFilter.DISABLED
     }
 
     fun forceDownloaded(): Boolean {
@@ -117,6 +128,10 @@ data class Anime(
         const val EPISODE_SHOW_BOOKMARKED = 0x00000020L
         const val EPISODE_SHOW_NOT_BOOKMARKED = 0x00000040L
         const val EPISODE_BOOKMARKED_MASK = 0x00000060L
+
+        const val EPISODE_SHOW_FILLERMARKED = 0x00000200L
+        const val EPISODE_SHOW_NOT_FILLERMARKED = 0x00000400L
+        const val EPISODE_FILLERMARKED_MASK = 0x00000600L
 
         const val EPISODE_SORTING_SOURCE = 0x00000000L
         const val EPISODE_SORTING_NUMBER = 0x00000100L
@@ -217,7 +232,7 @@ fun Anime.toAnimeUpdate(): AnimeUpdate {
     )
 }
 
-fun Anime.isLocal(): Boolean = source == LocalSource.ID
+fun Anime.isLocal(): Boolean = source == LocalAnimeSource.ID
 
 fun Anime.hasCustomCover(coverCache: AnimeCoverCache = Injekt.get()): Boolean {
     return coverCache.getCustomCoverFile(id).exists()

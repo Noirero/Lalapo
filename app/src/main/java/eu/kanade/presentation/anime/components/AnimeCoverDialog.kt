@@ -36,12 +36,12 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.size.Size
 import eu.kanade.domain.anime.model.Anime
+import eu.kanade.presentation.anime.EditCoverAction
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.Scaffold
-import eu.kanade.presentation.manga.EditCoverAction
 import eu.kanade.presentation.util.clickableNoIndication
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
+import eu.kanade.tachiyomi.ui.anime.info.AnimeCoverImageMaker
 
 @Composable
 fun AnimeCoverDialog(
@@ -125,7 +125,7 @@ fun AnimeCoverDialog(
         ) {
             AndroidView(
                 factory = {
-                    ReaderPageImageView(it).apply {
+                    AnimeCoverImageMaker(it).apply {
                         onViewClicked = onDismissRequest
                         clipToPadding = false
                         clipChildren = false
@@ -149,7 +149,7 @@ fun AnimeCoverDialog(
                                     it.bitmap.copy(config, false),
                                 )
                             } ?: drawable
-                            view.setImage(copy, ReaderPageImageView.Config(zoomDuration = 500))
+                            view.setImage(copy, AnimeCoverImageMaker.Config(zoomDuration = 500))
                         }
                         .build()
                     view.context.imageLoader.enqueue(request)

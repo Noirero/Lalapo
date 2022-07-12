@@ -7,8 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
+import eu.kanade.presentation.anime.EpisodeDownloadAction
 import eu.kanade.presentation.components.EpisodeDownloadIndicator
-import eu.kanade.presentation.manga.EpisodeDownloadAction
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 

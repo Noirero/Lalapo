@@ -7,7 +7,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.text.buildSpannedString
 import androidx.preference.PreferenceScreen
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import eu.kanade.domain.category.interactor.GetCategories
 import eu.kanade.domain.category.interactor.GetCategoriesAnime
 import eu.kanade.domain.category.model.Category
 import eu.kanade.tachiyomi.R
@@ -272,7 +271,7 @@ class SettingsLibraryController : SettingsController() {
                 summaryRes = R.string.pref_library_update_refresh_metadata_summary
                 defaultValue = false
             }
-            if (trackManager.hasLoggedServices()) {
+            if (trackManager.hasLoggedAnimeServices()) {
                 switchPreference {
                     key = Keys.autoUpdateTrackers
                     titleRes = R.string.pref_library_update_refresh_trackers

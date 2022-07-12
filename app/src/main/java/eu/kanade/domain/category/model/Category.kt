@@ -3,9 +3,9 @@ package eu.kanade.domain.category.model
 import android.content.Context
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.CategoryImpl
-import eu.kanade.tachiyomi.ui.library.setting.DisplayModeSetting
-import eu.kanade.tachiyomi.ui.library.setting.SortDirectionSetting
-import eu.kanade.tachiyomi.ui.library.setting.SortModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.DisplayModeSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.SortDirectionSetting
+import eu.kanade.tachiyomi.ui.animelib.setting.SortModeSetting
 import java.io.Serializable
 import eu.kanade.tachiyomi.data.database.models.Category as DbCategory
 

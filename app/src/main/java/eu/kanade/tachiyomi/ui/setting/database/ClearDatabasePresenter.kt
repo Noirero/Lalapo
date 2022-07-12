@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.setting.database
 
 import android.os.Bundle
 import eu.kanade.domain.animesource.interactor.GetAnimeSourcesWithNonLibraryAnime
+import eu.kanade.tachiyomi.mi.AnimeDatabase
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.withUIContext

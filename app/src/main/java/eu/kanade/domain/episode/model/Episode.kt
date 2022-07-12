@@ -49,6 +49,7 @@ data class Episode(
             animeId = -1,
             seen = false,
             bookmark = false,
+            fillermark = false,
             lastSecondSeen = 0,
             totalSeconds = 0,
             dateFetch = 0,
@@ -71,6 +72,7 @@ fun Episode.toDbEpisode(): DbEpisode = EpisodeImpl().also {
     it.scanlator = scanlator
     it.seen = seen
     it.bookmark = bookmark
+    it.fillermark = fillermark
     it.last_second_seen = lastSecondSeen
     it.total_seconds = totalSeconds
     it.date_fetch = dateFetch

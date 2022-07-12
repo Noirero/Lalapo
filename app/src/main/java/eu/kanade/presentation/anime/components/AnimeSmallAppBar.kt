@@ -37,8 +37,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.anime.DownloadAction
 import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.manga.DownloadAction
 import eu.kanade.tachiyomi.R
 
 @Composable
@@ -115,7 +115,7 @@ fun AnimeSmallAppBar(
                             IconButton(onClick = { onDownloadExpanded(!downloadExpanded) }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Download,
-                                    contentDescription = stringResource(R.string.manga_download),
+                                    contentDescription = stringResource(R.string.anime_download),
                                 )
                             }
                             val onDismissRequest = { onDownloadExpanded(false) }
@@ -126,21 +126,21 @@ fun AnimeSmallAppBar(
                                 DropdownMenuItem(
                                     text = { Text(text = stringResource(R.string.download_1_episode)) },
                                     onClick = {
-                                        onDownloadClicked(DownloadAction.NEXT_1_CHAPTER)
+                                        onDownloadClicked(DownloadAction.NEXT_1_EPISODES)
                                         onDismissRequest()
                                     },
                                 )
                                 DropdownMenuItem(
                                     text = { Text(text = stringResource(R.string.download_5_episodes)) },
                                     onClick = {
-                                        onDownloadClicked(DownloadAction.NEXT_5_CHAPTERS)
+                                        onDownloadClicked(DownloadAction.NEXT_5_EPISODES)
                                         onDismissRequest()
                                     },
                                 )
                                 DropdownMenuItem(
                                     text = { Text(text = stringResource(R.string.download_10_episodes)) },
                                     onClick = {
-                                        onDownloadClicked(DownloadAction.NEXT_10_CHAPTERS)
+                                        onDownloadClicked(DownloadAction.NEXT_10_EPISODES)
                                         onDismissRequest()
                                     },
                                 )
@@ -154,14 +154,14 @@ fun AnimeSmallAppBar(
                                 DropdownMenuItem(
                                     text = { Text(text = stringResource(R.string.download_unseen)) },
                                     onClick = {
-                                        onDownloadClicked(DownloadAction.UNREAD_CHAPTERS)
+                                        onDownloadClicked(DownloadAction.UNSEEN_EPISODES)
                                         onDismissRequest()
                                     },
                                 )
                                 DropdownMenuItem(
                                     text = { Text(text = stringResource(R.string.download_all)) },
                                     onClick = {
-                                        onDownloadClicked(DownloadAction.ALL_CHAPTERS)
+                                        onDownloadClicked(DownloadAction.ALL_EPISODES)
                                         onDismissRequest()
                                     },
                                 )
@@ -184,7 +184,7 @@ fun AnimeSmallAppBar(
                                 onDismissRequest = onDismissRequest,
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(text = stringResource(R.string.action_edit_anime_categories)) },
+                                    text = { Text(text = stringResource(R.string.action_edit_categories)) },
                                     onClick = {
                                         onEditCategoryClicked()
                                         onDismissRequest()

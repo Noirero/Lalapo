@@ -24,3 +24,5 @@ interface CategoryRepositoryAnime {
 
     suspend fun checkDuplicateName(name: String): Boolean
 }
+
+class DuplicateNameException(name: String) : Exception("There's a category which is named \"$name\" already")

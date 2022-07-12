@@ -20,15 +20,12 @@ import eu.kanade.domain.category.interactor.SetAnimeCategories
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.episode.interactor.SetSeenStatus
 import eu.kanade.domain.episode.interactor.SyncEpisodesWithSource
-import eu.kanade.domain.episode.interactor.SyncEpisodesWithTrackServiceTwoWay
 import eu.kanade.domain.episode.interactor.UpdateEpisode
 import eu.kanade.domain.episode.model.EpisodeUpdate
 import eu.kanade.domain.episode.model.toDbEpisode
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
-import eu.kanade.tachiyomi.animesource.LocalAnimeSource
 import eu.kanade.tachiyomi.animesource.model.toSEpisode
-import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.database.models.AnimeTrack
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
@@ -93,7 +90,6 @@ class AnimePresenter(
     private val getTracks: GetAnimeTracks = Injekt.get(),
     private val moveAnimeToCategories: SetAnimeCategories = Injekt.get(),
     private val insertTrack: InsertAnimeTrack = Injekt.get(),
-    private val syncEpisodesWithTrackServiceTwoWay: SyncEpisodesWithTrackServiceTwoWay = Injekt.get(),
 ) : BasePresenter<AnimeController>() {
 
     private val _state: MutableStateFlow<AnimeScreenState> = MutableStateFlow(AnimeScreenState.Loading)
@@ -122,13 +118,11 @@ class AnimePresenter(
     private var _trackList: List<TrackItem> = emptyList()
     val trackList get() = _trackList
 
-    private val loggedServices by lazy { trackManager.services.filter { it.isLogged && it !is MangaTrackService } }
+    private val loggedServices by lazy { trackManager.services.filter { it.isLogged } }
 
     private var searchTrackerJob: Job? = null
     private var refreshTrackersJob: Job? = null
 
-    private val customAnimeManager: CustomAnimeManager by injectLazy()
-    
     val anime: DomainAnime?
         get() = successState?.anime
 
@@ -227,74 +221,6 @@ class AnimePresenter(
         }
     }
 
-    fun updateAnimeInfo(
-        context: Context,
-        title: String?,
-        author: String?,
-        artist: String?,
-        description: String?,
-        tags: List<String>?,
-        status: Int?,
-        uri: Uri?,
-        resetCover: Boolean = false,
-    ) {
-        if (anime.source == LocalAnimeSource.ID) {
-            anime.title = if (title.isNullOrBlank()) anime.url else title.trim()
-            anime.author = author?.trimOrNull()
-            anime.artist = artist?.trimOrNull()
-            anime.description = description?.trimOrNull()
-            val tagsString = tags?.joinToString()
-            anime.genre = if (tags.isNullOrEmpty()) null else tagsString?.trim()
-            anime.status = status ?: 0
-            (sourceManager.get(LocalAnimeSource.ID) as LocalAnimeSource).updateAnimeInfo(anime)
-            db.updateAnimeInfo(anime).executeAsBlocking()
-        } else {
-            val genre = if (!tags.isNullOrEmpty() && tags.joinToString() != anime.originalGenre) {
-                tags
-            } else {
-                null
-            }
-            val anime = CustomAnimeManager.AnimeJson(
-                anime.id!!,
-                title?.trimOrNull(),
-                author?.trimOrNull(),
-                artist?.trimOrNull(),
-                description?.trimOrNull(),
-                genre,
-                status.takeUnless { it == anime.originalStatus },
-            )
-            customAnimeManager.saveAnimeInfo(anime)
-        }
-
-        if (uri != null) {
-            editCover(anime, context, uri)
-        } else if (resetCover) {
-            coverCache.deleteCustomCover(anime)
-            anime.updateCoverLastModified(db)
-        }
-
-        if (uri == null && resetCover) {
-            Observable.just(anime)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeLatestCache(
-                    { view, _ ->
-                        view.setRefreshing()
-                    },
-                )
-            fetchAnimeFromSource(manualFetch = true)
-        } else {
-            Observable.just(anime)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeLatestCache(
-                    { view, _ ->
-                        view.onNextAnimeInfo(anime, source)
-                    },
-                )
-        }
-    }
-
     /**
      * Update favorite status of anime, (removes / adds) anime (to / from) library.
      */
@@ -330,7 +256,7 @@ class AnimePresenter(
 
                 // Now check if user previously set categories, when available
                 val categories = getCategories()
-                val defaultCategoryId = preferences.defaultCategory().toLong()
+                val defaultCategoryId = preferences.defaultAnimeCategory().toLong()
                 val defaultCategory = categories.find { it.id == defaultCategoryId }
                 when {
                     // Default category set
@@ -352,26 +278,6 @@ class AnimePresenter(
                     // Choose a category
                     else -> launchUI { onRequireCategory(anime, categories) }
                 }
-
-                // Finally match with enhanced tracking when available
-                val source = state.source
-                trackList
-                    .map { it.service }
-                    .filterIsInstance<EnhancedTrackService>()
-                    .filter { it.accept(source) }
-                    .forEach { service ->
-                        launchIO {
-                            try {
-                                service.match(anime.toDbAnime())?.let { track ->
-                                    registerTracking(track, service as TrackService)
-                                }
-                            } catch (e: Exception) {
-                                logcat(LogPriority.WARN, e) {
-                                    "Could not match anime: ${anime.title} with service $service"
-                                }
-                            }
-                        }
-                    }
             }
         }
     }
