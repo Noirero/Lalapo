@@ -16,6 +16,7 @@ import androidx.core.view.isVisible
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.PlayerControlsBinding
+import eu.kanade.tachiyomi.databinding.PrefSkipIntroLengthBinding
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.PickerDialog
 import `is`.xyz.mpv.SpeedPickerDialog
@@ -139,8 +140,6 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
     }
 
     override fun onViewAdded(child: View?) {
-        binding.controlsSkipIntroBtn.text = context.getString(R.string.player_controls_skip_intro_text, preferences.introLengthPreference())
-
         binding.backArrowBtn.setOnClickListener { activity.onBackPressed() }
 
         // Lock and Unlock controls
@@ -158,22 +157,27 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
         binding.pipBtn.setOnClickListener { activity.startPiP() }
 
         binding.pipBtn.isVisible = !preferences.pipOnExit() && activity.deviceSupportsPip
+
+        binding.controlsSkipIntroBtn.setOnLongClickListener { skipIntroLengthDialog(); true }
+
         binding.playbackPositionBtn.setOnClickListener {
-            preferences.invertedDurationTxt().set(false)
-            preferences.invertedPlaybackTxt().set(!preferences.invertedPlaybackTxt().get())
-            if (activity.player.timePos != null) {
+            if (activity.player.timePos != null && activity.player.duration != null) {
+                preferences.invertedDurationTxt().set(false)
+                preferences.invertedPlaybackTxt().set(!preferences.invertedPlaybackTxt().get())
                 updatePlaybackPos(activity.player.timePos!!)
                 updatePlaybackDuration(activity.player.duration!!)
             }
         }
 
         binding.playbackDurationBtn.setOnClickListener {
-            preferences.invertedPlaybackTxt().set(false)
-            preferences.invertedDurationTxt().set(!preferences.invertedDurationTxt().get())
-            if (preferences.invertedDurationTxt().get() && activity.player.timePos != null) {
-                updatePlaybackPos(activity.player.timePos!!)
-                updatePlaybackDuration(activity.player.timePos!!)
-            } else updatePlaybackDuration(activity.player.duration!!)
+            if (activity.player.timePos != null && activity.player.duration != null) {
+                preferences.invertedPlaybackTxt().set(false)
+                preferences.invertedDurationTxt().set(!preferences.invertedDurationTxt().get())
+                if (preferences.invertedDurationTxt().get()) {
+                    updatePlaybackPos(activity.player.timePos!!)
+                    updatePlaybackDuration(activity.player.timePos!!)
+                } else updatePlaybackDuration(activity.player.duration!!)
+            }
         }
 
         binding.toggleAutoplay.setOnCheckedChangeListener { _, isChecked ->
@@ -369,5 +373,39 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
             show()
         }
         picker.number = MPVLib.getPropertyDouble("speed")
+    }
+
+    private fun skipIntroLengthDialog() {
+        val restore = pauseForDialog()
+
+        var newSkipIntroLength = activity.presenter.getAnimeSkipIntroLength()
+
+        with(activity.HideBarsMaterialAlertDialogBuilder(context)) {
+            setTitle(R.string.pref_intro_length)
+            val binding = PrefSkipIntroLengthBinding.inflate(LayoutInflater.from(activity))
+
+            with(binding.skipIntroColumn) {
+                value = activity.presenter.getAnimeSkipIntroLength()
+                setOnValueChangedListener { _, _, newValue ->
+                    newSkipIntroLength = newValue
+                }
+            }
+
+            setView(binding.root)
+            setNeutralButton(R.string.label_default) { _, _ ->
+                activity.presenter.setAnimeSkipIntroLength(preferences.defaultIntroLength().get())
+            }
+            setPositiveButton(R.string.dialog_ok) { dialog, _ ->
+                when (newSkipIntroLength) {
+                    0 -> activity.presenter.setAnimeSkipIntroLength(preferences.defaultIntroLength().get())
+                    activity.presenter.getAnimeSkipIntroLength() -> dialog.cancel()
+                    else -> activity.presenter.setAnimeSkipIntroLength(newSkipIntroLength)
+                }
+            }
+            setNegativeButton(R.string.dialog_cancel) { dialog, _ -> dialog.cancel() }
+            setOnDismissListener { restore() }
+            create()
+            show()
+        }
     }
 }

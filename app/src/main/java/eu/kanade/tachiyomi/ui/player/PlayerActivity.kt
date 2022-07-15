@@ -1047,7 +1047,7 @@ class PlayerActivity :
 
     @Suppress("UNUSED_PARAMETER")
     fun skipIntro(view: View) {
-        doubleTapSeek(preferences.introLengthPreference(), isDoubleTap = false)
+        doubleTapSeek(presenter.getAnimeSkipIntroLength(), isDoubleTap = false)
         playerControls.resetControlsFade()
     }
 
@@ -1065,6 +1065,7 @@ class PlayerActivity :
     private fun updateEpisodeText() {
         playerControls.binding.titleMainTxt.text = presenter.anime?.title
         playerControls.binding.titleSecondaryTxt.text = presenter.currentEpisode?.name
+        playerControls.binding.controlsSkipIntroBtn.text = getString(R.string.player_controls_skip_intro_text, presenter.getAnimeSkipIntroLength())
     }
 
     private fun updatePlaylistButtons() {
@@ -1455,7 +1456,7 @@ class PlayerActivity :
                 playerControls.updatePlaybackPos(value.toInt())
                 if (preferences.invertedDurationTxt().get()) playerControls.updatePlaybackDuration(value.toInt())
             }
-            "duration" -> playerControls.updatePlaybackDuration(value.toInt())
+            "duration" -> if (!preferences.invertedDurationTxt().get()) playerControls.updatePlaybackDuration(value.toInt())
         }
     }
 
