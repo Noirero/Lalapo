@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.data.backup.BackupRestoreService
 import eu.kanade.tachiyomi.data.backup.full.FullBackupRestoreValidator
 import eu.kanade.tachiyomi.data.backup.full.models.BackupFull
 import eu.kanade.tachiyomi.data.preference.FLAG_CATEGORIES
+import eu.kanade.tachiyomi.data.preference.FLAG_CUSTOM_INFORMATION
 import eu.kanade.tachiyomi.data.preference.FLAG_EPISODES
 import eu.kanade.tachiyomi.data.preference.FLAG_HISTORY
 import eu.kanade.tachiyomi.data.preference.FLAG_SETTINGS
@@ -138,6 +139,9 @@ class SettingsBackupController : SettingsController() {
                     R.string.episodes,
                     R.string.track,
                     R.string.history,
+                    // AM -->
+                    R.string.custom_anime_info,
+                    // AM <--
                     R.string.settings,
                 )
                 entryValues = arrayOf(
@@ -145,6 +149,9 @@ class SettingsBackupController : SettingsController() {
                     FLAG_EPISODES,
                     FLAG_TRACK,
                     FLAG_HISTORY,
+                    // AM -->
+                    FLAG_CUSTOM_INFORMATION,
+                    // AM <--
                     FLAG_SETTINGS,
                 )
 
@@ -261,6 +268,9 @@ class SettingsBackupController : SettingsController() {
                 R.string.episodes,
                 R.string.track,
                 R.string.history,
+                // AM -->
+                R.string.custom_anime_info,
+                // AM <--
                 R.string.settings,
             )
                 .map { activity.getString(it) }
@@ -284,7 +294,8 @@ class SettingsBackupController : SettingsController() {
                                 2 -> flags = flags or BackupConst.BACKUP_EPISODE
                                 3 -> flags = flags or BackupConst.BACKUP_TRACK
                                 4 -> flags = flags or BackupConst.BACKUP_HISTORY
-                                5 -> {
+                                5 -> flags = flags or BackupConst.BACKUP_CUSTOM_INFO
+                                6 -> {
                                     activity.toast(R.string.backup_settings_warning)
                                     flags = flags or BackupConst.BACKUP_PREFS
                                 }

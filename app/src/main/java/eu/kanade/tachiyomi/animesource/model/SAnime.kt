@@ -1,7 +1,12 @@
 package eu.kanade.tachiyomi.animesource.model
 
 import dataanime.Animes
+import eu.kanade.tachiyomi.data.database.models.Anime
+import eu.kanade.tachiyomi.data.database.models.AnimeImpl
+import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
 import tachiyomi.animesource.model.AnimeInfo
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.io.Serializable
 
 interface SAnime : Serializable {
@@ -24,23 +29,47 @@ interface SAnime : Serializable {
 
     var initialized: Boolean
 
+    // AM -->
+    val originalTitle: String
+        get() = (this as? AnimeImpl)?.ogTitle ?: title
+    val originalAuthor: String?
+        get() = (this as? AnimeImpl)?.ogAuthor ?: author
+    val originalArtist: String?
+        get() = (this as? AnimeImpl)?.ogArtist ?: artist
+    val originalDescription: String?
+        get() = (this as? AnimeImpl)?.ogDesc ?: description
+    val originalGenre: String?
+        get() = (this as? AnimeImpl)?.ogGenre ?: genre
+    val originalStatus: Int
+        get() = (this as? AnimeImpl)?.ogStatus ?: status
+    // AM <--
+
     fun copyFrom(other: SAnime) {
-        title = other.title
+        // AM -->
+        if (other.title.isNotBlank() && originalTitle != other.title) {
+            val oldTitle = originalTitle
+            title = other.originalTitle
+            val source = (this as? Anime)?.source
+            if (source != null) {
+                Injekt.get<AnimeDownloadManager>().renameAnimeDir(oldTitle, other.originalTitle, source)
+            }
+        }
+        // AM <--
 
         if (other.author != null) {
-            author = other.author
+            author = /* AM --> */ other.originalAuthor // AM <--
         }
 
         if (other.artist != null) {
-            artist = other.artist
+            artist = /* AM --> */ other.originalArtist // AM <--
         }
 
         if (other.description != null) {
-            description = other.description
+            description = /* AM --> */ other.originalDescription // AM <--
         }
 
         if (other.genre != null) {
-            genre = other.genre
+            genre = /* AM --> */ other.originalGenre // AM <--
         }
 
         if (other.thumbnail_url != null) {
@@ -60,11 +89,11 @@ interface SAnime : Serializable {
         }
 
         if (other.artist != null) {
-            artist = other.artist
+            artist = /* AM --> */ other.artist // AM <--
         }
 
         if (other.description != null) {
-            description = other.description
+            description = /* AM --> */ other.description // AM <--
         }
 
         if (other.genre != null) {

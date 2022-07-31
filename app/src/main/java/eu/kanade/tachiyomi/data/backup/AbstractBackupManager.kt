@@ -9,6 +9,7 @@ import eu.kanade.domain.episode.model.toDbEpisode
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.toSEpisode
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.database.models.Episode
 import eu.kanade.tachiyomi.data.database.models.toAnimeInfo
@@ -17,6 +18,7 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import dataanime.Animes as DbAnime
 import eu.kanade.domain.anime.interactor.GetFavorites as GetFavoritesAnime
 import eu.kanade.domain.anime.model.Anime as DomainAnime
@@ -27,6 +29,9 @@ abstract class AbstractBackupManager(protected val context: Context) {
     internal val animesourceManager: AnimeSourceManager = Injekt.get()
     internal val trackManager: TrackManager = Injekt.get()
     protected val preferences: PreferencesHelper = Injekt.get()
+
+    // AM -->
+    protected val customAnimeManager: CustomAnimeManager by injectLazy()
     private val getFavoritesAnime: GetFavoritesAnime = Injekt.get()
     private val syncEpisodesWithSource: SyncEpisodesWithSource = Injekt.get()
 

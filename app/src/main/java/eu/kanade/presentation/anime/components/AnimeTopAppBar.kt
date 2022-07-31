@@ -46,6 +46,10 @@ fun AnimeTopAppBar(
     onDownloadClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    // AM -->
+    showEditInfo: Boolean,
+    onEditInfoClicked: () -> Unit,
+    // AM <--
     doGlobalSearch: (query: String, global: Boolean) -> Unit,
     scrollBehavior: TopAppBarScrollBehavior?,
     // For action mode
@@ -108,6 +112,10 @@ fun AnimeTopAppBar(
                 onDownloadClicked = onDownloadClicked,
                 onEditCategoryClicked = onEditCategoryClicked,
                 onMigrateClicked = onMigrateClicked,
+                // AM -->
+                showEditInfo = showEditInfo,
+                onEditInfoClicked = onEditInfoClicked,
+                // AM <--
                 actionModeCounter = actionModeCounter,
                 onSelectAll = onSelectAll,
                 onInvertSelection = onInvertSelection,

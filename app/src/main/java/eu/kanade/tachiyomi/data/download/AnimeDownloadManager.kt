@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.download.model.AnimeDownloadQueue
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.util.lang.launchIO
+import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.logcat
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
@@ -379,4 +380,12 @@ class AnimeDownloadManager(
             episodes
         }
     }
+
+    // AM -->
+    fun renameAnimeDir(oldTitle: String, newTitle: String, animeSource: Long) {
+        val sourceDir = provider.findSourceDir(sourceManager.getOrStub(animeSource)) ?: return
+        val animeDir = sourceDir.findFile(DiskUtil.buildValidFilename(oldTitle), true) ?: return
+        animeDir.renameTo(DiskUtil.buildValidFilename(newTitle))
+    }
+    // AM <--
 }

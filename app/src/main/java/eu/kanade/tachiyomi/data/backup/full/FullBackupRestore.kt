@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.preference.PreferenceManager
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.backup.AbstractBackupRestore
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.full.models.BackupAnime
@@ -99,9 +100,14 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         val categories = backupAnime.categories.map { it.toInt() }
         val history = backupAnime.brokenHistory.map { BackupAnimeHistory(it.url, it.lastSeen) } + backupAnime.history
         val tracks = backupAnime.getTrackingImpl()
+        // AM -->
+        val customAnime = backupAnime.getCustomAnimeInfo()
+        // AM <--
 
         try {
-            restoreAnimeData(anime, episodes, categories, history, tracks, backupCategories)
+            // AM -->
+            restoreAnimeData(anime, episodes, categories, history, tracks, backupCategories, customAnime)
+            // AM <--
         } catch (e: Exception) {
             val sourceName = sourceMapping[anime.source] ?: anime.source.toString()
             errors.add(Date() to "${anime.title} [$sourceName]: ${e.message}")
@@ -127,17 +133,24 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         history: List<BackupAnimeHistory>,
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
+        // AM -->
+        customAnime: CustomAnimeManager.AnimeJson?,
+        // AM <--
     ) {
         val dbAnime = backupManager.getAnimeFromDatabase(anime.url, anime.source)
         if (dbAnime == null) {
             // Anime not in database
-            restoreAnimeFetch(anime, episodes, categories, history, tracks, backupCategories)
+            // AM -->
+            restoreAnimeFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
+            // AM <--
         } else {
             // Anime in database
             // Copy information from anime already in database
             backupManager.restoreAnimeNoFetch(anime, dbAnime)
             // Fetch rest of anime information
-            restoreAnimeNoFetch(anime, episodes, categories, history, tracks, backupCategories)
+            // AM -->
+            restoreAnimeNoFetch(anime, episodes, categories, history, tracks, backupCategories, customAnime)
+            // AM <--
         }
     }
 
@@ -155,6 +168,9 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         history: List<BackupAnimeHistory>,
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
+        // AM -->
+        customAnime: CustomAnimeManager.AnimeJson?,
+        // AM <--
     ) {
         try {
             val fetchedAnime = backupManager.restoreAnime(anime)
@@ -162,7 +178,9 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
 
             backupManager.restoreEpisodesForAnime(fetchedAnime, episodes)
 
-            restoreExtraForAnime(fetchedAnime, categories, history, tracks, backupCategories)
+            // AM -->
+            restoreExtraForAnime(fetchedAnime, categories, history, tracks, backupCategories, customAnime)
+            // AM <--
         } catch (e: Exception) {
             errors.add(Date() to "${anime.title} - ${e.message}")
         }
@@ -175,13 +193,19 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
         history: List<BackupAnimeHistory>,
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
+        // AM -->
+        customAnime: CustomAnimeManager.AnimeJson?,
+        // AM <--
     ) {
         backupManager.restoreEpisodesForAnime(backupAnime, episodes)
-
-        restoreExtraForAnime(backupAnime, categories, history, tracks, backupCategories)
+        // AM -->
+        restoreExtraForAnime(backupAnime, categories, history, tracks, backupCategories, customAnime)
+        // AM <--
     }
 
-    private suspend fun restoreExtraForAnime(anime: Anime, categories: List<Int>, history: List<BackupAnimeHistory>, tracks: List<AnimeTrack>, backupCategories: List<BackupCategory>) {
+    // AM -->
+    private suspend fun restoreExtraForAnime(anime: Anime, categories: List<Int>, history: List<BackupAnimeHistory>, tracks: List<AnimeTrack>, backupCategories: List<BackupCategory>, customAnime: CustomAnimeManager.AnimeJson?) {
+        // AM <--
         // Restore categories
         backupManager.restoreCategoriesForAnime(anime, categories, backupCategories)
 
@@ -190,5 +214,11 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
 
         // Restore tracking
         backupManager.restoreTrackForAnime(anime, tracks)
+
+        // AM -->
+        // Restore Custom Info
+        customAnime?.id = anime.id!!
+        customAnime?.let { customAnimeManager.saveAnimeInfo(it) }
+        // AM <--
     }
 }

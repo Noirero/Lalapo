@@ -19,6 +19,7 @@ import eu.kanade.domain.episode.interactor.UpdateEpisode
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.database.models.toDomainAnime
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
@@ -30,6 +31,7 @@ import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.util.lang.combineLatest
 import eu.kanade.tachiyomi.util.lang.isNullOrUnsubscribed
 import eu.kanade.tachiyomi.util.lang.launchIO
+import eu.kanade.tachiyomi.util.nullIfBlank
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import kotlinx.coroutines.runBlocking
@@ -72,6 +74,9 @@ class AnimelibPresenter(
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val trackManager: TrackManager = Injekt.get(),
+    // AM -->
+    private val customAnimeManager: CustomAnimeManager = Injekt.get(),
+    // AM <--
 ) : BasePresenter<AnimelibController>() {
 
     private val context = preferences.context
@@ -446,7 +451,7 @@ class AnimelibPresenter(
                 tracks
                     .groupBy { it.animeId }
                     .mapValues { tracksForAnimeId ->
-                        // Check if any of the trackers is logged in for the current manga id
+                        // Check if any of the trackers is logged in for the current anime id
                         tracksForAnimeId.value.associate {
                             Pair(it.syncId, trackManager.getService(it.syncId)?.isLogged ?: false)
                         }
@@ -523,6 +528,32 @@ class AnimelibPresenter(
             }
         }
     }
+
+    // AM -->
+    fun cleanTitles(animes: List<DbAnime>) {
+        animes.forEach { anime ->
+            val editedTitle = anime.title.replace("\\[.*?]".toRegex(), "").trim().replace("\\(.*?\\)".toRegex(), "").trim().replace("\\{.*?\\}".toRegex(), "").trim().let {
+                if (it.contains("|")) {
+                    it.replace(".*\\|".toRegex(), "").trim()
+                } else {
+                    it
+                }
+            }
+            if (anime.title == editedTitle) return@forEach
+            val animeJson = CustomAnimeManager.AnimeJson(
+                id = anime.id,
+                title = editedTitle.nullIfBlank(),
+                author = anime.author.takeUnless { it == anime.originalAuthor },
+                artist = anime.artist.takeUnless { it == anime.originalArtist },
+                description = anime.description.takeUnless { it == anime.originalDescription },
+                genre = anime.getGenres().takeUnless { it == anime.getOriginalGenres() },
+                status = anime.status.takeUnless { it == anime.originalStatus }?.toLong(),
+            )
+
+            customAnimeManager.saveAnimeInfo(animeJson)
+        }
+    }
+    // AM <--
 
     /**
      * Marks animes' episodes seen status.

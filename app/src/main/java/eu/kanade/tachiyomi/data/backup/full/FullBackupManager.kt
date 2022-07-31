@@ -12,6 +12,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.AbstractBackupManager
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY_MASK
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY
@@ -167,7 +169,9 @@ class FullBackupManager(context: Context) : AbstractBackupManager(context) {
      */
     private suspend fun backupAnimeObject(anime: DomainAnime, options: Int): BackupAnime {
         // Entry for this anime
-        val animeObject = BackupAnime.copyFrom(anime)
+        // AM -->
+        val animeObject = BackupAnime.copyFrom(anime, if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) customAnimeManager else null)
+        // AM <--
 
         // Check if user wants chapter information in backup
         if (options and BACKUP_EPISODE_MASK == BACKUP_EPISODE) {

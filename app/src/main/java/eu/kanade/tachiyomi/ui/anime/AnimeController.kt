@@ -149,6 +149,9 @@ class AnimeController :
                 onDownloadActionClicked = this::runDownloadEpisodeAction.takeIf { !successState.source.isLocalOrStub() },
                 onEditCategoryClicked = this::onCategoriesClick.takeIf { successState.anime.favorite },
                 onMigrateClicked = this::migrateAnime.takeIf { successState.anime.favorite },
+                // AM -->
+                onEditInfoClicked = this::openEditAnimeInfoDialog,
+                // AM <--
                 onMultiFillermarkClicked = presenter::fillermarkEpisodes,
                 onMultiBookmarkClicked = presenter::bookmarkEpisodes,
                 onMultiMarkAsSeenClicked = presenter::markEpisodesSeen,
@@ -183,6 +186,15 @@ class AnimeController :
         }
         activity?.toast(error.message)
     }
+
+    // AM -->
+    private fun openEditAnimeInfoDialog() {
+        EditAnimeDialog(
+            this,
+            presenter.anime ?: return,
+        ).showDialog(router)
+    }
+    // AM <--
 
     private fun openAnimeInWebView() {
         val anime = presenter.anime ?: return

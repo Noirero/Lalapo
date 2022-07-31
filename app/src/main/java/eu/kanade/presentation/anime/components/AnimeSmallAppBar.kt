@@ -54,6 +54,10 @@ fun AnimeSmallAppBar(
     onDownloadClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    // AM -->
+    showEditInfo: Boolean,
+    onEditInfoClicked: () -> Unit,
+    // AM <--
     // For action mode
     actionModeCounter: Int,
     onSelectAll: () -> Unit,
@@ -168,8 +172,9 @@ fun AnimeSmallAppBar(
                             }
                         }
                     }
-
-                    if (onEditCategoryClicked != null && onMigrateClicked != null) {
+                    // AM -->
+                    if (onEditCategoryClicked != null || onMigrateClicked != null || showEditInfo) {
+                        // AM <--
                         val (moreExpanded, onMoreExpanded) = remember { mutableStateOf(false) }
                         Box {
                             IconButton(onClick = { onMoreExpanded(!moreExpanded) }) {
@@ -183,20 +188,35 @@ fun AnimeSmallAppBar(
                                 expanded = moreExpanded,
                                 onDismissRequest = onDismissRequest,
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text(text = stringResource(R.string.action_edit_categories)) },
-                                    onClick = {
-                                        onEditCategoryClicked()
-                                        onDismissRequest()
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(text = stringResource(R.string.action_migrate)) },
-                                    onClick = {
-                                        onMigrateClicked()
-                                        onDismissRequest()
-                                    },
-                                )
+                                if (onEditCategoryClicked != null) {
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(R.string.action_edit_categories)) },
+                                        onClick = {
+                                            onEditCategoryClicked()
+                                            onDismissRequest()
+                                        },
+                                    )
+                                }
+                                if (onMigrateClicked != null) {
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(R.string.action_migrate)) },
+                                        onClick = {
+                                            onMigrateClicked()
+                                            onDismissRequest()
+                                        },
+                                    )
+                                }
+                                // AM -->
+                                if (showEditInfo) {
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(R.string.action_edit_info)) },
+                                        onClick = {
+                                            onEditInfoClicked()
+                                            onDismissRequest()
+                                        },
+                                    )
+                                }
+                                // AM <--
                             }
                         }
                     }

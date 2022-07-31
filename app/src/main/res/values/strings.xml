@@ -13,6 +13,7 @@
     <string name="track">Tracking</string>
     <string name="history">History</string>
     <string name="settings">Settings</string>
+    <string name="custom_anime_info">Custom anime info</string>
 
     <string name="backup_settings_warning">Warning: Backing up settings will store your track passwords as well, do not share this backup file!</string>
 

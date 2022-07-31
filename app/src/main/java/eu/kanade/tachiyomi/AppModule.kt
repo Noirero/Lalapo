@@ -12,6 +12,7 @@ import eu.kanade.data.AnimeDatabaseHandler
 import eu.kanade.data.dateAdapter
 import eu.kanade.data.listOfStringsAdapter
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
+import eu.kanade.tachiyomi.data.animelib.CustomAnimeManager
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
@@ -83,6 +84,10 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { ImageSaver(app) }
 
+        // AM -->
+        addSingletonFactory { CustomAnimeManager(app) }
+        // AM <--
+
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(app).execute {
             get<PreferencesHelper>()
@@ -94,6 +99,10 @@ class AppModule(val app: Application) : InjektModule {
             get<AnimeDatabase>()
 
             get<AnimeDownloadManager>()
+
+            // AM -->
+            get<CustomAnimeManager>()
+            // AM <--
         }
     }
 }

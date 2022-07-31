@@ -62,7 +62,7 @@
         android:layout_marginEnd="16dp">
 
         <eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText
-            android:id="@+id/anime_studio"
+            android:id="@+id/anime_author"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"

@@ -32,6 +32,12 @@ interface Anime : SAnime {
         return genre?.split(", ")?.map { it.trim() }?.filterNot { it.isBlank() }?.distinct()
     }
 
+    // AM -->
+    fun getOriginalGenres(): List<String>? {
+        return originalGenre?.split(", ")?.map { it.trim() }
+    }
+    // AM <--
+
     private fun setEpisodeFlags(flag: Int, mask: Int) {
         episode_flags = episode_flags and mask.inv() or (flag and mask)
     }
@@ -103,12 +109,14 @@ fun Anime.toDomainAnime(): DomainAnime? {
         episodeFlags = episode_flags.toLong(),
         coverLastModified = cover_last_modified,
         url = url,
-        title = title,
-        artist = artist,
-        author = author,
-        description = description,
-        genre = getGenres(),
-        status = status.toLong(),
+        // AM -->
+        ogTitle = originalTitle,
+        ogArtist = originalArtist,
+        ogAuthor = originalAuthor,
+        ogDescription = originalDescription,
+        ogGenre = getOriginalGenres(),
+        ogStatus = originalStatus.toLong(),
+        // AM <--
         thumbnailUrl = thumbnail_url,
         initialized = initialized,
     )

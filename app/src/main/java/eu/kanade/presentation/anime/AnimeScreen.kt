@@ -119,6 +119,9 @@ fun AnimeScreen(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    // AM -->
+    onEditInfoClicked: () -> Unit,
+    // AM <--
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
@@ -147,6 +150,9 @@ fun AnimeScreen(
             onDownloadActionClicked = onDownloadActionClicked,
             onEditCategoryClicked = onEditCategoryClicked,
             onMigrateClicked = onMigrateClicked,
+            // AM -->
+            onEditInfoClicked = onEditInfoClicked,
+            // AM <--
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             onMultiFillermarkClicked = onMultiFillermarkClicked,
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
@@ -174,6 +180,9 @@ fun AnimeScreen(
             onDownloadActionClicked = onDownloadActionClicked,
             onEditCategoryClicked = onEditCategoryClicked,
             onMigrateClicked = onMigrateClicked,
+            // AM -->
+            onEditInfoClicked = onEditInfoClicked,
+            // AM <--
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             onMultiFillermarkClicked = onMultiFillermarkClicked,
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
@@ -207,6 +216,10 @@ private fun AnimeScreenSmallImpl(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+
+    // AM -->
+    onEditInfoClicked: () -> Unit,
+    // AM <--
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
@@ -306,6 +319,10 @@ private fun AnimeScreenSmallImpl(
                     onDownloadClicked = onDownloadActionClicked,
                     onEditCategoryClicked = onEditCategoryClicked,
                     onMigrateClicked = onMigrateClicked,
+                    // AM -->
+                    showEditInfo = state.anime.favorite,
+                    onEditInfoClicked = onEditInfoClicked,
+                    // AM <--
                     doGlobalSearch = onSearch,
                     scrollBehavior = scrollBehavior,
                     actionModeCounter = selected.size,
@@ -412,6 +429,10 @@ fun AnimeScreenLargeImpl(
     onEditCategoryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
 
+    // AM -->
+    onEditInfoClicked: () -> Unit,
+    // AM <--
+
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
     onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
@@ -469,6 +490,10 @@ fun AnimeScreenLargeImpl(
                     onDownloadClicked = onDownloadActionClicked,
                     onEditCategoryClicked = onEditCategoryClicked,
                     onMigrateClicked = onMigrateClicked,
+                    // AM -->
+                    showEditInfo = state.anime.favorite,
+                    onEditInfoClicked = onEditInfoClicked,
+                    // AM <--
                     actionModeCounter = selected.size,
                     onSelectAll = {
                         selected.clear()
