@@ -62,10 +62,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
-                <action android:name="eu.kanade.tachiyomi.SEARCH" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
                 <action android:name="eu.kanade.tachiyomi.ANIMESEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
