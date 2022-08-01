@@ -52,7 +52,7 @@ body:
       label: Animiru version
       description: You can find your Animiru version in **More → About**.
       placeholder: |
-        Example: "0.13.3.3"
+        Example: "0.13.3.4"
     validations:
       required: true
 
