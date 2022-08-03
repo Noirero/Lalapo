@@ -395,6 +395,7 @@
     <string name="pref_category_delete_episodes">Delete episodes</string>
     <string name="pref_remove_after_marked_as_seen">After manually marked as seen</string>
     <string name="pref_remove_after_seen">After watching automatically delete</string>
+    <string name="pref_download_after_seen">After watching automatically download</string>
     <string name="pref_remove_bookmarked_episodes">Allow deleting bookmarked episodes</string>
     <string name="pref_remove_exclude_categories">Excluded categories</string>
     <string name="pref_remove_exclude_categories_anime_prefix">Anime: </string>
@@ -405,6 +406,11 @@
     <string name="third_to_last">Third to last seen episode</string>
     <string name="fourth_to_last">Fourth to last seen episode</string>
     <string name="fifth_to_last">Fifth to last seen episode</string>
+    <string name="one_episode_ahead">One episode ahead</string>
+    <string name="two_episodes_ahead">Two episodes ahead</string>
+    <string name="three_episodes_ahead">Three episodes ahead</string>
+    <string name="four_episodes_ahead">Four episodes ahead</string>
+    <string name="five_episodes_ahead">Five episodes ahead</string>
     <string name="pref_category_auto_download">Auto-download</string>
     <string name="pref_category_external_downloader">External downloader</string>
     <string name="pref_use_external_downloader">Always use external downloader for anime</string>

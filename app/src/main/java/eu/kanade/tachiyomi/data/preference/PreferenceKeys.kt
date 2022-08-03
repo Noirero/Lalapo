@@ -46,9 +46,11 @@ object PreferenceKeys {
 
     const val downloadOnlyOverWifi = "pref_download_only_over_wifi_key"
 
-    const val removeAfterReadSlots = "remove_after_read_slots"
+    const val removeAfterSeenSlots = "remove_after_seen_slots"
 
-    const val removeAfterMarkedAsRead = "pref_remove_after_marked_as_read_key"
+    const val downloadAfterSeenSlots = "download_after_seen_slots"
+
+    const val removeAfterMarkedAsSeen = "pref_remove_after_marked_as_seen_key"
 
     const val removeBookmarkedChapters = "pref_remove_bookmarked"
 

@@ -274,6 +274,9 @@ class ExternalIntents(val anime: Anime, val source: AnimeSource) {
                 if (episode.seen) {
                     deleteEpisodeIfNeeded(episode.toDomainEpisode()!!, anime)
                     deleteEpisodeFromDownloadQueue(episode.toDomainEpisode()!!)
+                    // AM -->
+                    downloadEpisodesIfNeeded(episode.toDomainEpisode()!!, anime)
+                    // AM <--
                 }
             }
         }
@@ -284,8 +287,39 @@ class ExternalIntents(val anime: Anime, val source: AnimeSource) {
             }
         }
 
+        // AM -->
+        private suspend fun downloadEpisodesIfNeeded(currentEpisode: Episode, anime: Anime) {
+            // Determine which episodes should be downloaded and enqueue them
+            val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
+                Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.sourceOrder.compareTo(c1.sourceOrder) }
+                Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episodeNumber.compareTo(c2.episodeNumber) }
+                Anime.EPISODE_SORTING_UPLOAD_DATE -> { c1, c2 -> c1.dateUpload.compareTo(c2.dateUpload) }
+                else -> throw NotImplementedError("Unknown sorting method")
+            }
+
+            val episodeList = getEpisodeByAnimeId.await(anime.id)
+                .sortedWith { e1, e2 -> sortFunction(e1, e2) }
+
+            // Determine which episode should be downloaded and enqueue
+            val currentEpisodePosition = episodeList.indexOf(currentEpisode)
+            val downloadAfterSeenSlots = preferences.downloadAfterSeenSlots()
+            var episodePositionDelta = 1
+            val episodesToDownload = mutableListOf<Episode>()
+            while (episodePositionDelta <= downloadAfterSeenSlots) {
+                val episodeToDownload = episodeList.getOrNull(currentEpisodePosition + episodePositionDelta)
+                // Check if downloading option is enabled and episode exists
+                if (downloadAfterSeenSlots != 0 && episodeToDownload != null) {
+                    // Check if episode is already in the downloader
+                    if (downloadManager.getEpisodeDownloadOrNull(episodeToDownload) == null) episodesToDownload += episodeToDownload
+                }
+                episodePositionDelta++
+            }
+            if (episodesToDownload.isNotEmpty()) downloadManager.downloadEpisodes(anime, episodesToDownload)
+        }
+        // AM <--
+
         private suspend fun deleteEpisodeIfNeeded(episode: Episode, anime: Anime) {
-            // Determine which chapter should be deleted and enqueue
+            // Determine which episode should be deleted and enqueue
             val sortFunction: (Episode, Episode) -> Int = when (anime.sorting) {
                 Anime.EPISODE_SORTING_SOURCE -> { c1, c2 -> c2.sourceOrder.compareTo(c1.sourceOrder) }
                 Anime.EPISODE_SORTING_NUMBER -> { c1, c2 -> c1.episodeNumber.compareTo(c2.episodeNumber) }
@@ -297,11 +331,11 @@ class ExternalIntents(val anime: Anime, val source: AnimeSource) {
                 .sortedWith { e1, e2 -> sortFunction(e1, e2) }
 
             val currentEpisodePosition = episodes.indexOf(episode)
-            val removeAfterReadSlots = preferences.removeAfterReadSlots()
-            val episodeToDelete = episodes.getOrNull(currentEpisodePosition - removeAfterReadSlots)
+            val removeAfterSeenSlots = preferences.removeAfterSeenSlots()
+            val episodeToDelete = episodes.getOrNull(currentEpisodePosition - removeAfterSeenSlots)
 
             // Check if deleting option is enabled and chapter exists
-            if (removeAfterReadSlots != -1 && episodeToDelete != null) {
+            if (removeAfterSeenSlots != -1 && episodeToDelete != null) {
                 enqueueDeleteSeenEpisodes(episodeToDelete, anime)
             }
         }

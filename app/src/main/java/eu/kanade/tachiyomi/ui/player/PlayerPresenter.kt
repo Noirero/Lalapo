@@ -346,6 +346,9 @@ class PlayerPresenter(
             if (episode.seen) {
                 deleteEpisodeIfNeeded(episode)
                 deleteEpisodeFromDownloadQueue(episode)
+                // AM -->
+                downloadEpisodesIfNeeded(episode)
+                // AM <--
             }
         }
     }
@@ -356,10 +359,34 @@ class PlayerPresenter(
         }
     }
 
+    // AM -->
+    private fun downloadEpisodesIfNeeded(currentEpisode: Episode) {
+        if (anime == null) return
+
+        // Determine which episode should be downloaded and enqueue
+        val currentEpisodePosition = episodeList.indexOf(currentEpisode)
+        val downloadAfterSeenSlots = preferences.downloadAfterSeenSlots()
+
+        var episodePositionDelta = 1
+        val episodesToDownload = mutableListOf<eu.kanade.domain.episode.model.Episode>()
+
+        while (episodePositionDelta <= downloadAfterSeenSlots) {
+            val episodeToDownload = episodeList.getOrNull(currentEpisodePosition + episodePositionDelta)
+            // Check if downloading option is enabled and episode exists
+            if (downloadAfterSeenSlots != 0 && episodeToDownload != null) {
+                // Check if episode is already in the downloader
+                if (downloadManager.getEpisodeDownloadOrNull(episodeToDownload.toDomainEpisode()!!) == null) episodesToDownload += episodeToDownload.toDomainEpisode()!!
+            }
+            episodePositionDelta++
+        }
+        if (episodesToDownload.isNotEmpty()) downloadManager.downloadEpisodes(anime!!.toDomainAnime()!!, episodesToDownload)
+    }
+    // AM <--
+
     private fun deleteEpisodeIfNeeded(currentEpisode: Episode) {
         // Determine which episode should be deleted and enqueue
         val currentEpisodePosition = episodeList.indexOf(currentEpisode)
-        val removeAfterSeenSlots = preferences.removeAfterReadSlots()
+        val removeAfterSeenSlots = preferences.removeAfterSeenSlots()
         val episodeToDelete = episodeList.getOrNull(currentEpisodePosition - removeAfterSeenSlots)
 
         // Check if deleting option is enabled and episode exists

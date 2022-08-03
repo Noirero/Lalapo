@@ -75,12 +75,17 @@ class SettingsDownloadController : SettingsController() {
             titleRes = R.string.pref_category_delete_episodes
 
             switchPreference {
-                key = Keys.removeAfterMarkedAsRead
+                key = Keys.removeAfterMarkedAsSeen
                 titleRes = R.string.pref_remove_after_marked_as_seen
                 defaultValue = false
             }
+            switchPreference {
+                key = Keys.removeBookmarkedChapters
+                titleRes = R.string.pref_remove_bookmarked_episodes
+                defaultValue = false
+            }
             intListPreference {
-                key = Keys.removeAfterReadSlots
+                key = Keys.removeAfterSeenSlots
                 titleRes = R.string.pref_remove_after_seen
                 entriesRes = arrayOf(
                     R.string.disabled,
@@ -93,11 +98,6 @@ class SettingsDownloadController : SettingsController() {
                 entryValues = arrayOf("-1", "0", "1", "2", "3", "4")
                 defaultValue = "-1"
                 summary = "%s"
-            }
-            switchPreference {
-                key = Keys.removeBookmarkedChapters
-                titleRes = R.string.pref_remove_bookmarked_episodes
-                defaultValue = false
             }
             multiSelectListPreference {
                 bindTo(preferences.removeExcludeAnimeCategories())
@@ -169,6 +169,23 @@ class SettingsDownloadController : SettingsController() {
                     .onEach { updateSummary() }
                     .launchIn(viewScope)
             }
+            // AM -->
+            intListPreference {
+                key = Keys.downloadAfterSeenSlots
+                titleRes = R.string.pref_download_after_seen
+                entriesRes = arrayOf(
+                    R.string.disabled,
+                    R.string.one_episode_ahead,
+                    R.string.two_episodes_ahead,
+                    R.string.three_episodes_ahead,
+                    R.string.four_episodes_ahead,
+                    R.string.five_episodes_ahead,
+                )
+                entryValues = arrayOf("0", "1", "2", "3", "4", "5")
+                defaultValue = "0"
+                summary = "%s"
+            }
+            // AM <--
         }
         preferenceCategory {
             titleRes = R.string.pref_category_external_downloader

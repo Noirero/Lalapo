@@ -52,7 +52,7 @@ class SetSeenStatus(
             return@f Result.InternalError(e)
         }
 
-        if (seen && preferences.removeAfterMarkedAsRead()) {
+        if (seen && preferences.removeAfterMarkedAsSeen()) {
             anime.forEach { anime ->
                 deleteDownload.awaitAll(
                     anime = anime,

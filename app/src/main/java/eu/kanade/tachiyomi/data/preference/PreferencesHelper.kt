@@ -195,9 +195,11 @@ class PreferencesHelper(val context: Context) {
 
     fun backupFlags() = flowPrefs.getStringSet("backup_flags", setOf(FLAG_CATEGORIES, FLAG_EPISODES, FLAG_HISTORY, FLAG_TRACK))
 
-    fun removeAfterReadSlots() = prefs.getInt(Keys.removeAfterReadSlots, -1)
+    fun removeAfterSeenSlots() = prefs.getInt(Keys.removeAfterSeenSlots, -1)
 
-    fun removeAfterMarkedAsRead() = prefs.getBoolean(Keys.removeAfterMarkedAsRead, false)
+    fun removeAfterMarkedAsSeen() = prefs.getBoolean(Keys.removeAfterMarkedAsSeen, false)
+
+    fun downloadAfterSeenSlots() = prefs.getInt(Keys.downloadAfterSeenSlots, 0)
 
     fun removeBookmarkedChapters() = prefs.getBoolean(Keys.removeBookmarkedChapters, false)
 
