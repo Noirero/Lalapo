@@ -365,7 +365,7 @@ class PlayerPresenter(
 
         // Determine which episode should be downloaded and enqueue
         val currentEpisodePosition = episodeList.indexOf(currentEpisode)
-        val downloadAfterSeenSlots = preferences.downloadAfterSeenSlots()
+        val downloadAfterSeenSlots = preferences.downloadAfterSeenSlots().get()
 
         var episodePositionDelta = 1
         val episodesToDownload = mutableListOf<eu.kanade.domain.episode.model.Episode>()

@@ -185,6 +185,19 @@ class SettingsDownloadController : SettingsController() {
                 defaultValue = "0"
                 summary = "%s"
             }
+            intListPreference {
+                bindTo(preferences.downloadOnAddingToLibrary())
+                titleRes = R.string.pref_download_on_add_library
+                entriesRes = arrayOf(
+                    R.string.never_add_library_download,
+                    R.string.prompt_add_library_download,
+                    R.string.always_add_library_download,
+                )
+                entryValues = arrayOf("0", "1", "2")
+                defaultValue = "0"
+                summary = "%s"
+                visibleIf(preferences.downloadAfterSeenSlots()) { it != 0 }
+            }
             // AM <--
         }
         preferenceCategory {

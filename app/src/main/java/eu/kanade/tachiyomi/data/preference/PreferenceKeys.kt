@@ -50,6 +50,10 @@ object PreferenceKeys {
 
     const val downloadAfterSeenSlots = "download_after_seen_slots"
 
+    const val trackOnAddingToLibrary = "track_on_adding_to_library"
+
+    const val downloadOnAddingToLibrary = "download_on_adding_to_library"
+
     const val removeAfterMarkedAsSeen = "pref_remove_after_marked_as_seen_key"
 
     const val removeBookmarkedChapters = "pref_remove_bookmarked"

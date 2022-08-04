@@ -6,6 +6,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.preference.PreferenceGroup
 import androidx.preference.PreferenceScreen
+import androidx.preference.SwitchPreferenceCompat
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.track.NoLoginTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
@@ -18,6 +19,7 @@ import eu.kanade.tachiyomi.data.track.simkl.SimklApi
 import eu.kanade.tachiyomi.ui.setting.track.TrackLoginDialog
 import eu.kanade.tachiyomi.ui.setting.track.TrackLogoutDialog
 import eu.kanade.tachiyomi.util.preference.add
+import eu.kanade.tachiyomi.util.preference.bindTo
 import eu.kanade.tachiyomi.util.preference.defaultValue
 import eu.kanade.tachiyomi.util.preference.iconRes
 import eu.kanade.tachiyomi.util.preference.infoPreference
@@ -37,6 +39,10 @@ class SettingsTrackingController :
 
     private val trackManager: TrackManager by injectLazy()
 
+    // AM -->
+    private lateinit var trackOnAddingToLibrary: SwitchPreferenceCompat
+    // AM <--
+
     override fun setupPreferenceScreen(screen: PreferenceScreen) = screen.apply {
         titleRes = R.string.pref_category_tracking
 
@@ -45,6 +51,16 @@ class SettingsTrackingController :
             titleRes = R.string.pref_auto_update_sync
             defaultValue = true
         }
+
+        // AM -->
+        trackOnAddingToLibrary = switchPreference {
+            bindTo(preferences.trackOnAddingToLibrary())
+            titleRes = R.string.pref_track_on_add_library
+            defaultValue = false
+        }
+
+        trackOnAddingToLibrary.isVisible = trackManager.hasLoggedAnimeServices()
+        // AM <--
 
         preferenceCategory {
             titleRes = R.string.services
@@ -110,6 +126,9 @@ class SettingsTrackingController :
         updatePreference(trackManager.shikimori.id)
         updatePreference(trackManager.bangumi.id)
         updatePreference(trackManager.simkl.id)
+        // AM -->
+        setVisibility(preferences.trackOnAddingToLibrary(), trackOnAddingToLibrary, trackManager.hasLoggedAnimeServices())
+        // AM <--
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -134,6 +153,9 @@ class SettingsTrackingController :
 
     override fun trackLogoutDialogClosed(service: TrackService) {
         updatePreference(service.id)
+        // AM -->
+        setVisibility(preferences.trackOnAddingToLibrary(), trackOnAddingToLibrary, trackManager.hasLoggedAnimeServices())
+        // AM <--
     }
 }
 

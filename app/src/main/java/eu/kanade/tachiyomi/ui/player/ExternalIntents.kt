@@ -302,7 +302,7 @@ class ExternalIntents(val anime: Anime, val source: AnimeSource) {
 
             // Determine which episode should be downloaded and enqueue
             val currentEpisodePosition = episodeList.indexOf(currentEpisode)
-            val downloadAfterSeenSlots = preferences.downloadAfterSeenSlots()
+            val downloadAfterSeenSlots = preferences.downloadAfterSeenSlots().get()
             var episodePositionDelta = 1
             val episodesToDownload = mutableListOf<Episode>()
             while (episodePositionDelta <= downloadAfterSeenSlots) {

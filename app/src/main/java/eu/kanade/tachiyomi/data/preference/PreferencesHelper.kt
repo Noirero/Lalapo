@@ -199,7 +199,11 @@ class PreferencesHelper(val context: Context) {
 
     fun removeAfterMarkedAsSeen() = prefs.getBoolean(Keys.removeAfterMarkedAsSeen, false)
 
-    fun downloadAfterSeenSlots() = prefs.getInt(Keys.downloadAfterSeenSlots, 0)
+    fun downloadAfterSeenSlots() = flowPrefs.getInt(Keys.downloadAfterSeenSlots, 0)
+
+    fun trackOnAddingToLibrary() = flowPrefs.getBoolean(Keys.trackOnAddingToLibrary, false)
+
+    fun downloadOnAddingToLibrary() = flowPrefs.getInt(Keys.downloadOnAddingToLibrary, 0)
 
     fun removeBookmarkedChapters() = prefs.getBoolean(Keys.removeBookmarkedChapters, false)
 

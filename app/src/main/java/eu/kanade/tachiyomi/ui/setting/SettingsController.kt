@@ -141,4 +141,11 @@ abstract class SettingsController : PreferenceController() {
         preference.asImmediateFlow { isVisible = block(it) }
             .launchIn(viewScope)
     }
+
+    // AM -->
+    fun <T> setVisibility(preference: com.fredporciuncula.flow.preferences.Preference<T>, parentPreference: Preference, value: Boolean) {
+        preference.asImmediateFlow { parentPreference.isVisible = value }
+            .launchIn(viewScope)
+    }
+    // AM <--
 }
