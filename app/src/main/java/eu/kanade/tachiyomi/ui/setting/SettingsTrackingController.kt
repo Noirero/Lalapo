@@ -56,7 +56,7 @@ class SettingsTrackingController :
         trackOnAddingToLibrary = switchPreference {
             bindTo(preferences.trackOnAddingToLibrary())
             titleRes = R.string.pref_track_on_add_library
-            defaultValue = false
+            defaultValue = true
         }
 
         trackOnAddingToLibrary.isVisible = trackManager.hasLoggedAnimeServices()

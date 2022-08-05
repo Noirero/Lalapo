@@ -194,7 +194,7 @@ class SettingsDownloadController : SettingsController() {
                     R.string.always_add_library_download,
                 )
                 entryValues = arrayOf("0", "1", "2")
-                defaultValue = "0"
+                defaultValue = "1"
                 summary = "%s"
                 visibleIf(preferences.downloadAfterSeenSlots()) { it != 0 }
             }
