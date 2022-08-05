@@ -67,7 +67,7 @@
     <string name="action_select_inverse">Select inverse</string>
     <string name="action_mark_as_seen">Mark unseen</string>
     <string name="action_mark_as_unseen">Mark seen</string>
-    <string name="action_mark_previous_as_seen">Mark previous seen</string>
+    <string name="action_mark_previous_as_seen">Previous seen</string>
     <string name="action_download">Download</string>
     <string name="action_play_internally">Play internally</string>
     <string name="action_play_externally">Play externally</string>
