@@ -77,11 +77,11 @@ fun AnimeBottomActionMenu(
             tonalElevation = 3.dp,
         ) {
             val haptic = LocalHapticFeedback.current
-            val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false, false, false) }
+            val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false, false, false, false, false) }
             var resetJob: Job? = remember { null }
             val onLongClickItem: (Int) -> Unit = { toConfirmIndex ->
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                (0 until 9).forEach { i -> confirm[i] = i == toConfirmIndex }
+                (0 until 11).forEach { i -> confirm[i] = i == toConfirmIndex }
                 resetJob?.cancel()
                 resetJob = scope.launch {
                     delay(1000)
@@ -115,8 +115,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_fillermark),
                         icon = ImageVector.vectorResource(R.drawable.ic_fillermark_24dp),
-                        toConfirm = confirm[0],
-                        onLongClick = { onLongClickItem(0) },
+                        toConfirm = confirm[2],
+                        onLongClick = { onLongClickItem(2) },
                         onClick = onFillermarkClicked,
                     )
                 }
@@ -124,8 +124,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_remove_fillermark),
                         icon = ImageVector.vectorResource(R.drawable.ic_fillermark_border_24dp),
-                        toConfirm = confirm[1],
-                        onLongClick = { onLongClickItem(1) },
+                        toConfirm = confirm[3],
+                        onLongClick = { onLongClickItem(3) },
                         onClick = onRemoveFillermarkClicked,
                     )
                 }
@@ -133,8 +133,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_mark_as_seen),
                         icon = Icons.Default.DoneAll,
-                        toConfirm = confirm[2],
-                        onLongClick = { onLongClickItem(2) },
+                        toConfirm = confirm[4],
+                        onLongClick = { onLongClickItem(4) },
                         onClick = onMarkAsSeenClicked,
                     )
                 }
@@ -142,8 +142,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_mark_as_unseen),
                         icon = Icons.Default.RemoveDone,
-                        toConfirm = confirm[3],
-                        onLongClick = { onLongClickItem(3) },
+                        toConfirm = confirm[5],
+                        onLongClick = { onLongClickItem(5) },
                         onClick = onMarkAsUnseenClicked,
                     )
                 }
@@ -151,8 +151,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_mark_previous_as_seen),
                         icon = ImageVector.vectorResource(id = R.drawable.ic_done_prev_24dp),
-                        toConfirm = confirm[4],
-                        onLongClick = { onLongClickItem(4) },
+                        toConfirm = confirm[6],
+                        onLongClick = { onLongClickItem(6) },
                         onClick = onMarkPreviousAsSeenClicked,
                     )
                 }
@@ -160,8 +160,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_download),
                         icon = Icons.Outlined.Download,
-                        toConfirm = confirm[5],
-                        onLongClick = { onLongClickItem(5) },
+                        toConfirm = confirm[7],
+                        onLongClick = { onLongClickItem(7) },
                         onClick = onDownloadClicked,
                     )
                 }
@@ -169,8 +169,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_delete),
                         icon = Icons.Outlined.Delete,
-                        toConfirm = confirm[6],
-                        onLongClick = { onLongClickItem(6) },
+                        toConfirm = confirm[8],
+                        onLongClick = { onLongClickItem(8) },
                         onClick = onDeleteClicked,
                     )
                 }
@@ -178,8 +178,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_play_externally),
                         icon = Icons.Outlined.OpenInNew,
-                        toConfirm = confirm[7],
-                        onLongClick = { onLongClickItem(7) },
+                        toConfirm = confirm[9],
+                        onLongClick = { onLongClickItem(9) },
                         onClick = onExternalClicked,
                     )
                 }
@@ -187,8 +187,8 @@ fun AnimeBottomActionMenu(
                     Button(
                         title = stringResource(R.string.action_play_internally),
                         icon = Icons.Outlined.Input,
-                        toConfirm = confirm[8],
-                        onLongClick = { onLongClickItem(8) },
+                        toConfirm = confirm[10],
+                        onLongClick = { onLongClickItem(10) },
                         onClick = onInternalClicked,
                     )
                 }

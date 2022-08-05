@@ -261,7 +261,6 @@ class AnimeController :
 
     private fun onFavoriteRemoved() {
         val context = activity ?: return
-        context.toast(activity?.getString(R.string.item_removed_library))
         // AM -->
         snackbarHostState.currentSnackbarData?.dismiss()
         // AM <--
