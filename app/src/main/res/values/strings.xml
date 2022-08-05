@@ -397,6 +397,7 @@
     <string name="pref_remove_after_seen">After watching automatically delete</string>
     <string name="pref_download_after_seen">After watching automatically download</string>
     <string name="pref_download_on_add_library">Download episodes on adding to library</string>
+    <string name="pref_download_on_add_library_summary">Downloads the same number of episodes as the chosen option above\n\n%s</string>
     <string name="pref_remove_bookmarked_episodes">Allow deleting bookmarked episodes</string>
     <string name="pref_remove_exclude_categories">Excluded categories</string>
     <string name="pref_remove_exclude_categories_anime_prefix">Anime: </string>
@@ -616,8 +617,8 @@
     <string name="episode_progress_no_total">Progress: %1$s</string>
     <string name="delete_downloads_for_anime">Delete downloaded episodes?</string>
     <plurals name="download_episodes_for_anime">
-        <item quantity="one">Download first episode?</item>
-        <item quantity="other">Download first %d episodes?</item>
+        <item quantity="one">Download first unseen episode?</item>
+        <item quantity="other">Download first %d unseen episodes?</item>
     </plurals>
     <string name="copied_to_clipboard">Copied to clipboard:\n%1$s</string>
     <string name="clipboard_copy_error">Failed to copy to clipboard</string>

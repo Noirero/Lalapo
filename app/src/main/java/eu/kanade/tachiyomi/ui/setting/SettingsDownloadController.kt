@@ -195,7 +195,7 @@ class SettingsDownloadController : SettingsController() {
                 )
                 entryValues = arrayOf("0", "1", "2")
                 defaultValue = "1"
-                summary = "%s"
+                summary = context.resources.getString(R.string.pref_download_on_add_library_summary)
                 visibleIf(preferences.downloadAfterSeenSlots()) { it != 0 }
             }
             // AM <--
