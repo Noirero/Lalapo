@@ -288,43 +288,39 @@ class AnimeController :
 
             // Check for episodes that can be downloaded
             presenter.getAnimeAndEpisodes.subscribe(animeId)
-                .collectLatest { (anime, episodes) ->
-                    var areEpisodesAvailableForDownload = false
-                    val episodeSlots = preferences.downloadAfterSeenSlots().get()
-                    val episodesAvailable = if (episodes.size >= episodeSlots) episodeSlots
-                    else episodes.size
+                .collectLatest { (anime, _) ->
 
-                    episodes.take(episodesAvailable).forEach {
-                        if (!presenter.downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source)) areEpisodesAvailableForDownload = true
+                    val episodes = presenter.getUnseenEpisodesSorted(false)
+                    val episodeSlots = preferences.downloadAfterSeenSlots().get()
+                    val episodesNumber = if (episodes.size >= episodeSlots) episodeSlots else episodes.size
+                    val episodesAvailable = episodes.take(episodesNumber).filterNot {
+                        presenter.downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source)
                     }
-                    if (areEpisodesAvailableForDownload && preferences.downloadOnAddingToLibrary().get() != 0) {
+
+                    if (episodesAvailable.isNotEmpty() && preferences.downloadOnAddingToLibrary().get() != 0) {
                         if (preferences.downloadOnAddingToLibrary().get() == 2) {
-                            downloadEpisodes(presenter.getOnlyUnseenEpisodesSorted().take(preferences.downloadAfterSeenSlots().get()))
+                            downloadEpisodes(episodesAvailable)
                         } else if (!preferences.trackOnAddingToLibrary().get() || !presenter.trackManager.hasLoggedAnimeServices()) {
                             this.cancel()
-                            downloadEpisodesSnackbar(context, episodesAvailable)
+                            downloadEpisodesSnackbar(context, episodesNumber, episodesAvailable)
                         } else if (preferences.trackOnAddingToLibrary().get() && presenter.trackManager.hasLoggedAnimeServices()) {
-                            trackSheet.setOnDismissListener { downloadEpisodesSnackbar(context, episodesAvailable) }
+                            trackSheet.setOnDismissListener { downloadEpisodesSnackbar(context, episodesNumber, episodesAvailable) }
                         }
                     }
                 }
         }
     }
 
-    private fun downloadEpisodesSnackbar(context: Context, episodesAvailable: Int) {
+    private fun downloadEpisodesSnackbar(context: Context, episodesNumber: Int, episodesAvailable: List<DomainEpisode>) {
         snackbarHostState.currentSnackbarData?.dismiss()
         viewScope.launch {
             val result = snackbarHostState.showSnackbar(
-                message = context.resources.getQuantityString(
-                    R.plurals.download_episodes_for_anime,
-                    episodesAvailable,
-                    episodesAvailable,
-                ),
+                message = context.resources.getQuantityString(R.plurals.download_episodes_for_anime, episodesNumber, episodesNumber),
                 actionLabel = context.getString(R.string.action_download),
                 withDismissAction = true,
             )
             if (result == SnackbarResult.ActionPerformed) {
-                downloadEpisodes(presenter.getOnlyUnseenEpisodesSorted().take(preferences.downloadAfterSeenSlots().get()))
+                downloadEpisodes(episodesAvailable)
             }
         }
     }

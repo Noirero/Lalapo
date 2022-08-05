@@ -540,32 +540,26 @@ class AnimePresenter(
         }
     }
 
-    fun getUnseenEpisodes(): List<DomainEpisode> {
-        return successState?.processedEpisodes
+    fun getUnseenEpisodes(checkDownloads: Boolean = true): List<DomainEpisode> {
+        return if (checkDownloads) successState?.processedEpisodes
             ?.filter { (episode, dlStatus) -> !episode.seen && dlStatus == AnimeDownload.State.NOT_DOWNLOADED }
             ?.map { it.episode }
             ?.toList()
             ?: emptyList()
-    }
-
-    fun getUnseenEpisodesSorted(): List<DomainEpisode> {
-        val anime = successState?.anime ?: return emptyList()
-        val episodes = getUnseenEpisodes().sortedWith(getEpisodeSort(anime))
-        return if (anime.sortDescending()) episodes.reversed() else episodes
-    }
-
-    // AM -->
-    fun getOnlyUnseenEpisodesSorted(): List<DomainEpisode> {
-        val anime = successState?.anime ?: return emptyList()
-        val episodes = successState?.processedEpisodes
+        // AM -->
+        else successState?.processedEpisodes
             ?.filter { (episode) -> !episode.seen }
             ?.map { it.episode }
             ?.toList()
-            ?.sortedWith(getEpisodeSort(anime))
             ?: emptyList()
+        // AM <--
+    }
+
+    fun getUnseenEpisodesSorted(checkDownloads: Boolean = true): List<DomainEpisode> {
+        val anime = successState?.anime ?: return emptyList()
+        val episodes = getUnseenEpisodes(checkDownloads).sortedWith(getEpisodeSort(anime))
         return if (anime.sortDescending()) episodes.reversed() else episodes
     }
-    // AM <--
 
     fun startDownloadingNow(episodeId: Long) {
         downloadManager.startDownloadNow(episodeId)
