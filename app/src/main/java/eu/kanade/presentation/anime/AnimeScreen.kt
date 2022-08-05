@@ -119,6 +119,7 @@ fun AnimeScreen(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+
     // AM -->
     onEditInfoClicked: () -> Unit,
     // AM <--

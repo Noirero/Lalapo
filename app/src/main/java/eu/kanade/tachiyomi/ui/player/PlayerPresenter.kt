@@ -344,11 +344,11 @@ class PlayerPresenter(
                 updateTrackEpisodeSeen(episode)
             }
             if (episode.seen) {
-                deleteEpisodeIfNeeded(episode)
-                deleteEpisodeFromDownloadQueue(episode)
                 // AM -->
                 downloadEpisodesIfNeeded(episode)
                 // AM <--
+                deleteEpisodeIfNeeded(episode)
+                deleteEpisodeFromDownloadQueue(episode)
             }
         }
     }

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.anime
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -70,6 +71,8 @@ import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.widget.materialdialogs.QuadStateTextView
 import eu.kanade.tachiyomi.widget.materialdialogs.await
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import uy.kohesive.injekt.Injekt
@@ -230,7 +233,9 @@ class AnimeController :
     private fun onFavoriteClick(checkDuplicate: Boolean = true) {
         presenter.toggleFavorite(
             onRemoved = this::onFavoriteRemoved,
-            onAdded = { activity?.toast(activity?.getString(R.string.item_added_library)) },
+            // AM -->
+            onAdded = this::onFavoriteAdded,
+            // AM <--
             onDuplicateExists = if (checkDuplicate) {
                 {
                     AddDuplicateAnimeDialog(
@@ -257,6 +262,9 @@ class AnimeController :
     private fun onFavoriteRemoved() {
         val context = activity ?: return
         context.toast(activity?.getString(R.string.item_removed_library))
+        // AM -->
+        snackbarHostState.currentSnackbarData?.dismiss()
+        // AM <--
         viewScope.launch {
             if (!presenter.hasDownloads()) return@launch
             val result = snackbarHostState.showSnackbar(
@@ -269,6 +277,59 @@ class AnimeController :
             }
         }
     }
+
+    // AM -->
+    private fun onFavoriteAdded() {
+        val context = activity ?: return
+        viewScope.launch {
+            // Show tracking sheet if enabled by user
+            if (presenter.trackManager.hasLoggedAnimeServices() &&
+                preferences.trackOnAddingToLibrary().get()
+            ) trackSheet.show()
+
+            // Check for episodes that can be downloaded
+            presenter.getAnimeAndEpisodes.subscribe(animeId)
+                .collectLatest { (anime, episodes) ->
+                    var areEpisodesAvailableForDownload = false
+                    val episodeSlots = preferences.downloadAfterSeenSlots().get()
+                    val episodesAvailable = if (episodes.size >= episodeSlots) episodeSlots
+                    else episodes.size
+
+                    episodes.take(episodesAvailable).forEach {
+                        if (!presenter.downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source)) areEpisodesAvailableForDownload = true
+                    }
+                    if (areEpisodesAvailableForDownload && preferences.downloadOnAddingToLibrary().get() != 0) {
+                        if (preferences.downloadOnAddingToLibrary().get() == 2) {
+                            downloadEpisodes(presenter.getOnlyUnseenEpisodesSorted().take(preferences.downloadAfterSeenSlots().get()))
+                        } else if (!preferences.trackOnAddingToLibrary().get() || !presenter.trackManager.hasLoggedAnimeServices()) {
+                            this.cancel()
+                            downloadEpisodesSnackbar(context, episodesAvailable)
+                        } else if (preferences.trackOnAddingToLibrary().get() && presenter.trackManager.hasLoggedAnimeServices()) {
+                            trackSheet.setOnDismissListener { downloadEpisodesSnackbar(context, episodesAvailable) }
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun downloadEpisodesSnackbar(context: Context, episodesAvailable: Int) {
+        snackbarHostState.currentSnackbarData?.dismiss()
+        viewScope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = context.resources.getQuantityString(
+                    R.plurals.download_episodes_for_anime,
+                    episodesAvailable,
+                    episodesAvailable,
+                ),
+                actionLabel = context.getString(R.string.action_download),
+                withDismissAction = true,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                downloadEpisodes(presenter.getOnlyUnseenEpisodesSorted().take(preferences.downloadAfterSeenSlots().get()))
+            }
+        }
+    }
+    // AM <--
 
     private fun onCategoriesClick() {
         viewScope.launchIO {

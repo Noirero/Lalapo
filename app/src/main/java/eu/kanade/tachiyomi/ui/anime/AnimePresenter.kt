@@ -80,11 +80,11 @@ class AnimePresenter(
     val animeId: Long,
     val isFromSource: Boolean,
     private val preferences: PreferencesHelper = Injekt.get(),
-    private val trackManager: TrackManager = Injekt.get(),
-    private val downloadManager: AnimeDownloadManager = Injekt.get(),
+    internal val trackManager: TrackManager = Injekt.get(),
+    internal val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val coverCache: AnimeCoverCache = Injekt.get(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
-    private val getAnimeAndEpisodes: GetAnimeWithEpisodes = Injekt.get(),
+    internal val getAnimeAndEpisodes: GetAnimeWithEpisodes = Injekt.get(),
     private val getDuplicateLibraryAnime: GetDuplicateLibraryAnime = Injekt.get(),
     private val setAnimeEpisodeFlags: SetAnimeEpisodeFlags = Injekt.get(),
     private val setSeenStatus: SetSeenStatus = Injekt.get(),
@@ -553,6 +553,19 @@ class AnimePresenter(
         val episodes = getUnseenEpisodes().sortedWith(getEpisodeSort(anime))
         return if (anime.sortDescending()) episodes.reversed() else episodes
     }
+
+    // AM -->
+    fun getOnlyUnseenEpisodesSorted(): List<DomainEpisode> {
+        val anime = successState?.anime ?: return emptyList()
+        val episodes = successState?.processedEpisodes
+            ?.filter { (episode) -> !episode.seen }
+            ?.map { it.episode }
+            ?.toList()
+            ?.sortedWith(getEpisodeSort(anime))
+            ?: emptyList()
+        return if (anime.sortDescending()) episodes.reversed() else episodes
+    }
+    // AM <--
 
     fun startDownloadingNow(episodeId: Long) {
         downloadManager.startDownloadNow(episodeId)

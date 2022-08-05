@@ -272,11 +272,11 @@ class ExternalIntents(val anime: Anime, val source: AnimeSource) {
                     updateTrackEpisodeSeen(episode, anime)
                 }
                 if (episode.seen) {
-                    deleteEpisodeIfNeeded(episode.toDomainEpisode()!!, anime)
-                    deleteEpisodeFromDownloadQueue(episode.toDomainEpisode()!!)
                     // AM -->
                     downloadEpisodesIfNeeded(episode.toDomainEpisode()!!, anime)
                     // AM <--
+                    deleteEpisodeIfNeeded(episode.toDomainEpisode()!!, anime)
+                    deleteEpisodeFromDownloadQueue(episode.toDomainEpisode()!!)
                 }
             }
         }
