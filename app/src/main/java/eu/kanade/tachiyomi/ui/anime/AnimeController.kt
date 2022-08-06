@@ -254,6 +254,9 @@ class AnimeController :
                         QuadStateTextView.State.UNCHECKED.ordinal
                     }
                 }.toTypedArray()
+                // AM -->
+                snackbarHostState.currentSnackbarData?.dismiss()
+                // AM <--
                 showChangeCategoryDialog(anime, categories, preselected)
             },
         )
@@ -281,6 +284,7 @@ class AnimeController :
     private fun onFavoriteAdded() {
         val context = activity ?: return
         viewScope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
             // Show tracking sheet if enabled by user
             if (presenter.trackManager.hasLoggedAnimeServices() &&
                 preferences.trackOnAddingToLibrary().get()
@@ -347,7 +351,7 @@ class AnimeController :
     }
 
     private fun showChangeCategoryDialog(anime: Anime, categories: List<Category>, preselected: Array<Int>) {
-        ChangeAnimeCategoriesDialog(this, listOf(anime), categories, preselected.toIntArray())
+        ChangeAnimeCategoriesDialog(this, listOf(anime), categories, preselected.toIntArray(), this::onFavoriteAdded)
             .showDialog(router)
     }
 

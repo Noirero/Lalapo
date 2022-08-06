@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.ui.base.controller.pushController
 import eu.kanade.tachiyomi.widget.materialdialogs.QuadStateTextView
 import eu.kanade.tachiyomi.widget.materialdialogs.setQuadStateMultiChoiceItems
+import kotlin.reflect.KFunction0
 
 class ChangeAnimeCategoriesDialog<T>(bundle: Bundle? = null) :
     DialogController(bundle) where T : Controller, T : ChangeAnimeCategoriesDialog.Listener {
@@ -20,20 +21,22 @@ class ChangeAnimeCategoriesDialog<T>(bundle: Bundle? = null) :
     private var categories = emptyList<Category>()
     private var preselected = intArrayOf()
     private var selected = intArrayOf()
+    private var function: KFunction0<Unit>? = null
 
     constructor(
         target: T,
         animes: List<Anime>,
         categories: List<Category>,
         preselected: IntArray,
+        function: KFunction0<Unit>? = null,
     ) : this() {
         this.animes = animes
         this.categories = categories
         this.preselected = preselected
         this.selected = preselected
+        this.function = function
         targetController = target
     }
-
     override fun onCreateDialog(savedViewState: Bundle?): Dialog {
         return MaterialAlertDialogBuilder(activity!!)
             .setTitle(R.string.action_move_category)
@@ -55,6 +58,7 @@ class ChangeAnimeCategoriesDialog<T>(bundle: Bundle? = null) :
                             .mapIndexed { index, value -> if (value == QuadStateTextView.State.UNCHECKED.ordinal) categories[index] else null }
                             .filterNotNull()
                         (targetController as? Listener)?.updateCategoriesForAnimes(animes, add, remove)
+                        function?.invoke()
                     }
                     setNeutralButton(R.string.action_edit) { _, _ -> openCategoryController() }
                 } else {
