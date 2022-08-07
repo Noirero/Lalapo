@@ -7,6 +7,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Security
@@ -65,6 +66,13 @@ class SettingsMainController : BasicComposeController() {
                 painter = rememberVectorPainter(Icons.Outlined.Sync),
                 onClick = { router.pushController(SettingsTrackingController()) },
             ),
+            // AM -->
+            SettingsSection(
+                titleRes = R.string.pref_category_connections,
+                painter = rememberVectorPainter(Icons.Outlined.Link),
+                onClick = { router.pushController(SettingsConnectionsController()) },
+            ),
+            // AM <--
             SettingsSection(
                 titleRes = R.string.browse,
                 painter = painterResource(R.drawable.ic_browse_outline_24dp),
