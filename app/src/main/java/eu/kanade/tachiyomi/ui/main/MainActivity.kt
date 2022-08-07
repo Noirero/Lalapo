@@ -85,12 +85,25 @@ class MainActivity : BaseActivity() {
 
     private lateinit var router: Router
 
-    private val startScreenId by lazy {
-        when (preferences.startScreen()) {
-            2 -> R.id.nav_updates
-            3 -> R.id.nav_history
-            4 -> R.id.nav_browse
-            else -> R.id.nav_animelib
+    private val startScreenId by
+    if (!BuildConfig.DEBUG) {
+        lazy {
+            when (preferences.startScreen()) {
+                2 -> R.id.nav_updates
+                3 -> R.id.nav_history
+                4 -> R.id.nav_browse
+                else -> R.id.nav_animelib
+            }
+        }
+    } else {
+        lazy {
+            when (preferences.startScreen()) {
+                2 -> R.id.nav_updates
+                3 -> R.id.nav_history
+                4 -> R.id.nav_browse
+                5 -> R.id.nav_more
+                else -> R.id.nav_animelib
+            }
         }
     }
 

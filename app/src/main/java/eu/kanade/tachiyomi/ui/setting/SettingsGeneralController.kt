@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.util.preference.preference
 import eu.kanade.tachiyomi.util.preference.preferenceCategory
 import eu.kanade.tachiyomi.util.preference.switchPreference
 import eu.kanade.tachiyomi.util.preference.titleRes
+import eu.kanade.tachiyomi.util.system.isDevFlavor
 import java.util.Date
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 
@@ -23,19 +24,39 @@ class SettingsGeneralController : SettingsController() {
     override fun setupPreferenceScreen(screen: PreferenceScreen) = screen.apply {
         titleRes = R.string.pref_category_general
 
-        intListPreference {
-            key = Keys.startScreen
-            titleRes = R.string.pref_start_screen
-            entriesRes = arrayOf(
-                R.string.label_animelib,
-                R.string.label_recent_updates,
-                R.string.label_recent_history,
-                R.string.browse,
-            )
-            entryValues = arrayOf("1", "2", "3", "4")
-            defaultValue = "1"
-            summary = "%s"
+        if (isDevFlavor.not()) {
+            intListPreference {
+                key = Keys.startScreen
+                titleRes = R.string.pref_start_screen
+                entriesRes = arrayOf(
+                    R.string.label_animelib,
+                    R.string.label_recent_updates,
+                    R.string.label_recent_history,
+                    R.string.browse,
+                )
+                entryValues = arrayOf("1", "2", "3", "4")
+                defaultValue = "1"
+                summary = "%s"
+            }
         }
+        // AM -->
+        else {
+            intListPreference {
+                key = Keys.startScreen
+                titleRes = R.string.pref_start_screen
+                entriesRes = arrayOf(
+                    R.string.label_animelib,
+                    R.string.label_recent_updates,
+                    R.string.label_recent_history,
+                    R.string.browse,
+                    R.string.label_more,
+                )
+                entryValues = arrayOf("1", "2", "3", "4", "5")
+                defaultValue = "1"
+                summary = "%s"
+            }
+        }
+        // AM <--
 
         switchPreference {
             bindTo(preferences.showUpdatesNavBadge())
