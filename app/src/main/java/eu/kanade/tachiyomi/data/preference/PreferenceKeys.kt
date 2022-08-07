@@ -74,6 +74,8 @@ object PreferenceKeys {
     const val migrationSortingMode = "pref_migration_sorting"
     const val migrationSortingDirection = "pref_migration_direction"
 
+    const val enableDiscordRPC = "pref_enable_discord_rpc"
+
     const val startScreen = "start_screen"
 
     const val hideNotificationContent = "hide_notification_content"

@@ -170,6 +170,7 @@
     <string name="pref_category_downloads">Downloads</string>
     <string name="pref_category_tracking">Tracking</string>
     <string name="pref_category_connections">Connections</string>
+    <string name="pref_category_discord">Discord</string>
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
 
@@ -432,6 +433,9 @@
     <string name="services">Services</string>
     <string name="tracking_info">One-way sync to update the episode progress in tracking services. Set up tracking for individual anime entries from their tracking button.</string>
     <string name="action_track">Track</string>
+
+      <!-- Connections section -->
+    <string name="pref_enable_discord_rpc">Enable Discord Rich Presence</string>
 
       <!-- Browse section -->
     <string name="pref_duplicate_pinned_sources">Show duplicated pinned sources</string>

@@ -333,6 +333,8 @@ class PreferencesHelper(val context: Context) {
 
     fun duplicatePinnedSources() = flowPrefs.getBoolean("duplicate_pinned_sources", false)
 
+    fun enableDiscordRPC() = flowPrefs.getBoolean(Keys.enableDiscordRPC, false)
+
     fun setEpisodeSettingsDefault(anime: Anime) {
         prefs.edit {
             putInt(Keys.defaultEpisodeFilterBySeen, anime.seenFilter)

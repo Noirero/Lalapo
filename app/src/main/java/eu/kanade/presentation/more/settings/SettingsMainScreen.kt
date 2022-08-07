@@ -11,6 +11,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import eu.kanade.presentation.components.PreferenceRow
+import eu.kanade.presentation.components.PreferenceRowColor
 import eu.kanade.presentation.components.ScrollbarLazyColumn
 
 @Composable
@@ -24,11 +25,22 @@ fun SettingsMainScreen(
     ) {
         sections.map {
             item {
-                PreferenceRow(
-                    title = stringResource(it.titleRes),
-                    painter = it.painter,
-                    onClick = it.onClick,
-                )
+                // AM -->
+                if (it.useIconColor) {
+                    PreferenceRowColor(
+                        title = stringResource(it.titleRes),
+                        painter = it.painter,
+                        onClick = it.onClick,
+                        iconColor = it.iconColor,
+                    )
+                } else {
+                    PreferenceRow(
+                        title = stringResource(it.titleRes),
+                        painter = it.painter,
+                        onClick = it.onClick,
+                    )
+                }
+                // AM <--
             }
         }
     }
@@ -38,4 +50,8 @@ data class SettingsSection(
     @StringRes val titleRes: Int,
     val painter: Painter,
     val onClick: () -> Unit,
+    // AM -->
+    val useIconColor: Boolean = false,
+    val iconColor: String = "#000000",
+    // AM <--
 )
