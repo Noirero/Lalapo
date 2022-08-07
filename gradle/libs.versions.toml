@@ -105,6 +105,8 @@ junit = "org.junit.jupiter:junit-jupiter:5.8.2"
 ffmpeg-kit = "com.arthenica:ffmpeg-kit-https:4.5.1-1.LTS"
 aniyomi-mpv = "com.github.jmir1:aniyomi-mpv-lib:1.3"
 
+discord-rpc = "com.github.dead8309:KizzyRPC:1.0.5"
+
 [bundles]
 reactivex = ["rxandroid", "rxjava", "rxrelay"]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-dnsoverhttps"]
