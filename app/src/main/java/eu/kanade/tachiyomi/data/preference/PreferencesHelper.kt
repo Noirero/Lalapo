@@ -335,6 +335,8 @@ class PreferencesHelper(val context: Context) {
 
     fun enableDiscordRPC() = flowPrefs.getBoolean(Keys.enableDiscordRPC, false)
 
+    fun discordToken() = flowPrefs.getString(Keys.discordToken, "")
+
     fun setEpisodeSettingsDefault(anime: Anime) {
         prefs.edit {
             putInt(Keys.defaultEpisodeFilterBySeen, anime.seenFilter)

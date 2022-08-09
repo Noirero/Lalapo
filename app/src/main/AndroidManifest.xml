@@ -184,6 +184,17 @@
             </intent-filter>
         </activity>
 
+        <activity android:label="Discord Login"
+            android:name=".connections.discord.DiscordLoginActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="account.samsung.com" android:path="/accounts/oauth/callback"/>
+            </intent-filter>
+        </activity>
+
         <receiver
             android:name=".data.notification.NotificationReceiver"
             android:exported="false" />
