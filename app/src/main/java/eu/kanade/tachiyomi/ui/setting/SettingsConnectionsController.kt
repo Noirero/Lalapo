@@ -1,6 +1,7 @@
 // AM -->
 package eu.kanade.tachiyomi.ui.setting
 
+import android.content.Intent
 import android.view.Menu
 import android.view.MenuInflater
 import androidx.compose.runtime.Composable
@@ -9,11 +10,16 @@ import eu.kanade.presentation.more.settings.SettingsMainScreen
 import eu.kanade.presentation.more.settings.SettingsSection
 import eu.kanade.presentation.util.rememberResourceBitmapPainter
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.connections.discord.DiscordLoginActivity
+import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.controller.BasicComposeController
 import eu.kanade.tachiyomi.ui.base.controller.pushController
 import eu.kanade.tachiyomi.ui.setting.connections.DiscordSettingsController
+import uy.kohesive.injekt.injectLazy
 
 class SettingsConnectionsController : BasicComposeController() {
+
+    private val preferences: PreferencesHelper by injectLazy()
 
     override fun getTitle() = resources?.getString(R.string.pref_category_connections)
 
@@ -23,7 +29,10 @@ class SettingsConnectionsController : BasicComposeController() {
             SettingsSection(
                 titleRes = R.string.pref_category_discord,
                 painter = rememberResourceBitmapPainter(R.drawable.ic_discord_24dp),
-                onClick = { router.pushController(DiscordSettingsController()) },
+                onClick = {
+                    if (preferences.discordToken().get() == "") discordLogin()
+                    else router.pushController(DiscordSettingsController())
+                },
                 useIconColor = true,
                 iconColor = "#5865f2",
             ),
@@ -41,6 +50,11 @@ class SettingsConnectionsController : BasicComposeController() {
         // Initialize search option.
         val searchItem = menu.findItem(R.id.action_search)
         searchItem.isVisible = false
+    }
+
+    private fun discordLogin() {
+        val intent = Intent(activity!!, DiscordLoginActivity::class.java)
+        startActivity(intent)
     }
 }
 // AM <--
