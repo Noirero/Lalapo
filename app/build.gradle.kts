@@ -297,6 +297,9 @@ dependencies {
 
     // mpv-android
     implementation(libs.aniyomi.mpv)
+
+    // discord-rpc
+    implementation(libs.discord.rpc)
 }
 
 tasks {
