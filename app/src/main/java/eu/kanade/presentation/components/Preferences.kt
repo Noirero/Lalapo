@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -101,75 +100,6 @@ fun PreferenceRow(
         }
     }
 }
-
-// AM -->
-@Composable
-fun PreferenceRowColor(
-    modifier: Modifier = Modifier,
-    title: String,
-    painter: Painter? = null,
-    iconColor: String,
-    onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {},
-    subtitle: String? = null,
-    action: @Composable (() -> Unit)? = null,
-) {
-    val height = if (subtitle != null) 72.dp else 56.dp
-
-    val titleTextStyle = MaterialTheme.typography.bodyLarge
-    val subtitleTextStyle = MaterialTheme.typography.bodyMedium.copy(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-    )
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = height)
-            .combinedClickable(
-                onLongClick = onLongClick,
-                onClick = onClick,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (painter != null) {
-            Icon(
-                painter = painter,
-                modifier = Modifier
-                    .padding(start = horizontalPadding, end = 16.dp)
-                    .size(24.dp),
-                tint = Color(android.graphics.Color.parseColor(iconColor)),
-                contentDescription = null,
-            )
-        }
-        Column(
-            Modifier
-                .padding(horizontal = 16.dp)
-                .weight(1f),
-        ) {
-            Text(
-                text = title,
-                style = titleTextStyle,
-            )
-            if (subtitle != null) {
-                Text(
-                    modifier = Modifier.padding(top = 4.dp),
-                    text = subtitle,
-                    style = subtitleTextStyle,
-                )
-            }
-        }
-        if (action != null) {
-            Box(
-                Modifier
-                    .widthIn(min = 56.dp)
-                    .padding(end = horizontalPadding),
-            ) {
-                action()
-            }
-        }
-    }
-}
-// AM <--
 
 @Composable
 fun SwitchPreference(

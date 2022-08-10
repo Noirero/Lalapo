@@ -185,7 +185,7 @@
         </activity>
 
         <activity android:label="Discord Login"
-            android:name=".connections.discord.DiscordLoginActivity"
+            android:name=".ui.setting.connections.DiscordLoginActivity"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>

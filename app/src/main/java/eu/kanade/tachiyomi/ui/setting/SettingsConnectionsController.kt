@@ -1,60 +1,69 @@
 // AM -->
 package eu.kanade.tachiyomi.ui.setting
 
+import android.app.Activity
 import android.content.Intent
-import android.view.Menu
-import android.view.MenuInflater
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import eu.kanade.presentation.more.settings.SettingsMainScreen
-import eu.kanade.presentation.more.settings.SettingsSection
-import eu.kanade.presentation.util.rememberResourceBitmapPainter
+import androidx.preference.PreferenceGroup
+import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.connections.discord.DiscordLoginActivity
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.ui.base.controller.BasicComposeController
+import eu.kanade.tachiyomi.data.connections.ConnectionService
+import eu.kanade.tachiyomi.data.connections.ConnectionsManager
+import eu.kanade.tachiyomi.data.preference.PreferenceKeys
 import eu.kanade.tachiyomi.ui.base.controller.pushController
-import eu.kanade.tachiyomi.ui.setting.connections.DiscordSettingsController
+import eu.kanade.tachiyomi.ui.setting.connections.DiscordLoginActivity
+import eu.kanade.tachiyomi.util.preference.add
+import eu.kanade.tachiyomi.util.preference.iconRes
+import eu.kanade.tachiyomi.util.preference.onClick
+import eu.kanade.tachiyomi.util.preference.titleRes
+import eu.kanade.tachiyomi.widget.preference.TrackerPreference
 import uy.kohesive.injekt.injectLazy
+import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 
-class SettingsConnectionsController : BasicComposeController() {
+class SettingsConnectionsController : SettingsController() {
 
-    private val preferences: PreferencesHelper by injectLazy()
+    private val connectionsManager: ConnectionsManager by injectLazy()
 
-    override fun getTitle() = resources?.getString(R.string.pref_category_connections)
+    override fun setupPreferenceScreen(screen: PreferenceScreen) = screen.apply {
+        titleRes = R.string.pref_category_connections
 
-    @Composable
-    override fun ComposeContent(nestedScrollInterop: NestedScrollConnection) {
-        val settingsSections = listOf(
-            SettingsSection(
-                titleRes = R.string.pref_category_discord,
-                painter = rememberResourceBitmapPainter(R.drawable.ic_discord_24dp),
-                onClick = {
-                    if (preferences.discordToken().get() == "") discordLogin()
-                    else router.pushController(DiscordSettingsController())
-                },
-                useIconColor = true,
-                iconColor = "#5865f2",
-            ),
-        )
+        connectionPreference(connectionsManager.discord, SettingsDiscordController()) {
+            val intent = Intent(activity!!, DiscordLoginActivity::class.java)
+            startActivityForResult(intent, connectionsManager.discord.id.toInt())
+        }
+    }
 
-        SettingsMainScreen(
-            nestedScrollInterop = nestedScrollInterop,
-            sections = settingsSections,
+    private inline fun PreferenceGroup.connectionPreference(
+        service: ConnectionService,
+        controller: SettingsController,
+        crossinline login: () -> Unit,
+    ): TrackerPreference {
+        return add(
+            TrackerPreference(context).apply {
+                key = Keys.connectionToken(service.id)
+                titleRes = service.nameRes()
+                iconRes = service.getLogo()
+                iconColor = service.getLogoColor()
+                onClick {
+                    if (service.isLogged) router.pushController(controller)
+                    else login()
+                }
+            },
         )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.settings_main, menu)
-
-        // Initialize search option.
-        val searchItem = menu.findItem(R.id.action_search)
-        searchItem.isVisible = false
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                connectionsManager.discord.id.toInt() -> router.pushController(
+                    SettingsDiscordController(),
+                )
+            }
+        }
     }
 
-    private fun discordLogin() {
-        val intent = Intent(activity!!, DiscordLoginActivity::class.java)
-        startActivity(intent)
+    private fun updatePreference(id: Long) {
+        val pref = findPreference(PreferenceKeys.connectionToken(id)) as? TrackerPreference
+        pref?.notifyChanged()
     }
 }
 // AM <--

@@ -76,8 +76,6 @@ object PreferenceKeys {
 
     const val enableDiscordRPC = "pref_enable_discord_rpc"
 
-    const val discordToken = "pref_discord_token"
-
     const val startScreen = "start_screen"
 
     const val hideNotificationContent = "hide_notification_content"
@@ -123,4 +121,6 @@ object PreferenceKeys {
     fun trackPassword(syncId: Long) = "pref_mangasync_password_$syncId"
 
     fun trackToken(syncId: Long) = "track_token_$syncId"
+
+    fun connectionToken(syncId: Long) = "connection_token_$syncId"
 }

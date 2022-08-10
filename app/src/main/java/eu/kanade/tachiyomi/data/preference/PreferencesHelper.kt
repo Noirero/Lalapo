@@ -9,6 +9,7 @@ import androidx.preference.PreferenceManager
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
 import eu.kanade.domain.animesource.interactor.SetMigrateSorting
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connections.ConnectionService
 import eu.kanade.tachiyomi.data.database.models.Anime
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
@@ -169,6 +170,8 @@ class PreferencesHelper(val context: Context) {
     }
 
     fun trackToken(sync: TrackService) = flowPrefs.getString(Keys.trackToken(sync.id), "")
+
+    fun connectionToken(sync: ConnectionService) = flowPrefs.getString(Keys.connectionToken(sync.id), "")
 
     fun anilistScoreType() = flowPrefs.getString("anilist_score_type", Anilist.POINT_10)
 
@@ -334,8 +337,6 @@ class PreferencesHelper(val context: Context) {
     fun duplicatePinnedSources() = flowPrefs.getBoolean("duplicate_pinned_sources", false)
 
     fun enableDiscordRPC() = flowPrefs.getBoolean(Keys.enableDiscordRPC, false)
-
-    fun discordToken() = flowPrefs.getString(Keys.discordToken, "")
 
     fun setEpisodeSettingsDefault(anime: Anime) {
         prefs.edit {

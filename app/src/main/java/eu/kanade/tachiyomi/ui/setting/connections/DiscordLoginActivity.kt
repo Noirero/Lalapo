@@ -1,17 +1,19 @@
 // AM -->
-package eu.kanade.tachiyomi.connections.discord
+package eu.kanade.tachiyomi.ui.setting.connections
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.toast
+import uy.kohesive.injekt.injectLazy
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
@@ -20,12 +22,13 @@ import java.io.FilenameFilter
 class DiscordLoginActivity : BaseActivity() {
     private var authToken: String? = null
     private lateinit var webView: WebView
+    private val connectionsManager: ConnectionsManager by injectLazy()
 
-    /* access modifiers changed from: protected */
     @Suppress("DEPRECATION")
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setResult(Activity.RESULT_CANCELED)
         setContentView(R.layout.discord_login_activity)
         webView = findViewById(R.id.mainWebView)
         initialiseWebView()
@@ -33,7 +36,6 @@ class DiscordLoginActivity : BaseActivity() {
         class DiscordWebViewLoginClient : WebViewClient() {
             @Deprecated("Deprecated in Java")
             override fun shouldOverrideUrlLoading(webView: WebView, str: String): Boolean {
-                Log.d("Web", "Attempt to enter $str")
                 webView.stopLoading()
                 if (str.endsWith("/app")) {
                     webView.visibility = View.GONE
@@ -69,8 +71,8 @@ class DiscordLoginActivity : BaseActivity() {
             webView.stopLoading()
             webView.visibility = View.GONE
         } else if (authToken != null) {
-            Log.i("tokenads", authToken!!)
-            preferences.discordToken().set(authToken!!)
+            setResult(Activity.RESULT_OK)
+            preferences.connectionToken(connectionsManager.discord).set(authToken!!)
             toast(R.string.login_success)
             applicationInfo.dataDir.let { File("$it/app_webview/").deleteRecursively() }
             finish()
