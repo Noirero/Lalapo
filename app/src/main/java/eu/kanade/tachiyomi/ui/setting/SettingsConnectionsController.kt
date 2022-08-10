@@ -6,8 +6,8 @@ import android.content.Intent
 import androidx.preference.PreferenceGroup
 import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.connections.ConnectionService
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
+import eu.kanade.tachiyomi.data.connections.ConnectionsService
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys
 import eu.kanade.tachiyomi.ui.base.controller.pushController
 import eu.kanade.tachiyomi.ui.setting.connections.DiscordLoginActivity
@@ -33,7 +33,7 @@ class SettingsConnectionsController : SettingsController() {
     }
 
     private inline fun PreferenceGroup.connectionPreference(
-        service: ConnectionService,
+        service: ConnectionsService,
         controller: SettingsController,
         crossinline login: () -> Unit,
     ): TrackerPreference {
@@ -51,12 +51,14 @@ class SettingsConnectionsController : SettingsController() {
         )
     }
 
+    override fun onActivityResumed(activity: Activity) {
+        super.onActivityResumed(activity)
+        updatePreference(connectionsManager.discord.id)
+    }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
-                connectionsManager.discord.id.toInt() -> router.pushController(
-                    SettingsDiscordController(),
-                )
+                connectionsManager.discord.id.toInt() -> router.pushController(SettingsDiscordController())
             }
         }
     }

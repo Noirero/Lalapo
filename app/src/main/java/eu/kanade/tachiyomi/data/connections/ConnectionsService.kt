@@ -10,7 +10,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import okhttp3.OkHttpClient
 import uy.kohesive.injekt.injectLazy
 
-abstract class ConnectionService(val id: Long) {
+abstract class ConnectionsService(val id: Long) {
 
     val preferences: PreferencesHelper by injectLazy()
     val networkService: NetworkHelper by injectLazy()

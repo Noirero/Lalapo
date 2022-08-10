@@ -5,9 +5,9 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.connections.ConnectionService
+import eu.kanade.tachiyomi.data.connections.ConnectionsService
 
-class Discord(private val context: Context, id: Long) : ConnectionService(id) {
+class Discord(private val context: Context, id: Long) : ConnectionsService(id) {
     @StringRes
     override fun nameRes() = R.string.connection_discord
 
