@@ -113,7 +113,7 @@ object Notifications {
                     setName(context.getString(R.string.download_notifier_downloader_title))
                 },
                 buildNotificationChannelGroup(GROUP_LIBRARY) {
-                    setName(context.getString(R.string.label_library))
+                    setName(context.getString(R.string.label_animelib))
                 },
                 buildNotificationChannelGroup(GROUP_APK_UPDATES) {
                     setName(context.getString(R.string.label_recent_updates))

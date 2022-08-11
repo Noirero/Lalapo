@@ -217,7 +217,7 @@ class SettingsAdvancedController(
         }
 
         preferenceCategory {
-            titleRes = R.string.label_library
+            titleRes = R.string.label_animelib
 
             preference {
                 key = "pref_refresh_library_covers"
