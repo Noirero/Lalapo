@@ -35,6 +35,7 @@ import dev.chrisbanes.insetter.applyInsetter
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 // import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
@@ -306,6 +307,14 @@ class MainActivity : BaseActivity() {
         preferences.bottomBarLabels()
             .asImmediateFlow { setNavLabelVisibility() }
             .launchIn(lifecycleScope)
+
+        preferences.enableDiscordRPC()
+            .asImmediateFlow {
+                if (it) {
+                    startService(Intent(this, DiscordRPCService::class.java))
+                } else stopService(Intent(this, DiscordRPCService::class.java))
+            }
+            .launchIn(lifecycleScope)
     }
 
     /**
@@ -377,6 +386,7 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (preferences.enableDiscordRPC().get()) startService(Intent(this, DiscordRPCService::class.java))
         checkForUpdates()
     }
 
@@ -497,11 +507,14 @@ class MainActivity : BaseActivity() {
 
     @Suppress("UNNECESSARY_SAFE_CALL")
     override fun onDestroy() {
+        launchUI { DiscordRPCService.rpc!!.closeRPC() }
         super.onDestroy()
 
         // Binding sometimes isn't actually instantiated yet somehow
         nav.setOnItemSelectedListener(null)
         binding.toolbar.setNavigationOnClickListener(null)
+
+        stopService(Intent(this, DiscordRPCService::class.java))
     }
 
     override fun onBackPressed() {

@@ -47,6 +47,7 @@ import logcat.LogPriority
 import reactivecircus.flowbinding.recyclerview.scrollStateChanges
 import reactivecircus.flowbinding.swiperefreshlayout.refreshes
 import uy.kohesive.injekt.injectLazy
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 
 /**
  * Fragment that shows recent episodes.
@@ -80,8 +81,9 @@ class AnimeUpdatesController :
         setHasOptionsMenu(true)
     }
 
-    override fun getTitle(): String? {
-        return resources?.getString(R.string.label_recent_updates)
+    override fun getTitle(): String {
+        DRPC.setDRPC(DRPC.updates, resources!!.getString(R.string.label_recent_updates), resources!!.getString(R.string.scrolling), resources!!.getString(R.string.label_recent_updates))
+        return resources!!.getString(R.string.label_recent_updates)
     }
 
     override fun createPresenter(): AnimeUpdatesPresenter {

@@ -52,6 +52,7 @@ import rx.android.schedulers.AndroidSchedulers
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.TimeUnit
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 
 class AnimelibController(
     bundle: Bundle? = null,
@@ -140,8 +141,9 @@ class AnimelibController(
             }
         }
 
-    override fun getTitle(): String? {
-        return currentTitle ?: resources?.getString(R.string.label_animelib)
+    override fun getTitle(): String {
+        DRPC.setDRPC(DRPC.library, resources!!.getString(R.string.label_animelib), resources!!.getString(R.string.browsing), resources!!.getString(R.string.label_animelib))
+        return currentTitle ?: resources!!.getString(R.string.label_animelib)
     }
 
     private fun updateTitle() {

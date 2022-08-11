@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.ui.browse.animesource.AnimeSourcesController
 import eu.kanade.tachiyomi.ui.browse.migration.animesources.MigrationAnimeSourcesController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import uy.kohesive.injekt.injectLazy
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 
 class BrowseController :
     RxController<PagerControllerBinding>,
@@ -45,7 +46,8 @@ class BrowseController :
 
     private var adapter: BrowseAdapter? = null
 
-    override fun getTitle(): String? {
+    override fun getTitle(): String {
+        DRPC.setDRPC(DRPC.browse, resources!!.getString(R.string.browse), resources!!.getString(R.string.browsing), resources!!.getString(R.string.sources))
         return resources!!.getString(R.string.browse)
     }
 

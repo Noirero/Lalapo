@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import eu.kanade.presentation.more.MoreScreen
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.controller.ComposeController
 import eu.kanade.tachiyomi.ui.base.controller.NoAppBarElevationController
 import eu.kanade.tachiyomi.ui.base.controller.RootController
@@ -14,8 +13,7 @@ import eu.kanade.tachiyomi.ui.recent.animehistory.AnimeHistoryController
 import eu.kanade.tachiyomi.ui.recent.animeupdates.AnimeUpdatesController
 import eu.kanade.tachiyomi.ui.setting.SettingsBackupController
 import eu.kanade.tachiyomi.ui.setting.SettingsMainController
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 import eu.kanade.tachiyomi.ui.animecategory.CategoryController as AnimeCategoryController
 
 class MoreController :
@@ -23,9 +21,10 @@ class MoreController :
     RootController,
     NoAppBarElevationController {
 
-    private val preferences: PreferencesHelper = Injekt.get()
-
-    override fun getTitle() = resources?.getString(R.string.label_more)
+    override fun getTitle(): String {
+        DRPC.setDRPC(DRPC.more, resources!!.getString(R.string.label_more), resources!!.getString(R.string.messing), resources!!.getString(R.string.settings))
+        return resources!!.getString(R.string.label_more)
+    }
 
     override fun createPresenter() = MorePresenter()
 

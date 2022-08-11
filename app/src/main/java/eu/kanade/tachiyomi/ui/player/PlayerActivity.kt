@@ -64,6 +64,7 @@ import java.io.File
 import java.io.InputStream
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 
 @RequiresPresenter(PlayerPresenter::class)
 class PlayerActivity :
@@ -1061,6 +1062,7 @@ class PlayerActivity :
         player.timePos?.let { playerControls.updatePlaybackPos(it) }
         updatePlaylistButtons()
         updateEpisodeText()
+        DRPC.setDRPC(DRPC.video, resources!!.getString(R.string.watching), presenter.anime?.title, presenter.currentEpisode?.name)
         player.loadTracks()
     }
 
@@ -1113,13 +1115,10 @@ class PlayerActivity :
     }
 
     override fun onBackPressed() {
-        if (deviceSupportsPip) {
-            if (player.paused == false && preferences.pipOnExit()) startPiP()
-            else {
-                finishAndRemoveTask()
-                super.onBackPressed()
-            }
+        if (deviceSupportsPip && player.paused == false && preferences.pipOnExit()) {
+            startPiP()
         } else {
+            DRPC.setDRPC(DRPC.library, resources!!.getString(R.string.label_animelib), resources!!.getString(R.string.browsing), resources!!.getString(R.string.label_animelib))
             finishAndRemoveTask()
             super.onBackPressed()
         }
@@ -1140,9 +1139,10 @@ class PlayerActivity :
             }
             player.paused = true
         }
-        if (deviceSupportsPip && isInPipMode &&
-            powerManager.isInteractive
-        ) finishAndRemoveTask()
+        if (deviceSupportsPip && isInPipMode && powerManager.isInteractive) {
+            DRPC.setDRPC(DRPC.library, resources!!.getString(R.string.label_animelib), resources!!.getString(R.string.browsing), resources!!.getString(R.string.label_animelib))
+            finishAndRemoveTask()
+        }
 
         super.onStop()
     }

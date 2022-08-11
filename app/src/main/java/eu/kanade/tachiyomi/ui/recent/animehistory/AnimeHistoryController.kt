@@ -34,6 +34,7 @@ import reactivecircus.flowbinding.appcompat.queryTextChanges
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 
 class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootController {
 
@@ -43,7 +44,10 @@ class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootC
     private val getAnimeById: GetAnime = Injekt.get()
     private val sourceManager: AnimeSourceManager by injectLazy()
 
-    override fun getTitle() = resources?.getString(R.string.label_recent_history)
+    override fun getTitle(): String {
+        DRPC.setDRPC(DRPC.history, resources!!.getString(R.string.label_recent_history), resources!!.getString(R.string.scrolling), resources!!.getString(R.string.label_recent_history))
+        return resources!!.getString(R.string.label_recent_history)
+    }
 
     override fun createPresenter() = AnimeHistoryPresenter()
 
