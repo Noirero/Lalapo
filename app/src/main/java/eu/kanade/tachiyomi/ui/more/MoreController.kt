@@ -22,7 +22,9 @@ class MoreController :
     NoAppBarElevationController {
 
     override fun getTitle(): String {
-        DRPC.setDRPC(DRPC.more, resources!!.getString(R.string.label_more), resources!!.getString(R.string.messing), resources!!.getString(R.string.settings))
+        // AM -->
+        DRPC.setDRPC("more", resources!!)
+        // AM <--
         return resources!!.getString(R.string.label_more)
     }
 

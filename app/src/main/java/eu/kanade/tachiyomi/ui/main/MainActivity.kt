@@ -35,7 +35,7 @@ import dev.chrisbanes.insetter.applyInsetter
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 // import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
@@ -308,13 +308,16 @@ class MainActivity : BaseActivity() {
             .asImmediateFlow { setNavLabelVisibility() }
             .launchIn(lifecycleScope)
 
+        // AM -->
         preferences.enableDiscordRPC()
             .asImmediateFlow {
                 if (it) {
-                    startService(Intent(this, DiscordRPCService::class.java))
-                } else stopService(Intent(this, DiscordRPCService::class.java))
+                    if (!DRPC.isBuilt) startService(Intent(this, DRPC::class.java))
+                } else stopService(Intent(this, DRPC::class.java))
             }
             .launchIn(lifecycleScope)
+        isRunning = true
+        // AM <--
     }
 
     /**
@@ -386,7 +389,9 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (preferences.enableDiscordRPC().get()) startService(Intent(this, DiscordRPCService::class.java))
+        // AM -->
+        if (preferences.enableDiscordRPC().get() && !DRPC.isBuilt) startService(Intent(this, DRPC::class.java))
+        // AM <--
         checkForUpdates()
     }
 
@@ -507,14 +512,18 @@ class MainActivity : BaseActivity() {
 
     @Suppress("UNNECESSARY_SAFE_CALL")
     override fun onDestroy() {
-        launchUI { DiscordRPCService.rpc!!.closeRPC() }
+        // AM -->
+        launchUI { DRPC.rpc!!.closeRPC() }
+        isRunning = false
+        // AM <--
         super.onDestroy()
 
         // Binding sometimes isn't actually instantiated yet somehow
         nav.setOnItemSelectedListener(null)
         binding.toolbar.setNavigationOnClickListener(null)
-
-        stopService(Intent(this, DiscordRPCService::class.java))
+        // AM --
+        stopService(Intent(this, DRPC::class.java))
+        // AM <--
     }
 
     override fun onBackPressed() {
@@ -717,6 +726,10 @@ class MainActivity : BaseActivity() {
     }
 
     companion object {
+        // AM -->
+        internal var isRunning = false
+        // AM <--
+
         // Splash screen
         private const val SPLASH_MIN_DURATION = 500 // ms
         private const val SPLASH_MAX_DURATION = 5000 // ms

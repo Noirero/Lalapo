@@ -45,7 +45,9 @@ class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootC
     private val sourceManager: AnimeSourceManager by injectLazy()
 
     override fun getTitle(): String {
-        DRPC.setDRPC(DRPC.history, resources!!.getString(R.string.label_recent_history), resources!!.getString(R.string.scrolling), resources!!.getString(R.string.label_recent_history))
+        // AM -->
+        DRPC.setDRPC("history", resources!!)
+        // AM <--
         return resources!!.getString(R.string.label_recent_history)
     }
 
@@ -112,7 +114,7 @@ class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootC
         if (useExternal) {
             openEpisodeExternal(episode, anime)
         } else {
-            val intent = PlayerActivity.newIntent(activity, anime.id, episode.id)
+            val intent = PlayerActivity.newIntent(activity, anime.id, episode.id, 1L)
             startActivity(intent)
         }
     }
@@ -133,7 +135,7 @@ class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootC
                 AnimeController.EXT_EPISODE = episode
                 AnimeController.EXT_ANIME = anime
 
-                val extIntent = ExternalIntents(anime, source).getExternalIntent(episode, video, context)
+                val extIntent = ExternalIntents(anime, source).getExternalIntent(episode, video, context, resources!!)
                 if (extIntent != null) try {
                     startActivityForResult(extIntent, AnimeController.REQUEST_EXTERNAL)
                 } catch (e: Exception) {
@@ -148,6 +150,9 @@ class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootC
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // AM -->
+        DRPC.setDRPC("history", resources!!)
+        // AM <--
         ExternalIntents.onActivityResult(requestCode, resultCode, data)
         super.onActivityResult(requestCode, resultCode, data)
     }

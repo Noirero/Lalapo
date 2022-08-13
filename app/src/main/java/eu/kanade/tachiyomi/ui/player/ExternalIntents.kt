@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.FileProvider
@@ -21,7 +22,9 @@ import eu.kanade.domain.episode.interactor.UpdateEpisode
 import eu.kanade.domain.episode.model.Episode
 import eu.kanade.domain.episode.model.EpisodeUpdate
 import eu.kanade.domain.episode.model.toDbEpisode
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
+import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.LocalAnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
@@ -47,12 +50,21 @@ import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.util.Date
+import kotlin.math.ceil
+import kotlin.math.floor
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 import eu.kanade.tachiyomi.data.database.models.Episode as DbEpisode
 
 class ExternalIntents(val anime: Anime, val source: AnimeSource) {
     private val preferences: PreferencesHelper by injectLazy()
 
-    fun getExternalIntent(episode: Episode, video: Video, context: Context): Intent? {
+    // AM -->
+    private val sourceManager: AnimeSourceManager by injectLazy()
+
+    private var incognitoDiscordRPC = false
+    // AM <--
+
+    fun getExternalIntent(episode: Episode, video: Video, context: Context, resources: Resources): Intent? {
         val videoUrl = if (video.videoUrl == null) {
             makeErrorToast(context, Exception("video URL is null."))
             return null
@@ -88,6 +100,18 @@ class ExternalIntents(val anime: Anime, val source: AnimeSource) {
                     )
             ) 1L else episode.lastSecondSeen
         } else episode.lastSecondSeen
+
+        // AM -->
+        incognitoDiscordRPC = false
+        val sourceUsed = sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
+        if (preferences.incognitoMode().get() || sourceUsed.isNsfw) incognitoDiscordRPC = true
+
+        val episodeNumber = if (ceil(episode.episodeNumber) == floor(episode.episodeNumber)) "Episode ${episode.episodeNumber.toInt()}"
+        else "Episode ${episode.episodeNumber}"
+
+        if (!incognitoDiscordRPC)DRPC.setDRPC(null, resources, DRPC.video, resources.getString(R.string.watching), anime.title, episodeNumber)
+        else DRPC.setDRPC(null, resources, DRPC.video, resources.getString(R.string.watching), " ", " ")
+        // AM <--
 
         return if (pkgName.isNullOrEmpty()) {
             Intent(Intent.ACTION_VIEW).apply {

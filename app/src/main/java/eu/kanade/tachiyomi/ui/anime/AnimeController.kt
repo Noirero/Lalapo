@@ -79,6 +79,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import eu.kanade.domain.anime.model.Anime as DomainAnime
 import eu.kanade.domain.episode.model.Episode as DomainEpisode
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 
 class AnimeController :
     FullComposeController<AnimePresenter>,
@@ -460,7 +461,7 @@ class AnimeController :
 
     private fun openEpisodeInternal(episode: DomainEpisode) {
         activity?.run {
-            startActivity(PlayerActivity.newIntent(this, episode.animeId, episode.id))
+            startActivity(PlayerActivity.newIntent(this, episode.animeId, episode.id, 0L))
         }
     }
 
@@ -483,6 +484,7 @@ class AnimeController :
                     episode,
                     video,
                     context,
+                    resources!!,
                 )
                 if (extIntent != null) try {
                     startActivityForResult(extIntent, REQUEST_EXTERNAL)
@@ -639,6 +641,9 @@ class AnimeController :
     // Tracker sheet - end
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // AM -->
+        DRPC.setDRPC("library", resources!!)
+        // AM <--
         ExternalIntents.onActivityResult(requestCode, resultCode, data)
     }
 

@@ -4,9 +4,11 @@ package eu.kanade.tachiyomi.data.connections.discord
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.os.IBinder
 import android.util.Log
 import com.my.discordrpc.DiscordRPC
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.util.lang.launchUI
@@ -19,11 +21,16 @@ class DiscordRPCService : Service() {
     override fun onCreate() {
         super.onCreate()
         context = this
+        rpc!!.setStartTimestamps(System.currentTimeMillis())
         rpc!!.build()
+        isBuilt = true
     }
 
     override fun onDestroy() {
-        launchUI { rpc!!.closeRPC() }
+        launchUI {
+            rpc!!.closeRPC()
+            isBuilt = false
+        }
         Log.i("RPCYO", "ITS DESTROYED BRUV")
         super.onDestroy()
     }
@@ -33,6 +40,9 @@ class DiscordRPCService : Service() {
     }
 
     companion object {
+        internal var isBuilt = false
+        internal var isPip = false
+
         private val preferences: PreferencesHelper by injectLazy()
 
         private val connectionsManager: ConnectionsManager by injectLazy()
@@ -48,15 +58,23 @@ class DiscordRPCService : Service() {
         internal const val video = "attachments/951705840031780865/1006843592637169714/video.png"
         internal const val webview = "attachments/951705840031780865/1006843593467629568/webview.png"
 
-        fun setDRPC(image: String, imageText: String, details: String?, state: String?) {
+        fun setDRPC(type: String?, resources: Resources, image: String? = null, imageText: String? = null, details: String? = null, state: String? = null) {
+            if (isPip) return
             if (preferences.enableDiscordRPC().get()) launchUI {
-                rpc!!.setLargeImage(
-                    image,
-                    imageText,
-                )
-                    .setDetails(details)
-                    .setState(state)
-                    .sendData()
+                if (type == null) {
+                    rpc!!.setLargeImage(image!!, imageText!!)
+                        .setDetails(details)
+                        .setState(state)
+                        .sendData()
+                }
+                when (type) {
+                    "library" -> setDRPC(null, resources, library, resources.getString(R.string.label_animelib), resources.getString(R.string.browsing), resources.getString(R.string.label_animelib))
+                    "browse" -> setDRPC(null, resources, browse, resources.getString(R.string.browse), resources.getString(R.string.browsing), resources.getString(R.string.sources))
+                    "more" -> setDRPC(null, resources, more, resources.getString(R.string.label_more), resources.getString(R.string.messing), resources.getString(R.string.settings))
+                    "history" -> setDRPC(null, resources, history, resources.getString(R.string.label_recent_history), resources.getString(R.string.scrolling), resources.getString(R.string.label_recent_history))
+                    "updates" -> setDRPC(null, resources, updates, resources.getString(R.string.label_recent_updates), resources.getString(R.string.scrolling), resources.getString(R.string.label_recent_updates))
+                    "animiru" -> setDRPC(null, resources, animiru, resources.getString(R.string.app_name))
+                }
             }
         }
 
@@ -65,7 +83,6 @@ class DiscordRPCService : Service() {
             .setName("Animiru")
             .setLargeImage(animiru, "Animiru")
             .setSmallImage(animiru, "Animiru")
-            .setStartTimestamps(System.currentTimeMillis())
             .setType(0)
             .setButton2("Get the app!", "https://github.com/Quickdesh/Animiru")
     }

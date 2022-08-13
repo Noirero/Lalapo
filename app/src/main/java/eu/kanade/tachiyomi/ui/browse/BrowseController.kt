@@ -47,7 +47,9 @@ class BrowseController :
     private var adapter: BrowseAdapter? = null
 
     override fun getTitle(): String {
-        DRPC.setDRPC(DRPC.browse, resources!!.getString(R.string.browse), resources!!.getString(R.string.browsing), resources!!.getString(R.string.sources))
+        // AM -->
+        DRPC.setDRPC("browse", resources!!)
+        // AM <--
         return resources!!.getString(R.string.browse)
     }
 

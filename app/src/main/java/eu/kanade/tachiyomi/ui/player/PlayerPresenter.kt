@@ -88,6 +88,10 @@ class PlayerPresenter(
      */
     private var episodeId = -1L
 
+    // AM -->
+    var playerStartedFrom = 0L
+    // AM <--
+
     var source: AnimeSource? = null
 
     var currentEpisode: Episode? = null
@@ -180,7 +184,10 @@ class PlayerPresenter(
      * Initializes this presenter with the given [animeId] and [initialEpisodeId]. This method will
      * fetch the anime from the database and initialize the initial episode.
      */
-    fun init(animeId: Long, initialEpisodeId: Long) {
+    fun init(animeId: Long, initialEpisodeId: Long, playerStartedFrom: Long) {
+        // AM -->
+        this.playerStartedFrom = playerStartedFrom
+        // AM <--
         if (!needsInit()) return
 
         launchIO {
@@ -222,6 +229,11 @@ class PlayerPresenter(
                         { activity, it ->
                             currentVideoList = it
                             if (it.isNotEmpty()) {
+                                // AM -->
+                                activity.incognitoDiscordRPC = false
+                                val sourceUsed = sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
+                                if (preferences.incognitoMode().get() || sourceUsed.isNsfw) activity.incognitoDiscordRPC = true
+                                // AM <--
                                 activity.setVideoList(it)
                             } else {
                                 activity.setInitialEpisodeError(Exception("Video list is empty."))
@@ -263,6 +275,11 @@ class PlayerPresenter(
                         { activity, it ->
                             currentVideoList = it
                             if (it.isNotEmpty()) {
+                                // AM -->
+                                activity.incognitoDiscordRPC = false
+                                val sourceUsed = sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
+                                if (preferences.incognitoMode().get() || sourceUsed.isNsfw) activity.incognitoDiscordRPC = true
+                                // AM <--
                                 activity.setVideoList(it, fromStart)
                                 callback()
                             } else {
@@ -300,6 +317,11 @@ class PlayerPresenter(
                         { activity, it ->
                             currentVideoList = it
                             if (it.isNotEmpty()) {
+                                // AM -->
+                                activity.incognitoDiscordRPC = false
+                                val sourceUsed = sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
+                                if (preferences.incognitoMode().get() || sourceUsed.isNsfw) activity.incognitoDiscordRPC = true
+                                // AM <--
                                 activity.setVideoList(it)
                                 callback()
                             } else {

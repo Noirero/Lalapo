@@ -23,7 +23,7 @@ import uy.kohesive.injekt.injectLazy
 
 class AnimeSourceManager(private val context: Context) {
 
-    private val extensionManager: AnimeExtensionManager by injectLazy()
+    internal val extensionManager: AnimeExtensionManager by injectLazy()
     private val getSourceData: GetAnimeSourceData by injectLazy()
     private val upsertSourceData: UpsertAnimeSourceData by injectLazy()
 

@@ -82,7 +82,9 @@ class AnimeUpdatesController :
     }
 
     override fun getTitle(): String {
-        DRPC.setDRPC(DRPC.updates, resources!!.getString(R.string.label_recent_updates), resources!!.getString(R.string.scrolling), resources!!.getString(R.string.label_recent_updates))
+        // AM -->
+        DRPC.setDRPC("updates", resources!!)
+        // AM <--
         return resources!!.getString(R.string.label_recent_updates)
     }
 
@@ -231,7 +233,7 @@ class AnimeUpdatesController :
         if (useExternal) {
             openEpisodeExternal(item)
         } else {
-            val intent = PlayerActivity.newIntent(activity, item.anime.id, item.episode.id)
+            val intent = PlayerActivity.newIntent(activity, item.anime.id, item.episode.id, 2L)
             if (hasAnimation) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             }
@@ -260,6 +262,7 @@ class AnimeUpdatesController :
                     episode,
                     video,
                     context,
+                    resources!!,
                 )
                 if (extIntent != null) try {
                     startActivityForResult(extIntent, AnimeController.REQUEST_EXTERNAL)
@@ -275,6 +278,9 @@ class AnimeUpdatesController :
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // AM -->
+        DRPC.setDRPC("updates", resources!!)
+        // AM <--
         ExternalIntents.onActivityResult(requestCode, resultCode, data)
         super.onActivityResult(requestCode, resultCode, data)
     }

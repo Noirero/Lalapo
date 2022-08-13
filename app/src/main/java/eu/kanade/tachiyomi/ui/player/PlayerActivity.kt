@@ -49,6 +49,7 @@ import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
 import eu.kanade.tachiyomi.ui.base.activity.BaseRxActivity
+import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -63,6 +64,8 @@ import nucleus.factory.RequiresPresenter
 import java.io.File
 import java.io.InputStream
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService as DRPC
 
@@ -74,10 +77,13 @@ class PlayerActivity :
 
     companion object {
 
-        fun newIntent(context: Context, animeId: Long?, episodeId: Long?): Intent {
+        fun newIntent(context: Context, animeId: Long?, episodeId: Long?, controllerNo: Long): Intent {
             return Intent(context, PlayerActivity::class.java).apply {
                 putExtra("anime", animeId)
                 putExtra("episode", episodeId)
+                // AM -->
+                putExtra("controller", controllerNo)
+                // AM <--
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
         }
@@ -86,6 +92,9 @@ class PlayerActivity :
     override fun onNewIntent(intent: Intent) {
         val anime = intent.extras!!.getLong("anime", -1)
         val episode = intent.extras!!.getLong("episode", -1)
+        // AM -->
+        val playerStartedFrom = intent.extras!!.getLong("controller", 0)
+        // AM <--
         if (anime == -1L || episode == -1L) {
             finish()
             return
@@ -96,7 +105,7 @@ class PlayerActivity :
         }
 
         presenter.anime = null
-        presenter.init(anime, episode)
+        presenter.init(anime, episode, playerStartedFrom)
         super.onNewIntent(intent)
     }
 
@@ -126,6 +135,10 @@ class PlayerActivity :
     private var height = 0
 
     internal var isLocked = false
+
+    // AM -->
+    internal var incognitoDiscordRPC = false
+    // AM <--
 
     private val windowInsetsController by lazy { WindowInsetsControllerCompat(window, binding.root) }
 
@@ -336,11 +349,14 @@ class PlayerActivity :
         if (presenter?.needsInit() == true) {
             val anime = intent.extras!!.getLong("anime", -1)
             val episode = intent.extras!!.getLong("episode", -1)
+            // AM -->
+            val playerStartedFrom = intent.extras!!.getLong("controller", 0)
+            // AM <--
             if (anime == -1L || episode == -1L) {
                 finish()
                 return
             }
-            presenter.init(anime, episode)
+            presenter.init(anime, episode, playerStartedFrom)
         }
         val dm = DisplayMetrics()
         windowManager.defaultDisplay.getRealMetrics(dm)
@@ -1062,7 +1078,16 @@ class PlayerActivity :
         player.timePos?.let { playerControls.updatePlaybackPos(it) }
         updatePlaylistButtons()
         updateEpisodeText()
-        DRPC.setDRPC(DRPC.video, resources!!.getString(R.string.watching), presenter.anime?.title, presenter.currentEpisode?.name)
+        // AM -->
+        presenter.currentEpisode?.episode_number?.let {
+            val episodeNumber =
+                if (ceil(it) == floor(it)) "Episode ${it.toInt()}"
+                else "Episode $it"
+
+            if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
+            else DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), " ", " ")
+        }
+        // AM <--
         player.loadTracks()
     }
 
@@ -1111,6 +1136,10 @@ class PlayerActivity :
             player.destroy()
         }
         abandonAudioFocus()
+        // AM -->
+        incognitoDiscordRPC = false
+        if (!MainActivity.isRunning) stopService(Intent(this, DRPC::class.java))
+        // AM <--
         super.onDestroy()
     }
 
@@ -1118,7 +1147,14 @@ class PlayerActivity :
         if (deviceSupportsPip && player.paused == false && preferences.pipOnExit()) {
             startPiP()
         } else {
-            DRPC.setDRPC(DRPC.library, resources!!.getString(R.string.label_animelib), resources!!.getString(R.string.browsing), resources!!.getString(R.string.label_animelib))
+            // AM -->
+            when (presenter.playerStartedFrom) {
+                0L -> DRPC.setDRPC("library", resources!!)
+                1L -> DRPC.setDRPC("history", resources!!)
+                2L -> DRPC.setDRPC("updates", resources!!)
+            }
+            DRPC.isPip = false
+            // AM <--
             finishAndRemoveTask()
             super.onBackPressed()
         }
@@ -1140,7 +1176,14 @@ class PlayerActivity :
             player.paused = true
         }
         if (deviceSupportsPip && isInPipMode && powerManager.isInteractive) {
-            DRPC.setDRPC(DRPC.library, resources!!.getString(R.string.label_animelib), resources!!.getString(R.string.browsing), resources!!.getString(R.string.label_animelib))
+            // AM -->
+            when (presenter.playerStartedFrom) {
+                0L -> DRPC.setDRPC("library", resources!!)
+                1L -> DRPC.setDRPC("history", resources!!)
+                2L -> DRPC.setDRPC("updates", resources!!)
+            }
+            DRPC.isPip = false
+            // AM <--
             finishAndRemoveTask()
         }
 
@@ -1150,6 +1193,9 @@ class PlayerActivity :
     override fun onResume() {
         super.onResume()
         setVisibilities()
+        // AM -->
+        if (preferences.enableDiscordRPC().get() && !DRPC.isBuilt) startService(Intent(this, DRPC::class.java))
+        // AM <--
         if (deviceSupportsPip && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) player.paused?.let { updatePictureInPictureActions(!it) }
     }
 
@@ -1157,6 +1203,9 @@ class PlayerActivity :
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         isInPipMode = isInPictureInPictureMode
         isPipStarted = isInPipMode
+        // AM -->
+        DRPC.isPip = isInPipMode
+        // AM <--
         playerControls.lockControls(isInPipMode)
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
 

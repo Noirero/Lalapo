@@ -142,7 +142,9 @@ class AnimelibController(
         }
 
     override fun getTitle(): String {
-        DRPC.setDRPC(DRPC.library, resources!!.getString(R.string.label_animelib), resources!!.getString(R.string.browsing), resources!!.getString(R.string.label_animelib))
+        // AM -->
+        DRPC.setDRPC("library", resources!!)
+        // AM <--
         return currentTitle ?: resources!!.getString(R.string.label_animelib)
     }
 
