@@ -113,6 +113,7 @@ android {
             "**/libavutil.so",
             "**/libswresample.so",
             "**/libswscale.so",
+            "**/libc++_shared.so",
         ))
     }
 
@@ -294,6 +295,7 @@ dependencies {
 
     // FFmpeg
     implementation(libs.ffmpeg.kit)
+    implementation(libs.arthenica.smartexceptions)
 
     // mpv-android
     implementation(libs.aniyomi.mpv)
