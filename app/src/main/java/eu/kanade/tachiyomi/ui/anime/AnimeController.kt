@@ -461,7 +461,8 @@ class AnimeController :
 
     private fun openEpisodeInternal(episode: DomainEpisode) {
         activity?.run {
-            startActivity(PlayerActivity.newIntent(this, episode.animeId, episode.id, 0L))
+            MainActivity.playerStartedFrom = 0L
+            startActivity(PlayerActivity.newIntent(this, episode.animeId, episode.id))
         }
     }
 

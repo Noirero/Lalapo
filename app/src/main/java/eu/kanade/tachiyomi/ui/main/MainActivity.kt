@@ -728,6 +728,7 @@ class MainActivity : BaseActivity() {
     companion object {
         // AM -->
         internal var isRunning = false
+        internal var playerStartedFrom = 0L
         // AM <--
 
         // Splash screen

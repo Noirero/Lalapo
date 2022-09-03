@@ -84,6 +84,7 @@ class AnimeUpdatesController :
     override fun getTitle(): String {
         // AM -->
         DRPC.setDRPC("updates", resources!!)
+        MainActivity.playerStartedFrom = 2L
         // AM <--
         return resources!!.getString(R.string.label_recent_updates)
     }
@@ -233,7 +234,7 @@ class AnimeUpdatesController :
         if (useExternal) {
             openEpisodeExternal(item)
         } else {
-            val intent = PlayerActivity.newIntent(activity, item.anime.id, item.episode.id, 2L)
+            val intent = PlayerActivity.newIntent(activity, item.anime.id, item.episode.id)
             if (hasAnimation) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             }

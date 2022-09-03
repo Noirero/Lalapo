@@ -89,10 +89,6 @@ class PlayerPresenter(
      */
     private var episodeId = -1L
 
-    // AM -->
-    var playerStartedFrom = 0L
-    // AM <--
-
     var source: AnimeSource? = null
 
     var currentEpisode: Episode? = null
@@ -185,10 +181,7 @@ class PlayerPresenter(
      * Initializes this presenter with the given [animeId] and [initialEpisodeId]. This method will
      * fetch the anime from the database and initialize the initial episode.
      */
-    fun init(animeId: Long, initialEpisodeId: Long, playerStartedFrom: Long) {
-        // AM -->
-        this.playerStartedFrom = playerStartedFrom
-        // AM <--
+    fun init(animeId: Long, initialEpisodeId: Long) {
         if (!needsInit()) return
 
         launchIO {

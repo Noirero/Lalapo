@@ -180,7 +180,8 @@ class NotificationReceiver : BroadcastReceiver() {
         val anime = runBlocking { getAnime.await(animeId) }
         val episode = runBlocking { getEpisode.await(episodeId) }
         if (anime != null && episode != null) {
-            val intent = PlayerActivity.newIntent(context, anime.id, episode.id, 0L).apply {
+            MainActivity.playerStartedFrom = 0L
+            val intent = PlayerActivity.newIntent(context, anime.id, episode.id).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             context.startActivity(intent)
@@ -445,7 +446,8 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param episode episode that needs to be opened
          */
         internal fun openEpisodePendingActivity(context: Context, anime: Anime, episode: Episode): PendingIntent {
-            val newIntent = PlayerActivity.newIntent(context, anime.id, episode.id, 0L)
+            val newIntent = PlayerActivity.newIntent(context, anime.id, episode.id)
+            MainActivity.playerStartedFrom = 0L
             return PendingIntent.getActivity(context, AnimeController.REQUEST_INTERNAL, newIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
 

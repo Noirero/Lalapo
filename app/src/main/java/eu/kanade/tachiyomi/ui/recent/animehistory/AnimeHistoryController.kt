@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.ui.anime.AnimeController
 import eu.kanade.tachiyomi.ui.base.controller.ComposeController
 import eu.kanade.tachiyomi.ui.base.controller.RootController
 import eu.kanade.tachiyomi.ui.base.controller.pushController
+import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.ExternalIntents
 import eu.kanade.tachiyomi.ui.player.PlayerActivity
@@ -47,6 +48,7 @@ class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootC
     override fun getTitle(): String {
         // AM -->
         DRPC.setDRPC("history", resources!!)
+        MainActivity.playerStartedFrom = 1L
         // AM <--
         return resources!!.getString(R.string.label_recent_history)
     }
@@ -114,7 +116,7 @@ class AnimeHistoryController : ComposeController<AnimeHistoryPresenter>(), RootC
         if (useExternal) {
             openEpisodeExternal(episode, anime)
         } else {
-            val intent = PlayerActivity.newIntent(activity, anime.id, episode.id, 1L)
+            val intent = PlayerActivity.newIntent(activity, anime.id, episode.id)
             startActivity(intent)
         }
     }

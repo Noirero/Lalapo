@@ -23,6 +23,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.Rational
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -77,13 +78,10 @@ class PlayerActivity :
 
     companion object {
 
-        fun newIntent(context: Context, animeId: Long?, episodeId: Long?, controllerNo: Long): Intent {
+        fun newIntent(context: Context, animeId: Long?, episodeId: Long?): Intent {
             return Intent(context, PlayerActivity::class.java).apply {
                 putExtra("anime", animeId)
                 putExtra("episode", episodeId)
-                // AM -->
-                putExtra("controller", controllerNo)
-                // AM <--
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
         }
@@ -92,9 +90,6 @@ class PlayerActivity :
     override fun onNewIntent(intent: Intent) {
         val anime = intent.extras!!.getLong("anime", -1)
         val episode = intent.extras!!.getLong("episode", -1)
-        // AM -->
-        val playerStartedFrom = intent.extras!!.getLong("controller", 0)
-        // AM <--
         if (anime == -1L || episode == -1L) {
             finish()
             return
@@ -105,7 +100,7 @@ class PlayerActivity :
         }
 
         presenter.anime = null
-        presenter.init(anime, episode, playerStartedFrom)
+        presenter.init(anime, episode)
         super.onNewIntent(intent)
     }
 
@@ -349,14 +344,11 @@ class PlayerActivity :
         if (presenter?.needsInit() == true) {
             val anime = intent.extras!!.getLong("anime", -1)
             val episode = intent.extras!!.getLong("episode", -1)
-            // AM -->
-            val playerStartedFrom = intent.extras!!.getLong("controller", 0)
-            // AM <--
             if (anime == -1L || episode == -1L) {
                 finish()
                 return
             }
-            presenter.init(anime, episode, playerStartedFrom)
+            presenter.init(anime, episode)
         }
         val dm = DisplayMetrics()
         windowManager.defaultDisplay.getRealMetrics(dm)
@@ -1079,17 +1071,32 @@ class PlayerActivity :
         updatePlaylistButtons()
         updateEpisodeText()
         // AM -->
-        presenter.currentEpisode?.episode_number?.let {
-            val episodeNumber =
-                if (ceil(it) == floor(it)) "Episode ${it.toInt()}"
-                else "Episode $it"
-
-            if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
-            else DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), " ", " ")
-        }
+        updateDRPC()
         // AM <--
         player.loadTracks()
     }
+
+    // AM -->
+    private fun updateDRPC() {
+        if (!isFinishing) {
+            presenter.currentEpisode?.episode_number?.let {
+                val episodeNumber =
+                    if (ceil(it) == floor(it)) "Episode ${it.toInt()}"
+                    else "Episode $it"
+                Log.i("RPCYO", presenter.anime?.thumbnail_url ?: DRPC.video)
+                if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, presenter.anime?.thumbnail_url ?: DRPC.video, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
+                else DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), " ", " ")
+            }
+        } else {
+            when (MainActivity.playerStartedFrom) {
+                0L -> DRPC.setDRPC("library", resources!!)
+                1L -> DRPC.setDRPC("history", resources!!)
+                2L -> DRPC.setDRPC("updates", resources!!)
+            }
+            DRPC.isPip = false
+        }
+    }
+    // AM <--
 
     private fun updateEpisodeText() {
         playerControls.binding.titleMainTxt.text = presenter.anime?.title
@@ -1138,6 +1145,7 @@ class PlayerActivity :
         abandonAudioFocus()
         // AM -->
         incognitoDiscordRPC = false
+        updateDRPC()
         if (!MainActivity.isRunning) stopService(Intent(this, DRPC::class.java))
         // AM <--
         super.onDestroy()
@@ -1147,14 +1155,6 @@ class PlayerActivity :
         if (deviceSupportsPip && player.paused == false && preferences.pipOnExit()) {
             startPiP()
         } else {
-            // AM -->
-            when (presenter.playerStartedFrom) {
-                0L -> DRPC.setDRPC("library", resources!!)
-                1L -> DRPC.setDRPC("history", resources!!)
-                2L -> DRPC.setDRPC("updates", resources!!)
-            }
-            DRPC.isPip = false
-            // AM <--
             finishAndRemoveTask()
             super.onBackPressed()
         }
@@ -1176,14 +1176,6 @@ class PlayerActivity :
             player.paused = true
         }
         if (deviceSupportsPip && isInPipMode && powerManager.isInteractive) {
-            // AM -->
-            when (presenter.playerStartedFrom) {
-                0L -> DRPC.setDRPC("library", resources!!)
-                1L -> DRPC.setDRPC("history", resources!!)
-                2L -> DRPC.setDRPC("updates", resources!!)
-            }
-            DRPC.isPip = false
-            // AM <--
             finishAndRemoveTask()
         }
 

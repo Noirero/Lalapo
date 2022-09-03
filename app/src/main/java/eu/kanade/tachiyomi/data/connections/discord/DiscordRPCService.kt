@@ -62,7 +62,8 @@ class DiscordRPCService : Service() {
             if (isPip) return
             if (preferences.enableDiscordRPC().get()) launchUI {
                 if (type == null) {
-                    rpc!!.setLargeImage(image!!, imageText!!)
+                    val useMp = image!!.startsWith("attachments/951705840031780865")
+                    rpc!!.setLargeImage(image, imageText!!, useMp)
                         .setDetails(details)
                         .setState(state)
                         .sendData()
@@ -81,8 +82,8 @@ class DiscordRPCService : Service() {
         internal var rpc: DiscordRPC? = DiscordRPC(token)
             .setApplicationId("962990036020756480")
             .setName("Animiru")
-            .setLargeImage(animiru, "Animiru")
-            .setSmallImage(animiru, "Animiru")
+            .setLargeImage(animiru, "Animiru", true)
+            .setSmallImage(animiru, "Animiru", true)
             .setType(0)
             .setButton2("Get the app!", "https://github.com/Quickdesh/Animiru")
     }
