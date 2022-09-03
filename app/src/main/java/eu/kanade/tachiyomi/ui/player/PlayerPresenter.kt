@@ -20,6 +20,7 @@ import eu.kanade.domain.episode.model.toDbEpisode
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
+import eu.kanade.tachiyomi.animesource.isLocalOrStub
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.database.models.Anime
@@ -231,8 +232,13 @@ class PlayerPresenter(
                             if (it.isNotEmpty()) {
                                 // AM -->
                                 activity.incognitoDiscordRPC = false
-                                val sourceUsed = sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
-                                if (preferences.incognitoMode().get() || sourceUsed.isNsfw) activity.incognitoDiscordRPC = true
+                                if (!source?.isLocalOrStub()!!) {
+                                    val sourceUsed =
+                                        sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
+                                    if (preferences.incognitoMode()
+                                        .get() || sourceUsed.isNsfw
+                                    ) activity.incognitoDiscordRPC = true
+                                }
                                 // AM <--
                                 activity.setVideoList(it)
                             } else {
@@ -277,8 +283,13 @@ class PlayerPresenter(
                             if (it.isNotEmpty()) {
                                 // AM -->
                                 activity.incognitoDiscordRPC = false
-                                val sourceUsed = sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
-                                if (preferences.incognitoMode().get() || sourceUsed.isNsfw) activity.incognitoDiscordRPC = true
+                                if (!source?.isLocalOrStub()!!) {
+                                    val sourceUsed =
+                                        sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
+                                    if (preferences.incognitoMode()
+                                        .get() || sourceUsed.isNsfw
+                                    ) activity.incognitoDiscordRPC = true
+                                }
                                 // AM <--
                                 activity.setVideoList(it, fromStart)
                                 callback()
@@ -319,8 +330,13 @@ class PlayerPresenter(
                             if (it.isNotEmpty()) {
                                 // AM -->
                                 activity.incognitoDiscordRPC = false
-                                val sourceUsed = sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
-                                if (preferences.incognitoMode().get() || sourceUsed.isNsfw) activity.incognitoDiscordRPC = true
+                                if (!source?.isLocalOrStub()!!) {
+                                    val sourceUsed =
+                                        sourceManager.extensionManager.installedExtensions.first { it.name == source!!.name }
+                                    if (preferences.incognitoMode()
+                                        .get() || sourceUsed.isNsfw
+                                    ) activity.incognitoDiscordRPC = true
+                                }
                                 // AM <--
                                 activity.setVideoList(it)
                                 callback()
