@@ -215,34 +215,33 @@ class SettingsAdvancedController(
                     true
                 }
             }
-        }
+            editTextPreference {
+                key = Keys.defaultUserAgent
+                titleRes = R.string.pref_user_agent_string
+                text = preferences.defaultUserAgent().get()
+                summary = network.defaultUserAgent
 
-        editTextPreference {
-            key = Keys.defaultUserAgent
-            titleRes = R.string.pref_user_agent_string
-            text = preferences.defaultUserAgent().get()
-            summary = network.defaultUserAgent
-
-            onChange {
-                if (it.toString().isBlank()) {
-                    activity?.toast(R.string.error_user_agent_string_blank)
-                    false
-                } else {
-                    activity?.toast(R.string.requires_app_restart)
-                    true
+                onChange {
+                    if (it.toString().isBlank()) {
+                        activity?.toast(R.string.error_user_agent_string_blank)
+                        false
+                    } else {
+                        activity?.toast(R.string.requires_app_restart)
+                        true
+                    }
                 }
             }
-        }
-        if (preferences.defaultUserAgent().isSet()) {
-            preference {
-                key = "pref_reset_user_agent"
-                titleRes = R.string.pref_reset_user_agent_string
+            if (preferences.defaultUserAgent().isSet()) {
+                preference {
+                    key = "pref_reset_user_agent"
+                    titleRes = R.string.pref_reset_user_agent_string
 
-                visibleIf(preferences.defaultUserAgent()) { it != preferences.defaultUserAgent().defaultValue }
+                    visibleIf(preferences.defaultUserAgent()) { it != preferences.defaultUserAgent().defaultValue }
 
-                onClick {
-                    preferences.defaultUserAgent().delete()
-                    activity?.toast(R.string.requires_app_restart)
+                    onClick {
+                        preferences.defaultUserAgent().delete()
+                        activity?.toast(R.string.requires_app_restart)
+                    }
                 }
             }
         }
