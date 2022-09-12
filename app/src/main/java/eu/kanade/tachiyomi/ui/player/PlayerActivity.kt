@@ -1102,20 +1102,19 @@ class PlayerActivity :
                             discordThumbnail = DRPC.video
                         } finally {
                             if (discordThumbnail == "external/Not Found") discordThumbnail = DRPC.video
+                            if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, discordThumbnail, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
+                            else DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), " ", " ")
                         }
-
-                        if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, discordThumbnail, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
-                        else DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), " ", " ")
                     }
                 }
             }
         } else {
+            DRPC.isPip = false
             when (MainActivity.playerStartedFrom) {
                 0L -> DRPC.setDRPC("library", resources!!)
                 1L -> DRPC.setDRPC("history", resources!!)
                 2L -> DRPC.setDRPC("updates", resources!!)
             }
-            DRPC.isPip = false
         }
     }
     // AM <--
