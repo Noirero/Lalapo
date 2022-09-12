@@ -1101,7 +1101,7 @@ class PlayerActivity :
                         } catch (e: Throwable) {
                             discordThumbnail = DRPC.video
                         } finally {
-                            if (discordThumbnail == "Not Found") discordThumbnail = DRPC.video
+                            if (discordThumbnail == "external/Not Found") discordThumbnail = DRPC.video
                         }
 
                         if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, discordThumbnail, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
