@@ -48,6 +48,8 @@ object PreferenceKeys {
 
     const val removeAfterSeenSlots = "remove_after_seen_slots"
 
+    const val defaultUserAgent = "default_user_agent"
+
     const val downloadAfterSeenSlots = "download_after_seen_slots"
 
     const val trackOnAddingToLibrary = "track_on_adding_to_library"
