@@ -62,8 +62,7 @@ class DiscordRPCService : Service() {
             if (isPip) return
             if (preferences.enableDiscordRPC().get()) launchUI {
                 if (type == null) {
-                    val useMp = image!!.startsWith("attachments/951705840031780865")
-                    rpc!!.setLargeImage(image, imageText!!, useMp)
+                    rpc!!.setLargeImage(image!!, imageText!!, true)
                         .setDetails(details)
                         .setState(state)
                         .sendData()

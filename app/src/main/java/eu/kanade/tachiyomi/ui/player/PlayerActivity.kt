@@ -23,7 +23,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.DisplayMetrics
-import android.util.Log
 import android.util.Rational
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -49,6 +48,8 @@ import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
+import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.base.activity.BaseRxActivity
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.lang.launchIO
@@ -62,8 +63,10 @@ import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.Utils
 import logcat.LogPriority
 import nucleus.factory.RequiresPresenter
+import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.InputStream
+import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -1083,9 +1086,28 @@ class PlayerActivity :
                 val episodeNumber =
                     if (ceil(it) == floor(it)) "Episode ${it.toInt()}"
                     else "Episode $it"
-                Log.i("RPCYO", presenter.anime?.thumbnail_url ?: DRPC.video)
-                if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, presenter.anime?.thumbnail_url ?: DRPC.video, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
-                else DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), " ", " ")
+
+                var discordThumbnail = DRPC.video
+                thread {
+                    val networkService: NetworkHelper by injectLazy()
+                    val client = networkService.client
+                    presenter.anime?.thumbnail_url?.let { thumbnail ->
+                        try {
+                            discordThumbnail = "external/" +
+                                client.newCall(GET("http://140.83.62.114:5000/link?imageLink=$thumbnail"))
+                                    .execute()
+                                    .header("discord-image-link")
+                                    .toString().split("external/")[1]
+                        } catch (e: Throwable) {
+                            discordThumbnail = DRPC.video
+                        } finally {
+                            if (discordThumbnail == "Not Found") discordThumbnail = DRPC.video
+                        }
+
+                        if (!incognitoDiscordRPC) DRPC.setDRPC(null, resources!!, discordThumbnail, resources!!.getString(R.string.watching), presenter.anime?.title, episodeNumber)
+                        else DRPC.setDRPC(null, resources!!, DRPC.video, resources!!.getString(R.string.watching), " ", " ")
+                    }
+                }
             }
         } else {
             when (MainActivity.playerStartedFrom) {
