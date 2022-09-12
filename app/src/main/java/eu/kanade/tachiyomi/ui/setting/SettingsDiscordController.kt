@@ -11,10 +11,14 @@ import eu.kanade.tachiyomi.ui.setting.connections.ConnectionsLogoutDialog
 import eu.kanade.tachiyomi.util.preference.asImmediateFlow
 import eu.kanade.tachiyomi.util.preference.bindTo
 import eu.kanade.tachiyomi.util.preference.defaultValue
+import eu.kanade.tachiyomi.util.preference.entriesRes
+import eu.kanade.tachiyomi.util.preference.listPreference
+import eu.kanade.tachiyomi.util.preference.onChange
 import eu.kanade.tachiyomi.util.preference.onClick
 import eu.kanade.tachiyomi.util.preference.preference
 import eu.kanade.tachiyomi.util.preference.switchPreference
 import eu.kanade.tachiyomi.util.preference.titleRes
+import eu.kanade.tachiyomi.util.system.toast
 import uy.kohesive.injekt.injectLazy
 
 class SettingsDiscordController : SettingsController(), ConnectionsLogoutDialog.Listener {
@@ -34,6 +38,24 @@ class SettingsDiscordController : SettingsController(), ConnectionsLogoutDialog.
                 if (it) activity!!.startService(Intent(activity!!, DiscordRPCService::class.java))
                 else activity!!.stopService(Intent(activity!!, DiscordRPCService::class.java))
             }
+
+        listPreference {
+            bindTo(preferences.discordRPCStatus())
+            titleRes = R.string.pref_discord_status
+            entriesRes = arrayOf(
+                R.string.pref_discord_dnd,
+                R.string.pref_discord_idle,
+                R.string.pref_discord_online,
+            )
+            entryValues = arrayOf("dnd", "idle", "online")
+            summary = "%s"
+            visibleIf(preferences.enableDiscordRPC()) { it }
+            onChange { newValue ->
+                activity?.toast(R.string.requires_app_restart)
+                DiscordRPCService.rpc?.setStatus(newValue as String?)
+                true
+            }
+        }
 
         preference {
             key = "logout_discord"

@@ -84,7 +84,8 @@ class DiscordRPCService : Service() {
             .setLargeImage(animiru, "Animiru", true)
             .setSmallImage(animiru, "Animiru", true)
             .setType(0)
-            .setButton1("Join the Discord!","https://discord.gg/yDuHDMwxhv")
+            .setStatus(preferences.discordRPCStatus().get())
+            .setButton1("Join the Discord!", "https://discord.gg/yDuHDMwxhv")
             .setButton2("Get the app!", "https://github.com/Quickdesh/Animiru")
     }
 }

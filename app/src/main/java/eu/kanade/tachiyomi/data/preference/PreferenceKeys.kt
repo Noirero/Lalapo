@@ -76,6 +76,8 @@ object PreferenceKeys {
 
     const val enableDiscordRPC = "pref_enable_discord_rpc"
 
+    const val discordRPCStatus = "pref_discord_rpc_status"
+
     const val startScreen = "start_screen"
 
     const val hideNotificationContent = "hide_notification_content"

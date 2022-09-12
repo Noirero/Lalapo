@@ -436,6 +436,10 @@
     <string name="special_services">Special Services</string>
     <string name="connection_discord">Discord</string>
     <string name="pref_enable_discord_rpc">Enable Discord Rich Presence</string>
+    <string name="pref_discord_status">Discord Status</string>
+    <string name="pref_discord_dnd">Do Not Disturb ⛔</string>
+    <string name="pref_discord_idle">Idle 🌙</string>
+    <string name="pref_discord_online">Online 🟢</string>
 
       <!-- Browse section -->
     <string name="pref_duplicate_pinned_sources">Show duplicated pinned sources</string>
