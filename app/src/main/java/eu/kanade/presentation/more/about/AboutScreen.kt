@@ -110,13 +110,15 @@ fun AboutScreen(
                 LinkIcon(
                     label = "Discord",
                     painter = painterResource(R.drawable.ic_discord_24dp),
-                    url = "https://discord.gg/F32UjdJZrR",
+                    url = "https://discord.gg/yDuHDMwxhv",
                 )
-                LinkIcon(
-                    label = "Reddit",
-                    painter = painterResource(R.drawable.ic_reddit_24dp),
-                    url = "https://www.reddit.com/r/Aniyomi",
-                )
+                /**
+                 * LinkIcon(
+                 * label = "Reddit",
+                 * painter = painterResource(R.drawable.ic_reddit_24dp),
+                 * url = "https://www.reddit.com/r/Aniyomi",
+                 * )
+                 */
                 LinkIcon(
                     label = "GitHub",
                     painter = painterResource(R.drawable.ic_github_24dp),
