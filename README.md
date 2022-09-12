@@ -1,4 +1,4 @@
-| Stable | Aniyomi Discord Server |
+| Stable | Discord Server |
 |--------|----------------|
 [![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv) |
 
