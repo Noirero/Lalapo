@@ -75,14 +75,17 @@ import eu.kanade.presentation.util.plus
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSourceManager
 import eu.kanade.tachiyomi.animesource.getNameForAnimeInfo
+import eu.kanade.tachiyomi.data.download.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.anime.AnimeScreenState
 import eu.kanade.tachiyomi.ui.anime.EpisodeItem
 import eu.kanade.tachiyomi.util.lang.toRelativeString
+import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.runBlocking
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Date
@@ -721,7 +724,21 @@ private fun LazyListScope.sharedEpisodeItems(
         val totalSeconds = remember(episode.totalSeconds) {
             episode.totalSeconds.takeIf { !episode.seen && it > 0 }
         }
-        val scanlator = remember(episode.scanlator) { episode.scanlator.takeIf { !it.isNullOrBlank() } }
+        val scanlator =
+            remember(episode.scanlator) { episode.scanlator.takeIf { !it.isNullOrBlank() } }
+
+        val downloadedFileSize =
+            if (downloadState == AnimeDownload.State.DOWNLOADED) {
+                val provider = AnimeDownloadProvider(LocalContext.current)
+                provider.findEpisodeDir(
+                    episode.name,
+                    episode.scanlator,
+                    state.anime.title,
+                    state.source,
+                )?.filePath?.let {
+                    DiskUtil.getDirectorySize(File(it))
+                }
+            } else null
 
         AnimeEpisodeListItem(
             title = episodeTitle,
@@ -746,6 +763,10 @@ private fun LazyListScope.sharedEpisodeItems(
             fillermark = episode.fillermark,
             selected = selected.contains(episodeItem),
             downloadState = downloadState,
+            downloadedFileSizeMb = downloadedFileSize?.let {
+                // Convert it from bytes to Megabytes
+                it / (1024 * 1024)
+            },
             downloadProgress = downloadProgress,
             onLongClick = {
                 val dispatched = onEpisodeItemLongClick(

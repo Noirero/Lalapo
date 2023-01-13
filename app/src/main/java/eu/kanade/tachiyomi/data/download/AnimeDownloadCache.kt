@@ -79,6 +79,7 @@ class AnimeDownloadCache(
     ): Boolean {
         val source = sourceManager.getOrStub(sourceId)
         return provider.findEpisodeDir(episodeName, chapterScanlator, animeTitle, source) != null
+        // TODO: Check if folder actually has the downloaded video
     }
 
     /**

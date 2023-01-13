@@ -63,7 +63,8 @@ class AnimeUpdatesHolder(private val view: View, private val adapter: AnimeUpdat
 
         // Set episode status
         binding.download.isVisible = item.anime.source != LocalAnimeSource.ID
-        binding.download.setState(item.status, item.progress)
+        binding.download.setState(item.status, item.progress) // TODO: downloadedEpisodeFileSizeMb
+        // FIXME : State doesn't apply for the first time, until scrolled/redrawn
 
         // Set cover
         binding.mangaCover.dispose()
