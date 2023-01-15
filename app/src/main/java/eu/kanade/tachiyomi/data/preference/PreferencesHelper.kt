@@ -22,7 +22,7 @@ import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 import java.io.File
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.Locale
+import java.util.*
 import eu.kanade.domain.anime.model.Anime as DomainAnime
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 import eu.kanade.tachiyomi.data.preference.PreferenceValues as Values
@@ -191,6 +191,8 @@ class PreferencesHelper(val context: Context) {
     fun externalDownloaderSelection() = prefs.getString(Keys.externalDownloaderSelection, "")
 
     fun downloadOnlyOverWifi() = prefs.getBoolean(Keys.downloadOnlyOverWifi, true)
+
+    fun showDownloadedEpisodeSize() = prefs.getBoolean(Keys.showDownloadedEpisodeSize, true) //AM
 
     fun numberOfBackups() = flowPrefs.getInt("backup_slots", 2)
 

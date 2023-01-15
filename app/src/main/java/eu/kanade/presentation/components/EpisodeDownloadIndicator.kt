@@ -1,7 +1,7 @@
 package eu.kanade.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.anime.EpisodeDownloadAction
 import eu.kanade.presentation.util.secondaryItemAlpha
 import eu.kanade.tachiyomi.R
@@ -34,14 +35,28 @@ import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 fun EpisodeDownloadIndicator(
     modifier: Modifier = Modifier,
     downloadState: AnimeDownload.State,
+    downloadedEpisodeFileSizeMb: Long?, // AM
     downloadProgress: Int,
     onClick: (EpisodeDownloadAction) -> Unit,
 ) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         CompositionLocalProvider(LocalMinimumTouchTargetEnforcement provides false) {
             val isDownloaded = downloadState == AnimeDownload.State.DOWNLOADED
             val isDownloading = downloadState != AnimeDownload.State.NOT_DOWNLOADED
             var isMenuExpanded by remember(downloadState) { mutableStateOf(false) }
+
+            // AM -->
+            if (isDownloaded && downloadedEpisodeFileSizeMb != null) {
+                Text(
+                    text = "${downloadedEpisodeFileSizeMb}MB",
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodyMedium
+                        .copy(color = MaterialTheme.colorScheme.primary, fontSize = 12.sp),
+
+                )
+            }
+            // AM  <--
+
             IconButton(
                 onClick = {
                     if (isDownloaded || isDownloading) {

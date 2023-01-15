@@ -71,6 +71,14 @@ class SettingsDownloadController : SettingsController() {
             defaultValue = true
         }
 
+        // AM -->
+        switchPreference {
+            key = Keys.showDownloadedEpisodeSize
+            titleRes = R.string.show_downloaded_episode_size
+            defaultValue = true
+        }
+        // AM  <--
+
         preferenceCategory {
             titleRes = R.string.pref_category_delete_episodes
 
