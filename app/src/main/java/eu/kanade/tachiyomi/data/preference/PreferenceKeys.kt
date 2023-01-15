@@ -46,6 +46,8 @@ object PreferenceKeys {
 
     const val downloadOnlyOverWifi = "pref_download_only_over_wifi_key"
 
+    const val showDownloadedEpisodeSize = "pref_downloaded_episode_size"
+
     const val removeAfterSeenSlots = "remove_after_seen_slots"
 
     const val defaultUserAgent = "default_user_agent"

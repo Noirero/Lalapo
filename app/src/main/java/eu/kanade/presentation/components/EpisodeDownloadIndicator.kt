@@ -24,7 +24,7 @@ import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 fun EpisodeDownloadIndicator(
     modifier: Modifier = Modifier,
     downloadState: AnimeDownload.State,
-    downloadedEpisodeFileSizeMb: Long?, //AM
+    downloadedEpisodeFileSizeMb: Long?, // AM
     downloadProgress: Int,
     onClick: (EpisodeDownloadAction) -> Unit,
 ) {
@@ -42,7 +42,7 @@ fun EpisodeDownloadIndicator(
                     style = MaterialTheme.typography.bodyMedium
                         .copy(color = MaterialTheme.colorScheme.primary, fontSize = 12.sp),
 
-                    )
+                )
             }
             // AM  <--
 

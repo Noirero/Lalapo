@@ -16,17 +16,7 @@ import eu.kanade.domain.category.model.Category
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
-import eu.kanade.tachiyomi.util.preference.bindTo
-import eu.kanade.tachiyomi.util.preference.defaultValue
-import eu.kanade.tachiyomi.util.preference.entriesRes
-import eu.kanade.tachiyomi.util.preference.intListPreference
-import eu.kanade.tachiyomi.util.preference.listPreference
-import eu.kanade.tachiyomi.util.preference.multiSelectListPreference
-import eu.kanade.tachiyomi.util.preference.onClick
-import eu.kanade.tachiyomi.util.preference.preference
-import eu.kanade.tachiyomi.util.preference.preferenceCategory
-import eu.kanade.tachiyomi.util.preference.switchPreference
-import eu.kanade.tachiyomi.util.preference.titleRes
+import eu.kanade.tachiyomi.util.preference.*
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.widget.materialdialogs.QuadStateTextView
 import eu.kanade.tachiyomi.widget.materialdialogs.setQuadStateMultiChoiceItems
@@ -70,6 +60,14 @@ class SettingsDownloadController : SettingsController() {
             titleRes = R.string.connected_to_wifi
             defaultValue = true
         }
+
+        // AM -->
+        switchPreference {
+            key = Keys.showDownloadedEpisodeSize
+            titleRes = R.string.show_downloaded_episode_size
+            defaultValue = true
+        }
+        // AM  <--
 
         preferenceCategory {
             titleRes = R.string.pref_category_delete_episodes
