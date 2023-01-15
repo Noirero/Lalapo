@@ -20,7 +20,7 @@ class EpisodeDownloadView @JvmOverloads constructor(
 
     private var state by mutableStateOf(AnimeDownload.State.NOT_DOWNLOADED)
     private var progress by mutableStateOf(0)
-    private var downloadedEpisodeFileSizeMb: Long? = null
+    private var downloadedEpisodeFileSizeMb: Long? = null //AM
 
     var listener: (EpisodeDownloadAction) -> Unit = {}
 
@@ -31,7 +31,7 @@ class EpisodeDownloadView @JvmOverloads constructor(
                 downloadState = state,
                 downloadProgress = progress,
                 onClick = listener,
-                downloadedEpisodeFileSizeMb = downloadedEpisodeFileSizeMb,
+                downloadedEpisodeFileSizeMb = downloadedEpisodeFileSizeMb, //AM
             )
         }
     }
@@ -43,6 +43,6 @@ class EpisodeDownloadView @JvmOverloads constructor(
     ) {
         this.state = state
         this.progress = progress
-        this.downloadedEpisodeFileSizeMb = downloadedEpisodeFileSizeMb
+        this.downloadedEpisodeFileSizeMb = downloadedEpisodeFileSizeMb //AM
     }
 }

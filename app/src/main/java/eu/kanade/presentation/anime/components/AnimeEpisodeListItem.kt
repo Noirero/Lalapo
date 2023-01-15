@@ -48,7 +48,7 @@ fun AnimeEpisodeListItem(
     fillermark: Boolean,
     selected: Boolean,
     downloadState: AnimeDownload.State,
-    downloadedFileSizeMb: Long?,
+    downloadedEpisodeFileSizeMb: Long?, //AM
     downloadProgress: Int,
     onLongClick: () -> Unit,
     onClick: () -> Unit,
@@ -149,7 +149,7 @@ fun AnimeEpisodeListItem(
                 downloadState = downloadState,
                 downloadProgress = downloadProgress,
                 onClick = onDownloadClick,
-                downloadedEpisodeFileSizeMb = downloadedFileSizeMb,
+                downloadedEpisodeFileSizeMb = downloadedEpisodeFileSizeMb, //AM
             )
         }
     }

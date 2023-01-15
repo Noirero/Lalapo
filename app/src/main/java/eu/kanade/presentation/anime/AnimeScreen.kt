@@ -10,20 +10,7 @@ import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -32,18 +19,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberTopAppBarScrollState
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -58,12 +37,7 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import eu.kanade.domain.anime.model.Anime.Companion.EPISODE_DISPLAY_NUMBER
 import eu.kanade.domain.episode.model.Episode
-import eu.kanade.presentation.anime.components.AnimeBottomActionMenu
-import eu.kanade.presentation.anime.components.AnimeEpisodeListItem
-import eu.kanade.presentation.anime.components.AnimeInfoHeader
-import eu.kanade.presentation.anime.components.AnimeSmallAppBar
-import eu.kanade.presentation.anime.components.AnimeTopAppBar
-import eu.kanade.presentation.anime.components.EpisodeHeader
+import eu.kanade.presentation.anime.components.*
 import eu.kanade.presentation.components.ExtendedFloatingActionButton
 import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.components.SwipeRefreshIndicator
@@ -88,7 +62,7 @@ import uy.kohesive.injekt.api.get
 import java.io.File
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.Date
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 private val episodeDecimalFormat = DecimalFormat(
@@ -727,6 +701,7 @@ private fun LazyListScope.sharedEpisodeItems(
         val scanlator =
             remember(episode.scanlator) { episode.scanlator.takeIf { !it.isNullOrBlank() } }
 
+        // AM  -->
         val downloadedFileSize =
             if (downloadState == AnimeDownload.State.DOWNLOADED) {
                 val provider = AnimeDownloadProvider(LocalContext.current)
@@ -739,6 +714,7 @@ private fun LazyListScope.sharedEpisodeItems(
                     DiskUtil.getDirectorySize(File(it))
                 }
             } else null
+        // AM  <--
 
         AnimeEpisodeListItem(
             title = episodeTitle,
@@ -763,7 +739,7 @@ private fun LazyListScope.sharedEpisodeItems(
             fillermark = episode.fillermark,
             selected = selected.contains(episodeItem),
             downloadState = downloadState,
-            downloadedFileSizeMb = downloadedFileSize?.let {
+            downloadedEpisodeFileSizeMb = downloadedFileSize?.let {
                 // Convert it from bytes to Megabytes
                 it / (1024 * 1024)
             },

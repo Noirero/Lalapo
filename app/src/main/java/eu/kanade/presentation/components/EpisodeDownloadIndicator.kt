@@ -7,19 +7,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalMinimumTouchTargetEnforcement
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +24,7 @@ import eu.kanade.tachiyomi.data.download.model.AnimeDownload
 fun EpisodeDownloadIndicator(
     modifier: Modifier = Modifier,
     downloadState: AnimeDownload.State,
-    downloadedEpisodeFileSizeMb: Long?,
+    downloadedEpisodeFileSizeMb: Long?, //AM
     downloadProgress: Int,
     onClick: (EpisodeDownloadAction) -> Unit,
 ) {
@@ -45,6 +34,7 @@ fun EpisodeDownloadIndicator(
             val isDownloading = downloadState != AnimeDownload.State.NOT_DOWNLOADED
             var isMenuExpanded by remember(downloadState) { mutableStateOf(false) }
 
+            // AM -->
             if (isDownloaded && downloadedEpisodeFileSizeMb != null) {
                 Text(
                     text = "${downloadedEpisodeFileSizeMb}MB",
@@ -52,8 +42,9 @@ fun EpisodeDownloadIndicator(
                     style = MaterialTheme.typography.bodyMedium
                         .copy(color = MaterialTheme.colorScheme.primary, fontSize = 12.sp),
 
-                )
+                    )
             }
+            // AM  <--
 
             IconButton(
                 onClick = {
