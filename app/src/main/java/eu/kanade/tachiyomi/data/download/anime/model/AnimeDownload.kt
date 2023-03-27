@@ -5,7 +5,7 @@ import eu.kanade.domain.entries.anime.model.Anime
 import eu.kanade.domain.items.episode.interactor.GetEpisode
 import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.tachiyomi.animesource.model.Video
-import eu.kanade.tachiyomi.animesource.online.HttpAnimeSource
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import rx.subjects.PublishSubject
 import uy.kohesive.injekt.Injekt

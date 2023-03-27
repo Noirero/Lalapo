@@ -11,6 +11,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven(url = "https://www.jitpack.io")
     }
 }
 
@@ -36,3 +37,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Animiru"
 include(":app")
+include(":i18n")
+include(":source-api")
+include(":core")
+include(":macrobenchmark")

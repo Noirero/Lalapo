@@ -1,7 +1,6 @@
 -dontobfuscate
 
 # Keep common dependencies used in extensions
--keep,allowoptimization class eu.kanade.tachiyomi.** { public protected *; }
 -keep,allowoptimization class androidx.preference.** { public protected *; }
 -keep,allowoptimization class android.content.** { *; }
 -keep,allowoptimization class uy.kohesive.injekt.** { public protected *; }
@@ -13,12 +12,19 @@
 -keep,allowoptimization class okio.** { public protected *; }
 -keep,allowoptimization class rx.** { public protected *; }
 -keep,allowoptimization class org.jsoup.** { public protected *; }
--keep,allowoptimization class com.squareup.duktape.** { public protected *; }
 -keep,allowoptimization class app.cash.quickjs.** { public protected *; }
 -keep,allowoptimization class uy.kohesive.injekt.** { public protected *; }
 -keep,allowoptimization class is.xyz.mpv.** { public protected *; }
 -keep,allowoptimization class com.arthenica.** { public protected *; }
 -keep,allowoptimization class com.my.discordrpc.** { public protected *; }
+
+# From extensions-lib
+-keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.RateLimitInterceptorKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.SpecificHostRateLimitInterceptorKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.NetworkHelper { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.OkHttpExtensionsKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
 
 ##---------------Begin: proguard configuration for RxJava 1.x  ----------
 -dontwarn sun.misc.**
@@ -51,11 +57,11 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
--keep,includedescriptorclasses class eu.kanade.tachiyomi.**$$serializer { *; }
--keepclassmembers class eu.kanade.tachiyomi.** {
+-keep,includedescriptorclasses class eu.kanade.**$$serializer { *; }
+-keepclassmembers class eu.kanade.** {
     *** Companion;
 }
--keepclasseswithmembers class eu.kanade.tachiyomi.** {
+-keepclasseswithmembers class eu.kanade.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
 
@@ -64,3 +70,6 @@
     <methods>;
 }
 ##---------------End: proguard configuration for kotlinx.serialization  ----------
+
+# XmlUtil
+-keep public enum nl.adaptivity.xmlutil.EventType { *; }

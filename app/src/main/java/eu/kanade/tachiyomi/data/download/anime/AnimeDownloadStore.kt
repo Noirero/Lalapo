@@ -5,7 +5,7 @@ import androidx.core.content.edit
 import eu.kanade.domain.entries.anime.interactor.GetAnime
 import eu.kanade.domain.entries.anime.model.Anime
 import eu.kanade.domain.items.episode.interactor.GetEpisode
-import eu.kanade.tachiyomi.animesource.online.HttpAnimeSource
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import kotlinx.coroutines.runBlocking
