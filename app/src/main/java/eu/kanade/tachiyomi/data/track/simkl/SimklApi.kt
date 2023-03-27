@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.track.simkl
 
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.network.GET
@@ -107,10 +107,12 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
                 putJsonArray("seasons") {
                     addJsonObject {
                         put("number", 1)
-                        if (add) putJsonArray("episodes") {
-                            for (epNum in 1..track.last_episode_seen.toInt()) {
-                                addJsonObject {
-                                    put("number", epNum)
+                        if (add) {
+                            putJsonArray("episodes") {
+                                for (epNum in 1..track.last_episode_seen.toInt()) {
+                                    addJsonObject {
+                                        put("number", epNum)
+                                    }
                                 }
                             }
                         }
@@ -269,15 +271,15 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
     )
 
     companion object {
-        const val clientId = "350eaf4b09c4fac6a762f7b42427d33eca32e8b09b8d0e66d0de0a86bd8026ce"
-        private const val clientSecret = "5eb22d7a0926b6a1167eec272b8cef33ee45952dbdc45ba5980eb597f759e9c9"
+        const val clientId = "aa62a7da32518aae5d5049a658b87fa4837c3b739e06ed250b315aab6af82b0e"
+        private const val clientSecret = "2bec9c1d0c00a1e9b0e9e096a71f88d555a6f52da7923df07906df3b21351783"
 
         private const val baseUrl = "https://simkl.com"
         private const val apiUrl = "https://api.simkl.com"
         private const val oauthUrl = "$apiUrl/oauth/token"
         private const val loginUrl = "$baseUrl/oauth/authorize"
 
-        private const val redirectUrl = "animiru://simkl-auth"
+        private const val redirectUrl = "aniyomi://simkl-auth"
 
         fun authUrl(): Uri =
             loginUrl.toUri().buildUpon()

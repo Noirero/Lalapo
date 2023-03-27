@@ -1,34 +1,42 @@
 package eu.kanade.tachiyomi.ui.webview
 
+import android.app.assist.AssistContent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.compose.setContent
-import eu.kanade.presentation.theme.TachiyomiTheme
+import androidx.core.net.toUri
 import eu.kanade.presentation.webview.WebViewScreen
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.animesource.AnimeSourceManager
-import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.animesource.online.HttpAnimeSource
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
+import eu.kanade.tachiyomi.source.manga.MangaSourceManager
+import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.openInBrowser
+import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.view.setComposeContent
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {
 
-    private val sourceManager: AnimeSourceManager by injectLazy()
+    private val sourceManager: MangaSourceManager by injectLazy()
+    private val animeSourceManager: AnimeSourceManager by injectLazy()
     private val network: NetworkHelper by injectLazy()
+
+    private var assistUrl: String? = null
 
     init {
         registerSecureActivity(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        overridePendingTransition(R.anim.shared_axis_x_push_enter, R.anim.shared_axis_x_push_exit)
         super.onCreate(savedInstanceState)
 
         if (!WebViewUtil.supportsWebView(this)) {
@@ -39,33 +47,41 @@ class WebViewActivity : BaseActivity() {
 
         val url = intent.extras!!.getString(URL_KEY) ?: return
         var headers = mutableMapOf<String, String>()
-        val source = sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? AnimeHttpSource
+        val source = sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? HttpSource
+        val animeSource = animeSourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? HttpAnimeSource
         if (source != null) {
             headers = source.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }.toMutableMap()
+        } else if (animeSource != null) {
+            headers = animeSource.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }.toMutableMap()
         }
 
-        setContent {
-            TachiyomiTheme {
-                WebViewScreen(
-                    onUp = { finish() },
-                    initialTitle = intent.extras?.getString(TITLE_KEY),
-                    url = url,
-                    headers = headers,
-                    onShare = this::shareWebpage,
-                    onOpenInBrowser = this::openInBrowser,
-                    onClearCookies = this::clearCookies,
-                )
-            }
+        setComposeContent {
+            WebViewScreen(
+                onNavigateUp = { finish() },
+                initialTitle = intent.extras?.getString(TITLE_KEY),
+                url = url,
+                headers = headers,
+                onUrlChange = { assistUrl = it },
+                onShare = this::shareWebpage,
+                onOpenInBrowser = this::openInBrowser,
+                onClearCookies = this::clearCookies,
+            )
         }
+    }
+
+    override fun onProvideAssistContent(outContent: AssistContent) {
+        super.onProvideAssistContent(outContent)
+        assistUrl?.let { outContent.webUri = it.toUri() }
+    }
+
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(R.anim.shared_axis_x_pop_enter, R.anim.shared_axis_x_pop_exit)
     }
 
     private fun shareWebpage(url: String) {
         try {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, url)
-            }
-            startActivity(Intent.createChooser(intent, getString(R.string.action_share)))
+            startActivity(url.toUri().toShareIntent(this, type = "text/plain"))
         } catch (e: Exception) {
             toast(e.message)
         }

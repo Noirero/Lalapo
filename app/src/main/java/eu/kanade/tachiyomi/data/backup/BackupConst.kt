@@ -10,19 +10,13 @@ object BackupConst {
     // Filter options
     internal const val BACKUP_CATEGORY = 0x1
     internal const val BACKUP_CATEGORY_MASK = 0x1
-    internal const val BACKUP_EPISODE = 0x2
-    internal const val BACKUP_EPISODE_MASK = 0x2
+    internal const val BACKUP_CHAPTER = 0x2
+    internal const val BACKUP_CHAPTER_MASK = 0x2
     internal const val BACKUP_HISTORY = 0x4
     internal const val BACKUP_HISTORY_MASK = 0x4
     internal const val BACKUP_TRACK = 0x8
     internal const val BACKUP_TRACK_MASK = 0x8
-    internal const val BACKUP_ALL = 0xF
-
-    // AM -->
-    internal const val BACKUP_CUSTOM_INFO = 0x10
-    internal const val BACKUP_CUSTOM_INFO_MASK = 0x10
-    // AM <--
-
-    internal const val BACKUP_PREFS = 0x12
-    internal const val BACKUP_PREFS_MASK = 0x12
+    internal const val BACKUP_PREFS = 0x10
+    internal const val BACKUP_PREFS_MASK = 0x10
+    internal const val BACKUP_ALL = 0x1F
 }

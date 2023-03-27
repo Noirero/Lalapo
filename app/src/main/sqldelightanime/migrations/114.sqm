@@ -49,7 +49,6 @@ CREATE TABLE episodes(
     scanlator TEXT,
     seen INTEGER AS Boolean NOT NULL,
     bookmark INTEGER AS Boolean NOT NULL,
-    fillermark INTEGER AS Boolean NOT NULL,
     last_second_seen INTEGER NOT NULL,
     total_seconds INTEGER NOT NULL,
     episode_number REAL AS Float NOT NULL,
@@ -60,7 +59,7 @@ CREATE TABLE episodes(
     ON DELETE CASCADE
 );
 INSERT INTO episodes
-SELECT _id,anime_id,url,name,scanlator,seen,bookmark,fillermark,last_second_seen,total_seconds,episode_number,source_order,date_fetch,date_upload
+SELECT _id,anime_id,url,name,scanlator,seen,bookmark,last_second_seen,total_seconds,episode_number,source_order,date_fetch,date_upload
 FROM episodes_temp;
 
 ALTER TABLE animehistory RENAME TO animehistory_temp;
