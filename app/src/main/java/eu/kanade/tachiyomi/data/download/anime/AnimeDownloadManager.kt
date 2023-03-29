@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.data.download.anime
 
 import android.content.Context
+import android.util.Log
+import com.hippo.unifile.UniFile
 import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
 import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.entries.anime.model.Anime
@@ -143,7 +145,10 @@ class AnimeDownloadManager(
      * @param autoStart whether to start the downloader after enqueing the episodes.
      */
     fun downloadEpisodes(anime: Anime, episodes: List<Episode>, autoStart: Boolean = true, alt: Boolean = false) {
-        downloader.queueEpisodes(anime, episodes, autoStart, alt)
+        // AM (FM) -->
+        val filteredEpisodes = getEpisodesToDownload(episodes)
+        // <-- AM (FM)
+        downloader.queueEpisodes(anime, filteredEpisodes, autoStart, alt)
     }
 
     /**
@@ -155,7 +160,10 @@ class AnimeDownloadManager(
      * @param autoStart whether to start the downloader after enqueing the episodes.
      */
     fun downloadEpisodesAlt(anime: Anime, episodes: List<Episode>, autoStart: Boolean = true) {
-        downloader.queueEpisodes(anime, episodes, autoStart, true)
+        // AM (FM) -->
+        val filteredEpisodes = getEpisodesToDownload(episodes)
+        // <-- AM (FM)
+        downloader.queueEpisodes(anime, filteredEpisodes, autoStart, true)
     }
 
     /**
@@ -181,7 +189,7 @@ class AnimeDownloadManager(
      * @return an observable containing the list of pages from the episode.
      */
     fun buildVideo(source: AnimeSource, anime: Anime, episode: Episode): Observable<Video> {
-        val episodeDir = provider.findEpisodeDir(episode.name, episode.scanlator, anime.title, source)
+        val episodeDir = provider.findEpisodeDir(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
         return Observable.fromCallable {
             val files = episodeDir?.listFiles().orEmpty()
                 .filter { "video" in it.type.orEmpty() }
@@ -269,7 +277,7 @@ class AnimeDownloadManager(
             if (removeQueued) {
                 queue.remove(anime)
             }
-            provider.findAnimeDir(anime.title, source)?.delete()
+            provider.findAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)?.delete()
             cache.removeAnime(anime)
             // Delete source directory if empty
             val sourceDir = provider.findSourceDir(source)
@@ -297,6 +305,58 @@ class AnimeDownloadManager(
             }
         }
     }
+
+    // AM (CU) -->
+    /**
+     * return the list of all anime folders
+     */
+    fun getAnimeFolders(source: AnimeSource): List<UniFile> {
+        return provider.findSourceDir(source)?.listFiles()?.toList().orEmpty()
+    }
+
+    /**
+     * Deletes the directories of episodes that were read or have no match
+     *
+     * @param allEpisodes the list of episodes to delete.
+     * @param anime the manga of the chapters.
+     * @param source the source of the chapters.
+     */
+    suspend fun cleanupEpisodes(allEpisodes: List<Episode>, anime: Anime, source: AnimeSource, removeRead: Boolean, removeNonFavorite: Boolean): Int {
+        var cleaned = 0
+
+        if (removeNonFavorite && !anime.favorite) {
+            val animeFolder = provider.getAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
+            cleaned += 1 + animeFolder.listFiles().orEmpty().size
+            animeFolder.delete()
+            cache.removeAnime(anime)
+            return cleaned
+        }
+
+        val filesWithNoEpisode = provider.findUnmatchedEpisodeDirs(allEpisodes, anime, source)
+        cleaned += filesWithNoEpisode.size
+        cache.removeFolders(filesWithNoEpisode.mapNotNull { it.name }, anime)
+        filesWithNoEpisode.forEach { it.delete() }
+
+        if (removeRead) {
+            val readEpisodes = allEpisodes.filter { it.seen }
+            val readEpisodeDirs = provider.findEpisodeDirs(readEpisodes, anime, source)
+            readEpisodeDirs.second.forEach { it.delete() }
+            cleaned += readEpisodeDirs.second.size
+            cache.removeEpisodes(readEpisodes, anime)
+        }
+
+        if (cache.getDownloadCount(anime) == 0) {
+            val animeFolder = provider.getAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
+            if (!animeFolder.listFiles().isNullOrEmpty()) {
+                animeFolder.delete()
+                cache.removeAnime(anime)
+            } else {
+                Log.e("", "Cache and download folder doesn't match for " + /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */)
+            }
+        }
+        return cleaned
+    }
+    // <-- AM (CU)
 
     /**
      * Adds a list of episodes to be deleted later.
@@ -353,7 +413,7 @@ class AnimeDownloadManager(
      */
     fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
         val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator)
-        val animeDir = provider.getAnimeDir(anime.title, source)
+        val animeDir = provider.getAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
 
         // Assume there's only 1 version of the episode name formats present
         val oldFolder = oldNames.asSequence()
@@ -380,10 +440,20 @@ class AnimeDownloadManager(
 
         return if (categoriesForAnime.intersect(categoriesToExclude).isNotEmpty()) {
             episodes.filterNot { it.seen }
-        } else if (!downloadPreferences.removeBookmarkedChapters().get()) {
+        } else if (!downloadPreferences.removeBookmarkedEpisodes().get()) {
             episodes.filterNot { it.bookmark }
         } else {
             episodes
         }
     }
+
+    // AM (FM) -->
+    private fun getEpisodesToDownload(episodes: List<Episode>): List<Episode> {
+        return if (!downloadPreferences.notDownloadFillermarkedItems().get()) {
+            episodes.filterNot { it.fillermark }
+        } else {
+            episodes
+        }
+    }
+    // <-- AM (FM)
 }

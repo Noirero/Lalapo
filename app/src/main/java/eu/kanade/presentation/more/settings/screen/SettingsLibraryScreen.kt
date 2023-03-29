@@ -37,8 +37,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.commandiron.wheel_picker_compose.WheelPicker
 import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
-import eu.kanade.domain.category.manga.interactor.GetMangaCategories
-import eu.kanade.domain.category.manga.interactor.ResetMangaCategoryFlags
+import eu.kanade.domain.category.anime.interactor.ResetAnimeCategoryFlags
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.presentation.category.visualName
@@ -46,7 +45,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.data.preference.DEVICE_BATTERY_NOT_LOW
 import eu.kanade.tachiyomi.data.preference.DEVICE_CHARGING
 import eu.kanade.tachiyomi.data.preference.DEVICE_NETWORK_NOT_METERED
@@ -55,7 +54,7 @@ import eu.kanade.tachiyomi.data.preference.MANGA_HAS_UNREAD
 import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
 import eu.kanade.tachiyomi.data.preference.MANGA_NON_READ
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import uy.kohesive.injekt.Injekt
@@ -70,16 +69,14 @@ object SettingsLibraryScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val getCategories = remember { Injekt.get<GetMangaCategories>() }
-        val allCategories by getCategories.subscribe().collectAsState(initial = runBlocking { getCategories.await() })
         val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
         val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(initial = runBlocking { getAnimeCategories.await() })
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
 
         return mutableListOf(
             getDisplayGroup(libraryPreferences),
-            getCategoriesGroup(LocalNavigator.currentOrThrow, allCategories, allAnimeCategories, libraryPreferences),
-            getGlobalUpdateGroup(allCategories, allAnimeCategories, libraryPreferences),
+            getCategoriesGroup(LocalNavigator.currentOrThrow, allAnimeCategories, libraryPreferences),
+            getGlobalUpdateGroup(allAnimeCategories, libraryPreferences),
         )
     }
 
@@ -88,12 +85,9 @@ object SettingsLibraryScreen : SearchableSettings {
         val scope = rememberCoroutineScope()
 
         val animePortraitColumns by libraryPreferences.animePortraitColumns().stateIn(scope).collectAsState()
-        val mangaPortraitColumns by libraryPreferences.mangaPortraitColumns().stateIn(scope).collectAsState()
         val animeLandscapeColumns by libraryPreferences.animeLandscapeColumns().stateIn(scope).collectAsState()
-        val mangaLandscapeColumns by libraryPreferences.mangaLandscapeColumns().stateIn(scope).collectAsState()
 
         var showAnimeDialog by rememberSaveable { mutableStateOf(false) }
-        var showDialog by rememberSaveable { mutableStateOf(false) }
 
         if (showAnimeDialog) {
             LibraryColumnsDialog(
@@ -108,33 +102,14 @@ object SettingsLibraryScreen : SearchableSettings {
             )
         }
 
-        if (showDialog) {
-            LibraryColumnsDialog(
-                initialPortrait = mangaPortraitColumns,
-                initialLandscape = mangaLandscapeColumns,
-                onDismissRequest = { showDialog = false },
-                onValueChanged = { portrait, landscape ->
-                    libraryPreferences.mangaPortraitColumns().set(portrait)
-                    libraryPreferences.mangaLandscapeColumns().set(landscape)
-                    showDialog = false
-                },
-            )
-        }
-
         return Preference.PreferenceGroup(
             title = stringResource(R.string.pref_category_display),
             preferenceItems = listOf(
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.pref_library_anime_columns),
+                    title = stringResource(R.string.pref_library_columns),
                     subtitle = "${stringResource(R.string.portrait)}: ${getColumnValue(animePortraitColumns)}, " +
                         "${stringResource(R.string.landscape)}: ${getColumnValue(animeLandscapeColumns)}",
                     onClick = { showAnimeDialog = true },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.pref_library_manga_columns),
-                    subtitle = "${stringResource(R.string.portrait)}: ${getColumnValue(mangaPortraitColumns)}, " +
-                        "${stringResource(R.string.landscape)}: ${getColumnValue(mangaLandscapeColumns)}",
-                    onClick = { showDialog = true },
                 ),
             ),
         )
@@ -143,28 +118,20 @@ object SettingsLibraryScreen : SearchableSettings {
     @Composable
     private fun getCategoriesGroup(
         navigator: Navigator,
-        allCategories: List<Category>,
         allAnimeCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val userCategoriesCount = allCategories.filterNot(Category::isSystemCategory).size
         val userAnimeCategoriesCount = allAnimeCategories.filterNot(Category::isSystemCategory).size
 
-        val defaultCategory by libraryPreferences.defaultMangaCategory().collectAsState()
-        val selectedCategory = allCategories.find { it.id == defaultCategory.toLong() }
         val defaultAnimeCategory by libraryPreferences.defaultAnimeCategory().collectAsState()
         val selectedAnimeCategory = allAnimeCategories.find { it.id == defaultAnimeCategory.toLong() }
 
         // For default category
-        val mangaIds = listOf(libraryPreferences.defaultMangaCategory().defaultValue()) +
-            allCategories.fastMap { it.id.toInt() }
         val animeIds = listOf(libraryPreferences.defaultAnimeCategory().defaultValue()) +
             allAnimeCategories.fastMap { it.id.toInt() }
 
-        val mangaLabels = listOf(stringResource(R.string.default_category_summary)) +
-            allCategories.fastMap { it.visualName(context) }
         val animeLabels = listOf(stringResource(R.string.default_category_summary)) +
             allAnimeCategories.fastMap { it.visualName(context) }
 
@@ -178,7 +145,7 @@ object SettingsLibraryScreen : SearchableSettings {
                         count = userAnimeCategoriesCount,
                         userAnimeCategoriesCount,
                     ),
-                    onClick = { navigator.push(CategoriesTab(false)) },
+                    onClick = { navigator.push(CategoryScreen()) },
                 ),
                 Preference.PreferenceItem.ListPreference(
                     pref = libraryPreferences.defaultAnimeCategory(),
@@ -186,28 +153,13 @@ object SettingsLibraryScreen : SearchableSettings {
                     subtitle = selectedAnimeCategory?.visualName ?: stringResource(R.string.default_category_summary),
                     entries = animeIds.zip(animeLabels).toMap(),
                 ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.action_edit_manga_categories),
-                    subtitle = pluralStringResource(
-                        id = R.plurals.num_categories,
-                        count = userCategoriesCount,
-                        userCategoriesCount,
-                    ),
-                    onClick = { navigator.push(CategoriesTab(true)) },
-                ),
-                Preference.PreferenceItem.ListPreference(
-                    pref = libraryPreferences.defaultMangaCategory(),
-                    title = stringResource(R.string.default_category),
-                    subtitle = selectedCategory?.visualName ?: stringResource(R.string.default_category_summary),
-                    entries = mangaIds.zip(mangaLabels).toMap(),
-                ),
                 Preference.PreferenceItem.SwitchPreference(
                     pref = libraryPreferences.categorizedDisplaySettings(),
                     title = stringResource(R.string.categorized_display_settings),
                     onValueChanged = {
                         if (!it) {
                             scope.launch {
-                                Injekt.get<ResetMangaCategoryFlags>().await()
+                                Injekt.get<ResetAnimeCategoryFlags>().await()
                             }
                         }
                         true
@@ -219,7 +171,6 @@ object SettingsLibraryScreen : SearchableSettings {
 
     @Composable
     private fun getGlobalUpdateGroup(
-        allMangaCategories: List<Category>,
         allAnimeCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
@@ -253,28 +204,6 @@ object SettingsLibraryScreen : SearchableSettings {
             )
         }
 
-        val libraryUpdateCategoriesPref = libraryPreferences.mangaLibraryUpdateCategories()
-        val libraryUpdateCategoriesExcludePref = libraryPreferences.mangaLibraryUpdateCategoriesExclude()
-
-        val includedManga by libraryUpdateCategoriesPref.collectAsState()
-        val excludedManga by libraryUpdateCategoriesExcludePref.collectAsState()
-        var showMangaDialog by rememberSaveable { mutableStateOf(false) }
-        if (showMangaDialog) {
-            TriStateListDialog(
-                title = stringResource(R.string.manga_categories),
-                message = stringResource(R.string.pref_manga_library_update_categories_details),
-                items = allMangaCategories,
-                initialChecked = includedManga.mapNotNull { id -> allMangaCategories.find { it.id.toString() == id } },
-                initialInversed = excludedManga.mapNotNull { id -> allMangaCategories.find { it.id.toString() == id } },
-                itemLabel = { it.visualName },
-                onDismissRequest = { showMangaDialog = false },
-                onValueChanged = { newIncluded, newExcluded ->
-                    libraryUpdateCategoriesPref.set(newIncluded.map { it.id.toString() }.toSet())
-                    libraryUpdateCategoriesExcludePref.set(newExcluded.map { it.id.toString() }.toSet())
-                    showMangaDialog = false
-                },
-            )
-        }
         return Preference.PreferenceGroup(
             title = stringResource(R.string.pref_category_library_update),
             preferenceItems = listOf(
@@ -290,7 +219,7 @@ object SettingsLibraryScreen : SearchableSettings {
                         168 to stringResource(R.string.update_weekly),
                     ),
                     onValueChanged = {
-                        MangaLibraryUpdateJob.setupTask(context, it)
+                        AnimeLibraryUpdateJob.setupTask(context, it)
                         true
                     },
                 ),
@@ -307,7 +236,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                     onValueChanged = {
                         // Post to event looper to allow the preference to be updated.
-                        ContextCompat.getMainExecutor(context).execute { MangaLibraryUpdateJob.setupTask(context) }
+                        ContextCompat.getMainExecutor(context).execute { AnimeLibraryUpdateJob.setupTask(context) }
                         true
                     },
                 ),
@@ -315,7 +244,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     pref = libraryUpdateMangaRestrictionPref,
                     title = stringResource(R.string.pref_library_update_manga_restriction),
                     entries = mapOf(
-                        MANGA_HAS_UNREAD to stringResource(R.string.pref_update_only_completely_read),
+                        MANGA_HAS_UNREAD to stringResource(R.string.pref_update_only_completely_seen),
                         MANGA_NON_READ to stringResource(R.string.pref_update_only_started),
                         MANGA_NON_COMPLETED to stringResource(R.string.pref_update_only_non_completed),
                     ),
@@ -328,15 +257,6 @@ object SettingsLibraryScreen : SearchableSettings {
                         excluded = excludedAnime,
                     ),
                     onClick = { showAnimeDialog = true },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.manga_categories),
-                    subtitle = getCategoriesLabel(
-                        allCategories = allMangaCategories,
-                        included = includedManga,
-                        excluded = excludedManga,
-                    ),
-                    onClick = { showMangaDialog = true },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     pref = libraryPreferences.autoUpdateMetadata(),

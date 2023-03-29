@@ -188,6 +188,7 @@
                     android:scheme="animiru" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.setting.track.SimklLoginActivity"
             android:label="Simkl"
@@ -229,13 +230,12 @@
                     android:path="/accounts/oauth/callback"/>
             </intent-filter>
         </service>
-
         <receiver
             android:name=".data.notification.NotificationReceiver"
             android:exported="false" />
 
         <receiver
-            android:name=".glance.manga.MangaUpdatesGridGlanceReceiver"
+            android:name=".glance.anime.AnimeUpdatesGridGlanceReceiver"
             android:enabled="@bool/glance_appwidget_available"
             android:exported="false"
             android:label="@string/label_recent_updates">

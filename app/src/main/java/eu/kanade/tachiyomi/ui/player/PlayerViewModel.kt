@@ -40,8 +40,8 @@ import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
+import eu.kanade.tachiyomi.source.anime.isLocalOrStub
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
-import eu.kanade.tachiyomi.ui.reader.SaveImageNotifier
 import eu.kanade.tachiyomi.util.AniSkipApi
 import eu.kanade.tachiyomi.util.Stamp
 import eu.kanade.tachiyomi.util.editCover
@@ -127,6 +127,10 @@ class PlayerViewModel(
 
     private var requestedSecond: Long = 0L
 
+    // AM (DC) -->
+    internal var isSourceNsfw = false
+    // <-- AM (DC)
+
     /**
      * Episode list for the active anime. It's retrieved lazily and should be accessed for the first
      * time in a background thread to avoid blocking the UI.
@@ -143,8 +147,8 @@ class PlayerViewModel(
         val episodesForPlayer = episodes.filterNot {
             anime.unseenFilterRaw == Anime.EPISODE_SHOW_SEEN && !it.seen ||
                 anime.unseenFilterRaw == Anime.EPISODE_SHOW_UNSEEN && it.seen ||
-                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source) ||
-                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.title, anime.source) ||
+                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(it.name, it.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source) ||
+                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark
         }.toMutableList()
@@ -235,6 +239,9 @@ class PlayerViewModel(
                     val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
 
                     currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
+                    // AM (DC) -->
+                    isSourceNSFW(source)
+                    // <-- AM (DC)
                     episodeId = currentEpisode.id!!
 
                     Pair(currentVideoList, Result.success(true))
@@ -247,6 +254,15 @@ class PlayerViewModel(
             }
         }
     }
+
+    // AM (DC) -->
+    private suspend fun isSourceNSFW(source: AnimeSource) {
+        if (!source.isLocalOrStub()) {
+            val sourceUsed = sourceManager.extensionManager.installedExtensionsFlow.first().first { it.name == source.name }
+            isSourceNsfw = sourceUsed.isNsfw
+        }
+    }
+    // <-- AM (DC)
 
     fun isEpisodeOnline(): Boolean? {
         val anime = anime ?: return null
@@ -266,6 +282,9 @@ class PlayerViewModel(
             try {
                 val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
                 currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
+                // AM (DC) -->
+                isSourceNSFW(source)
+                // <-- AM (DC)
                 episodeId = currentEpisode.id!!
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links." }
@@ -287,6 +306,9 @@ class PlayerViewModel(
             try {
                 val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
                 currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
+                // AM (DC) -->
+                isSourceNSFW(source)
+                // <-- AM (DC)
                 episodeId = currentEpisode.id!!
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links." }
@@ -359,7 +381,7 @@ class PlayerViewModel(
     private fun deleteEpisodeIfNeeded(currentEpisode: Episode) {
         // Determine which episode should be deleted and enqueue
         val currentEpisodePosition = episodeList.indexOf(currentEpisode)
-        val removeAfterSeenSlots = downloadPreferences.removeAfterReadSlots().get()
+        val removeAfterSeenSlots = downloadPreferences.removeAfterSeenSlots().get()
         val episodeToDelete = episodeList.getOrNull(currentEpisodePosition - removeAfterSeenSlots)
         // If episode is completely seen no need to download it
         episodeToDownload = null
@@ -431,6 +453,22 @@ class PlayerViewModel(
     }
 
     /**
+     * Fillermarks the currently active episode.
+     */
+    fun fillermarkCurrentEpisode(fillermarked: Boolean) {
+        val episode = currentEpisode ?: return
+        episode.fillermark = fillermarked // Otherwise the fillermark icon doesn't update
+        viewModelScope.launchNonCancellable {
+            updateEpisode.await(
+                EpisodeUpdate(
+                    id = episode.id!!.toLong(),
+                    fillermark = fillermarked,
+                ),
+            )
+        }
+    }
+
+    /**
      * Saves the screenshot on the pictures directory and notifies the UI of the result.
      * There's also a notification to allow sharing the image somewhere else or deleting it.
      */
@@ -445,7 +483,7 @@ class PlayerViewModel(
         val filename = generateFilename(anime, seconds) ?: return
 
         // Pictures directory.
-        val relativePath = DiskUtil.buildValidFilename(anime.title)
+        val relativePath = DiskUtil.buildValidFilename(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */)
 
         // Copy file in background.
         viewModelScope.launchNonCancellable {
@@ -638,7 +676,7 @@ class PlayerViewModel(
         val episode = currentEpisode ?: return null
         val filenameSuffix = " - $timePos"
         return DiskUtil.buildValidFilename(
-            "${anime.title} - ${episode.name}".takeBytes(MAX_FILE_NAME_BYTES - filenameSuffix.byteSize()),
+            "${/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */} - ${episode.name}".takeBytes(MAX_FILE_NAME_BYTES - filenameSuffix.byteSize()),
         ) + filenameSuffix
     }
 

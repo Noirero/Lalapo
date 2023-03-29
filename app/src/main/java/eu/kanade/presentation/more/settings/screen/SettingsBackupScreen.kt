@@ -144,10 +144,13 @@ object SettingsBackupScreen : SearchableSettings {
         val choices = remember {
             mapOf(
                 BackupConst.BACKUP_CATEGORY to R.string.general_categories,
-                BackupConst.BACKUP_CHAPTER to R.string.chapters_episodes,
+                BackupConst.BACKUP_CHAPTER to R.string.episodes,
                 BackupConst.BACKUP_TRACK to R.string.track,
                 BackupConst.BACKUP_HISTORY to R.string.history,
                 BackupConst.BACKUP_PREFS to R.string.settings,
+                // AM (CU) -->
+                BackupConst.BACKUP_CUSTOM_INFO to R.string.custom_entry_info,
+                // <-- AM (CU)
             )
         }
         val flags = remember { choices.keys.toMutableStateList() }
@@ -161,7 +164,7 @@ object SettingsBackupScreen : SearchableSettings {
                         item {
                             CreateBackupDialogItem(
                                 isSelected = true,
-                                title = stringResource(R.string.manga),
+                                title = stringResource(R.string.label_anime),
                             )
                         }
                         choices.forEach { (k, v) ->

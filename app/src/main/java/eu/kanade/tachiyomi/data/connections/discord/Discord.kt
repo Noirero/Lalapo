@@ -1,0 +1,28 @@
+// AM (DC) -->
+package eu.kanade.tachiyomi.data.connections.discord
+
+import android.content.Context
+import android.graphics.Color
+import androidx.annotation.StringRes
+import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connections.ConnectionsService
+
+class Discord(private val context: Context, id: Long) : ConnectionsService(id) {
+
+    @StringRes
+    override fun nameRes() = R.string.connections_discord
+
+    override fun getLogo() = R.drawable.ic_discord_24dp
+
+    override fun getLogoColor() = Color.rgb(88, 101, 242)
+
+    override fun logout() {
+        super.logout()
+        connectionsPreferences.connectionsToken(this).delete()
+    }
+
+    override suspend fun login(username: String, password: String) {
+        TODO("Not yet implemented")
+    }
+}
+// AM (DC) <--

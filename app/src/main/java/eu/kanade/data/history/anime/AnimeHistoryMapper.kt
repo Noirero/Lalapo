@@ -19,7 +19,9 @@ val animeHistoryWithRelationsMapper: (Long, Long, Long, String, String?, Long, B
         id = historyId,
         episodeId = episodeId,
         animeId = animeId,
-        title = title,
+        // AM (CU) -->
+        ogTitle = title,
+        // <-- AM (CU)
         episodeNumber = episodeNumber,
         seenAt = seenAt,
         coverData = AnimeCover(

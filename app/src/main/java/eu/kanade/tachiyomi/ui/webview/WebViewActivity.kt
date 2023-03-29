@@ -11,8 +11,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
-import eu.kanade.tachiyomi.source.manga.MangaSourceManager
-import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.logcat
@@ -24,8 +22,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {
-
-    private val sourceManager: MangaSourceManager by injectLazy()
     private val animeSourceManager: AnimeSourceManager by injectLazy()
     private val network: NetworkHelper by injectLazy()
 
@@ -47,11 +43,8 @@ class WebViewActivity : BaseActivity() {
 
         val url = intent.extras!!.getString(URL_KEY) ?: return
         var headers = mutableMapOf<String, String>()
-        val source = sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? HttpSource
         val animeSource = animeSourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? AnimeHttpSource
-        if (source != null) {
-            headers = source.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }.toMutableMap()
-        } else if (animeSource != null) {
+        if (animeSource != null) {
             headers = animeSource.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }.toMutableMap()
         }
 

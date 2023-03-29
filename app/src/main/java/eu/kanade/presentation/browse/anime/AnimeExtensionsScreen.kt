@@ -1,5 +1,6 @@
 package eu.kanade.presentation.browse.anime
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -37,14 +39,13 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.flowlayout.FlowRow
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
-import eu.kanade.presentation.browse.manga.ExtensionHeader
-import eu.kanade.presentation.browse.manga.ExtensionTrustDialog
 import eu.kanade.presentation.components.EmptyScreen
 import eu.kanade.presentation.components.FastScrollLazyColumn
 import eu.kanade.presentation.components.LoadingScreen
 import eu.kanade.presentation.components.PullRefresh
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.entries.DotSeparatorNoSpaceText
+import eu.kanade.presentation.theme.header
 import eu.kanade.presentation.util.padding
 import eu.kanade.presentation.util.plus
 import eu.kanade.presentation.util.secondaryItemAlpha
@@ -404,4 +405,65 @@ private fun AnimeExtensionItemActions(
             }
         }
     }
+}
+
+@Composable
+fun ExtensionHeader(
+    @StringRes textRes: Int,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    ExtensionHeader(
+        text = stringResource(textRes),
+        modifier = modifier,
+        action = action,
+    )
+}
+
+@Composable
+fun ExtensionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .weight(1f),
+            style = MaterialTheme.typography.header,
+        )
+        action()
+    }
+}
+
+@Composable
+fun ExtensionTrustDialog(
+    onClickConfirm: () -> Unit,
+    onClickDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(text = stringResource(R.string.untrusted_extension))
+        },
+        text = {
+            Text(text = stringResource(R.string.untrusted_extension_message))
+        },
+        confirmButton = {
+            TextButton(onClick = onClickConfirm) {
+                Text(text = stringResource(R.string.ext_trust))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClickDismiss) {
+                Text(text = stringResource(R.string.ext_uninstall))
+            }
+        },
+        onDismissRequest = onDismissRequest,
+    )
 }

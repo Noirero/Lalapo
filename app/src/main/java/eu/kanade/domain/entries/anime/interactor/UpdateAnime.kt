@@ -36,7 +36,13 @@ class UpdateAnime(
         }
 
         // if the anime isn't a favorite, set its title from source and update in db
-        val title = if (remoteTitle.isEmpty() || localAnime.favorite) null else remoteTitle
+        // AM (CU) -->
+        val title = if (remoteTitle.isNotBlank() && localAnime.ogTitle != remoteTitle) {
+            remoteTitle
+        } else {
+            null
+        }
+        // <-- AM (CU)
 
         val coverLastModified =
             when {

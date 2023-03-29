@@ -107,3 +107,6 @@ WHERE _id = :animeId;
 
 selectLastInsertedRowId:
 SELECT last_insert_rowid();
+
+getAll:
+SELECT * FROM animes;

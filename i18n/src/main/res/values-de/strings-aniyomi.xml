@@ -15,7 +15,7 @@
     <string name="pref_bottom_nav_no_history">Verschiebe Verlauf in den Mehr-Tab</string>
     <string name="pref_bottom_nav_no_updates">Verschiebe Neues in den Mehr-Tab</string>
     <string name="pref_bottom_nav_no_manga">Verschiebe Manga in den Mehr-Tab</string>
-    <string name="unlock_app">Aniyomi entsperren</string>
+    <string name="unlock_app">Animiru entsperren</string>
     <string name="action_filter_unseen">Ungesehen</string>
     <string name="action_sort_total_episodes">Folgenanzahl</string>
     <string name="action_sort_last_seen">Zuletzt gesehen</string>
@@ -65,7 +65,7 @@
 \nEine bösartige Erweiterung könnte in Tachiyomi gespeicherte Anmeldedaten auslesen oder einen schädlichen Code ausführen.
 \n
 \nDurch das Vertrauen dieses Zertifikats akzeptierst du diese Risiken.</string>
-    <string name="unofficial_extension_message_aniyomi">Diese Erweiterung stammt nicht von der offiziellen Aniyomi-Erweiterungsliste.</string>
+    <string name="unofficial_extension_message_animiru">Diese Erweiterung stammt nicht von der offiziellen Animiru-Erweiterungsliste.</string>
     <string name="rotation_reverse_landscape">Umgekehrtes Querformat</string>
     <string name="rotation_sensor_portrait">Sensor-Hochformat</string>
     <string name="rotation_sensor_landscape">Sensor-Querformat</string>

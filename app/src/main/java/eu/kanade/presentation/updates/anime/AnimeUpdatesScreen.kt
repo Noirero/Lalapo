@@ -1,11 +1,17 @@
 package eu.kanade.presentation.updates.anime
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FlipToBack
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,8 +20,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.EmptyScreen
 import eu.kanade.presentation.components.EntryBottomActionMenu
 import eu.kanade.presentation.components.EpisodeDownloadAction
@@ -38,7 +46,6 @@ import kotlin.time.Duration.Companion.seconds
 fun AnimeUpdateScreen(
     state: AnimeUpdatesState,
     snackbarHostState: SnackbarHostState,
-    contentPadding: PaddingValues,
     lastUpdated: Long,
     relativeTime: Int,
     onClickCover: (AnimeUpdatesItem) -> Unit,
@@ -47,28 +54,46 @@ fun AnimeUpdateScreen(
     onUpdateLibrary: () -> Boolean,
     onDownloadEpisode: (List<AnimeUpdatesItem>, EpisodeDownloadAction) -> Unit,
     onMultiBookmarkClicked: (List<AnimeUpdatesItem>, bookmark: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<AnimeUpdatesItem>, fillermark: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<AnimeUpdatesItem>, seen: Boolean) -> Unit,
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onUpdateSelected: (AnimeUpdatesItem, Boolean, Boolean, Boolean) -> Unit,
     onOpenEpisode: (AnimeUpdatesItem, altPlayer: Boolean) -> Unit,
+    // AM (UH) -->
+    navigateUp: (() -> Unit)?,
+    // <-- AM (UH)
 ) {
     BackHandler(enabled = state.selectionMode, onBack = { onSelectAll(false) })
 
     val context = LocalContext.current
 
     Scaffold(
+        topBar = { scrollBehavior ->
+            UpdatesAppBar(
+                onUpdateLibrary = { onUpdateLibrary() },
+                actionModeCounter = state.selected.size,
+                onSelectAll = { onSelectAll(true) },
+                onInvertSelection = { onInvertSelection() },
+                onCancelActionMode = { onSelectAll(false) },
+                scrollBehavior = scrollBehavior,
+                // AM (UH) -->
+                navigateUp = navigateUp,
+                // <-- AM (UH)
+            )
+        },
         bottomBar = {
             AnimeUpdatesBottomBar(
                 selected = state.selected,
                 onDownloadEpisode = onDownloadEpisode,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
+                onMultiFillermarkClicked = onMultiFillermarkClicked,
                 onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                 onMultiDeleteClicked = onMultiDeleteClicked,
                 onOpenEpisode = onOpenEpisode,
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) {
+    ) { contentPadding ->
         when {
             state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
             state.items.isEmpty() -> EmptyScreen(
@@ -116,10 +141,55 @@ fun AnimeUpdateScreen(
 }
 
 @Composable
+private fun UpdatesAppBar(
+    modifier: Modifier = Modifier,
+    onUpdateLibrary: () -> Unit,
+    // For action mode
+    actionModeCounter: Int,
+    onSelectAll: () -> Unit,
+    onInvertSelection: () -> Unit,
+    onCancelActionMode: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    navigateUp: (() -> Unit)? = null,
+) {
+    AppBar(
+        modifier = modifier,
+        title = stringResource(R.string.label_recent_updates),
+        actions = {
+            IconButton(onClick = onUpdateLibrary) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = stringResource(R.string.action_update_library),
+                )
+            }
+        },
+        actionModeCounter = actionModeCounter,
+        onCancelActionMode = onCancelActionMode,
+        actionModeActions = {
+            IconButton(onClick = onSelectAll) {
+                Icon(
+                    imageVector = Icons.Outlined.SelectAll,
+                    contentDescription = stringResource(R.string.action_select_all),
+                )
+            }
+            IconButton(onClick = onInvertSelection) {
+                Icon(
+                    imageVector = Icons.Outlined.FlipToBack,
+                    contentDescription = stringResource(R.string.action_select_inverse),
+                )
+            }
+        },
+        scrollBehavior = scrollBehavior,
+        navigateUp = navigateUp,
+    )
+}
+
+@Composable
 private fun AnimeUpdatesBottomBar(
     selected: List<AnimeUpdatesItem>,
     onDownloadEpisode: (List<AnimeUpdatesItem>, EpisodeDownloadAction) -> Unit,
     onMultiBookmarkClicked: (List<AnimeUpdatesItem>, bookmark: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<AnimeUpdatesItem>, fillermark: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<AnimeUpdatesItem>, seen: Boolean) -> Unit,
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onOpenEpisode: (AnimeUpdatesItem, altPlayer: Boolean) -> Unit,
@@ -134,6 +204,14 @@ private fun AnimeUpdatesBottomBar(
         onRemoveBookmarkClicked = {
             onMultiBookmarkClicked.invoke(selected, false)
         }.takeIf { selected.fastAll { it.update.bookmark } },
+        // AM (FM) -->
+        onFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected, true)
+        }.takeIf { selected.fastAny { !it.update.fillermark } },
+        onRemoveFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected, false)
+        }.takeIf { selected.fastAll { it.update.fillermark } },
+        // <-- AM (FM)
         onMarkAsViewedClicked = {
             onMultiMarkAsSeenClicked(selected, true)
         }.takeIf { selected.fastAny { !it.update.seen } },

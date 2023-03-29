@@ -46,6 +46,9 @@ fun EntryToolbar(
     onClickMigrate: (() -> Unit)?,
     // Anime only
     changeAnimeSkipIntro: (() -> Unit)?,
+    // AM (CU) -->
+    onClickEditInfo: (() -> Unit)?,
+    // <-- AM (CU)
     // For action mode
     actionModeCounter: Int,
     onSelectAll: () -> Unit,
@@ -112,7 +115,7 @@ fun EntryToolbar(
                         Icon(Icons.Outlined.FilterList, contentDescription = stringResource(R.string.action_filter), tint = filterTint)
                     }
 
-                    if (onClickEditCategory != null || onClickMigrate != null || onClickShare != null || changeAnimeSkipIntro != null) {
+                    if (onClickEditCategory != null || onClickMigrate != null || onClickShare != null || changeAnimeSkipIntro != null || /* AM (CU) --> */ onClickEditInfo != null /* <-- AM (CU) */) {
                         OverflowMenu { closeMenu ->
                             if (onClickEditCategory != null) {
                                 DropdownMenuItem(
@@ -150,6 +153,17 @@ fun EntryToolbar(
                                     },
                                 )
                             }
+                            // AM (CU) -->
+                            if (onClickEditInfo != null) {
+                                DropdownMenuItem(
+                                    text = { Text(text = stringResource(R.string.action_edit_info)) },
+                                    onClick = {
+                                        onClickEditInfo()
+                                        closeMenu()
+                                    },
+                                )
+                            }
+                            // <-- AM (CU)
                         }
                     }
                 }

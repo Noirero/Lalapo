@@ -16,7 +16,6 @@
 -keep,allowoptimization class uy.kohesive.injekt.** { public protected *; }
 -keep,allowoptimization class is.xyz.mpv.** { public protected *; }
 -keep,allowoptimization class com.arthenica.** { public protected *; }
--keep,allowoptimization class com.my.discordrpc.** { public protected *; }
 
 # From extensions-lib
 -keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.RateLimitInterceptorKt { public protected *; }

@@ -32,7 +32,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import eu.kanade.domain.download.service.DownloadPreferences
+import eu.kanade.presentation.util.padding
 import eu.kanade.presentation.util.secondaryItemAlpha
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
@@ -53,6 +55,9 @@ fun EpisodeDownloadIndicator(
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
     onClick: (EpisodeDownloadAction) -> Unit,
+    // AM (DS) -->
+    fileSize: Long?,
+    // <-- AM (DS)
 ) {
     when (val downloadState = downloadStateProvider()) {
         AnimeDownload.State.NOT_DOWNLOADED -> NotDownloadedIndicator(
@@ -71,6 +76,9 @@ fun EpisodeDownloadIndicator(
             enabled = enabled,
             modifier = modifier,
             onClick = onClick,
+            // AM (DS) -->
+            fileSize = fileSize,
+            // <-- AM (DS)
         )
         AnimeDownload.State.ERROR -> ErrorIndicator(
             enabled = enabled,
@@ -199,33 +207,44 @@ private fun DownloadedIndicator(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     onClick: (EpisodeDownloadAction) -> Unit,
+    fileSize: Long?,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
+    // AM (DS) -->
+    if (fileSize != null) {
+        Text(
+            text = "${fileSize / 1024 / 1024}MB",
+            maxLines = 1,
+            style = MaterialTheme.typography.bodyMedium
+                .copy(color = MaterialTheme.colorScheme.primary, fontSize = 12.sp),
+            modifier = modifier.padding(all = 10.dp),
+        )
+    }
+    // <-- AM (DS)
     Box(
-        modifier = modifier
-            .size(IconButtonTokens.StateLayerSize)
-            .commonClickable(
-                enabled = enabled,
-                onLongClick = { isMenuExpanded = true },
-                onClick = { isMenuExpanded = true },
-            ),
+        modifier = modifier.size(IconButtonTokens.StateLayerSize),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = null,
-            modifier = Modifier.size(IndicatorSize),
+            modifier = Modifier.size(IndicatorSize)
+                .commonClickable(
+                    enabled = enabled,
+                    onLongClick = { isMenuExpanded = true },
+                    onClick = { isMenuExpanded = true },
+                ),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(R.string.action_delete)) },
-                onClick = {
-                    onClick(EpisodeDownloadAction.DELETE)
-                    isMenuExpanded = false
-                },
-            )
-        }
+    }
+    DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.action_delete)) },
+            onClick = {
+                onClick(EpisodeDownloadAction.DELETE)
+                isMenuExpanded = false
+            },
+        )
     }
 }
 

@@ -26,6 +26,7 @@ import eu.kanade.domain.track.anime.interactor.InsertAnimeTrack
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.core.preference.getAndSet
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
@@ -40,7 +41,6 @@ import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.util.lang.withIOContext
@@ -583,7 +583,7 @@ class AnimeLibraryUpdateService(
     private fun writeErrorFile(errors: List<Pair<Anime, String?>>): File {
         try {
             if (errors.isNotEmpty()) {
-                val file = createFileInCacheDir("aniyomi_update_errors.txt")
+                val file = createFileInCacheDir("animirui_update_errors.txt")
                 file.bufferedWriter().use { out ->
                     out.write(getString(R.string.library_errors_help, ERROR_LOG_HELP_URL) + "\n\n")
                     // Error file format:

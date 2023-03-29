@@ -180,7 +180,7 @@ internal object AnimeExtensionLoader {
                 }
             }
 
-        val langs = sources.filterIsInstance<CatalogueAnimeSource>()
+        val langs = sources.filterIsInstance<AnimeCatalogueSource>()
             .map { it.lang }
             .toSet()
         val lang = when (langs.size) {

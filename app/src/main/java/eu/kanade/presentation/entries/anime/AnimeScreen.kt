@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
+import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.presentation.components.EntryBottomActionMenu
 import eu.kanade.presentation.components.EpisodeDownloadAction
@@ -66,14 +68,16 @@ import eu.kanade.presentation.entries.anime.components.ExpandableAnimeDescriptio
 import eu.kanade.presentation.util.isScrolledToEnd
 import eu.kanade.presentation.util.isScrollingUp
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreenState
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeItem
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import eu.kanade.tachiyomi.util.storage.DiskUtil
+import uy.kohesive.injekt.injectLazy
+import java.io.File
 
 @Composable
 fun AnimeScreen(
@@ -103,8 +107,15 @@ fun AnimeScreen(
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
 
+    // AM (CU) -->
+    onEditInfoClicked: () -> Unit,
+    // <-- AM (CU)
+
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    // AM (FM) -->
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
+    // <-- AM (FM)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
@@ -136,7 +147,13 @@ fun AnimeScreen(
             onEditCategoryClicked = onEditCategoryClicked,
             onMigrateClicked = onMigrateClicked,
             changeAnimeSkipIntro = changeAnimeSkipIntro,
+            // AM (CU) -->
+            onEditInfoClicked = onEditInfoClicked,
+            // <-- AM (CU)
             onMultiBookmarkClicked = onMultiBookmarkClicked,
+            // AM (FM) -->
+            onMultiFillermarkClicked = onMultiFillermarkClicked,
+            // <-- AM (FM)
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
             onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
@@ -166,7 +183,13 @@ fun AnimeScreen(
             onEditCategoryClicked = onEditCategoryClicked,
             changeAnimeSkipIntro = changeAnimeSkipIntro,
             onMigrateClicked = onMigrateClicked,
+            // AM (CU) -->
+            onEditInfoClicked = onEditInfoClicked,
+            // <-- AM (CU)
             onMultiBookmarkClicked = onMultiBookmarkClicked,
+            // AM (FM) -->
+            onMultiFillermarkClicked = onMultiFillermarkClicked,
+            // <-- AM (FM)
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
             onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
@@ -204,8 +227,15 @@ private fun AnimeScreenSmallImpl(
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
 
+    // AM (CU) -->
+    onEditInfoClicked: () -> Unit,
+    // <-- AM (CU)
+
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    // AM (FM) -->
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
+    // <-- AM (FM)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
@@ -253,6 +283,9 @@ private fun AnimeScreenSmallImpl(
                 onClickEditCategory = onEditCategoryClicked,
                 onClickMigrate = onMigrateClicked,
                 changeAnimeSkipIntro = changeAnimeSkipIntro,
+                // AM (CU) -->
+                onClickEditInfo = onEditInfoClicked.takeIf { state.anime.favorite },
+                // <-- AM (CU)
                 actionModeCounter = episodes.count { it.selected },
                 onSelectAll = { onAllEpisodeSelected(true) },
                 onInvertSelection = { onInvertSelection() },
@@ -264,6 +297,9 @@ private fun AnimeScreenSmallImpl(
                 selected = episodes.filter { it.selected },
                 onEpisodeClicked = onEpisodeClicked,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
+                // AM (FM) -->
+                onMultiFillermarkClicked = onMultiFillermarkClicked,
+                // <-- AM (FM)
                 onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                 onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
                 onDownloadEpisode = onDownloadEpisode,
@@ -381,6 +417,9 @@ private fun AnimeScreenSmallImpl(
                     }
 
                     sharedEpisodeItems(
+                        // AM (DS) -->
+                        state = state,
+                        // <-- AM (DS)
                         episodes = episodes,
                         onEpisodeClicked = onEpisodeClicked,
                         onDownloadEpisode = onDownloadEpisode,
@@ -419,8 +458,15 @@ fun AnimeScreenLargeImpl(
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
 
+    // AM (CU) -->
+    onEditInfoClicked: () -> Unit,
+    // <-- AM (CU)
+
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    // AM (FM) -->
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
+    // <-- AM (FM)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
@@ -474,6 +520,9 @@ fun AnimeScreenLargeImpl(
                     onClickEditCategory = onEditCategoryClicked,
                     onClickMigrate = onMigrateClicked,
                     changeAnimeSkipIntro = changeAnimeSkipIntro,
+                    // AM (CU) -->
+                    onClickEditInfo = onEditInfoClicked.takeIf { state.anime.favorite },
+                    // <-- AM (CU)
                     actionModeCounter = episodes.count { it.selected },
                     onSelectAll = { onAllEpisodeSelected(true) },
                     onInvertSelection = { onInvertSelection() },
@@ -489,6 +538,9 @@ fun AnimeScreenLargeImpl(
                         selected = episodes.filter { it.selected },
                         onEpisodeClicked = onEpisodeClicked,
                         onMultiBookmarkClicked = onMultiBookmarkClicked,
+                        // AM (FM) -->
+                        onMultiFillermarkClicked = onMultiFillermarkClicked,
+                        // <-- AM (FM)
                         onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                         onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
                         onDownloadEpisode = onDownloadEpisode,
@@ -587,6 +639,9 @@ fun AnimeScreenLargeImpl(
                             }
 
                             sharedEpisodeItems(
+                                // AM (DS) -->
+                                state = state,
+                                // <-- AM (DS)
                                 episodes = episodes,
                                 onEpisodeClicked = onEpisodeClicked,
                                 onDownloadEpisode = onDownloadEpisode,
@@ -606,13 +661,16 @@ private fun SharedAnimeBottomActionMenu(
     modifier: Modifier = Modifier,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
+    // AM (FM) -->
+    onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
+    // <-- AM (FM)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
     fillFraction: Float,
 ) {
-    val preferences: PlayerPreferences = Injekt.get()
+    val preferences: PlayerPreferences by injectLazy()
     EntryBottomActionMenu(
         visible = selected.isNotEmpty(),
         modifier = modifier.fillMaxWidth(fillFraction),
@@ -622,6 +680,14 @@ private fun SharedAnimeBottomActionMenu(
         onRemoveBookmarkClicked = {
             onMultiBookmarkClicked.invoke(selected.fastMap { it.episode }, false)
         }.takeIf { selected.fastAll { it.episode.bookmark } },
+        // AM (FM) -->
+        onFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected.fastMap { it.episode }, true)
+        }.takeIf { selected.fastAny { !it.episode.fillermark } },
+        onRemoveFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected.fastMap { it.episode }, false)
+        }.takeIf { selected.fastAll { it.episode.fillermark } },
+        // <-- AM (FM)
         onMarkAsViewedClicked = {
             onMultiMarkAsSeenClicked(selected.fastMap { it.episode }, true)
         }.takeIf { selected.fastAny { !it.episode.seen } },
@@ -652,6 +718,9 @@ private fun SharedAnimeBottomActionMenu(
 }
 
 private fun LazyListScope.sharedEpisodeItems(
+    // AM (DS) -->
+    state: AnimeScreenState.Success,
+    // <-- AM (DS)
     episodes: List<EpisodeItem>,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -664,6 +733,10 @@ private fun LazyListScope.sharedEpisodeItems(
     ) { episodeItem ->
         val haptic = LocalHapticFeedback.current
 
+        // AM (DS) -->
+        val downloadPreferences: DownloadPreferences by injectLazy()
+        // <-- AM (DS)
+
         AnimeEpisodeListItem(
             title = episodeItem.episodeTitleString,
             date = episodeItem.dateUploadString,
@@ -671,6 +744,9 @@ private fun LazyListScope.sharedEpisodeItems(
             scanlator = episodeItem.episode.scanlator.takeIf { !it.isNullOrBlank() },
             seen = episodeItem.episode.seen,
             bookmark = episodeItem.episode.bookmark,
+            // AM (FM) -->
+            fillermark = episodeItem.episode.fillermark,
+            // <-- AM (FM)
             selected = episodeItem.selected,
             downloadIndicatorEnabled = episodes.fastAll { !it.selected },
             downloadStateProvider = { episodeItem.downloadState },
@@ -692,6 +768,21 @@ private fun LazyListScope.sharedEpisodeItems(
             } else {
                 null
             },
+            // AM (DS) -->
+            fileSize = if (downloadPreferences.showDownloadedEpisodeSize().get() && episodeItem.isDownloaded) {
+                val provider = AnimeDownloadProvider(LocalContext.current)
+                provider.findEpisodeDir(
+                    episodeItem.episode.name,
+                    episodeItem.episode.scanlator,
+                    state.anime.ogTitle,
+                    state.source,
+                )?.filePath?.let {
+                    DiskUtil.getDirectorySize(File(it))
+                }
+            } else {
+                null
+            },
+            // <-- AM (DS)
         )
     }
 }

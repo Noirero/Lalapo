@@ -37,18 +37,19 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.NavigationBar
 import eu.kanade.presentation.components.NavigationRail
 import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
-import eu.kanade.tachiyomi.ui.download.DownloadsTab
-import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
-import eu.kanade.tachiyomi.ui.history.HistoriesTab
+import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
+import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
-import eu.kanade.tachiyomi.ui.library.manga.MangaLibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -67,50 +68,71 @@ object HomeScreen : Screen {
     private val openTabEvent = Channel<Tab>()
     private val showBottomNavEvent = Channel<Boolean>()
 
-    private const val TabFadeDuration = 200
+    private const val TabFadeDuration = 300
 
-    private val libraryPreferences: LibraryPreferences by injectLazy()
+    private val uiPreferences: UiPreferences by injectLazy()
+    private val playerPreferences: PlayerPreferences by injectLazy()
 
-    val tabsNoHistory = listOf(
+    // AM (UH) -->
+    val tabsYUYH = listOf(
         AnimeLibraryTab,
-        MangaLibraryTab,
-        UpdatesTab(fromMore = false, inMiddle = true),
+        UpdatesTab(
+            fromMore = false,
+            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
+        ),
+        HistoryTab(
+            fromMore = false,
+            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
+        ),
         BrowseTab(),
         MoreTab,
     )
 
-    val tabsNoUpdates = listOf(
+    val tabsYUNH = listOf(
         AnimeLibraryTab,
-        MangaLibraryTab,
-        HistoriesTab(false),
+        UpdatesTab(
+            fromMore = false,
+            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
+        ),
         BrowseTab(),
         MoreTab,
     )
 
-    val tabsNoManga = listOf(
+    val tabsNUYH = listOf(
         AnimeLibraryTab,
-        UpdatesTab(fromMore = false, inMiddle = false),
-        HistoriesTab(false),
+        HistoryTab(
+            fromMore = false,
+            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
+        ),
         BrowseTab(),
         MoreTab,
     )
 
-    var tabs = when (libraryPreferences.bottomNavStyle().get()) {
-        0 -> tabsNoHistory
-        1 -> tabsNoUpdates
-        else -> tabsNoManga
+    val tabsNUNH = listOf(
+        AnimeLibraryTab,
+        BrowseTab(),
+        MoreTab,
+    )
+    // <-- AM (UH)
+
+    var tabs = if (uiPreferences.showNavUpdates().get()) {
+        if (uiPreferences.showNavHistory().get()) {
+            tabsYUYH
+        } else {
+            tabsYUNH
+        }
+    } else {
+        if (uiPreferences.showNavHistory().get()) {
+            tabsNUYH
+        } else {
+            tabsNUNH
+        }
     }
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val defaultTab = if (libraryPreferences.isDefaultHomeTabLibraryManga().get() &&
-            libraryPreferences.bottomNavStyle().get() != 2
-        ) {
-            MangaLibraryTab
-        } else {
-            AnimeLibraryTab
-        }
+        val defaultTab = AnimeLibraryTab
         TabNavigator(
             tab = defaultTab,
         ) { tabNavigator ->
@@ -176,6 +198,9 @@ object HomeScreen : Screen {
             LaunchedEffect(Unit) {
                 launch {
                     librarySearchEvent.receiveAsFlow().collectLatest {
+                        // AM (DC) -->
+                        DiscordRPCService.setDiscordPage(0)
+                        // <-- AM (DC)
                         goToAnimelibTab()
                         AnimeLibraryTab.search(it)
                     }
@@ -183,25 +208,45 @@ object HomeScreen : Screen {
                 launch {
                     openTabEvent.receiveAsFlow().collectLatest {
                         tabNavigator.current = when (it) {
-                            is Tab.Animelib -> AnimeLibraryTab
-                            is Tab.Library -> MangaLibraryTab
-                            is Tab.Updates -> UpdatesTab(
-                                libraryPreferences.bottomNavStyle().get() == 1,
-                                libraryPreferences.bottomNavStyle().get() == 0,
-                            )
-                            is Tab.History -> HistoriesTab(false)
-                            is Tab.Browse -> BrowseTab(it.toExtensions)
-                            is Tab.More -> MoreTab
-                        }
-
-                        if (it is Tab.Animelib && it.animeIdToOpen != null) {
-                            navigator.push(MangaScreen(it.animeIdToOpen))
-                        }
-                        if (it is Tab.Library && it.mangaIdToOpen != null) {
-                            navigator.push(MangaScreen(it.mangaIdToOpen))
+                            is Tab.Animelib -> {
+                                // AM (DC) -->
+                                DiscordRPCService.setDiscordPage(0)
+                                // <-- AM (DC)
+                                AnimeLibraryTab
+                            }
+                            is Tab.Updates -> {
+                                // AM (DC) -->
+                                DiscordRPCService.setDiscordPage(1)
+                                // <-- AM (DC)
+                                UpdatesTab(
+                                    fromMore = !uiPreferences.showNavUpdates().get(),
+                                    externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
+                                )
+                            }
+                            is Tab.History -> {
+                                // AM (DC) -->
+                                DiscordRPCService.setDiscordPage(2)
+                                // <-- AM (DC)
+                                HistoryTab(
+                                    fromMore = !uiPreferences.showNavHistory().get(),
+                                    externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
+                                )
+                            }
+                            is Tab.Browse -> {
+                                // AM (DC) -->
+                                DiscordRPCService.setDiscordPage(3)
+                                // <-- AM (DC)
+                                BrowseTab(it.toExtensions)
+                            }
+                            is Tab.More -> {
+                                // AM (DC) -->
+                                DiscordRPCService.setDiscordPage(4)
+                                // <-- AM (DC)
+                                MoreTab
+                            }
                         }
                         if (it is Tab.More && it.toDownloads) {
-                            navigator.push(DownloadsTab())
+                            navigator.push(AnimeDownloadQueueScreen)
                         }
                     }
                 }
@@ -273,10 +318,7 @@ object HomeScreen : Screen {
                     UpdatesTab::class.isInstance(tab) -> {
                         val count by produceState(initialValue = 0) {
                             val pref = Injekt.get<LibraryPreferences>()
-                            combine(
-                                pref.newAnimeUpdatesCount().changes(),
-                                pref.newMangaUpdatesCount().changes(),
-                            ) { countAnime, countManga -> countAnime + countManga }
+                            pref.newAnimeUpdatesCount().changes()
                                 .collectLatest { value = if (pref.newShowUpdatesCount().get()) it else 0 }
                         }
                         if (count > 0) {
@@ -337,7 +379,6 @@ object HomeScreen : Screen {
 
     sealed class Tab {
         data class Animelib(val animeIdToOpen: Long? = null) : Tab()
-        data class Library(val mangaIdToOpen: Long? = null) : Tab()
         object Updates : Tab()
         object History : Tab()
         data class Browse(val toExtensions: Boolean = false) : Tab()

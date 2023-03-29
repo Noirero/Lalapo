@@ -145,4 +145,10 @@ class AnimeRepositoryImpl(
             }
         }
     }
+
+    // AM (CU) -->
+    override suspend fun getAll(): List<Anime> {
+        return handler.awaitList { animesQueries.getAll(animeMapper) }
+    }
+    // <-- AM (CU)
 }

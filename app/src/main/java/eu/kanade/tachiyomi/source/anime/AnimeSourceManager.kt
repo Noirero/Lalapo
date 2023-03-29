@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class AnimeSourceManager(
     private val context: Context,
-    private val extensionManager: AnimeExtensionManager,
+    internal val extensionManager: AnimeExtensionManager,
     private val sourceRepository: AnimeSourceDataRepository,
 ) {
     private val downloadManager: AnimeDownloadManager by injectLazy()

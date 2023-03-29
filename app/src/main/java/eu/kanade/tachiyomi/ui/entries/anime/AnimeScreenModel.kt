@@ -18,8 +18,11 @@ import eu.kanade.domain.entries.TriStateFilter
 import eu.kanade.domain.entries.anime.interactor.GetAnimeWithEpisodes
 import eu.kanade.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import eu.kanade.domain.entries.anime.interactor.SetAnimeEpisodeFlags
+import eu.kanade.domain.entries.anime.interactor.SetCustomAnimeInfo
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.Anime
+import eu.kanade.domain.entries.anime.model.AnimeUpdate
+import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
 import eu.kanade.domain.entries.anime.model.isLocal
 import eu.kanade.domain.items.episode.interactor.SetAnimeDefaultEpisodeFlags
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
@@ -45,6 +48,7 @@ import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
+import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.episode.getEpisodeSort
@@ -54,9 +58,11 @@ import eu.kanade.tachiyomi.util.lang.launchNonCancellable
 import eu.kanade.tachiyomi.util.lang.toRelativeString
 import eu.kanade.tachiyomi.util.lang.withIOContext
 import eu.kanade.tachiyomi.util.lang.withUIContext
+import eu.kanade.tachiyomi.util.nullIfEmpty
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
 import eu.kanade.tachiyomi.util.system.logcat
+import eu.kanade.tachiyomi.util.trimOrNull
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.catch
@@ -91,6 +97,9 @@ class AnimeInfoScreenModel(
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val downloadCache: AnimeDownloadCache = Injekt.get(),
     private val getAnimeAndEpisodes: GetAnimeWithEpisodes = Injekt.get(),
+    // AM (CU) -->
+    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get(),
+    // <-- AM (CU)
     private val getDuplicateLibraryAnime: GetDuplicateLibraryAnime = Injekt.get(),
     private val setAnimeEpisodeFlags: SetAnimeEpisodeFlags = Injekt.get(),
     private val setAnimeDefaultEpisodeFlags: SetAnimeDefaultEpisodeFlags = Injekt.get(),
@@ -187,7 +196,7 @@ class AnimeInfoScreenModel(
                     dialog = null,
                 )
             }
-            // Start observe tracking since it only needs mangaId
+            // Start observe tracking since it only needs animeId
             observeTrackers()
 
             // Fetch info-episodes when needed
@@ -238,6 +247,71 @@ class AnimeInfoScreenModel(
             }
         }
     }
+
+    // AM (CU) -->
+    fun updateAnimeInfo(
+        title: String?,
+        author: String?,
+        artist: String?,
+        description: String?,
+        tags: List<String>?,
+        status: Long?,
+    ) {
+        val state = successState ?: return
+        var anime = state.anime
+        if (state.anime.isLocal()) {
+            val newTitle = if (title.isNullOrBlank()) anime.url else title.trim()
+            val newAuthor = author?.trimOrNull()
+            val newArtist = artist?.trimOrNull()
+            val newDesc = description?.trimOrNull()
+            anime = anime.copy(
+                ogTitle = newTitle,
+                ogAuthor = author?.trimOrNull(),
+                ogArtist = artist?.trimOrNull(),
+                ogDescription = description?.trimOrNull(),
+                ogGenre = tags?.nullIfEmpty(),
+                ogStatus = status ?: 0,
+                lastUpdate = anime.lastUpdate + 1,
+            )
+            (sourceManager.get(LocalAnimeSource.ID) as LocalAnimeSource).updateAnimeInfo(anime.toSAnime())
+            coroutineScope.launchNonCancellable {
+                updateAnime.await(
+                    AnimeUpdate(
+                        anime.id,
+                        title = newTitle,
+                        author = newAuthor,
+                        artist = newArtist,
+                        description = newDesc,
+                        genre = tags,
+                        status = status,
+                    ),
+                )
+            }
+        } else {
+            val genre = if (!tags.isNullOrEmpty() && tags != state.anime.ogGenre) {
+                tags
+            } else {
+                null
+            }
+            setCustomAnimeInfo.set(
+                CustomAnimeInfo(
+                    state.anime.id,
+                    title?.trimOrNull(),
+                    author?.trimOrNull(),
+                    artist?.trimOrNull(),
+                    description?.trimOrNull(),
+                    genre,
+                    status.takeUnless { it == state.anime.ogStatus },
+                ),
+            )
+            anime = anime.copy(lastUpdate = anime.lastUpdate + 1)
+        }
+
+        updateSuccessState { successState ->
+            successState.copy(anime = anime)
+        }
+    }
+    // <-- AM (CU)
 
     fun toggleFavorite() {
         toggleFavorite(
@@ -338,7 +412,7 @@ class AnimeInfoScreenModel(
                                 }
                             } catch (e: Exception) {
                                 logcat(LogPriority.WARN, e) {
-                                    "Could not match anime: ${anime.title} with service $service"
+                                    "Could not match anime: ${/*  AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */} with service $service"
                                 }
                             }
                         }
@@ -498,7 +572,7 @@ class AnimeInfoScreenModel(
             val downloaded = if (isLocal) {
                 true
             } else {
-                downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.title, anime.source)
+                downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
             }
             val downloadState = when {
                 activeDownload != null -> activeDownload.status
@@ -718,6 +792,22 @@ class AnimeInfoScreenModel(
         toggleAllSelection(false)
     }
 
+    // AM (FM) -->
+    /**
+     * Fillermarks the given list of episodes.
+     * @param episodes the list of episodes to fillermark.
+     */
+    fun fillermarkEpisodes(episodes: List<Episode>, fillermarked: Boolean) {
+        coroutineScope.launchIO {
+            episodes
+                .filterNot { it.fillermark == fillermarked }
+                .map { EpisodeUpdate(id = it.id, fillermark = fillermarked) }
+                .let { updateEpisode.awaitAll(it) }
+        }
+        toggleAllSelection(false)
+    }
+    // <-- AM (FM)
+
     /**
      * Deletes the given list of episode.
      *
@@ -800,6 +890,26 @@ class AnimeInfoScreenModel(
             setAnimeEpisodeFlags.awaitSetBookmarkFilter(anime, flag)
         }
     }
+
+    // AM (FM) -->
+    /**
+     * Sets the fillermark filter and requests an UI update.
+     * @param state whether to display only fillermarked episodes or all episodes.
+     */
+    fun setFillermarkedFilter(state: TriStateFilter) {
+        val anime = successState?.anime ?: return
+
+        val flag = when (state) {
+            TriStateFilter.DISABLED -> Anime.SHOW_ALL
+            TriStateFilter.ENABLED_IS -> Anime.EPISODE_SHOW_FILLERMARKED
+            TriStateFilter.ENABLED_NOT -> Anime.EPISODE_SHOW_NOT_FILLERMARKED
+        }
+
+        coroutineScope.launchNonCancellable {
+            setAnimeEpisodeFlags.awaitSetFillermarkFilter(anime, flag)
+        }
+    }
+    // <-- AM (FM)
 
     /**
      * Sets the active display mode.
@@ -939,7 +1049,7 @@ class AnimeInfoScreenModel(
                     loggedServices
                         // Map to TrackItem
                         .map { service -> AnimeTrackItem(dbTracks.find { it.sync_id.toLong() == service.id }, service) }
-                        // Show only if the service supports this manga's source
+                        // Show only if the service supports this anime's source
                         .filter { (it.service as? EnhancedAnimeTrackService)?.accept(source!!) ?: true }
                 }
                 .distinctUntilChanged()
@@ -961,6 +1071,11 @@ class AnimeInfoScreenModel(
         data class DuplicateAnime(val anime: Anime, val duplicate: Anime) : Dialog()
         data class DownloadCustomAmount(val max: Int) : Dialog()
         object ChangeAnimeSkipIntro : Dialog()
+
+        // AM (CU) -->
+        data class EditAnimeInfo(val anime: Anime) : Dialog()
+        // <-- AM (CU)
+
         object SettingsSheet : Dialog()
         object TrackSheet : Dialog()
         object FullCover : Dialog()
@@ -1028,6 +1143,19 @@ class AnimeInfoScreenModel(
             }
         }
     }
+
+    // AM (CU) -->
+    fun showEditAnimeInfoDialog() {
+        mutableState.update { state ->
+            when (state) {
+                AnimeScreenState.Loading -> state
+                is AnimeScreenState.Success -> {
+                    state.copy(dialog = Dialog.EditAnimeInfo(state.anime))
+                }
+            }
+        }
+    }
+    // <-- AM (CU)
 }
 
 sealed class AnimeScreenState {
@@ -1063,6 +1191,7 @@ sealed class AnimeScreenState {
             val unseenFilter = anime.unseenFilter
             val downloadedFilter = anime.downloadedFilter
             val bookmarkedFilter = anime.bookmarkedFilter
+            val fillermarkedFilter = anime.fillermarkedFilter
             return asSequence()
                 .filter { (episode) ->
                     when (unseenFilter) {
@@ -1078,6 +1207,15 @@ sealed class AnimeScreenState {
                         TriStateFilter.ENABLED_NOT -> !episode.bookmark
                     }
                 }
+                // AM (FM) -->
+                .filter { (episode) ->
+                    when (fillermarkedFilter) {
+                        TriStateFilter.DISABLED -> true
+                        TriStateFilter.ENABLED_IS -> episode.fillermark
+                        TriStateFilter.ENABLED_NOT -> !episode.fillermark
+                    }
+                }
+                // <-- AM (FM)
                 .filter {
                     when (downloadedFilter) {
                         TriStateFilter.DISABLED -> true

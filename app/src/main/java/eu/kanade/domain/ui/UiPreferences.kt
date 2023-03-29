@@ -34,6 +34,12 @@ class UiPreferences(
 
     fun tabletUiMode() = preferenceStore.getEnum("tablet_ui_mode", TabletUiMode.AUTOMATIC)
 
+    // AM (UH) -->
+    fun showNavUpdates() = preferenceStore.getBoolean("pref_show_updates_button", true)
+
+    fun showNavHistory() = preferenceStore.getBoolean("pref_show_history_button", true)
+    // <-- AM (UH)
+
     companion object {
         fun dateFormat(format: String): DateFormat = when (format) {
             "" -> DateFormat.getDateInstance(DateFormat.SHORT)

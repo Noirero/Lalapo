@@ -83,7 +83,7 @@ class SyncEpisodesWithSource(
             var episode = sourceEpisode
 
             // Update metadata from source if necessary.
-            if (source is HttpAnimeSource) {
+            if (source is AnimeHttpSource) {
                 val sEpisode = episode.toSEpisode()
                 source.prepareNewEpisode(sEpisode, sAnime)
                 episode = episode.copyFromSEpisode(sEpisode)
@@ -107,7 +107,7 @@ class SyncEpisodesWithSource(
             } else {
                 if (shouldUpdateDbEpisode.await(dbEpisode, episode)) {
                     val shouldRenameEpisode = downloadProvider.isEpisodeDirNameChanged(dbEpisode, episode) &&
-                        downloadManager.isEpisodeDownloaded(dbEpisode.name, dbEpisode.scanlator, anime.title, anime.source)
+                        downloadManager.isEpisodeDownloaded(dbEpisode.name, dbEpisode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
 
                     if (shouldRenameEpisode) {
                         downloadManager.renameEpisode(source, anime, dbEpisode, episode)

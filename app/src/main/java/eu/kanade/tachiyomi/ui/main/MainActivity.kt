@@ -52,6 +52,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.category.model.Category
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
@@ -66,25 +67,20 @@ import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.AppUpdateResult
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.browse.BrowseMangaSourceScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.globalsearch.GlobalMangaSearchScreen
+import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibrarySettingsSheet
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
-import eu.kanade.tachiyomi.ui.library.manga.MangaLibrarySettingsSheet
-import eu.kanade.tachiyomi.ui.library.manga.MangaLibraryTab
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.player.ExternalIntents
 import eu.kanade.tachiyomi.util.Constants
@@ -116,10 +112,8 @@ class MainActivity : BaseActivity() {
     private val preferences: BasePreferences by injectLazy()
 
     private val episodeCache: EpisodeCache by injectLazy()
-    private val chapterCache: ChapterCache by injectLazy()
 
     private val animeDownloadCache: AnimeDownloadCache by injectLazy()
-    private val downloadCache: MangaDownloadCache by injectLazy()
 
     private val externalIntents: ExternalIntents by injectLazy()
 
@@ -130,10 +124,13 @@ class MainActivity : BaseActivity() {
      * Sheet containing filter/sort/display items.
      */
     private var animeSettingsSheet: AnimeLibrarySettingsSheet? = null
-    private var mangaSettingsSheet: MangaLibrarySettingsSheet? = null
 
     private var isHandlingShortcut: Boolean = false
     private lateinit var navigator: Navigator
+
+    // AM (CN) -->
+    private val connectionsPreferences: ConnectionsPreferences by injectLazy()
+    // <-- AM (CN)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Prevent splash screen showing up on configuration changes
@@ -151,9 +148,11 @@ class MainActivity : BaseActivity() {
                 sourcePreferences = sourcePreferences,
                 securityPreferences = Injekt.get(),
                 libraryPreferences = libraryPreferences,
-                readerPreferences = Injekt.get(),
                 playerPreferences = Injekt.get(),
                 backupPreferences = Injekt.get(),
+                // AM (CN) -->
+                connectionsPreferences = connectionsPreferences,
+                // <-- AM (CN)
             )
         } else {
             false
@@ -165,6 +164,10 @@ class MainActivity : BaseActivity() {
             return
         }
 
+        // AM (DC) -->
+        DiscordRPCService.resources = resources
+        // <-- AM (DC)
+
         // Draw edge-to-edge
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -173,22 +176,16 @@ class MainActivity : BaseActivity() {
             .onEach(::showAnimeSettingsSheet)
             .launchIn(lifecycleScope)
 
-        mangaSettingsSheet = MangaLibrarySettingsSheet(this)
-        MangaLibraryTab.openSettingsSheetEvent
-            .onEach(::showMangaSettingsSheet)
-            .launchIn(lifecycleScope)
-
         setComposeContent {
             val incognito by preferences.incognitoMode().collectAsState()
             val downloadOnly by preferences.downloadedOnly().collectAsState()
-            val indexing by downloadCache.isRenewing.collectAsState()
             val indexingAnime by animeDownloadCache.isRenewing.collectAsState()
 
             // Set statusbar color considering the top app state banner
             val systemUiController = rememberSystemUiController()
             val isSystemInDarkTheme = isSystemInDarkTheme()
             val statusBarBackgroundColor = when {
-                indexing || indexingAnime -> IndexingBannerBackgroundColor
+                indexingAnime -> IndexingBannerBackgroundColor
                 downloadOnly -> DownloadedOnlyBannerBackgroundColor
                 incognito -> IncognitoModeBannerBackgroundColor
                 else -> MaterialTheme.colorScheme.surface
@@ -243,7 +240,7 @@ class MainActivity : BaseActivity() {
                         AppStateBanners(
                             downloadedOnlyMode = downloadOnly,
                             incognitoMode = incognito,
-                            indexing = indexing || indexingAnime,
+                            indexing = indexingAnime,
                             modifier = Modifier.windowInsetsPadding(scaffoldInsets),
                         )
                     },
@@ -267,20 +264,33 @@ class MainActivity : BaseActivity() {
                         .onEach {
                             if (!it) {
                                 val currentScreen = navigator.lastItem
-                                if ((
-                                    currentScreen is BrowseMangaSourceScreen ||
-                                        (currentScreen is MangaScreen && currentScreen.fromSource)
-                                    ) ||
-                                    (
-                                        currentScreen is BrowseAnimeSourceScreen ||
-                                            (currentScreen is AnimeScreen && currentScreen.fromSource)
-                                        )
+                                if (currentScreen is BrowseAnimeSourceScreen ||
+                                    (currentScreen is AnimeScreen && currentScreen.fromSource)
                                 ) {
                                     navigator.popUntilRoot()
                                 }
                             }
                         }
                         .launchIn(this)
+
+                    // AM (DC) -->
+                    connectionsPreferences.enableDiscordRPC().changes()
+                        .drop(1)
+                        .onEach {
+                            if (it) {
+                                startService(Intent(this@MainActivity, DiscordRPCService::class.java))
+                            } else {
+                                stopService(Intent(this@MainActivity, DiscordRPCService::class.java))
+                            }
+                        }.launchIn(this)
+
+                    connectionsPreferences.discordRPCStatus().changes()
+                        .drop(1)
+                        .onEach {
+                            stopService(Intent(this@MainActivity, DiscordRPCService::class.java))
+                            startService(Intent(this@MainActivity, DiscordRPCService::class.java))
+                        }.launchIn(this)
+                    // <-- AM (DC)
                 }
 
                 CheckForUpdate()
@@ -311,6 +321,12 @@ class MainActivity : BaseActivity() {
             elapsed <= SPLASH_MIN_DURATION || !ready && elapsed <= SPLASH_MAX_DURATION
         }
         setSplashScreenExitAnimation(splashScreen)
+
+        // AM (DC) -->
+        if (DiscordRPCService.rpc == null && connectionsPreferences.enableDiscordRPC().get()) {
+            startService(Intent(this@MainActivity, DiscordRPCService::class.java))
+        }
+        // <-- AM (DC)
     }
 
     override fun onProvideAssistContent(outContent: AssistContent) {
@@ -328,16 +344,6 @@ class MainActivity : BaseActivity() {
         } else {
             lifecycleScope.launch {
                 AnimeLibraryTab.requestOpenSettingsSheet()
-            }
-        }
-    }
-
-    private fun showMangaSettingsSheet(category: Category? = null) {
-        if (category != null) {
-            mangaSettingsSheet?.show(category)
-        } else {
-            lifecycleScope.launch {
-                MangaLibraryTab.requestOpenSettingsSheet()
             }
         }
     }
@@ -445,12 +451,6 @@ class MainActivity : BaseActivity() {
 
         when (intent.action) {
             SHORTCUT_ANIMELIB -> HomeScreen.openTab(HomeScreen.Tab.Animelib())
-            SHORTCUT_LIBRARY -> HomeScreen.openTab(HomeScreen.Tab.Library())
-            SHORTCUT_MANGA -> {
-                val idToOpen = intent.extras?.getLong(Constants.MANGA_EXTRA) ?: return false
-                navigator.popUntilRoot()
-                HomeScreen.openTab(HomeScreen.Tab.Library(idToOpen))
-            }
             SHORTCUT_ANIME -> {
                 val idToOpen = intent.extras?.getLong(Constants.ANIME_EXTRA) ?: return false
                 navigator.popUntilRoot()
@@ -459,11 +459,6 @@ class MainActivity : BaseActivity() {
             SHORTCUT_UPDATES -> HomeScreen.openTab(HomeScreen.Tab.Updates)
             SHORTCUT_HISTORY -> HomeScreen.openTab(HomeScreen.Tab.History)
             SHORTCUT_SOURCES -> HomeScreen.openTab(HomeScreen.Tab.Browse(false))
-            SHORTCUT_EXTENSIONS -> HomeScreen.openTab(HomeScreen.Tab.Browse(true))
-            SHORTCUT_DOWNLOADS -> {
-                navigator.popUntilRoot()
-                HomeScreen.openTab(HomeScreen.Tab.More(toDownloads = true))
-            }
             SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 HomeScreen.openTab(HomeScreen.Tab.More(toDownloads = true))
@@ -476,7 +471,7 @@ class MainActivity : BaseActivity() {
                 val query = intent.getStringExtra(SearchManager.QUERY) ?: intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (query != null && query.isNotEmpty()) {
                     navigator.popUntilRoot()
-                    navigator.push(GlobalMangaSearchScreen(query))
+                    navigator.push(GlobalAnimeSearchScreen(query))
                 }
             }
             INTENT_SEARCH -> {
@@ -484,7 +479,7 @@ class MainActivity : BaseActivity() {
                 if (query != null && query.isNotEmpty()) {
                     val filter = intent.getStringExtra(INTENT_SEARCH_FILTER) ?: ""
                     navigator.popUntilRoot()
-                    navigator.push(GlobalMangaSearchScreen(query, filter))
+                    navigator.push(GlobalAnimeSearchScreen(query, filter))
                 }
             }
             INTENT_ANIMESEARCH -> {
@@ -492,7 +487,7 @@ class MainActivity : BaseActivity() {
                 if (query != null && query.isNotEmpty()) {
                     val filter = intent.getStringExtra(INTENT_SEARCH_FILTER) ?: ""
                     navigator.popUntilRoot()
-                    navigator.push(GlobalMangaSearchScreen(query, filter))
+                    navigator.push(GlobalAnimeSearchScreen(query, filter))
                 }
             }
             else -> {
@@ -508,9 +503,12 @@ class MainActivity : BaseActivity() {
 
     override fun onDestroy() {
         animeSettingsSheet?.sheetScope?.cancel()
-        mangaSettingsSheet?.sheetScope?.cancel()
         animeSettingsSheet = null
-        mangaSettingsSheet = null
+        // AM (DC) -->
+        if (connectionsPreferences.enableDiscordRPC().get()) {
+            stopService(Intent(this@MainActivity, DiscordRPCService::class.java))
+        }
+        // <-- AM (DC)
         super.onDestroy()
     }
 
@@ -519,7 +517,6 @@ class MainActivity : BaseActivity() {
             !onBackPressedDispatcher.hasEnabledCallbacks() &&
             libraryPreferences.autoClearItemCache().get()
         ) {
-            chapterCache.clear()
             episodeCache.clear()
         }
         super.onBackPressed()
@@ -543,16 +540,12 @@ class MainActivity : BaseActivity() {
 
         // Shortcut actions
         const val SHORTCUT_ANIMELIB = "eu.kanade.tachiyomi.SHOW_ANIMELIB"
-        const val SHORTCUT_LIBRARY = "eu.kanade.tachiyomi.SHOW_LIBRARY"
         const val SHORTCUT_ANIME = "eu.kanade.tachiyomi.SHOW_ANIME"
-        const val SHORTCUT_MANGA = "eu.kanade.tachiyomi.SHOW_MANGA"
         const val SHORTCUT_UPDATES = "eu.kanade.tachiyomi.SHOW_RECENTLY_UPDATED"
         const val SHORTCUT_HISTORY = "eu.kanade.tachiyomi.SHOW_RECENTLY_READ"
         const val SHORTCUT_SOURCES = "eu.kanade.tachiyomi.SHOW_CATALOGUES"
         const val SHORTCUT_ANIMEEXTENSIONS = "eu.kanade.tachiyomi.ANIMEEXTENSIONS"
-        const val SHORTCUT_EXTENSIONS = "eu.kanade.tachiyomi.EXTENSIONS"
         const val SHORTCUT_ANIME_DOWNLOADS = "eu.kanade.tachiyomi.SHOW_ANIME_DOWNLOADS"
-        const val SHORTCUT_DOWNLOADS = "eu.kanade.tachiyomi.SHOW_DOWNLOADS"
 
         const val INTENT_SEARCH = "eu.kanade.tachiyomi.SEARCH"
         const val INTENT_ANIMESEARCH = "eu.kanade.tachiyomi.ANIMESEARCH"

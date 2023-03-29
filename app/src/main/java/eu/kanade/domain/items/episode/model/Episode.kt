@@ -9,6 +9,9 @@ data class Episode(
     val animeId: Long,
     val seen: Boolean,
     val bookmark: Boolean,
+    // AM (FM) -->
+    val fillermark: Boolean,
+    // <-- AM (FM)
     val lastSecondSeen: Long,
     val totalSeconds: Long,
     val dateFetch: Long,
@@ -48,6 +51,9 @@ data class Episode(
             animeId = -1,
             seen = false,
             bookmark = false,
+            // AM (FM) -->
+            fillermark = false,
+            // <-- AM (FM)
             lastSecondSeen = 0,
             totalSeconds = 0,
             dateFetch = 0,
@@ -70,6 +76,9 @@ fun Episode.toDbEpisode(): DbEpisode = EpisodeImpl().also {
     it.scanlator = scanlator
     it.seen = seen
     it.bookmark = bookmark
+    // AM (FM) -->
+    it.fillermark = fillermark
+    // <-- AM (FM)
     it.last_second_seen = lastSecondSeen
     it.total_seconds = totalSeconds
     it.date_fetch = dateFetch

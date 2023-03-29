@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.History
@@ -26,7 +25,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import eu.kanade.domain.library.service.LibraryPreferences
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.Divider
 import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.components.ScrollbarLazyColumn
@@ -46,7 +45,10 @@ fun MoreScreen(
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
     isFDroid: Boolean,
-    onClickAlt: () -> Unit,
+    // AM (UH) -->
+    onClickUpdates: () -> Unit,
+    onClickHistory: () -> Unit,
+    // <-- AM (UH)
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
@@ -101,26 +103,29 @@ fun MoreScreen(
 
             item { Divider() }
 
-            val libraryPreferences: LibraryPreferences by injectLazy()
+            // AM (UH) -->
+            val uiPreferences: UiPreferences by injectLazy()
 
-            item {
-                val bottomNavStyle = libraryPreferences.bottomNavStyle().get()
-                val titleRes = when (bottomNavStyle) {
-                    0 -> R.string.label_recent_manga
-                    1 -> R.string.label_recent_updates
-                    else -> R.string.label_manga
+            if (!uiPreferences.showNavUpdates().get()) {
+                item {
+                    TextPreferenceWidget(
+                        title = stringResource(R.string.label_recent_updates),
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_updates_outline_24dp),
+                        onPreferenceClick = onClickUpdates,
+                    )
                 }
-                val icon = when (bottomNavStyle) {
-                    0 -> Icons.Outlined.History
-                    1 -> ImageVector.vectorResource(id = R.drawable.ic_updates_outline_24dp)
-                    else -> Icons.Outlined.CollectionsBookmark
-                }
-                TextPreferenceWidget(
-                    title = stringResource(titleRes),
-                    icon = icon,
-                    onPreferenceClick = onClickAlt,
-                )
             }
+
+            if (!uiPreferences.showNavHistory().get()) {
+                item {
+                    TextPreferenceWidget(
+                        title = stringResource(R.string.label_recent_manga),
+                        icon = Icons.Outlined.History,
+                        onPreferenceClick = onClickHistory,
+                    )
+                }
+            }
+            // <-- AM (UH)
 
             item {
                 val downloadQueueState = downloadQueueStateProvider()

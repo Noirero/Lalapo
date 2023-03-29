@@ -51,7 +51,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreenModel.Listing
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.Constants
@@ -242,7 +242,7 @@ data class BrowseAnimeSourceScreen(
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoriesTab(false)) },
+                    onEditCategories = { navigator.push(CategoryScreen()) },
                     onConfirm = { include, _ ->
                         screenModel.changeAnimeFavorite(dialog.anime)
                         screenModel.moveAnimeToCategories(dialog.anime, include)

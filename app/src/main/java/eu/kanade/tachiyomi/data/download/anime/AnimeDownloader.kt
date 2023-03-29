@@ -18,15 +18,15 @@ import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.entries.anime.model.Anime
 import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.Video
-import eu.kanade.tachiyomi.animesource.online.HttpAnimeSource
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.animesource.online.fetchUrlFromVideo
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownloadQueue
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchNow
@@ -199,7 +199,7 @@ class AnimeDownloader(
             queue
                 .filter { it.status == AnimeDownload.State.QUEUE }
                 .forEach {
-                    val animeDir = provider.getAnimeDir(it.anime.title, it.source)
+                    val animeDir = provider.getAnimeDir(/* AM (CU) --> */ it.anime.ogTitle /* <-- AM (CU) */, it.source)
                     val episodeDirname = provider.getEpisodeDirName(it.episode.name, it.episode.scanlator)
                     val tmpDir = animeDir.findFile(episodeDirname + TMP_DIR_SUFFIX)
                     tmpDir?.delete()
@@ -278,7 +278,7 @@ class AnimeDownloader(
         val episodesWithoutDir = async {
             episodes
                 // Filter out those already downloaded.
-                .filter { provider.findEpisodeDir(it.name, it.scanlator, anime.title, source) == null }
+                .filter { provider.findEpisodeDir(it.name, it.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source) == null }
                 // Add episodes to queue from the start.
                 .sortedByDescending { it.sourceOrder }
         }
@@ -330,7 +330,7 @@ class AnimeDownloader(
      * @param download the episode to be downloaded.
      */
     private fun downloadEpisode(download: AnimeDownload): Observable<AnimeDownload> = Observable.defer {
-        val animeDir = provider.getAnimeDir(download.anime.title, download.source)
+        val animeDir = provider.getAnimeDir(/* AM (CU) --> */ download.anime.ogTitle /* <-- AM (CU) */, download.source)
 
         val availSpace = DiskUtil.getAvailableStorageSpace(animeDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
@@ -445,7 +445,7 @@ class AnimeDownloader(
                 if (preferences.useExternalDownloader().get() == download.changeDownloader) {
                     downloadVideo(video, download, tmpDir, filename)
                 } else {
-                    val betterFileName = DiskUtil.buildValidFilename("${download.anime.title} - ${download.episode.name}")
+                    val betterFileName = DiskUtil.buildValidFilename("${/* AM (CU) --> */ download.anime.ogTitle /* <-- AM (CU) */} - ${download.episode.name}")
                     downloadVideoExternal(video, download.source, tmpDir, betterFileName)
                 }
             }
@@ -464,7 +464,7 @@ class AnimeDownloader(
             .onErrorReturn {
                 video.progress = 0
                 video.status = Video.State.ERROR
-                notifier.onError(it.message, download.episode.name, download.anime.title)
+                notifier.onError(it.message, download.episode.name, /* AM (CU) --> */ download.anime.ogTitle /* <-- AM (CU) */)
                 video
             }
     }

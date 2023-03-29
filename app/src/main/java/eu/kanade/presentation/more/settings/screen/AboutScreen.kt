@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -144,24 +141,14 @@ object AboutScreen : Screen {
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         LinkIcon(
-                            label = stringResource(R.string.website),
-                            painter = rememberVectorPainter(Icons.Outlined.Public),
-                            url = "https://aniyomi.org",
-                        )
-                        LinkIcon(
                             label = "Discord",
                             painter = painterResource(R.drawable.ic_discord_24dp),
-                            url = "https://discord.gg/F32UjdJZrR",
-                        )
-                        LinkIcon(
-                            label = "Reddit",
-                            painter = painterResource(R.drawable.ic_reddit_24dp),
-                            url = "https://www.reddit.com/r/Aniyomi",
+                            url = "https://discord.gg/yDuHDMwxhv",
                         )
                         LinkIcon(
                             label = "GitHub",
                             painter = painterResource(R.drawable.ic_github_24dp),
-                            url = "https://github.com/jmir1/aniyomi",
+                            url = "https://github.com/Quickdesh/Animiru",
                         )
                     }
                 }

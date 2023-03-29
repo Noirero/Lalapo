@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <string-array name="clean_up_downloads">
+        <item>@string/clean_orphaned_downloads</item>
+        <item>@string/clean_seen_downloads</item>
+        <item>@string/clean_seen_entries_not_in_library</item>
+    </string-array>
+
     <string-array name="viewers_selector">
         <item>@string/label_default</item>
         <item>@string/left_to_right_viewer</item>

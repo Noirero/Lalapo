@@ -48,7 +48,7 @@ import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.entries.EditCoverAction
 import eu.kanade.presentation.util.clickableNoIndication
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
+import eu.kanade.tachiyomi.util.ReaderPageImageView
 
 @Composable
 fun AnimeCoverDialog(

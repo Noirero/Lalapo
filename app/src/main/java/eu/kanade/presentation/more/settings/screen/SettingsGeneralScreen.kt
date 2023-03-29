@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -16,16 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.core.app.ActivityCompat
 import androidx.core.os.LocaleListCompat
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.drop
 import org.xmlpull.v1.XmlPullParser
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -43,44 +38,11 @@ object SettingsGeneralScreen : SearchableSettings {
         val libraryPrefs = remember { Injekt.get<LibraryPreferences>() }
         val context = LocalContext.current
 
-        LaunchedEffect(Unit) {
-            libraryPrefs.bottomNavStyle().changes()
-                .drop(1)
-                .collectLatest { value ->
-                    HomeScreen.tabs = when (value) {
-                        0 -> HomeScreen.tabsNoHistory
-                        1 -> HomeScreen.tabsNoUpdates
-                        else -> HomeScreen.tabsNoManga
-                    }
-                    (context as? Activity)?.let {
-                        ActivityCompat.recreate(it)
-                    }
-                }
-        }
-
         return mutableListOf<Preference>().apply {
-            add(
-                Preference.PreferenceItem.ListPreference(
-                    pref = libraryPrefs.bottomNavStyle(),
-                    title = stringResource(R.string.pref_bottom_nav_style),
-                    entries = mapOf(
-                        0 to stringResource(R.string.pref_bottom_nav_no_history),
-                        1 to stringResource(R.string.pref_bottom_nav_no_updates),
-                        2 to stringResource(R.string.pref_bottom_nav_no_manga),
-                    ),
-                ),
-            )
-            add(
-                Preference.PreferenceItem.SwitchPreference(
-                    pref = libraryPrefs.isDefaultHomeTabLibraryManga(),
-                    title = stringResource(R.string.pref_default_home_tab_library),
-                    enabled = libraryPrefs.bottomNavStyle().get() != 2,
-                ),
-            )
             add(
                 Preference.PreferenceItem.SwitchPreference(
                     pref = libraryPrefs.newShowUpdatesCount(),
-                    title = stringResource(R.string.pref_library_update_show_tab_badge),
+                    title = stringResource(R.string.pref_library_anime_update_show_tab_badge),
                 ),
             )
 

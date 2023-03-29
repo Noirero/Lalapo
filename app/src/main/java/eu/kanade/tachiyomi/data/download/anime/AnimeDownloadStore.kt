@@ -93,7 +93,7 @@ class AnimeDownloadStore(
                 val anime = cachedAnime.getOrPut(animeId) {
                     runBlocking { getAnime.await(animeId) }
                 } ?: continue
-                val source = sourceManager.get(anime.source) as? HttpAnimeSource ?: continue
+                val source = sourceManager.get(anime.source) as? AnimeHttpSource ?: continue
                 val episode = runBlocking { getEpisode.await(episodeId) } ?: continue
                 downloads.add(AnimeDownload(source, anime, episode))
             }

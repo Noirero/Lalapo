@@ -46,10 +46,12 @@ import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
@@ -100,6 +102,10 @@ class PlayerActivity :
     private val playerPreferences: PlayerPreferences by injectLazy()
 
     private val networkPreferences: NetworkPreferences by injectLazy()
+
+    // AM (CN) -->
+    private val connectionsPreferences: ConnectionsPreferences by injectLazy()
+    // <-- AM (CN)
 
     val viewModel by viewModels<PlayerViewModel>()
 
@@ -417,6 +423,12 @@ class PlayerActivity :
             .launchIn(lifecycleScope)
 
         playerIsDestroyed = false
+
+        // AM (DC) -->
+        if (DiscordRPCService.rpc == null && connectionsPreferences.enableDiscordRPC().get()) {
+            startService(Intent(this, DiscordRPCService::class.java))
+        }
+        // <-- AM (DC)
     }
 
     private fun setMpvConf() {
@@ -1059,7 +1071,7 @@ class PlayerActivity :
 
         val intent = uri.toShareIntent(
             context = applicationContext,
-            message = getString(R.string.share_screenshot_info, anime.title, episode.name, seconds),
+            message = getString(R.string.share_screenshot_info, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, episode.name, seconds),
         )
         startActivity(Intent.createChooser(intent, getString(R.string.action_share)))
     }
@@ -1180,6 +1192,19 @@ class PlayerActivity :
         updatePlaylistButtons()
         updateEpisodeText()
         player.loadTracks()
+        // AM (DC) -->
+        if (!isFinishing) {
+            viewModel.viewModelScope.launchIO {
+                DiscordRPCService.videoInPip = isInPipMode
+                DiscordRPCService.setDiscordVideo(
+                    isNsfwSource = viewModel.isSourceNsfw,
+                    episodeNumber = viewModel.currentEpisode?.episode_number,
+                    thumbnailUrl = viewModel.anime?.thumbnailUrl,
+                    animeTitle = viewModel.anime?.title,
+                )
+            }
+        }
+        // <-- AM (DC)
     }
 
     private fun updateEpisodeText() {
@@ -1227,6 +1252,14 @@ class PlayerActivity :
             player.destroy()
         }
         abandonAudioFocus()
+        // AM (DC) -->
+        if (connectionsPreferences.enableDiscordRPC().get()) {
+            DiscordRPCService.videoInPip = false
+            val lastUsedPage = DiscordRPCService.lastUsedPage
+            DiscordRPCService.setDiscordPage(lastUsedPage)
+            if (lastUsedPage == -1) stopService(Intent(this, DiscordRPCService::class.java))
+        }
+        // <-- AM (DC)
         super.onDestroy()
     }
 
@@ -1276,6 +1309,7 @@ class PlayerActivity :
         isInPipMode = isInPictureInPictureMode
         isPipStarted = isInPipMode
         playerControls.lockControls(isInPipMode)
+        refreshUi()
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
 
         if (isInPictureInPictureMode) {

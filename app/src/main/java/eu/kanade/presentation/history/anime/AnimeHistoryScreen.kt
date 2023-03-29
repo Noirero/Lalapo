@@ -1,16 +1,22 @@
 package eu.kanade.presentation.history.anime
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import eu.kanade.domain.history.anime.model.AnimeHistoryWithRelations
 import eu.kanade.presentation.animehistory.components.AnimeHistoryContent
+import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.EmptyScreen
 import eu.kanade.presentation.components.LoadingScreen
 import eu.kanade.presentation.components.Scaffold
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryState
@@ -19,15 +25,37 @@ import java.util.Date
 @Composable
 fun AnimeHistoryScreen(
     state: AnimeHistoryState,
-    contentPadding: PaddingValues,
     snackbarHostState: SnackbarHostState,
+    onSearchQueryChange: (String?) -> Unit,
     onClickCover: (animeId: Long) -> Unit,
     onClickResume: (animeId: Long, episodeId: Long) -> Unit,
     onDialogChange: (AnimeHistoryScreenModel.Dialog?) -> Unit,
+    // AM (UH) -->
+    navigateUp: (() -> Unit)?,
+    // <-- AM (UH)
 ) {
     Scaffold(
+        topBar = { scrollBehavior ->
+            SearchToolbar(
+                titleContent = { AppBarTitle(stringResource(R.string.history)) },
+                searchQuery = state.searchQuery,
+                onChangeSearchQuery = onSearchQueryChange,
+                actions = {
+                    IconButton(onClick = { onDialogChange(AnimeHistoryScreenModel.Dialog.DeleteAll) }) {
+                        Icon(
+                            Icons.Outlined.DeleteSweep,
+                            contentDescription = stringResource(R.string.pref_clear_history),
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                // AM (UH) -->
+                navigateUp = navigateUp,
+                // <-- AM (UH)
+            )
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) { _ ->
+    ) { contentPadding ->
         state.list.let {
             if (it == null) {
                 LoadingScreen(modifier = Modifier.padding(contentPadding))

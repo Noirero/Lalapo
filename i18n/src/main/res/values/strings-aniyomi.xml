@@ -21,7 +21,7 @@
     <string name="pref_bottom_nav_no_history">Move History to the More tab</string>
     <string name="pref_bottom_nav_no_updates">Move Updates to the More tab</string>
     <string name="pref_bottom_nav_no_manga">Move Manga to the More tab</string>
-    <string name="unlock_app">Unlock Aniyomi</string>
+    <string name="unlock_app">Unlock Animiru</string>
     <string name="action_filter_unseen">Unseen</string>
     <string name="action_sort_total_episodes">Total episodes</string>
     <string name="action_sort_last_seen">Last seen</string>
@@ -66,8 +66,8 @@
     <string name="default_anime_category">Default anime category</string>
     <string name="pref_manga_library_update_categories_details">Manga in excluded categories will not be updated even if they are also in included categories.</string>
     <string name="pref_anime_library_update_categories_details">Anime in excluded categories will not be updated even if they are also in included categories.</string>
-    <string name="untrusted_extension_message">This extension was signed with an untrusted certificate and wasn\'t activated.\n\nA malicious extension could read any login credentials stored in Aniyomi or execute arbitrary code.\n\nBy trusting this certificate you accept these risks.</string>
-    <string name="unofficial_extension_message_aniyomi">This extension is not from the official Aniyomi extensions list.</string>
+    <string name="untrusted_extension_message">This extension was signed with an untrusted certificate and wasn\'t activated.\n\nA malicious extension could read any login credentials stored in Animiru or execute arbitrary code.\n\nBy trusting this certificate you accept these risks.</string>
+    <string name="unofficial_extension_message_animiru">This extension is not from the official Animiru extensions list.</string>
     <string name="rotation_reverse_landscape">Reverse landscape</string>
     <string name="rotation_sensor_portrait">Sensor portrait</string>
     <string name="rotation_sensor_landscape">Sensor landscape</string>
@@ -201,7 +201,7 @@
     <string name="stats_page_3">Page 3</string>
     <string name="recent_anime_time">Ep. %1$s - %2$s</string>
     <string name="download_insufficient_space">Couldn\'t download due to low storage space</string>
-    <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking Aniyomi. Tap to learn more.</string>
+    <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking Animiru. Tap to learn more.</string>
     <string name="video_list_empty_error">No video found</string>
     <string name="notification_new_episodes">New episodes found</string>
     <plurals name="notification_new_episodes_summary">
@@ -214,7 +214,7 @@
     </plurals>
     <string name="information_no_recent_anime">Nothing watched recently</string>
     <!-- Do not translate "WebView" -->
-    <string name="information_webview_required">WebView is required for Aniyomi</string>
+    <string name="information_webview_required">WebView is required for Animiru</string>
     <string name="episode_settings_updated">Updated default episode settings</string>
     <string name="download_notifier_download_paused_chapters">Chapter download paused</string>
     <string name="download_notifier_download_paused_episodes">Episode download paused</string>
@@ -241,7 +241,7 @@
     <string name="video_crop_screen">"Cropped to screen"</string>
     <string name="video_stretch_screen">"Stretched to screen"</string>
 
-    <!-- Aniyomi stuff -->
+    <!-- Animiru stuff -->
     <string name="playback_speed_dialog_title">Change playback speed:</string>
     <string name="playback_speed_dialog_reset">Reset</string>
     <string name="quality_dialog_header">Change video quality:</string>

@@ -2,12 +2,14 @@ package eu.kanade.domain.entries.anime.model
 
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.entries.TriStateFilter
+import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import java.io.Serializable
 
 data class Anime(
@@ -20,16 +22,44 @@ data class Anime(
     val episodeFlags: Long,
     val coverLastModified: Long,
     val url: String,
-    val title: String,
-    val artist: String?,
-    val author: String?,
-    val description: String?,
-    val genre: List<String>?,
-    val status: Long,
+    // AM (CU) -->
+    val ogTitle: String,
+    val ogArtist: String?,
+    val ogAuthor: String?,
+    val ogDescription: String?,
+    val ogGenre: List<String>?,
+    val ogStatus: Long,
+    // <-- AM (CU)
     val thumbnailUrl: String?,
     val updateStrategy: UpdateStrategy,
     val initialized: Boolean,
 ) : Serializable {
+
+    // AM (CU) -->
+    private val customAnimeInfo = if (favorite) {
+        getCustomAnimeInfo.get(id)
+    } else {
+        null
+    }
+
+    val title: String
+        get() = customAnimeInfo?.title ?: ogTitle
+
+    val author: String?
+        get() = customAnimeInfo?.author ?: ogAuthor
+
+    val artist: String?
+        get() = customAnimeInfo?.artist ?: ogArtist
+
+    val description: String?
+        get() = customAnimeInfo?.description ?: ogDescription
+
+    val genre: List<String>?
+        get() = customAnimeInfo?.genre ?: ogGenre
+
+    val status: Long
+        get() = customAnimeInfo?.status ?: ogStatus
+    // <-- AM (CU)
 
     val sorting: Long
         get() = episodeFlags and EPISODE_SORTING_MASK
@@ -45,6 +75,11 @@ data class Anime(
 
     val bookmarkedFilterRaw: Long
         get() = episodeFlags and EPISODE_BOOKMARKED_MASK
+
+    // AM (FM) -->
+    val fillermarkedFilterRaw: Long
+        get() = episodeFlags and EPISODE_FILLERMARKED_MASK
+    // <-- AM (FM)
 
     val skipIntroLength: Long
         get() = viewerFlags
@@ -73,10 +108,22 @@ data class Anime(
             else -> TriStateFilter.DISABLED
         }
 
+    // AM (FM) -->
+    val fillermarkedFilter: TriStateFilter
+        get() = when (fillermarkedFilterRaw) {
+            EPISODE_SHOW_FILLERMARKED -> TriStateFilter.ENABLED_IS
+            EPISODE_SHOW_NOT_FILLERMARKED -> TriStateFilter.ENABLED_NOT
+            else -> TriStateFilter.DISABLED
+        }
+    // <-- AM (FM)
+
     fun episodesFiltered(): Boolean {
         return unseenFilter != TriStateFilter.DISABLED ||
             downloadedFilter != TriStateFilter.DISABLED ||
-            bookmarkedFilter != TriStateFilter.DISABLED
+            bookmarkedFilter != TriStateFilter.DISABLED ||
+            // AM (FM) -->
+            fillermarkedFilter != TriStateFilter.DISABLED
+        // <-- AM (FM)
     }
 
     fun forceDownloaded(): Boolean {
@@ -110,12 +157,16 @@ data class Anime(
         }
         val thumbnailUrl = other.thumbnail_url ?: thumbnailUrl
         return this.copy(
-            author = author,
-            artist = artist,
-            description = description,
-            genre = genres,
+            // AM (CU) -->
+            ogAuthor = author,
+            ogArtist = artist,
+            ogDescription = description,
+            ogGenre = genres,
+            // <-- AM (CU)
             thumbnailUrl = thumbnailUrl,
-            status = other.status.toLong(),
+            // AM (CU) -->
+            ogStatus = other.status.toLong(),
+            // <-- AM (CU)
             updateStrategy = other.update_strategy,
             initialized = other.initialized && initialized,
         )
@@ -141,10 +192,16 @@ data class Anime(
         const val EPISODE_SHOW_NOT_BOOKMARKED = 0x00000040L
         const val EPISODE_BOOKMARKED_MASK = 0x00000060L
 
+        // AM (FM) -->
+        const val EPISODE_SHOW_FILLERMARKED = 0x00000080L
+        const val EPISODE_SHOW_NOT_FILLERMARKED = 0x00000100L
+        const val EPISODE_FILLERMARKED_MASK = 0x00000180L
+
         const val EPISODE_SORTING_SOURCE = 0x00000000L
-        const val EPISODE_SORTING_NUMBER = 0x00000100L
-        const val EPISODE_SORTING_UPLOAD_DATE = 0x00000200L
-        const val EPISODE_SORTING_MASK = 0x00000300L
+        const val EPISODE_SORTING_NUMBER = 0x00000200L
+        const val EPISODE_SORTING_UPLOAD_DATE = 0x00000400L
+        const val EPISODE_SORTING_MASK = 0x00000600L
+        // <-- AM (FM)
 
         const val EPISODE_DISPLAY_NAME = 0x00000000L
         const val EPISODE_DISPLAY_NUMBER = 0x00100000L
@@ -153,7 +210,9 @@ data class Anime(
         fun create() = Anime(
             id = -1L,
             url = "",
-            title = "",
+            // AM (CU) -->
+            ogTitle = "",
+            // <-- AM (CU)
             source = -1L,
             favorite = false,
             lastUpdate = 0L,
@@ -161,15 +220,21 @@ data class Anime(
             viewerFlags = 0L,
             episodeFlags = 0L,
             coverLastModified = 0L,
-            artist = null,
-            author = null,
-            description = null,
-            genre = null,
-            status = 0L,
+            // AM (CU) -->
+            ogArtist = null,
+            ogAuthor = null,
+            ogDescription = null,
+            ogGenre = null,
+            ogStatus = 0L,
+            // <-- AM (CU)
             thumbnailUrl = null,
             updateStrategy = UpdateStrategy.ALWAYS_UPDATE,
             initialized = false,
         )
+
+        // AM (CU) -->
+        private val getCustomAnimeInfo: GetCustomAnimeInfo by injectLazy()
+        // <-- AM (CU)
     }
 }
 
@@ -183,13 +248,14 @@ fun Anime.toAnimeUpdate(): AnimeUpdate {
         viewerFlags = viewerFlags,
         episodeFlags = episodeFlags,
         coverLastModified = coverLastModified,
-        url = url,
-        title = title,
-        artist = artist,
-        author = author,
-        description = description,
-        genre = genre,
-        status = status,
+        // AM (CU) -->
+        title = ogTitle,
+        artist = ogArtist,
+        author = ogAuthor,
+        description = ogDescription,
+        genre = ogGenre,
+        status = ogStatus,
+        // <-- AM (CU)
         thumbnailUrl = thumbnailUrl,
         updateStrategy = updateStrategy,
         initialized = initialized,
@@ -199,12 +265,14 @@ fun Anime.toAnimeUpdate(): AnimeUpdate {
 fun SAnime.toDomainAnime(sourceId: Long): Anime {
     return Anime.create().copy(
         url = url,
-        title = title,
-        artist = artist,
-        author = author,
-        description = description,
-        genre = getGenres(),
-        status = status.toLong(),
+        // AM (CU) -->
+        ogTitle = title,
+        ogArtist = artist,
+        ogAuthor = author,
+        ogDescription = description,
+        ogGenre = getGenres(),
+        ogStatus = status.toLong(),
+        // <-- AM (CU)
         thumbnailUrl = thumbnail_url,
         updateStrategy = update_strategy,
         initialized = initialized,

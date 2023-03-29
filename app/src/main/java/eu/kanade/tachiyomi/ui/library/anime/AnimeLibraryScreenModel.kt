@@ -147,6 +147,9 @@ class AnimeLibraryScreenModel(
                     prefs.filterUnread or
                     prefs.filterStarted or
                     prefs.filterBookmarked or
+                    // AM (FM) -->
+                    prefs.filterFillermarked or
+                    // <-- AM (FM)
                     prefs.filterCompleted
                 ) != TriStateGroup.State.IGNORE.value
             val b = trackFilter.values.any { it != TriStateGroup.State.IGNORE.value }
@@ -174,6 +177,9 @@ class AnimeLibraryScreenModel(
         val filterUnread = prefs.filterUnread
         val filterStarted = prefs.filterStarted
         val filterBookmarked = prefs.filterBookmarked
+        // AM (FM) -->
+        val filterFillermarked = prefs.filterFillermarked
+        // <-- AM (FM)
         val filterCompleted = prefs.filterCompleted
 
         val isNotLoggedInAnyTrack = loggedInTrackServices.isEmpty()
@@ -228,6 +234,19 @@ class AnimeLibraryScreenModel(
             }
         }
 
+        // AM (FM) -->
+        val filterFnFillermarked: (AnimeLibraryItem) -> Boolean = fillermarked@{
+            if (filterFillermarked == TriStateGroup.State.IGNORE.value) return@fillermarked true
+
+            val hasFillermarks = it.libraryAnime.hasFillermarks
+            return@fillermarked if (filterFillermarked == TriStateGroup.State.INCLUDE.value) {
+                hasFillermarks
+            } else {
+                !hasFillermarks
+            }
+        }
+        // <-- AM (FM)
+
         val filterFnCompleted: (AnimeLibraryItem) -> Boolean = completed@{
             if (filterCompleted == TriStateGroup.State.IGNORE.value) return@completed true
 
@@ -265,6 +284,9 @@ class AnimeLibraryScreenModel(
                     !filterFnUnread(it) ||
                     !filterFnStarted(it) ||
                     !filterFnBookmarked(it) ||
+                    // AM (FM) -->
+                    !filterFnFillermarked(it) ||
+                    // <-- AM (FM)
                     !filterFnCompleted(it) ||
                     !filterFnTracking(it)
                 )
@@ -342,6 +364,9 @@ class AnimeLibraryScreenModel(
             libraryPreferences.filterUnseen().changes(),
             libraryPreferences.filterStartedAnime().changes(),
             libraryPreferences.filterBookmarkedAnime().changes(),
+            // AM (FM) -->
+            libraryPreferences.filterFillermarkedAnime().changes(),
+            // <-- AM (FM)
             libraryPreferences.filterCompletedAnime().changes(),
             transform = {
                 ItemPreferences(
@@ -354,7 +379,10 @@ class AnimeLibraryScreenModel(
                     filterUnread = it[6] as Int,
                     filterStarted = it[7] as Int,
                     filterBookmarked = it[8] as Int,
-                    filterCompleted = it[9] as Int,
+                    // AM (FM) -->
+                    filterFillermarked = it[9] as Int,
+                    // <-- AM (FM)
+                    filterCompleted = it[10] as Int,
                 )
             },
         )
@@ -489,7 +517,9 @@ class AnimeLibraryScreenModel(
                             downloadManager.isEpisodeDownloaded(
                                 episode.name,
                                 episode.scanlator,
-                                anime.title,
+                                // AM (CU) -->
+                                anime.ogTitle,
+                                // <-- AM (CU)
                                 anime.source,
                             )
                     }
@@ -717,6 +747,9 @@ class AnimeLibraryScreenModel(
         val filterUnread: Int,
         val filterStarted: Int,
         val filterBookmarked: Int,
+        // AM (FM) -->
+        val filterFillermarked: Int,
+        // <-- AM (FM)
         val filterCompleted: Int,
     )
 

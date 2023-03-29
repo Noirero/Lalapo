@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
 import android.content.Context
-import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +51,6 @@ import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
 import eu.kanade.tachiyomi.data.track.simkl.SimklApi
-import eu.kanade.tachiyomi.source.manga.MangaSourceManager
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.system.openInBrowser
@@ -106,7 +104,7 @@ object SettingsTrackingScreen : SearchableSettings {
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 pref = trackPreferences.autoUpdateTrack(),
-                title = stringResource(R.string.pref_auto_update_manga_sync),
+                title = stringResource(R.string.pref_auto_update_anime_sync),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 pref = trackPreferences.trackOnAddingToLibrary(),
@@ -134,12 +132,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         logout = { dialog = LogoutDialog(trackManager.kitsu) },
                     ),
                     Preference.PreferenceItem.TrackingPreference(
-                        title = stringResource(trackManager.mangaUpdates.nameRes()),
-                        service = trackManager.mangaUpdates,
-                        login = { dialog = LoginDialog(trackManager.mangaUpdates, R.string.username) },
-                        logout = { dialog = LogoutDialog(trackManager.mangaUpdates) },
-                    ),
-                    Preference.PreferenceItem.TrackingPreference(
                         title = stringResource(trackManager.shikimori.nameRes()),
                         service = trackManager.shikimori,
                         login = { context.openInBrowser(ShikimoriApi.authUrl(), forceDefaultBrowser = true) },
@@ -158,46 +150,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         logout = { dialog = LogoutDialog(trackManager.bangumi) },
                     ),
                     Preference.PreferenceItem.InfoPreference(stringResource(R.string.tracking_info)),
-                ),
-            ),
-            Preference.PreferenceGroup(
-                title = stringResource(R.string.enhanced_services),
-                preferenceItems = listOf(
-                    Preference.PreferenceItem.TrackingPreference(
-                        title = stringResource(trackManager.komga.nameRes()),
-                        service = trackManager.komga,
-                        login = {
-                            val sourceManager = Injekt.get<MangaSourceManager>()
-                            val acceptedSources = trackManager.komga.getAcceptedSources()
-                            val hasValidSourceInstalled = sourceManager.getCatalogueSources()
-                                .any { it::class.qualifiedName in acceptedSources }
-
-                            if (hasValidSourceInstalled) {
-                                trackManager.komga.loginNoop()
-                            } else {
-                                context.toast(context.getString(R.string.enhanced_tracking_warning, context.getString(trackManager.komga.nameRes())), Toast.LENGTH_LONG)
-                            }
-                        },
-                        logout = trackManager.komga::logout,
-                    ),
-                    Preference.PreferenceItem.TrackingPreference(
-                        title = stringResource(trackManager.kavita.nameRes()),
-                        service = trackManager.kavita,
-                        login = {
-                            val sourceManager = Injekt.get<MangaSourceManager>()
-                            val acceptedSources = trackManager.kavita.getAcceptedSources()
-                            val hasValidSourceInstalled = sourceManager.getCatalogueSources()
-                                .any { it::class.qualifiedName in acceptedSources }
-
-                            if (hasValidSourceInstalled) {
-                                trackManager.kavita.loginNoop()
-                            } else {
-                                context.toast(context.getString(R.string.enhanced_tracking_warning, context.getString(trackManager.kavita.nameRes())), Toast.LENGTH_LONG)
-                            }
-                        },
-                        logout = trackManager.kavita::logout,
-                    ),
-                    Preference.PreferenceItem.InfoPreference(stringResource(R.string.enhanced_tracking_info)),
                 ),
             ),
         )

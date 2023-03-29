@@ -6,27 +6,26 @@ import android.content.SharedPreferences
 import android.net.Uri
 import androidx.preference.PreferenceManager
 import com.hippo.unifile.UniFile
-import data.Manga_sync
-import data.Mangas
 import dataanime.Anime_sync
 import dataanime.Animes
 import eu.kanade.data.handlers.anime.AnimeDatabaseHandler
-import eu.kanade.data.handlers.manga.MangaDatabaseHandler
 import eu.kanade.data.updateStrategyAdapter
 import eu.kanade.domain.backup.service.BackupPreferences
 import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
-import eu.kanade.domain.category.manga.interactor.GetMangaCategories
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.entries.anime.interactor.GetAnimeFavorites
-import eu.kanade.domain.entries.manga.interactor.GetMangaFavorites
+import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
+import eu.kanade.domain.entries.anime.interactor.SetCustomAnimeInfo
+import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
 import eu.kanade.domain.history.anime.model.AnimeHistoryUpdate
-import eu.kanade.domain.history.manga.model.MangaHistoryUpdate
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CHAPTER
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CHAPTER_MASK
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_PREFS
@@ -38,11 +37,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
-import eu.kanade.tachiyomi.data.backup.models.BackupHistory
-import eu.kanade.tachiyomi.data.backup.models.BackupManga
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSerializer
-import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.FloatPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.IntPreferenceValue
@@ -51,19 +47,12 @@ import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.backupAnimeTrackMapper
 import eu.kanade.tachiyomi.data.backup.models.backupCategoryMapper
-import eu.kanade.tachiyomi.data.backup.models.backupChapterMapper
 import eu.kanade.tachiyomi.data.backup.models.backupEpisodeMapper
-import eu.kanade.tachiyomi.data.backup.models.backupTrackMapper
 import eu.kanade.tachiyomi.data.database.models.anime.Anime
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.anime.Episode
-import eu.kanade.tachiyomi.data.database.models.manga.Chapter
-import eu.kanade.tachiyomi.data.database.models.manga.Manga
-import eu.kanade.tachiyomi.data.database.models.manga.MangaTrack
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.anime.model.copyFrom
-import eu.kanade.tachiyomi.source.manga.MangaSourceManager
-import eu.kanade.tachiyomi.source.manga.model.copyFrom
 import eu.kanade.tachiyomi.util.system.hasPermission
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.toLong
@@ -78,22 +67,21 @@ import java.io.FileOutputStream
 import java.util.Date
 import kotlin.math.max
 import eu.kanade.domain.entries.anime.model.Anime as DomainAnime
-import eu.kanade.domain.entries.manga.model.Manga as DomainManga
 
 class BackupManager(
     private val context: Context,
 ) {
-
-    private val mangaHandler: MangaDatabaseHandler = Injekt.get()
     private val animeHandler: AnimeDatabaseHandler = Injekt.get()
-    private val mangaSourceManager: MangaSourceManager = Injekt.get()
     private val animeSourceManager: AnimeSourceManager = Injekt.get()
     private val backupPreferences: BackupPreferences = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()
-    private val getMangaCategories: GetMangaCategories = Injekt.get()
     private val getAnimeCategories: GetAnimeCategories = Injekt.get()
-    private val getMangaFavorites: GetMangaFavorites = Injekt.get()
     private val getAnimeFavorites: GetAnimeFavorites = Injekt.get()
+
+    // AM (CU) -->
+    private val getCustomAnimeInfo: GetCustomAnimeInfo = Injekt.get()
+    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get()
+    // <-- AM (CU)
 
     internal val parser = ProtoBuf
 
@@ -110,17 +98,12 @@ class BackupManager(
         }
 
         val databaseAnime = getAnimeFavorites.await()
-        val databaseManga = getMangaFavorites.await()
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         val backup = Backup(
-            backupMangas(databaseManga, flags),
-            backupCategories(flags),
             backupAnimes(databaseAnime, flags),
             backupAnimeCategories(flags),
-            emptyList(),
-            backupExtensionInfo(databaseManga),
             emptyList(),
             backupAnimeExtensionInfo(databaseAnime),
             backupPreferences(prefs, flags),
@@ -136,7 +119,7 @@ class BackupManager(
 
                     // Delete older backups
                     val numberOfBackups = backupPreferences.numberOfBackups().get()
-                    val backupRegex = Regex("""aniyomi_\d+-\d+-\d+_\d+-\d+.proto.gz""")
+                    val backupRegex = Regex("""Animiru_\d+-\d+-\d+_\d+-\d+.proto.gz""")
                     dir.listFiles { _, filename -> backupRegex.matches(filename) }
                         .orEmpty()
                         .sortedByDescending { it.name }
@@ -177,16 +160,6 @@ class BackupManager(
         }
     }
 
-    private fun backupExtensionInfo(mangas: List<DomainManga>): List<BackupSource> {
-        return mangas
-            .asSequence()
-            .map { it.source }
-            .distinct()
-            .map { mangaSourceManager.getOrStub(it) }
-            .map { BackupSource.copyFrom(it) }
-            .toList()
-    }
-
     private fun backupAnimeExtensionInfo(animes: List<DomainAnime>): List<BackupAnimeSource> {
         return animes
             .asSequence()
@@ -195,22 +168,6 @@ class BackupManager(
             .map { animeSourceManager.getOrStub(it) }
             .map { BackupAnimeSource.copyFrom(it) }
             .toList()
-    }
-
-    /**
-     * Backup the categories of manga library
-     *
-     * @return list of [BackupCategory] to be backed up
-     */
-    private suspend fun backupCategories(options: Int): List<BackupCategory> {
-        // Check if user wants category information in backup
-        return if (options and BACKUP_CATEGORY_MASK == BACKUP_CATEGORY) {
-            getMangaCategories.await()
-                .filterNot(Category::isSystemCategory)
-                .map(backupCategoryMapper)
-        } else {
-            emptyList()
-        }
     }
 
     /**
@@ -229,70 +186,10 @@ class BackupManager(
         }
     }
 
-    private suspend fun backupMangas(mangas: List<DomainManga>, flags: Int): List<BackupManga> {
-        return mangas.map {
-            backupManga(it, flags)
-        }
-    }
-
     private suspend fun backupAnimes(animes: List<DomainAnime>, flags: Int): List<BackupAnime> {
         return animes.map {
             backupAnime(it, flags)
         }
-    }
-
-    /**
-     * Convert a manga to Json
-     *
-     * @param manga manga that gets converted
-     * @param options options for the backup
-     * @return [BackupManga] containing manga in a serializable form
-     */
-    private suspend fun backupManga(manga: DomainManga, options: Int): BackupManga {
-        // Entry for this manga
-        val mangaObject = BackupManga.copyFrom(manga)
-
-        // Check if user wants chapter information in backup
-        if (options and BACKUP_CHAPTER_MASK == BACKUP_CHAPTER) {
-            // Backup all the chapters
-            val chapters = mangaHandler.awaitList { chaptersQueries.getChaptersByMangaId(manga.id, backupChapterMapper) }
-            if (chapters.isNotEmpty()) {
-                mangaObject.chapters = chapters
-            }
-        }
-
-        // Check if user wants category information in backup
-        if (options and BACKUP_CATEGORY_MASK == BACKUP_CATEGORY) {
-            // Backup categories for this manga
-            val categoriesForManga = getMangaCategories.await(manga.id)
-            if (categoriesForManga.isNotEmpty()) {
-                mangaObject.categories = categoriesForManga.map { it.order }
-            }
-        }
-
-        // Check if user wants track information in backup
-        if (options and BACKUP_TRACK_MASK == BACKUP_TRACK) {
-            val tracks = mangaHandler.awaitList { manga_syncQueries.getTracksByMangaId(manga.id, backupTrackMapper) }
-            if (tracks.isNotEmpty()) {
-                mangaObject.tracking = tracks
-            }
-        }
-
-        // Check if user wants history information in backup
-        if (options and BACKUP_HISTORY_MASK == BACKUP_HISTORY) {
-            val historyByMangaId = mangaHandler.awaitList(true) { historyQueries.getHistoryByMangaId(manga.id) }
-            if (historyByMangaId.isNotEmpty()) {
-                val history = historyByMangaId.map { history ->
-                    val chapter = mangaHandler.awaitOne { chaptersQueries.getChapterById(history.chapter_id) }
-                    BackupHistory(chapter.url, history.last_read?.time ?: 0L, history.time_read)
-                }
-                if (history.isNotEmpty()) {
-                    mangaObject.history = history
-                }
-            }
-        }
-
-        return mangaObject
     }
 
     /**
@@ -304,7 +201,12 @@ class BackupManager(
      */
     private suspend fun backupAnime(anime: DomainAnime, options: Int): BackupAnime {
         // Entry for this anime
-        val animeObject = BackupAnime.copyFrom(anime)
+        val animeObject = BackupAnime.copyFrom(
+            anime,
+            // AM (CU) -->
+            if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) getCustomAnimeInfo.get(anime.id) else null,
+            // <-- AM (CU)
+        )
 
         // Check if user wants chapter information in backup
         if (options and BACKUP_CHAPTER_MASK == BACKUP_CHAPTER) {
@@ -353,6 +255,9 @@ class BackupManager(
         if (options and BACKUP_PREFS_MASK != BACKUP_PREFS) return emptyList()
         val backupPreferences = mutableListOf<BackupPreference>()
         for (pref in prefs.all) {
+            // AM (CN) -->
+            if (pref.key.contains("connection")) continue
+            // <-- AM (CN)
             val toAdd = when (pref.value) {
                 is Int -> {
                     BackupPreference(pref.key, IntPreferenceValue(pref.value as Int))
@@ -383,25 +288,6 @@ class BackupManager(
         return backupPreferences
     }
 
-    internal suspend fun restoreExistingManga(manga: Manga, dbManga: Mangas) {
-        manga.id = dbManga._id
-        manga.copyFrom(dbManga)
-        updateManga(manga)
-    }
-
-    /**
-     * Fetches manga information
-     *
-     * @param manga manga that needs updating
-     * @return Updated manga info.
-     */
-    internal suspend fun restoreNewManga(manga: Manga): Manga {
-        return manga.also {
-            it.initialized = it.description != null
-            it.id = insertManga(it)
-        }
-    }
-
     internal suspend fun restoreExistingAnime(anime: Anime, dbAnime: Animes) {
         anime.id = dbAnime._id
         anime.copyFrom(dbAnime)
@@ -419,46 +305,6 @@ class BackupManager(
             it.initialized = it.description != null
             it.id = insertAnime(it)
         }
-    }
-
-    /**
-     * Restore the categories from Json
-     *
-     * @param backupCategories list containing categories
-     */
-    internal suspend fun restoreCategories(backupCategories: List<BackupCategory>) {
-        // Get categories from file and from db
-        val dbCategories = getMangaCategories.await()
-
-        val categories = backupCategories.map {
-            var category = it.getCategory()
-            var found = false
-            for (dbCategory in dbCategories) {
-                // If the category is already in the db, assign the id to the file's category
-                // and do nothing
-                if (category.name == dbCategory.name) {
-                    category = category.copy(id = dbCategory.id)
-                    found = true
-                    break
-                }
-            }
-            if (!found) {
-                // Let the db assign the id
-                val id = mangaHandler.awaitOne {
-                    categoriesQueries.insert(category.name, category.order, category.flags)
-                    categoriesQueries.selectLastInsertedRowId()
-                }
-                category = category.copy(id = id)
-            }
-
-            category
-        }
-
-        libraryPreferences.categorizedDisplaySettings().set(
-            (dbCategories + categories)
-                .distinctBy { it.flags }
-                .size > 1,
-        )
     }
 
     /**
@@ -502,39 +348,6 @@ class BackupManager(
     }
 
     /**
-     * Restores the categories a manga is in.
-     *
-     * @param manga the manga whose categories have to be restored.
-     * @param categories the categories to restore.
-     */
-    internal suspend fun restoreCategories(manga: Manga, categories: List<Int>, backupCategories: List<BackupCategory>) {
-        val dbCategories = getMangaCategories.await()
-        val mangaCategoriesToUpdate = mutableListOf<Pair<Long, Long>>()
-
-        categories.forEach { backupCategoryOrder ->
-            backupCategories.firstOrNull {
-                it.order == backupCategoryOrder.toLong()
-            }?.let { backupCategory ->
-                dbCategories.firstOrNull { dbCategory ->
-                    dbCategory.name == backupCategory.name
-                }?.let { dbCategory ->
-                    mangaCategoriesToUpdate.add(Pair(manga.id!!, dbCategory.id))
-                }
-            }
-        }
-
-        // Update database
-        if (mangaCategoriesToUpdate.isNotEmpty()) {
-            mangaHandler.await(true) {
-                mangas_categoriesQueries.deleteMangaCategoryByMangaId(manga.id!!)
-                mangaCategoriesToUpdate.forEach { (mangaId, categoryId) ->
-                    mangas_categoriesQueries.insert(mangaId, categoryId)
-                }
-            }
-        }
-    }
-
-    /**
      * Restores the categories an anime is in.
      *
      * @param anime the anime whose categories have to be restored.
@@ -563,55 +376,6 @@ class BackupManager(
                 animeCategoriesToUpdate.forEach { (animeId, categoryId) ->
                     animes_categoriesQueries.insert(animeId, categoryId)
                 }
-            }
-        }
-    }
-
-    /**
-     * Restore history from Json
-     *
-     * @param history list containing history to be restored
-     */
-    internal suspend fun restoreHistory(history: List<BackupHistory>) {
-        // List containing history to be updated
-        val toUpdate = mutableListOf<MangaHistoryUpdate>()
-        for ((url, lastRead, readDuration) in history) {
-            var dbHistory = mangaHandler.awaitOneOrNull { historyQueries.getHistoryByChapterUrl(url) }
-            // Check if history already in database and update
-            if (dbHistory != null) {
-                dbHistory = dbHistory.copy(
-                    last_read = Date(max(lastRead, dbHistory.last_read?.time ?: 0L)),
-                    time_read = max(readDuration, dbHistory.time_read) - dbHistory.time_read,
-                )
-                toUpdate.add(
-                    MangaHistoryUpdate(
-                        chapterId = dbHistory.chapter_id,
-                        readAt = dbHistory.last_read!!,
-                        sessionReadDuration = dbHistory.time_read,
-                    ),
-                )
-            } else {
-                // If not in database create
-                mangaHandler
-                    .awaitOneOrNull { chaptersQueries.getChapterByUrl(url) }
-                    ?.let {
-                        toUpdate.add(
-                            MangaHistoryUpdate(
-                                chapterId = it._id,
-                                readAt = Date(lastRead),
-                                sessionReadDuration = readDuration,
-                            ),
-                        )
-                    }
-            }
-        }
-        mangaHandler.await(true) {
-            toUpdate.forEach { payload ->
-                historyQueries.upsert(
-                    payload.chapterId,
-                    payload.readAt,
-                    payload.sessionReadDuration,
-                )
             }
         }
     }
@@ -655,89 +419,6 @@ class BackupManager(
                     payload.episodeId,
                     payload.seenAt,
                 )
-            }
-        }
-    }
-
-    /**
-     * Restores the sync of a manga.
-     *
-     * @param manga the manga whose sync have to be restored.
-     * @param tracks the track list to restore.
-     */
-    internal suspend fun restoreTracking(manga: Manga, tracks: List<MangaTrack>) {
-        // Fix foreign keys with the current manga id
-        tracks.map { it.manga_id = manga.id!! }
-
-        // Get tracks from database
-        val dbTracks = mangaHandler.awaitList { manga_syncQueries.getTracksByMangaId(manga.id!!) }
-        val toUpdate = mutableListOf<Manga_sync>()
-        val toInsert = mutableListOf<MangaTrack>()
-
-        tracks.forEach { track ->
-            var isInDatabase = false
-            for (dbTrack in dbTracks) {
-                if (track.sync_id == dbTrack.sync_id.toInt()) {
-                    // The sync is already in the db, only update its fields
-                    var temp = dbTrack
-                    if (track.media_id != dbTrack.remote_id) {
-                        temp = temp.copy(remote_id = track.media_id)
-                    }
-                    if (track.library_id != dbTrack.library_id) {
-                        temp = temp.copy(library_id = track.library_id)
-                    }
-                    temp = temp.copy(last_chapter_read = max(dbTrack.last_chapter_read, track.last_chapter_read.toDouble()))
-                    isInDatabase = true
-                    toUpdate.add(temp)
-                    break
-                }
-            }
-            if (!isInDatabase) {
-                // Insert new sync. Let the db assign the id
-                track.id = null
-                toInsert.add(track)
-            }
-        }
-        // Update database
-        if (toUpdate.isNotEmpty()) {
-            mangaHandler.await(true) {
-                toUpdate.forEach { track ->
-                    manga_syncQueries.update(
-                        track.manga_id,
-                        track.sync_id,
-                        track.remote_id,
-                        track.library_id,
-                        track.title,
-                        track.last_chapter_read,
-                        track.total_chapters,
-                        track.status,
-                        track.score.toDouble(),
-                        track.remote_url,
-                        track.start_date,
-                        track.finish_date,
-                        track._id,
-                    )
-                }
-            }
-        }
-        if (toInsert.isNotEmpty()) {
-            mangaHandler.await(true) {
-                toInsert.forEach { track ->
-                    manga_syncQueries.insert(
-                        track.manga_id,
-                        track.sync_id.toLong(),
-                        track.media_id,
-                        track.library_id,
-                        track.title,
-                        track.last_chapter_read.toDouble(),
-                        track.total_chapters.toLong(),
-                        track.status.toLong(),
-                        track.score,
-                        track.tracking_url,
-                        track.started_reading_date,
-                        track.finished_reading_date,
-                    )
-                }
             }
         }
     }
@@ -825,33 +506,6 @@ class BackupManager(
         }
     }
 
-    internal suspend fun restoreChapters(manga: Manga, chapters: List<Chapter>) {
-        val dbChapters = mangaHandler.awaitList { chaptersQueries.getChaptersByMangaId(manga.id!!) }
-
-        chapters.forEach { chapter ->
-            val dbChapter = dbChapters.find { it.url == chapter.url }
-            if (dbChapter != null) {
-                chapter.id = dbChapter._id
-                chapter.copyFrom(dbChapter)
-                if (dbChapter.read && !chapter.read) {
-                    chapter.read = dbChapter.read
-                    chapter.last_page_read = dbChapter.last_page_read.toInt()
-                } else if (chapter.last_page_read == 0 && dbChapter.last_page_read != 0L) {
-                    chapter.last_page_read = dbChapter.last_page_read.toInt()
-                }
-                if (!chapter.bookmark && dbChapter.bookmark) {
-                    chapter.bookmark = dbChapter.bookmark
-                }
-            }
-
-            chapter.manga_id = manga.id
-        }
-
-        val newChapters = chapters.groupBy { it.id != null }
-        newChapters[true]?.let { updateKnownChapters(it) }
-        newChapters[false]?.let { insertChapters(it) }
-    }
-
     internal suspend fun restoreEpisodes(anime: Anime, episodes: List<Episode>) {
         val dbEpisodes = animeHandler.awaitList { episodesQueries.getEpisodesByAnimeId(anime.id!!) }
 
@@ -869,6 +523,11 @@ class BackupManager(
                 if (!episode.bookmark && dbEpisode.bookmark) {
                     episode.bookmark = dbEpisode.bookmark
                 }
+                // AM (FM) -->
+                if (!episode.fillermark && dbEpisode.fillermark) {
+                    episode.fillermark = dbEpisode.fillermark
+                }
+                // <-- AM (FM)
             }
 
             episode.anime_id = anime.id
@@ -880,52 +539,12 @@ class BackupManager(
     }
 
     /**
-     * Returns manga
-     *
-     * @return [Manga], null if not found
-     */
-    internal suspend fun getMangaFromDatabase(url: String, source: Long): Mangas? {
-        return mangaHandler.awaitOneOrNull { mangasQueries.getMangaByUrlAndSource(url, source) }
-    }
-
-    /**
      * Returns anime
      *
      * @return [Anime], null if not found
      */
     internal suspend fun getAnimeFromDatabase(url: String, source: Long): Animes? {
         return animeHandler.awaitOneOrNull { animesQueries.getAnimeByUrlAndSource(url, source) }
-    }
-
-    /**
-     * Inserts manga and returns id
-     *
-     * @return id of [Manga], null if not found
-     */
-    private suspend fun insertManga(manga: Manga): Long {
-        return mangaHandler.awaitOne(true) {
-            mangasQueries.insert(
-                source = manga.source,
-                url = manga.url,
-                artist = manga.artist,
-                author = manga.author,
-                description = manga.description,
-                genre = manga.getGenres(),
-                title = manga.title,
-                status = manga.status.toLong(),
-                thumbnailUrl = manga.thumbnail_url,
-                favorite = manga.favorite,
-                lastUpdate = manga.last_update,
-                nextUpdate = 0L,
-                initialized = manga.initialized,
-                viewerFlags = manga.viewer_flags.toLong(),
-                chapterFlags = manga.chapter_flags.toLong(),
-                coverLastModified = manga.cover_last_modified,
-                dateAdded = manga.date_added,
-                updateStrategy = manga.update_strategy,
-            )
-            mangasQueries.selectLastInsertedRowId()
-        }
     }
 
     /**
@@ -959,32 +578,6 @@ class BackupManager(
         }
     }
 
-    private suspend fun updateManga(manga: Manga): Long {
-        mangaHandler.await(true) {
-            mangasQueries.update(
-                source = manga.source,
-                url = manga.url,
-                artist = manga.artist,
-                author = manga.author,
-                description = manga.description,
-                genre = manga.genre,
-                title = manga.title,
-                status = manga.status.toLong(),
-                thumbnailUrl = manga.thumbnail_url,
-                favorite = manga.favorite.toLong(),
-                lastUpdate = manga.last_update,
-                initialized = manga.initialized.toLong(),
-                viewer = manga.viewer_flags.toLong(),
-                chapterFlags = manga.chapter_flags.toLong(),
-                coverLastModified = manga.cover_last_modified,
-                dateAdded = manga.date_added,
-                mangaId = manga.id!!,
-                updateStrategy = manga.update_strategy.let(updateStrategyAdapter::encode),
-            )
-        }
-        return manga.id!!
-    }
-
     private suspend fun updateAnime(anime: Anime): Long {
         animeHandler.await(true) {
             animesQueries.update(
@@ -1012,29 +605,6 @@ class BackupManager(
     }
 
     /**
-     * Inserts list of chapters
-     */
-    private suspend fun insertChapters(chapters: List<Chapter>) {
-        mangaHandler.await(true) {
-            chapters.forEach { chapter ->
-                chaptersQueries.insert(
-                    chapter.manga_id!!,
-                    chapter.url,
-                    chapter.name,
-                    chapter.scanlator,
-                    chapter.read,
-                    chapter.bookmark,
-                    chapter.last_page_read.toLong(),
-                    chapter.chapter_number,
-                    chapter.source_order.toLong(),
-                    chapter.date_fetch,
-                    chapter.date_upload,
-                )
-            }
-        }
-    }
-
-    /**
      * Inserts list of episodes
      */
     private suspend fun insertEpisodes(episodes: List<Episode>) {
@@ -1047,36 +617,15 @@ class BackupManager(
                     episode.scanlator,
                     episode.seen,
                     episode.bookmark,
+                    // AM (FM) -->
+                    episode.fillermark,
+                    // <-- AM (FM)
                     episode.last_second_seen,
                     episode.total_seconds,
                     episode.episode_number,
                     episode.source_order.toLong(),
                     episode.date_fetch,
                     episode.date_upload,
-                )
-            }
-        }
-    }
-
-    /**
-     * Updates a list of chapters
-     */
-    private suspend fun updateChapters(chapters: List<Chapter>) {
-        mangaHandler.await(true) {
-            chapters.forEach { chapter ->
-                chaptersQueries.update(
-                    chapter.manga_id!!,
-                    chapter.url,
-                    chapter.name,
-                    chapter.scanlator,
-                    chapter.read.toLong(),
-                    chapter.bookmark.toLong(),
-                    chapter.last_page_read.toLong(),
-                    chapter.chapter_number.toDouble(),
-                    chapter.source_order.toLong(),
-                    chapter.date_fetch,
-                    chapter.date_upload,
-                    chapter.id!!,
                 )
             }
         }
@@ -1095,6 +644,9 @@ class BackupManager(
                     episode.scanlator,
                     episode.seen.toLong(),
                     episode.bookmark.toLong(),
+                    // AM (FM) -->
+                    episode.fillermark.toLong(),
+                    // <-- AM (FM)
                     episode.last_second_seen,
                     episode.total_seconds,
                     episode.episode_number.toDouble(),
@@ -1102,30 +654,6 @@ class BackupManager(
                     episode.date_fetch,
                     episode.date_upload,
                     episode.id!!,
-                )
-            }
-        }
-    }
-
-    /**
-     * Updates a list of chapters with known database ids
-     */
-    private suspend fun updateKnownChapters(chapters: List<Chapter>) {
-        mangaHandler.await(true) {
-            chapters.forEach { chapter ->
-                chaptersQueries.update(
-                    mangaId = null,
-                    url = null,
-                    name = null,
-                    scanlator = null,
-                    read = chapter.read.toLong(),
-                    bookmark = chapter.bookmark.toLong(),
-                    lastPageRead = chapter.last_page_read.toLong(),
-                    chapterNumber = null,
-                    sourceOrder = null,
-                    dateFetch = null,
-                    dateUpload = null,
-                    chapterId = chapter.id!!,
                 )
             }
         }
@@ -1144,6 +672,9 @@ class BackupManager(
                     scanlator = null,
                     seen = episode.seen.toLong(),
                     bookmark = episode.bookmark.toLong(),
+                    // AM (FM) -->
+                    fillermark = episode.fillermark.toLong(),
+                    // <-- AM (FM)
                     lastSecondSeen = episode.last_second_seen,
                     totalSeconds = episode.total_seconds,
                     episodeNumber = null,
@@ -1155,4 +686,11 @@ class BackupManager(
             }
         }
     }
+
+    // AM (CU) -->
+    internal fun restoreEditedInfo(animeJson: CustomAnimeInfo?) {
+        animeJson ?: return
+        setCustomAnimeInfo.set(animeJson)
+    }
+    // <-- AM (CU)
 }

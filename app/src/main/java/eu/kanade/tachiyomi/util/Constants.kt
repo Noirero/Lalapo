@@ -3,8 +3,6 @@ package eu.kanade.tachiyomi.util
 object Constants {
     const val URL_HELP = "https://aniyomi.org/help/"
 
-    const val MANGA_EXTRA = "manga"
-
     const val ANIME_EXTRA = "anime"
 
     // Player Constants

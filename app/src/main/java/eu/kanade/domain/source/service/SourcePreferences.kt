@@ -26,17 +26,13 @@ class SourcePreferences(
     // Mixture Sources
 
     fun disabledAnimeSources() = preferenceStore.getStringSet("hidden_anime_catalogues", emptySet())
-    fun disabledMangaSources() = preferenceStore.getStringSet("hidden_catalogues", emptySet())
 
     fun pinnedAnimeSources() = preferenceStore.getStringSet("pinned_anime_catalogues", emptySet())
-    fun pinnedMangaSources() = preferenceStore.getStringSet("pinned_catalogues", emptySet())
 
     fun lastUsedAnimeSource() = preferenceStore.getLong("last_anime_catalogue_source", -1)
-    fun lastUsedMangaSource() = preferenceStore.getLong("last_catalogue_source", -1)
 
     fun animeExtensionUpdatesCount() = preferenceStore.getInt("animeext_updates_count", 0)
     fun mangaExtensionUpdatesCount() = preferenceStore.getInt("ext_updates_count", 0)
 
     fun searchPinnedAnimeSourcesOnly() = preferenceStore.getBoolean("search_pinned_anime_sources_only", false)
-    fun searchPinnedMangaSourcesOnly() = preferenceStore.getBoolean("search_pinned_sources_only", false)
 }

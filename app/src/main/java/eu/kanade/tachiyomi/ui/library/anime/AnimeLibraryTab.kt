@@ -35,7 +35,6 @@ import eu.kanade.domain.entries.anime.model.isLocal
 import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.domain.library.anime.LibraryAnime
 import eu.kanade.domain.library.model.display
-import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.presentation.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.DeleteLibraryEntryDialog
 import eu.kanade.presentation.components.EmptyScreen
@@ -48,9 +47,10 @@ import eu.kanade.presentation.library.LibraryToolbar
 import eu.kanade.presentation.library.anime.AnimeLibraryContent
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateService
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -66,22 +66,14 @@ import uy.kohesive.injekt.injectLazy
 
 object AnimeLibraryTab : Tab {
 
-    val libraryPreferences: LibraryPreferences by injectLazy()
-    private val fromMore = libraryPreferences.bottomNavStyle().get() == 2
-
     override val options: TabOptions
         @Composable
         get() {
-            val title = if (fromMore) {
-                R.string.label_library
-            } else {
-                R.string.label_anime_library
-            }
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_animelibrary_leave)
             return TabOptions(
                 index = 0u,
-                title = stringResource(title),
+                title = stringResource(R.string.label_library),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -131,12 +123,10 @@ object AnimeLibraryTab : Tab {
             }
         }
 
-        val defaultTitle = if (fromMore) stringResource(R.string.label_library) else stringResource(R.string.label_anime_library)
-
         Scaffold(
             topBar = { scrollBehavior ->
                 val title = state.getToolbarTitle(
-                    defaultTitle = defaultTitle,
+                    defaultTitle = stringResource(R.string.label_library),
                     defaultCategoryTitle = stringResource(R.string.label_default),
                     page = screenModel.activeCategoryIndex,
                 )
@@ -238,7 +228,7 @@ object AnimeLibraryTab : Tab {
                     onDismissRequest = onDismissRequest,
                     onEditCategories = {
                         screenModel.clearSelection()
-                        navigator.push(CategoriesTab(false))
+                        navigator.push(CategoryScreen())
                     },
                     onConfirm = { include, exclude ->
                         screenModel.clearSelection()
@@ -284,6 +274,9 @@ object AnimeLibraryTab : Tab {
         LaunchedEffect(state.isLoading) {
             if (!state.isLoading) {
                 (context as? MainActivity)?.ready = true
+                // AM (DC) -->
+                DiscordRPCService.setDiscordPage(0)
+                // <-- AM (DC)
             }
         }
 

@@ -39,6 +39,9 @@ fun EpisodeSettingsDialog(
     onDownloadFilterChanged: (TriStateFilter) -> Unit,
     onUnseenFilterChanged: (TriStateFilter) -> Unit,
     onBookmarkedFilterChanged: (TriStateFilter) -> Unit,
+    // AM (FM) -->
+    onFillermarkedFilterChanged: (TriStateFilter) -> Unit,
+    // <-- AM (FM)
     onSortModeChanged: (Long) -> Unit,
     onDisplayModeChanged: (Long) -> Unit,
     onSetAsDefault: (applyToExistingAnime: Boolean) -> Unit,
@@ -88,6 +91,10 @@ fun EpisodeSettingsDialog(
                         onUnseenFilterChanged = onUnseenFilterChanged,
                         bookmarkedFilter = anime?.bookmarkedFilter ?: TriStateFilter.DISABLED,
                         onBookmarkedFilterChanged = onBookmarkedFilterChanged,
+                        // AM (FM) -->
+                        fillermarkedFilter = anime?.fillermarkedFilter ?: TriStateFilter.DISABLED,
+                        onFillermarkedFilterChanged = onFillermarkedFilterChanged,
+                        // <-- AM (FM)
                     )
                 }
                 1 -> {
@@ -165,6 +172,10 @@ private fun ColumnScope.FilterPage(
     onUnseenFilterChanged: (TriStateFilter) -> Unit,
     bookmarkedFilter: TriStateFilter,
     onBookmarkedFilterChanged: (TriStateFilter) -> Unit,
+    // AM (FM) -->
+    fillermarkedFilter: TriStateFilter,
+    onFillermarkedFilterChanged: (TriStateFilter) -> Unit,
+    // <-- AM (FM)
 ) {
     TriStateItem(
         label = stringResource(R.string.label_downloaded),
@@ -181,6 +192,13 @@ private fun ColumnScope.FilterPage(
         state = bookmarkedFilter,
         onClick = onBookmarkedFilterChanged,
     )
+    // AM (FM) -->
+    TriStateItem(
+        label = stringResource(R.string.action_filter_fillermarked),
+        state = fillermarkedFilter,
+        onClick = onFillermarkedFilterChanged,
+    )
+    // <-- AM (FM)
 }
 
 @Composable
@@ -195,7 +213,7 @@ private fun ColumnScope.SortPage(
         onClick = { onItemSelected(Anime.EPISODE_SORTING_SOURCE) },
     )
     SortItem(
-        label = stringResource(R.string.sort_by_number),
+        label = stringResource(R.string.action_order_by_episode_number),
         sortDescending = sortDescending.takeIf { sortingMode == Anime.EPISODE_SORTING_NUMBER },
         onClick = { onItemSelected(Anime.EPISODE_SORTING_NUMBER) },
     )

@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.models
 
 import eu.kanade.domain.entries.anime.model.Anime
+import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeImpl
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrackImpl
 import eu.kanade.tachiyomi.data.database.models.anime.EpisodeImpl
@@ -38,6 +39,16 @@ data class BackupAnime(
     @ProtoNumber(103) var viewer_flags: Int = 0,
     @ProtoNumber(104) var history: List<BackupAnimeHistory> = emptyList(),
     @ProtoNumber(105) var updateStrategy: UpdateStrategy = UpdateStrategy.ALWAYS_UPDATE,
+
+    // AM (CU) -->
+    // Bump values by 200
+    @ProtoNumber(200) var customStatus: Int = 0,
+    @ProtoNumber(201) var customTitle: String? = null,
+    @ProtoNumber(202) var customArtist: String? = null,
+    @ProtoNumber(203) var customAuthor: String? = null,
+    @ProtoNumber(204) var customDescription: String? = null,
+    @ProtoNumber(205) var customGenre: List<String>? = null,
+    // <-- AM (CU)
 ) {
     fun getAnimeImpl(): AnimeImpl {
         return AnimeImpl().apply {
@@ -64,6 +75,29 @@ data class BackupAnime(
         }
     }
 
+    // AM (CU) -->
+    fun getCustomAnimeInfo(): CustomAnimeInfo? {
+        if (customTitle != null ||
+            customArtist != null ||
+            customAuthor != null ||
+            customDescription != null ||
+            customGenre != null ||
+            customStatus != 0
+        ) {
+            return CustomAnimeInfo(
+                id = 0L,
+                title = customTitle,
+                author = customAuthor,
+                artist = customArtist,
+                description = customDescription,
+                genre = customGenre,
+                status = customStatus.takeUnless { it == 0 }?.toLong(),
+            )
+        }
+        return null
+    }
+    // <-- AM (CU)
+
     fun getTrackingImpl(): List<AnimeTrackImpl> {
         return tracking.map {
             it.getTrackingImpl()
@@ -71,15 +105,17 @@ data class BackupAnime(
     }
 
     companion object {
-        fun copyFrom(anime: Anime): BackupAnime {
+        fun copyFrom(anime: Anime, /* AM (CU) --> */ customAnimeInfo: CustomAnimeInfo? /* <-- AM (CU) */): BackupAnime {
             return BackupAnime(
                 url = anime.url,
-                title = anime.title,
-                artist = anime.artist,
-                author = anime.author,
-                description = anime.description,
-                genre = anime.genre ?: emptyList(),
-                status = anime.status.toInt(),
+                // AM (CU) -->
+                title = anime.ogTitle,
+                artist = anime.ogArtist,
+                author = anime.ogAuthor,
+                description = anime.ogDescription,
+                genre = anime.ogGenre ?: emptyList(),
+                status = anime.ogStatus.toInt(),
+                // <-- AM (CU)
                 thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite,
                 source = anime.source,
@@ -87,7 +123,18 @@ data class BackupAnime(
                 viewer_flags = anime.viewerFlags.toInt(),
                 episodeFlags = anime.episodeFlags.toInt(),
                 updateStrategy = anime.updateStrategy,
-            )
+                // AM (CU) -->
+            ).also { backupAnime ->
+                customAnimeInfo?.let {
+                    backupAnime.customTitle = it.title
+                    backupAnime.customArtist = it.artist
+                    backupAnime.customAuthor = it.author
+                    backupAnime.customDescription = it.description
+                    backupAnime.customGenre = it.genre
+                    backupAnime.customStatus = it.status?.toInt() ?: 0
+                }
+            }
+            // <-- AM (CU)
         }
     }
 }

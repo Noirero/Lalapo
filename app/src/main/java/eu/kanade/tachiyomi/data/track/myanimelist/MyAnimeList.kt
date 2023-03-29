@@ -5,18 +5,15 @@ import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.database.models.manga.MangaTrack
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
-import eu.kanade.tachiyomi.data.track.MangaTrackService
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.data.track.model.MangaTrackSearch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.injectLazy
 
-class MyAnimeList(private val context: Context, id: Long) : TrackService(id), MangaTrackService, AnimeTrackService {
+class MyAnimeList(private val context: Context, id: Long) : TrackService(id), AnimeTrackService {
 
     companion object {
         const val READING = 1
@@ -47,10 +44,6 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id), Ma
 
     override fun getLogoColor() = Color.rgb(46, 81, 162)
 
-    override fun getStatusListManga(): List<Int> {
-        return listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ, REREADING)
-    }
-
     override fun getStatusListAnime(): List<Int> {
         return listOf(WATCHING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_WATCH, REWATCHING)
     }
@@ -70,11 +63,7 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id), Ma
         }
     }
 
-    override fun getReadingStatus(): Int = READING
-
     override fun getWatchingStatus(): Int = WATCHING
-
-    override fun getRereadingStatus(): Int = REREADING
 
     override fun getRewatchingStatus(): Int = REWATCHING
 
@@ -88,39 +77,13 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id), Ma
         return index.toFloat()
     }
 
-    override fun displayScore(track: MangaTrack): String {
-        return track.score.toInt().toString()
-    }
-
     override fun displayScore(track: AnimeTrack): String {
         return track.score.toInt().toString()
-    }
-
-    private suspend fun add(track: MangaTrack): MangaTrack {
-        return api.updateItem(track)
     }
 
     private suspend fun add(track: AnimeTrack): AnimeTrack {
         track.status = WATCHING
         track.score = 0F
-        return api.updateItem(track)
-    }
-
-    override suspend fun update(track: MangaTrack, didReadChapter: Boolean): MangaTrack {
-        if (track.status != COMPLETED) {
-            if (didReadChapter) {
-                if (track.last_chapter_read.toInt() == track.total_chapters && track.total_chapters > 0) {
-                    track.status = COMPLETED
-                    track.finished_reading_date = System.currentTimeMillis()
-                } else if (track.status != REREADING) {
-                    track.status = READING
-                    if (track.last_chapter_read == 1F) {
-                        track.started_reading_date = System.currentTimeMillis()
-                    }
-                }
-            }
-        }
-
         return api.updateItem(track)
     }
 
@@ -140,26 +103,6 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id), Ma
         }
 
         return api.updateItem(track)
-    }
-
-    override suspend fun bind(track: MangaTrack, hasReadChapters: Boolean): MangaTrack {
-        val remoteTrack = api.findListItem(track)
-        return if (remoteTrack != null) {
-            track.copyPersonalFrom(remoteTrack)
-            track.media_id = remoteTrack.media_id
-
-            if (track.status != COMPLETED) {
-                val isRereading = track.status == REREADING
-                track.status = if (isRereading.not() && hasReadChapters) READING else track.status
-            }
-
-            update(track)
-        } else {
-            // Set default fields if it's not found in the list
-            track.status = if (hasReadChapters) READING else PLAN_TO_READ
-            track.score = 0F
-            add(track)
-        }
     }
 
     override suspend fun bind(track: AnimeTrack, hasReadChapters: Boolean): AnimeTrack {
@@ -182,22 +125,6 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id), Ma
         }
     }
 
-    override suspend fun searchManga(query: String): List<MangaTrackSearch> {
-        if (query.startsWith(SEARCH_ID_PREFIX)) {
-            query.substringAfter(SEARCH_ID_PREFIX).toIntOrNull()?.let { id ->
-                return listOf(api.getMangaDetails(id))
-            }
-        }
-
-        if (query.startsWith(SEARCH_LIST_PREFIX)) {
-            query.substringAfter(SEARCH_LIST_PREFIX).let { title ->
-                return api.findListItems(title)
-            }
-        }
-
-        return api.search(query)
-    }
-
     override suspend fun searchAnime(query: String): List<AnimeTrackSearch> {
         if (query.startsWith(SEARCH_ID_PREFIX)) {
             query.substringAfter(SEARCH_ID_PREFIX).toIntOrNull()?.let { id ->
@@ -212,10 +139,6 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id), Ma
         }
 
         return api.searchAnime(query)
-    }
-
-    override suspend fun refresh(track: MangaTrack): MangaTrack {
-        return api.findListItem(track) ?: add(track)
     }
 
     override suspend fun refresh(track: AnimeTrack): AnimeTrack {

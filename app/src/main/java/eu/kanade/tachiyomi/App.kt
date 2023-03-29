@@ -25,7 +25,6 @@ import coil.decode.ImageDecoderDecoder
 import coil.disk.DiskCache
 import coil.util.DebugLogger
 import eu.kanade.data.handlers.anime.AnimeDatabaseHandler
-import eu.kanade.data.handlers.manga.MangaDatabaseHandler
 import eu.kanade.domain.DomainModule
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.UiPreferences
@@ -36,14 +35,9 @@ import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
 import eu.kanade.tachiyomi.data.coil.AnimeKeyer
 import eu.kanade.tachiyomi.data.coil.DomainAnimeKeyer
-import eu.kanade.tachiyomi.data.coil.DomainMangaKeyer
-import eu.kanade.tachiyomi.data.coil.MangaCoverFetcher
-import eu.kanade.tachiyomi.data.coil.MangaCoverKeyer
-import eu.kanade.tachiyomi.data.coil.MangaKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.glance.anime.AnimeUpdatesGridGlanceWidget
-import eu.kanade.tachiyomi.glance.manga.MangaUpdatesGridGlanceWidget
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -129,17 +123,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode().get())
 
         // Updates widget update
-        Injekt.get<MangaDatabaseHandler>()
-            .subscribeToList { updatesViewQueries.updates(after = MangaUpdatesGridGlanceWidget.DateLimit.timeInMillis) }
-            .drop(1)
-            .distinctUntilChanged()
-            .onEach {
-                val manager = GlanceAppWidgetManager(this)
-                if (manager.getGlanceIds(MangaUpdatesGridGlanceWidget::class.java).isNotEmpty()) {
-                    MangaUpdatesGridGlanceWidget().loadData(it)
-                }
-            }
-            .launchIn(ProcessLifecycleOwner.get().lifecycleScope)
 
         Injekt.get<AnimeDatabaseHandler>()
             .subscribeToList { animeupdatesViewQueries.animeupdates(after = AnimeUpdatesGridGlanceWidget.DateLimit.timeInMillis) }
@@ -169,18 +152,12 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
                     add(GifDecoder.Factory())
                 }
                 add(TachiyomiImageDecoder.Factory())
-                add(MangaCoverFetcher.Factory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeCoverFetcher.Factory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeCoverFetcher.DomainAnimeFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeCoverFetcher.AnimeCoverFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeKeyer())
                 add(DomainAnimeKeyer())
-                add(MangaCoverFetcher.DomainMangaFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
-                add(MangaCoverFetcher.MangaCoverFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
-                add(MangaKeyer())
-                add(DomainMangaKeyer())
                 add(AnimeCoverKeyer())
-                add(MangaCoverKeyer())
             }
             callFactory(callFactoryInit)
             diskCache(diskCacheInit)

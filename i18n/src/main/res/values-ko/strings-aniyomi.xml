@@ -15,7 +15,7 @@
     <string name="pref_bottom_nav_no_history">기록을 더 보기 탭으로 이동</string>
     <string name="pref_bottom_nav_no_updates">업데이트를 더 보기 탭으로 이동</string>
     <string name="pref_bottom_nav_no_manga">만화를 더 보기 탭으로 이동</string>
-    <string name="unlock_app">Aniyomi 해제하기</string>
+    <string name="unlock_app">Animiru 해제하기</string>
     <string name="action_filter_unseen">보기 전</string>
     <string name="action_sort_total_episodes">전체 회차</string>
     <string name="action_sort_last_seen">마지막으로 봄</string>
@@ -65,7 +65,7 @@
 \n일부 악의적인 확장기능은 Tachiyomi에 저장된 로그인 정보를 읽거나 임의의 코드를 실행할 수도 있습니다.
 \n
 \n이 인증서를 신뢰하면 이러한 위험에 노출될 수 있습니다.</string>
-    <string name="unofficial_extension_message_aniyomi">이 확장기능은 Aniyomi의 공식 확장기능이 아닙니다.</string>
+    <string name="unofficial_extension_message_animiru">이 확장기능은 Animiru의 공식 확장기능이 아닙니다.</string>
     <string name="rotation_reverse_landscape">가로 반전</string>
     <string name="rotation_sensor_portrait">자동 세로</string>
     <string name="rotation_sensor_landscape">자동 가로</string>

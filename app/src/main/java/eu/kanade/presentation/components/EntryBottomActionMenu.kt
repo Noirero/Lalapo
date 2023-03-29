@@ -70,6 +70,10 @@ fun EntryBottomActionMenu(
     modifier: Modifier = Modifier,
     onBookmarkClicked: (() -> Unit)? = null,
     onRemoveBookmarkClicked: (() -> Unit)? = null,
+    // AM (FM) -->
+    onFillermarkClicked: (() -> Unit)? = null,
+    onRemoveFillermarkClicked: (() -> Unit)? = null,
+    // <-- AM (FM)
     onMarkAsViewedClicked: (() -> Unit)? = null,
     onMarkAsUnviewedClicked: (() -> Unit)? = null,
     onMarkPreviousAsViewedClicked: (() -> Unit)? = null,
@@ -132,6 +136,28 @@ fun EntryBottomActionMenu(
                         onClick = onRemoveBookmarkClicked,
                     )
                 }
+                // AM (FM) -->
+                if (onFillermarkClicked != null) {
+                    val fillermark = R.string.action_fillermark
+                    Button(
+                        title = stringResource(fillermark),
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp),
+                        toConfirm = confirm[0],
+                        onLongClick = { onLongClickItem(0) },
+                        onClick = onFillermarkClicked,
+                    )
+                }
+                if (onRemoveFillermarkClicked != null) {
+                    val removeFillermark = R.string.action_remove_fillermark
+                    Button(
+                        title = stringResource(removeFillermark),
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_fillermark_border_24dp),
+                        toConfirm = confirm[1],
+                        onLongClick = { onLongClickItem(1) },
+                        onClick = onRemoveFillermarkClicked,
+                    )
+                }
+                // <-- AM (FM)
                 if (onMarkAsViewedClicked != null) {
                     val viewed = if (isManga) R.string.action_mark_as_read else R.string.action_mark_as_seen
                     Button(

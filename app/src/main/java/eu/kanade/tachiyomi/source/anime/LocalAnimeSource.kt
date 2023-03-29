@@ -6,12 +6,12 @@ import com.arthenica.ffmpegkit.FFprobeKit
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.util.episode.EpisodeRecognition
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import eu.kanade.tachiyomi.util.lang.withIOContext
@@ -23,6 +23,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
 import logcat.LogPriority
 import rx.Observable
 import uy.kohesive.injekt.injectLazy
@@ -130,6 +131,23 @@ class LocalAnimeSource(
 
         return Observable.just(AnimesPage(animes.toList(), false))
     }
+
+    // AM (CU) -->
+    fun updateAnimeInfo(anime: SAnime) {
+        val directory = getBaseDirectories(context).map { File(it, anime.url) }.find {
+            it.exists()
+        } ?: return
+        val existingFileName = directory.listFiles()?.find { it.extension == "json" }?.name
+        val file = File(directory, existingFileName ?: "info.json")
+        file.outputStream().use {
+            json.encodeToStream(anime.toJson(), it)
+        }
+    }
+
+    private fun SAnime.toJson(): AnimeDetails {
+        return AnimeDetails(title, author, artist, description, genre?.split(", "), status)
+    }
+    // <-- AM (CU)
 
     // Anime details related
     override suspend fun getAnimeDetails(anime: SAnime): SAnime = withIOContext {

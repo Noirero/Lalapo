@@ -86,12 +86,7 @@ class AppUpdateChecker {
 }
 
 val GITHUB_REPO: String by lazy {
-    if (BuildConfig.PREVIEW) {
-        // TODO: CHANGE THIS BACK
-        "jmir1/aniyomi-mpv-beta"
-    } else {
-        "jmir1/aniyomi"
-    }
+    "Quickdesh/Animiru"
 }
 
 val RELEASE_TAG: String by lazy {

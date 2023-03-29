@@ -31,16 +31,19 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.database.models.anime.toDomainEpisode
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
+import eu.kanade.tachiyomi.source.anime.isLocalOrStub
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.Constants.REQUEST_EXTERNAL
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
+import eu.kanade.tachiyomi.util.lang.withIOContext
 import eu.kanade.tachiyomi.util.system.isOnline
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.toast
@@ -60,11 +63,19 @@ class ExternalIntents {
     lateinit var anime: Anime
     lateinit var episode: Episode
     lateinit var source: AnimeSource
+
+    // AM (DC) -->
+    private var isSourceNsfw = false
+    // <-- AM (DC)
+
     suspend fun getExternalIntent(context: Context, animeId: Long?, episodeId: Long?): Intent? {
         anime = getAnime.await(animeId!!) ?: return null
         source = sourceManager.get(anime.source) ?: return null
         episode = getEpisodeByAnimeId.await(anime.id).find { it.id == episodeId } ?: return null
         val video = EpisodeLoader.getLinks(episode.toDbEpisode(), anime, source).asFlow().first()[0]
+        // AM (DC) -->
+        isSourceNSFW(source)
+        // <-- AM (DC)
 
         val videoUrl = if (video.videoUrl == null) {
             makeErrorToast(context, Exception("video URL is null."))
@@ -77,7 +88,9 @@ class ExternalIntents {
                 downloadManager.isEpisodeDownloaded(
                     episode.name,
                     episode.scanlator,
-                    anime.title,
+                    // AM (CU) -->
+                    anime.ogTitle,
+                    // <-- AM (CU)
                     anime.source,
                 )
             }
@@ -108,6 +121,18 @@ class ExternalIntents {
             episode.lastSecondSeen
         }
 
+        // AM (DC) -->
+        withIOContext {
+            DiscordRPCService.videoInPip = false
+            DiscordRPCService.setDiscordVideo(
+                isNsfwSource = isSourceNsfw,
+                episodeNumber = episode.episodeNumber,
+                thumbnailUrl = anime.thumbnailUrl,
+                animeTitle = /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */,
+            )
+        }
+        // <-- AM (DC)
+
         return if (pkgName.isEmpty()) {
             Intent(Intent.ACTION_VIEW).apply {
                 setDataAndTypeAndNormalize(videoUrl, getMime(videoUrl))
@@ -115,7 +140,7 @@ class ExternalIntents {
                 putExtra("position", lastSecondSeen.toInt())
                 putExtra("return_result", true)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                val headers = video.headers ?: (source as? HttpAnimeSource)?.headers
+                val headers = video.headers ?: (source as? AnimeHttpSource)?.headers
                 if (headers != null) {
                     var headersArray = arrayOf<String>()
                     for (header in headers) {
@@ -130,6 +155,15 @@ class ExternalIntents {
             standardIntentForPackage(pkgName, context, videoUrl, episode, video)
         }
     }
+
+    // AM (DC) -->
+    private suspend fun isSourceNSFW(source: AnimeSource) {
+        if (!source.isLocalOrStub()) {
+            val sourceUsed = sourceManager.extensionManager.installedExtensionsFlow.first().first { it.name == source.name }
+            isSourceNsfw = sourceUsed.isNsfw
+        }
+    }
+    // <-- AM (DC)
 
     private fun makeErrorToast(context: Context, e: Exception?) {
         launchUI { context.toast(e?.message ?: "Cannot open episode") }
@@ -176,7 +210,7 @@ class ExternalIntents {
             if (enabledSubUrl != null) putExtra("subtitles_location", enabledSubUrl)*/
 
             // headers
-            val headers = video.headers ?: (source as? HttpAnimeSource)?.headers
+            val headers = video.headers ?: (source as? AnimeHttpSource)?.headers
             if (headers != null) {
                 var headersArray = arrayOf<String>()
                 for (header in headers) {
@@ -220,6 +254,9 @@ class ExternalIntents {
 
     @Suppress("DEPRECATION")
     suspend fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // AM (DC) -->
+        DiscordRPCService.setDiscordPage(DiscordRPCService.lastUsedPage)
+        // <-- AM (DC)
         if (requestCode == REQUEST_EXTERNAL && resultCode == Activity.RESULT_OK) {
             val anime = anime
             val currentExtEpisode = episode
@@ -293,6 +330,9 @@ class ExternalIntents {
                     id = episode.id!!,
                     seen = episode.seen,
                     bookmark = episode.bookmark,
+                    // AM (FM) -->
+                    fillermark = episode.fillermark,
+                    // <-- AM (FM)
                     lastSecondSeen = episode.last_second_seen,
                     totalSeconds = episode.total_seconds,
                 ),
@@ -319,7 +359,7 @@ class ExternalIntents {
             .sortedWith { e1, e2 -> sortFunction(e1, e2) }
 
         val currentEpisodePosition = episodes.indexOf(episode)
-        val removeAfterSeenSlots = downloadPreferences.removeAfterReadSlots().get()
+        val removeAfterSeenSlots = downloadPreferences.removeAfterSeenSlots().get()
         val episodeToDelete = episodes.getOrNull(currentEpisodePosition - removeAfterSeenSlots)
 
         // Check if deleting option is enabled and chapter exists

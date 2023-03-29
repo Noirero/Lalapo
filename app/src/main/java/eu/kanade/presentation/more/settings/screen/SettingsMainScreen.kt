@@ -9,12 +9,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.ChromeReaderMode
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
@@ -205,12 +205,6 @@ object SettingsMainScreen : Screen {
             screen = SettingsLibraryScreen,
         ),
         Item(
-            titleRes = R.string.pref_category_reader,
-            subtitleRes = R.string.pref_reader_summary,
-            icon = Icons.Outlined.ChromeReaderMode,
-            screen = SettingsReaderScreen,
-        ),
-        Item(
             titleRes = R.string.pref_category_player,
             subtitleRes = R.string.pref_player_summary,
             icon = Icons.Outlined.PlayCircleOutline,
@@ -228,6 +222,14 @@ object SettingsMainScreen : Screen {
             icon = Icons.Outlined.Sync,
             screen = SettingsTrackingScreen,
         ),
+        // AM (CN) -->
+        Item(
+            titleRes = R.string.pref_category_connections,
+            subtitleRes = R.string.pref_connections_summary,
+            icon = Icons.Outlined.Link,
+            screen = SettingsConnectionsScreen,
+        ),
+        // <-- AM (CN)
         Item(
             titleRes = R.string.browse,
             subtitleRes = R.string.pref_browse_summary,

@@ -15,7 +15,7 @@
     <string name="pref_bottom_nav_no_history">Geçmiş\'i Daha Fazla Sekmesine Taşı</string>
     <string name="pref_bottom_nav_no_updates">Güncellemeler\'i Daha Fazla Sekmesine Taşı</string>
     <string name="pref_bottom_nav_no_manga">Manga\'yı Daha Fazla Sekmesine Taşı</string>
-    <string name="unlock_app">Aniyomi\'yi Aç</string>
+    <string name="unlock_app">Animiru\'yi Aç</string>
     <string name="action_filter_unseen">İzlenmemiş</string>
     <string name="action_sort_total_episodes">Toplam Anime Bölüm Sayısı</string>
     <string name="action_sort_last_seen">Son Görülen</string>
@@ -64,7 +64,7 @@
 \nKötü niyetli bir uzantı, Tachiyomi\'de saklanan her giriş kimlik bilgisini okuyabilir veya rastgele kod yürütebilir.
 \n
 \nBu sertifikaya güvenerek bu riskleri kabul etmiş oluyorsunuz.</string>
-    <string name="unofficial_extension_message_aniyomi">Bu uzantı, resmi Aniyomi uzantıları listesinden değildir.</string>
+    <string name="unofficial_extension_message_animiru">Bu uzantı, resmi Animiru uzantıları listesinden değildir.</string>
     <string name="pref_category_player">Oynatıcı</string>
     <string name="pref_category_progress">İlerleyiş</string>
     <string name="pref_preserve_watching_position">İzlenen bölümlerde izleme konumunu koru</string>

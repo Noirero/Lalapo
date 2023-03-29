@@ -34,4 +34,8 @@ interface AnimeRepository {
     suspend fun updateAnime(update: AnimeUpdate): Boolean
 
     suspend fun updateAllAnime(animeUpdates: List<AnimeUpdate>): Boolean
+
+    // AM (CU) -->
+    suspend fun getAll(): List<Anime>
+    // <-- AM (CU)
 }

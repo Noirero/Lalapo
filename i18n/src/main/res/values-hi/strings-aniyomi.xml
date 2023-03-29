@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="manga_categories">श्रेणियाँ</string>
-    <string name="unlock_app">अनलॉक Aniyomi</string>
+    <string name="unlock_app">अनलॉक Animiru</string>
     <string name="action_sort_last_manga_update">आखिरी किताब अद्यतन</string>
     <string name="action_show_manga">मंगा दिखाएँ</string>
     <string name="action_display_local_badge">स्थानीय पुस्तक</string>

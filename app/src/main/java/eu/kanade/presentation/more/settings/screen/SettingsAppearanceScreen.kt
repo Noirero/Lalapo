@@ -19,6 +19,7 @@ import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
@@ -39,10 +40,59 @@ object SettingsAppearanceScreen : SearchableSettings {
         val context = LocalContext.current
         val uiPreferences = remember { Injekt.get<UiPreferences>() }
 
+        // AM (UH) -->
+        LaunchedEffect(Unit) {
+            uiPreferences.showNavUpdates().changes()
+                .drop(1)
+                .collectLatest { value ->
+                    HomeScreen.tabs = if (value) {
+                        if (uiPreferences.showNavUpdates().get()) {
+                            HomeScreen.tabsYUYH
+                        } else {
+                            HomeScreen.tabsYUNH
+                        }
+                    } else {
+                        if (uiPreferences.showNavUpdates().get()) {
+                            HomeScreen.tabsNUYH
+                        } else {
+                            HomeScreen.tabsNUNH
+                        }
+                    }
+                    (context as? Activity)?.let {
+                        ActivityCompat.recreate(it)
+                    }
+                }
+
+            uiPreferences.showNavHistory().changes()
+                .drop(1)
+                .collectLatest { value ->
+                    HomeScreen.tabs = if (uiPreferences.showNavUpdates().get()) {
+                        if (value) {
+                            HomeScreen.tabsYUYH
+                        } else {
+                            HomeScreen.tabsYUNH
+                        }
+                    } else {
+                        if (value) {
+                            HomeScreen.tabsNUYH
+                        } else {
+                            HomeScreen.tabsNUNH
+                        }
+                    }
+                    (context as? Activity)?.let {
+                        ActivityCompat.recreate(it)
+                    }
+                }
+        }
+        // <-- AM (UH)
+
         return listOf(
             getThemeGroup(context = context, uiPreferences = uiPreferences),
             getDisplayGroup(context = context, uiPreferences = uiPreferences),
             getTimestampGroup(uiPreferences = uiPreferences),
+            // AM (UH) --?
+            getNavBarGroup(uiPreferences = uiPreferences),
+            // <-- AM (UH)
         )
     }
 
@@ -146,6 +196,27 @@ object SettingsAppearanceScreen : SearchableSettings {
             ),
         )
     }
+
+    // AM (UH) -->
+    @Composable
+    private fun getNavBarGroup(uiPreferences: UiPreferences): Preference.PreferenceGroup {
+        val updatesNavBarPref = uiPreferences.showNavUpdates()
+        val historyNavBarPref = uiPreferences.showNavHistory()
+        return Preference.PreferenceGroup(
+            title = stringResource(R.string.pref_category_navbar),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    pref = updatesNavBarPref,
+                    title = stringResource(R.string.pref_hide_updates_button),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    pref = historyNavBarPref,
+                    title = stringResource(R.string.pref_hide_history_button),
+                ),
+            ),
+        )
+    }
+    // <-- AM (UH)
 }
 
 private val DateFormats = listOf(

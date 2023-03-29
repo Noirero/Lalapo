@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,9 @@ fun AnimeEpisodeListItem(
     scanlator: String?,
     seen: Boolean,
     bookmark: Boolean,
+    // AM (FM) -->
+    fillermark: Boolean,
+    // <-- AM (FM)
     selected: Boolean,
     downloadIndicatorEnabled: Boolean,
     downloadStateProvider: () -> AnimeDownload.State,
@@ -52,6 +56,9 @@ fun AnimeEpisodeListItem(
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((EpisodeDownloadAction) -> Unit)?,
+    // AM (DS) -->
+    fileSize: Long?,
+    // <-- AM (DS)
 ) {
     Row(
         modifier = modifier
@@ -78,6 +85,18 @@ fun AnimeEpisodeListItem(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                 }
+                // AM (FM) -->
+                if (fillermark) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_fillermark_24dp),
+                        contentDescription = stringResource(R.string.action_filter_fillermarked),
+                        modifier = Modifier
+                            .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
+                        tint = MaterialTheme.colorScheme.tertiary,
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                }
+                // <-- AM (FM)
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
@@ -128,6 +147,9 @@ fun AnimeEpisodeListItem(
                 downloadStateProvider = downloadStateProvider,
                 downloadProgressProvider = downloadProgressProvider,
                 onClick = onDownloadClick,
+                // AM (DS) -->
+                fileSize = fileSize,
+                // <-- AM (DS)
             )
         }
     }

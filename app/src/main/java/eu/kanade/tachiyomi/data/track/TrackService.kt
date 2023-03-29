@@ -55,7 +55,4 @@ abstract class TrackService(val id: Long) {
 
     open val animeService: AnimeTrackService
         get() = this as AnimeTrackService
-
-    open val mangaService: MangaTrackService
-        get() = this as MangaTrackService
 }

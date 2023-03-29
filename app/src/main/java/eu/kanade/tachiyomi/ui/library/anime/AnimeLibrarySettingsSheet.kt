@@ -96,6 +96,11 @@ class AnimeLibrarySettingsSheet(
             private val unseen = Item.TriStateGroup(R.string.action_filter_unseen, this)
             private val started = Item.TriStateGroup(R.string.label_started, this)
             private val bookmarked = Item.TriStateGroup(R.string.action_filter_bookmarked, this)
+
+            // AM (FM) -->
+            private val fillermarked = Item.TriStateGroup(R.string.action_filter_fillermarked, this)
+
+            // <-- AM (FM)
             private val completed = Item.TriStateGroup(R.string.completed, this)
             private val trackFilters: Map<Long, Item.TriStateGroup>
 
@@ -110,7 +115,7 @@ class AnimeLibrarySettingsSheet(
                         trackFilters = services.associate { service ->
                             Pair(service.id, Item.TriStateGroup(getServiceResId(service, size), this))
                         }
-                        val list: MutableList<Item> = mutableListOf(downloaded, unseen, started, bookmarked, completed)
+                        val list: MutableList<Item> = mutableListOf(downloaded, unseen, started, bookmarked, /* AM (FM) --> */ fillermarked, /* <-- AM (FM) */ completed)
                         if (size > 1) list.add(Item.Header(R.string.action_filter_tracked))
                         list.addAll(trackFilters.values)
                         items = list
@@ -131,6 +136,9 @@ class AnimeLibrarySettingsSheet(
                 unseen.state = libraryPreferences.filterUnseen().get()
                 started.state = libraryPreferences.filterStartedAnime().get()
                 bookmarked.state = libraryPreferences.filterBookmarkedAnime().get()
+                // AM (FM) -->
+                fillermarked.state = libraryPreferences.filterFillermarkedAnime().get()
+                // <-- AM (FM)
                 completed.state = libraryPreferences.filterCompletedAnime().get()
 
                 trackFilters.forEach { trackFilter ->
@@ -152,6 +160,9 @@ class AnimeLibrarySettingsSheet(
                     unseen -> libraryPreferences.filterUnseen().set(newState)
                     started -> libraryPreferences.filterStartedAnime().set(newState)
                     bookmarked -> libraryPreferences.filterBookmarkedAnime().set(newState)
+                    // AM (FM) -->
+                    fillermarked -> libraryPreferences.filterFillermarkedAnime().set(newState)
+                    // <-- AM (FM)
                     completed -> libraryPreferences.filterCompletedAnime().set(newState)
                     else -> {
                         trackFilters.forEach { trackFilter ->

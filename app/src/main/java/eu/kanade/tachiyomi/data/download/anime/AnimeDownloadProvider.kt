@@ -105,13 +105,37 @@ class AnimeDownloadProvider(
      * @param source the source of the episode.
      */
     fun findEpisodeDirs(episodes: List<Episode>, anime: Anime, source: AnimeSource): Pair<UniFile?, List<UniFile>> {
-        val animeDir = findAnimeDir(anime.title, source) ?: return null to emptyList()
+        val animeDir = findAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source) ?: return null to emptyList()
         return animeDir to episodes.mapNotNull { episode ->
             getValidEpisodeDirNames(episode.name, episode.scanlator).asSequence()
                 .mapNotNull { animeDir.findFile(it) }
                 .firstOrNull()
         }
     }
+
+    // AM (CU) -->
+    /**
+     * Returns a list of all files in anime directory
+     *
+     * @param episodes the episodes to query.
+     * @param anime the anime of the episode.
+     * @param source the source of the episode.
+     */
+    fun findUnmatchedEpisodeDirs(
+        episodes: List<Episode>,
+        anime: Anime,
+        source: AnimeSource,
+    ): List<UniFile> {
+        val animeDir = findAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source) ?: return emptyList()
+        return animeDir.listFiles().orEmpty().asList().filter {
+            episodes.find { chp ->
+                getValidEpisodeDirNames(chp.name, chp.scanlator).any { dir ->
+                    animeDir.findFile(dir) != null
+                }
+            } == null || it.name?.endsWith(AnimeDownloader.TMP_DIR_SUFFIX) == true
+        }
+    }
+    // <-- AM (CU)
 
     /**
      * Returns the download directory name for a source.

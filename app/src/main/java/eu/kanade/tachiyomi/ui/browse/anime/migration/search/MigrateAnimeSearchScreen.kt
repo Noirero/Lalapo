@@ -251,7 +251,7 @@ class MigrateAnimeDialogScreenModel(
             // Worst case, episodes won't be synced
         }
 
-        // Update episodes seen, bookmark and dateFetch
+        // Update episodes seen, bookmark, fillermark and dateFetch
         if (migrateEpisodes) {
             val prevAnimeEpisodes = getEpisodeByAnimeId.await(oldAnime.id)
             val animeEpisodes = getEpisodeByAnimeId.await(newAnime.id)
@@ -270,6 +270,9 @@ class MigrateAnimeDialogScreenModel(
                         updatedEpisode = updatedEpisode.copy(
                             dateFetch = prevEpisode.dateFetch,
                             bookmark = prevEpisode.bookmark,
+                            // AM (FM) -->
+                            fillermark = prevEpisode.fillermark,
+                            // <-- AM (FM)
                         )
                     }
 

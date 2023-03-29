@@ -282,8 +282,8 @@ dependencies {
 
     // Add the dependencies for the Crashlytics and Analytics libraries
     // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation("com.google.firebase:firebase-crashlytics-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    // implementation("com.google.firebase:firebase-crashlytics-ktx")
+    // implementation("com.google.firebase:firebase-analytics-ktx")
 
     // Shizuku
     implementation(libs.bundles.shizuku)
@@ -304,7 +304,8 @@ dependencies {
     implementation(libs.arthenica.smartexceptions)
 
     // discord-rpc
-    implementation(libs.discord.rpc)
+    implementation(libs.google.gson)
+    implementation(libs.java.websocket)
 }
 
 androidComponents {

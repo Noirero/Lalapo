@@ -11,12 +11,6 @@ import androidx.core.net.toUri
 import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.entries.anime.interactor.GetAnime
 import eu.kanade.domain.entries.anime.model.Anime
-import eu.kanade.domain.entries.manga.interactor.GetManga
-import eu.kanade.domain.entries.manga.model.Manga
-import eu.kanade.domain.items.chapter.interactor.GetChapter
-import eu.kanade.domain.items.chapter.interactor.UpdateChapter
-import eu.kanade.domain.items.chapter.model.Chapter
-import eu.kanade.domain.items.chapter.model.toChapterUpdate
 import eu.kanade.domain.items.episode.interactor.GetEpisode
 import eu.kanade.domain.items.episode.interactor.UpdateEpisode
 import eu.kanade.domain.items.episode.model.Episode
@@ -25,16 +19,11 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.BackupRestoreService
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadService
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateService
-import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateService
 import eu.kanade.tachiyomi.data.updater.AppUpdateService
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
-import eu.kanade.tachiyomi.source.manga.MangaSourceManager
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.PlayerActivity
-import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.util.Constants
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -57,13 +46,9 @@ import eu.kanade.tachiyomi.BuildConfig.APPLICATION_ID as ID
  */
 class NotificationReceiver : BroadcastReceiver() {
 
-    private val getManga: GetManga by injectLazy()
     private val getAnime: GetAnime by injectLazy()
-    private val getChapter: GetChapter by injectLazy()
     private val getEpisode: GetEpisode by injectLazy()
-    private val updateChapter: UpdateChapter by injectLazy()
     private val updateEpisode: UpdateEpisode by injectLazy()
-    private val mangaDownloadManager: MangaDownloadManager by injectLazy()
     private val animeDownloadManager: AnimeDownloadManager by injectLazy()
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -71,14 +56,6 @@ class NotificationReceiver : BroadcastReceiver() {
             // Dismiss notification
             ACTION_DISMISS_NOTIFICATION -> dismissNotification(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1))
             // Resume the download service
-            ACTION_RESUME_DOWNLOADS -> MangaDownloadService.start(context)
-            // Pause the download service
-            ACTION_PAUSE_DOWNLOADS -> {
-                MangaDownloadService.stop(context)
-                mangaDownloadManager.pauseDownloads()
-            }
-            // Clear the download queue
-            ACTION_CLEAR_DOWNLOADS -> mangaDownloadManager.clearQueue(true)
             ACTION_RESUME_ANIME_DOWNLOADS -> AnimeDownloadService.start(context)
             // Pause the download service
             ACTION_PAUSE_ANIME_DOWNLOADS -> {
@@ -114,18 +91,9 @@ class NotificationReceiver : BroadcastReceiver() {
                 intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1),
             )
             // Cancel library update and dismiss notification
-            ACTION_CANCEL_LIBRARY_UPDATE -> cancelLibraryUpdate(context, Notifications.ID_LIBRARY_PROGRESS)
             ACTION_CANCEL_ANIMELIB_UPDATE -> cancelAnimelibUpdate(context, Notifications.ID_LIBRARY_PROGRESS)
             // Cancel downloading app update
             ACTION_CANCEL_APP_UPDATE_DOWNLOAD -> cancelDownloadAppUpdate(context)
-            // Open reader activity
-            ACTION_OPEN_CHAPTER -> {
-                openChapter(
-                    context,
-                    intent.getLongExtra(EXTRA_MANGA_ID, -1),
-                    intent.getLongExtra(EXTRA_CHAPTER_ID, -1),
-                )
-            }
             // Open player activity
             ACTION_OPEN_EPISODE -> {
                 openEpisode(
@@ -133,18 +101,6 @@ class NotificationReceiver : BroadcastReceiver() {
                     intent.getLongExtra(EXTRA_MANGA_ID, -1),
                     intent.getLongExtra(EXTRA_CHAPTER_ID, -1),
                 )
-            }
-            // Mark updated manga chapters as read
-            ACTION_MARK_AS_READ -> {
-                val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
-                if (notificationId > -1) {
-                    dismissNotification(context, notificationId, intent.getIntExtra(EXTRA_GROUP_ID, 0))
-                }
-                val urls = intent.getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return
-                val mangaId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
-                if (mangaId > -1) {
-                    markAsRead(urls, mangaId)
-                }
             }
             // Mark updated anime episodes as seen
             ACTION_MARK_AS_SEEN -> {
@@ -156,18 +112,6 @@ class NotificationReceiver : BroadcastReceiver() {
                 val animeId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
                 if (animeId > -1) {
                     markAsSeen(urls, animeId)
-                }
-            }
-            // Download manga chapters
-            ACTION_DOWNLOAD_CHAPTER -> {
-                val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
-                if (notificationId > -1) {
-                    dismissNotification(context, notificationId, intent.getIntExtra(EXTRA_GROUP_ID, 0))
-                }
-                val urls = intent.getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return
-                val mangaId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
-                if (mangaId > -1) {
-                    downloadChapters(urls, mangaId)
                 }
             }
             // Download anime episodes
@@ -228,26 +172,6 @@ class NotificationReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Starts reader activity
-     *
-     * @param context context of application
-     * @param mangaId id of manga
-     * @param chapterId id of chapter
-     */
-    private fun openChapter(context: Context, mangaId: Long, chapterId: Long) {
-        val manga = runBlocking { getManga.await(mangaId) }
-        val chapter = runBlocking { getChapter.await(chapterId) }
-        if (manga != null && chapter != null) {
-            val intent = ReaderActivity.newIntent(context, manga.id, chapter.id).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-            context.startActivity(intent)
-        } else {
-            context.toast(context.getString(R.string.download_error))
-        }
-    }
-
-    /**
      * Starts player activity
      *
      * @param context context of application
@@ -294,17 +218,6 @@ class NotificationReceiver : BroadcastReceiver() {
         ContextCompat.getMainExecutor(context).execute { dismissNotification(context, notificationId) }
     }
 
-    /**
-     * Method called when user wants to stop a library update
-     *
-     * @param context context of application
-     * @param notificationId id of notification
-     */
-    private fun cancelLibraryUpdate(context: Context, notificationId: Int) {
-        MangaLibraryUpdateService.stop(context)
-        ContextCompat.getMainExecutor(context).execute { dismissNotification(context, notificationId) }
-    }
-
     private fun cancelDownloadAppUpdate(context: Context) {
         AppUpdateService.stop(context)
     }
@@ -321,35 +234,6 @@ class NotificationReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Method called when user wants to mark manga chapters as read
-     *
-     * @param chapterUrls URLs of chapter to mark as read
-     * @param mangaId id of manga
-     */
-    private fun markAsRead(chapterUrls: Array<String>, mangaId: Long) {
-        val downloadPreferences: DownloadPreferences = Injekt.get()
-        val sourceManager: MangaSourceManager = Injekt.get()
-
-        launchIO {
-            val toUpdate = chapterUrls.mapNotNull { getChapter.await(it, mangaId) }
-                .map {
-                    val chapter = it.copy(read = true)
-                    if (downloadPreferences.removeAfterMarkedAsRead().get()) {
-                        val manga = getManga.await(mangaId)
-                        if (manga != null) {
-                            val source = sourceManager.get(manga.source)
-                            if (source != null) {
-                                mangaDownloadManager.deleteChapters(listOf(it), manga, source)
-                            }
-                        }
-                    }
-                    chapter.toChapterUpdate()
-                }
-            updateChapter.awaitAll(toUpdate)
-        }
-    }
-
-    /**
      * Method called when user wants to mark anime episodes as seen
      *
      * @param episodeUrls URLs of episodes to mark as seen
@@ -363,7 +247,7 @@ class NotificationReceiver : BroadcastReceiver() {
             val toUpdate = episodeUrls.mapNotNull { getEpisode.await(it, animeId) }
                 .map {
                     val episode = it.copy(seen = true)
-                    if (downloadPreferences.removeAfterMarkedAsRead().get()) {
+                    if (downloadPreferences.removeAfterMarkedAsSeen().get()) {
                         val anime = getAnime.await(animeId)
                         if (anime != null) {
                             val source = sourceManager.get(anime.source)
@@ -375,20 +259,6 @@ class NotificationReceiver : BroadcastReceiver() {
                     episode.toEpisodeUpdate()
                 }
             updateEpisode.awaitAll(toUpdate)
-        }
-    }
-
-    /**
-     * Method called when user wants to download chapters
-     *
-     * @param chapterUrls URLs of chapter to download
-     * @param mangaId id of manga
-     */
-    private fun downloadChapters(chapterUrls: Array<String>, mangaId: Long) {
-        launchIO {
-            val manga = getManga.await(mangaId) ?: return@launchIO
-            val chapters = chapterUrls.mapNotNull { getChapter.await(it, mangaId) }
-            mangaDownloadManager.downloadChapters(manga, chapters)
         }
     }
 
@@ -418,16 +288,12 @@ class NotificationReceiver : BroadcastReceiver() {
 
         private const val ACTION_CANCEL_RESTORE = "$ID.$NAME.CANCEL_RESTORE"
 
-        private const val ACTION_CANCEL_LIBRARY_UPDATE = "$ID.$NAME.CANCEL_LIBRARY_UPDATE"
         private const val ACTION_CANCEL_ANIMELIB_UPDATE = "$ID.$NAME.CANCEL_ANIMELIB_UPDATE"
 
         private const val ACTION_CANCEL_APP_UPDATE_DOWNLOAD = "$ID.$NAME.CANCEL_APP_UPDATE_DOWNLOAD"
 
-        private const val ACTION_MARK_AS_READ = "$ID.$NAME.MARK_AS_READ"
         private const val ACTION_MARK_AS_SEEN = "$ID.$NAME.MARK_AS_SEEN"
-        private const val ACTION_OPEN_CHAPTER = "$ID.$NAME.ACTION_OPEN_CHAPTER"
         private const val ACTION_OPEN_EPISODE = "$ID.$NAME.ACTION_OPEN_EPISODE"
-        private const val ACTION_DOWNLOAD_CHAPTER = "$ID.$NAME.ACTION_DOWNLOAD_CHAPTER"
         private const val ACTION_DOWNLOAD_EPISODE = "$ID.$NAME.ACTION_DOWNLOAD_EPISODE"
 
         private const val ACTION_RESUME_DOWNLOADS = "$ID.$NAME.ACTION_RESUME_DOWNLOADS"
@@ -664,78 +530,6 @@ class NotificationReceiver : BroadcastReceiver() {
         }
 
         /**
-         * Returns [PendingIntent] that starts a reader activity containing chapter.
-         *
-         * @param context context of application
-         * @param manga manga of chapter
-         * @param chapter chapter that needs to be opened
-         */
-        internal fun openChapterPendingActivity(context: Context, manga: Manga, chapter: Chapter): PendingIntent {
-            val newIntent = ReaderActivity.newIntent(context, manga.id, chapter.id)
-            return PendingIntent.getActivity(context, manga.id.hashCode(), newIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
-
-        /**
-         * Returns [PendingIntent] that opens the manga info controller.
-         *
-         * @param context context of application
-         * @param manga manga of chapter
-         */
-        internal fun openChapterPendingActivity(context: Context, manga: Manga, groupId: Int): PendingIntent {
-            val newIntent =
-                Intent(context, MainActivity::class.java).setAction(MainActivity.SHORTCUT_MANGA)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    .putExtra(Constants.MANGA_EXTRA, manga.id)
-                    .putExtra("notificationId", manga.id.hashCode())
-                    .putExtra("groupId", groupId)
-            return PendingIntent.getActivity(context, manga.id.hashCode(), newIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
-
-        /**
-         * Returns [PendingIntent] that marks a chapter as read and deletes it if preferred
-         *
-         * @param context context of application
-         * @param manga manga of chapter
-         */
-        internal fun markAsViewedPendingBroadcast(
-            context: Context,
-            manga: Manga,
-            chapters: Array<Chapter>,
-            groupId: Int,
-        ): PendingIntent {
-            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_MARK_AS_READ
-                putExtra(EXTRA_CHAPTER_URL, chapters.map { it.url }.toTypedArray())
-                putExtra(EXTRA_MANGA_ID, manga.id)
-                putExtra(EXTRA_NOTIFICATION_ID, manga.id.hashCode())
-                putExtra(EXTRA_GROUP_ID, groupId)
-            }
-            return PendingIntent.getBroadcast(context, manga.id.hashCode(), newIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
-
-        /**
-         * Returns [PendingIntent] that downloads chapters
-         *
-         * @param context context of application
-         * @param manga manga of chapter
-         */
-        internal fun downloadChaptersPendingBroadcast(
-            context: Context,
-            manga: Manga,
-            chapters: Array<Chapter>,
-            groupId: Int,
-        ): PendingIntent {
-            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_DOWNLOAD_CHAPTER
-                putExtra(EXTRA_CHAPTER_URL, chapters.map { it.url }.toTypedArray())
-                putExtra(EXTRA_MANGA_ID, manga.id)
-                putExtra(EXTRA_NOTIFICATION_ID, manga.id.hashCode())
-                putExtra(EXTRA_GROUP_ID, groupId)
-            }
-            return PendingIntent.getBroadcast(context, manga.id.hashCode(), newIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
-
-        /**
          * Returns [PendingIntent] that downloads episodes
          *
          * @param context context of application
@@ -763,19 +557,6 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @return [PendingIntent]
          */
-        internal fun cancelLibraryUpdatePendingBroadcast(context: Context): PendingIntent {
-            val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_CANCEL_LIBRARY_UPDATE
-            }
-            return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
-
-        /**
-         * Returns [PendingIntent] that starts a service which stops the library update
-         *
-         * @param context context of application
-         * @return [PendingIntent]
-         */
         internal fun cancelAnimelibUpdatePendingBroadcast(context: Context): PendingIntent {
             val intent = Intent(context, NotificationReceiver::class.java).apply {
                 action = ACTION_CANCEL_ANIMELIB_UPDATE
@@ -791,20 +572,6 @@ class NotificationReceiver : BroadcastReceiver() {
                 action = ACTION_CANCEL_APP_UPDATE_DOWNLOAD
             }
             return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
-
-        /**
-         * Returns [PendingIntent] that opens the extensions controller.
-         *
-         * @param context context of application
-         * @return [PendingIntent]
-         */
-        internal fun openExtensionsPendingActivity(context: Context): PendingIntent {
-            val intent = Intent(context, MainActivity::class.java).apply {
-                action = MainActivity.SHORTCUT_EXTENSIONS
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            }
-            return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
 
         /**
