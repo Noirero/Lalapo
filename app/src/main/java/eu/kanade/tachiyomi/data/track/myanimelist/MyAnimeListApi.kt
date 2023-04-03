@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.track.myanimelist
 
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.network.GET
@@ -23,6 +23,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import okhttp3.FormBody
+import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -236,8 +237,8 @@ class MyAnimeListApi(private val client: OkHttpClient, interceptor: MyAnimeListI
     }
 
     companion object {
-
-        private const val clientId = "9d84f771b558696ffc83110a28d55d3d"
+        // Registered under arkon's MAL account
+        private const val clientId = "8fd3313bc138e8b890551aa1de1a2589"
 
         private const val baseOAuthUrl = "https://myanimelist.net/v1/oauth2"
         private const val baseApiUrl = "https://api.myanimelist.net/v2"
@@ -257,13 +258,21 @@ class MyAnimeListApi(private val client: OkHttpClient, interceptor: MyAnimeListI
             .appendPath("my_list_status")
             .build()
 
-        fun refreshTokenRequest(refreshToken: String): Request {
+        fun refreshTokenRequest(oauth: OAuth): Request {
             val formBody: RequestBody = FormBody.Builder()
                 .add("client_id", clientId)
-                .add("refresh_token", refreshToken)
+                .add("refresh_token", oauth.refresh_token)
                 .add("grant_type", "refresh_token")
                 .build()
-            return POST("$baseOAuthUrl/token", body = formBody)
+
+            // Add the Authorization header manually as this particular
+            // request is called by the interceptor itself so it doesn't reach
+            // the part where the token is added automatically.
+            val headers = Headers.Builder()
+                .add("Authorization", "Bearer ${oauth.access_token}")
+                .build()
+
+            return POST("$baseOAuthUrl/token", body = formBody, headers = headers)
         }
 
         private fun getPkceChallengeCode(): String {

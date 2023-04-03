@@ -1,16 +1,15 @@
 package eu.kanade.tachiyomi.ui.player
 
 import android.net.Uri
+import eu.kanade.domain.entries.anime.model.Anime
 import eu.kanade.tachiyomi.animesource.AnimeSource
-import eu.kanade.tachiyomi.animesource.LocalAnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.animesource.online.fetchUrlFromVideo
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.Episode
-import eu.kanade.tachiyomi.data.database.models.toDomainAnime
-import eu.kanade.tachiyomi.data.database.models.toDomainEpisode
-import eu.kanade.tachiyomi.data.download.AnimeDownloadManager
+import eu.kanade.tachiyomi.data.database.models.anime.Episode
+import eu.kanade.tachiyomi.data.database.models.anime.toDomainEpisode
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
+import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
 import eu.kanade.tachiyomi.util.system.logcat
 import rx.Observable
 import uy.kohesive.injekt.Injekt
@@ -23,7 +22,7 @@ class EpisodeLoader {
 
         fun getLinks(episode: Episode, anime: Anime, source: AnimeSource): Observable<List<Video>> {
             val downloadManager: AnimeDownloadManager = Injekt.get()
-            val isDownloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.title, anime.source)
+            val isDownloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
             return when {
                 isDownloaded -> isDownloaded(episode, anime, source, downloadManager)
                 source is AnimeHttpSource -> isHttp(episode, source)
@@ -34,12 +33,12 @@ class EpisodeLoader {
 
         fun isDownloaded(episode: Episode, anime: Anime): Boolean {
             val downloadManager: AnimeDownloadManager = Injekt.get()
-            return downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.title, anime.source)
+            return downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
         }
 
         fun getLink(episode: Episode, anime: Anime, source: AnimeSource): Observable<Video?> {
             val downloadManager: AnimeDownloadManager = Injekt.get()
-            val isDownloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.title, anime.source)
+            val isDownloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
             return when {
                 isDownloaded -> isDownloaded(episode, anime, source, downloadManager).map {
                     it.firstOrNull()
@@ -68,11 +67,14 @@ class EpisodeLoader {
             source: AnimeSource,
             downloadManager: AnimeDownloadManager,
         ): Observable<List<Video>> {
-            return downloadManager.buildVideo(source, anime.toDomainAnime()!!, episode.toDomainEpisode()!!)
+            return downloadManager.buildVideo(source, anime, episode.toDomainEpisode()!!)
                 .onErrorReturn { null }
                 .map {
-                    if (it == null) emptyList()
-                    else listOf(it)
+                    if (it == null) {
+                        emptyList()
+                    } else {
+                        listOf(it)
+                    }
                 }
         }
 

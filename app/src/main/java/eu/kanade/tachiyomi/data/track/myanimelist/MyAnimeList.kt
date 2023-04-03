@@ -4,7 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.decodeFromString
@@ -12,14 +13,17 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.injectLazy
 
-class MyAnimeList(private val context: Context, id: Long) : TrackService(id) {
+class MyAnimeList(private val context: Context, id: Long) : TrackService(id), AnimeTrackService {
 
     companion object {
+        const val READING = 1
         const val WATCHING = 11
         const val COMPLETED = 2
         const val ON_HOLD = 3
         const val DROPPED = 4
+        const val PLAN_TO_READ = 6
         const val PLAN_TO_WATCH = 16
+        const val REREADING = 7
         const val REWATCHING = 17
 
         private const val SEARCH_ID_PREFIX = "id:"
@@ -46,11 +50,14 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id) {
 
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
+            READING -> getString(R.string.reading)
             WATCHING -> getString(R.string.watching)
             COMPLETED -> getString(R.string.completed)
             ON_HOLD -> getString(R.string.on_hold)
             DROPPED -> getString(R.string.dropped)
+            PLAN_TO_READ -> getString(R.string.plan_to_read)
             PLAN_TO_WATCH -> getString(R.string.plan_to_watch)
+            REREADING -> getString(R.string.repeating)
             REWATCHING -> getString(R.string.repeating_anime)
             else -> ""
         }
@@ -64,6 +71,10 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id) {
 
     override fun getScoreList(): List<String> {
         return IntRange(0, 10).map(Int::toString)
+    }
+
+    override fun indexToScore(index: Int): Float {
+        return index.toFloat()
     }
 
     override fun displayScore(track: AnimeTrack): String {
@@ -149,17 +160,17 @@ class MyAnimeList(private val context: Context, id: Long) : TrackService(id) {
 
     override fun logout() {
         super.logout()
-        preferences.trackToken(this).delete()
+        trackPreferences.trackToken(this).delete()
         interceptor.setAuth(null)
     }
 
     fun saveOAuth(oAuth: OAuth?) {
-        preferences.trackToken(this).set(json.encodeToString(oAuth))
+        trackPreferences.trackToken(this).set(json.encodeToString(oAuth))
     }
 
     fun loadOAuth(): OAuth? {
         return try {
-            json.decodeFromString<OAuth>(preferences.trackToken(this).get())
+            json.decodeFromString<OAuth>(trackPreferences.trackToken(this).get())
         } catch (e: Exception) {
             null
         }

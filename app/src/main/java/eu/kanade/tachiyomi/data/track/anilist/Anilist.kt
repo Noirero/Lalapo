@@ -4,22 +4,27 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.injectLazy
+import eu.kanade.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
 
-class Anilist(private val context: Context, id: Long) : TrackService(id) {
+class Anilist(private val context: Context, id: Long) : TrackService(id), AnimeTrackService {
 
     companion object {
+        const val READING = 1
         const val WATCHING = 11
         const val COMPLETED = 2
         const val PAUSED = 3
         const val DROPPED = 4
+        const val PLANNING = 5
         const val PLANNING_ANIME = 15
+        const val REPEATING = 6
         const val REPEATING_ANIME = 16
 
         const val POINT_100 = "POINT_100"
@@ -37,7 +42,7 @@ class Anilist(private val context: Context, id: Long) : TrackService(id) {
 
     override val supportsReadingDates: Boolean = true
 
-    private val scorePreference = preferences.anilistScoreType()
+    private val scorePreference = trackPreferences.anilistScoreType()
 
     init {
         // If the preference is an int from APIv1, logout user to force using APIv2
@@ -63,8 +68,11 @@ class Anilist(private val context: Context, id: Long) : TrackService(id) {
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
             WATCHING -> getString(R.string.watching)
+            READING -> getString(R.string.reading)
+            PLANNING -> getString(R.string.plan_to_read)
             PLANNING_ANIME -> getString(R.string.plan_to_watch)
             COMPLETED -> getString(R.string.completed)
+            REPEATING -> getString(R.string.repeating)
             REPEATING_ANIME -> getString(R.string.repeating_anime)
             PAUSED -> getString(R.string.paused)
             DROPPED -> getString(R.string.dropped)
@@ -92,6 +100,11 @@ class Anilist(private val context: Context, id: Long) : TrackService(id) {
             POINT_10_DECIMAL -> IntRange(0, 100).map { (it / 10f).toString() }
             else -> throw Exception("Unknown score type")
         }
+    }
+
+    override fun get10PointScore(track: DomainAnimeTrack): Float {
+        // Score is stored in 100 point format
+        return track.score / 10f
     }
 
     override fun indexToScore(index: Int): Float {
@@ -211,17 +224,17 @@ class Anilist(private val context: Context, id: Long) : TrackService(id) {
 
     override fun logout() {
         super.logout()
-        preferences.trackToken(this).delete()
+        trackPreferences.trackToken(this).delete()
         interceptor.setAuth(null)
     }
 
     fun saveOAuth(oAuth: OAuth?) {
-        preferences.trackToken(this).set(json.encodeToString(oAuth))
+        trackPreferences.trackToken(this).set(json.encodeToString(oAuth))
     }
 
     fun loadOAuth(): OAuth? {
         return try {
-            json.decodeFromString<OAuth>(preferences.trackToken(this).get())
+            json.decodeFromString<OAuth>(trackPreferences.trackToken(this).get())
         } catch (e: Exception) {
             null
         }

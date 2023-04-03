@@ -2,15 +2,4 @@
 <remote-actions
     actionset_label="@string/app_name"
     version="1.2">
-    <action
-        id="animiru_back"
-        label="@string/action_webview_back"
-        priority="3"
-        repeatable="true"
-        repeatable_interval="short"
-        trigger_key="BACK">
-        <preference
-            name="gesture"
-            value="circle_ccw" />
-    </action>
 </remote-actions>

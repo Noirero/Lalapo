@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.track.anilist
 
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.await
@@ -324,10 +324,15 @@ class AnilistApi(val client: OkHttpClient, interceptor: AnilistInterceptor) {
     }
 
     companion object {
-        private const val clientId = "7719"
+        private const val clientId = "385"
         private const val apiUrl = "https://graphql.anilist.co/"
         private const val baseUrl = "https://anilist.co/api/v2/"
+        private const val baseMangaUrl = "https://anilist.co/manga/"
         private const val baseAnimeUrl = "https://anilist.co/anime/"
+
+        fun mangaUrl(mediaId: Long): String {
+            return baseMangaUrl + mediaId
+        }
 
         fun animeUrl(mediaId: Long): String {
             return baseAnimeUrl + mediaId

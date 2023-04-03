@@ -14,8 +14,9 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.forEach
 import androidx.core.view.get
-import com.fredporciuncula.flow.preferences.Preference
+import androidx.core.view.size
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.core.preference.Preference
 import eu.kanade.tachiyomi.databinding.PrefSpinnerBinding
 import eu.kanade.tachiyomi.util.system.getResourceColor
 
@@ -66,12 +67,13 @@ class MaterialSpinnerView @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     fun setSelection(selection: Int) {
-        popup?.menu?.get(selectedPosition)?.let {
-            it.icon = emptyIcon
-            it.title = entries[selectedPosition]
+        if (selectedPosition < (popup?.menu?.size ?: 0)) {
+            popup?.menu?.getItem(selectedPosition)?.let {
+                it.icon = emptyIcon
+            }
         }
         selectedPosition = selection
-        popup?.menu?.get(selectedPosition)?.let {
+        popup?.menu?.getItem(selectedPosition)?.let {
             it.icon = checkmarkIcon
         }
         binding.details.text = entries.getOrNull(selection).orEmpty()
@@ -87,14 +89,14 @@ class MaterialSpinnerView @JvmOverloads constructor(context: Context, attrs: Att
         }
     }
 
-    inline fun <reified T : Enum<T>> bindToPreference(pref: Preference<T>) {
-        val enumConstants = T::class.java.enumConstants
+    fun <T : Enum<T>> bindToPreference(pref: Preference<T>, clazz: Class<T>) {
+        val enumConstants = clazz.enumConstants
         enumConstants?.indexOf(pref.get())?.let { setSelection(it) }
 
-        val popup = makeSettingsPopup(pref)
-        setOnTouchListener(popup.dragToOpenListener)
+        popup = makeSettingsPopup(pref, clazz)
+        setOnTouchListener(popup?.dragToOpenListener)
         setOnClickListener {
-            popup.show()
+            popup?.show()
         }
     }
 
@@ -109,11 +111,11 @@ class MaterialSpinnerView @JvmOverloads constructor(context: Context, attrs: Att
         }
     }
 
-    inline fun <reified T : Enum<T>> makeSettingsPopup(preference: Preference<T>): PopupMenu {
+    private fun <T : Enum<T>> makeSettingsPopup(preference: Preference<T>, clazz: Class<T>): PopupMenu {
         return createPopupMenu { pos ->
             onItemSelectedListener?.invoke(pos)
 
-            val enumConstants = T::class.java.enumConstants
+            val enumConstants = clazz.enumConstants
             enumConstants?.get(pos)?.let { enumValue -> preference.set(enumValue) }
         }
     }

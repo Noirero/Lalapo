@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -13,9 +14,8 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.hippo.unifile.UniFile
-import eu.kanade.tachiyomi.data.backup.full.FullBackupManager
+import eu.kanade.domain.backup.service.BackupPreferences
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.util.system.logcat
 import eu.kanade.tachiyomi.util.system.notificationManager
 import logcat.LogPriority
@@ -26,17 +26,24 @@ import java.util.concurrent.TimeUnit
 class BackupCreatorJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
+    private val notifier = BackupNotifier(context)
+
     override suspend fun doWork(): Result {
-        val preferences = Injekt.get<PreferencesHelper>()
-        val notifier = BackupNotifier(context)
+        val backupPreferences = Injekt.get<BackupPreferences>()
         val uri = inputData.getString(LOCATION_URI_KEY)?.toUri()
-            ?: preferences.backupsDirectory().get().toUri()
+            ?: backupPreferences.backupsDirectory().get().toUri()
         val flags = inputData.getInt(BACKUP_FLAGS_KEY, BackupConst.BACKUP_ALL)
         val isAutoBackup = inputData.getBoolean(IS_AUTO_BACKUP_KEY, true)
 
+        try {
+            setForeground(getForegroundInfo())
+        } catch (e: IllegalStateException) {
+            logcat(LogPriority.ERROR, e) { "Not allowed to run on foreground service" }
+        }
+
         context.notificationManager.notify(Notifications.ID_BACKUP_PROGRESS, notifier.showBackupProgress().build())
         return try {
-            val location = FullBackupManager(context).createBackup(uri, flags, isAutoBackup)
+            val location = BackupManager(context).createBackup(uri, flags, isAutoBackup)
             if (!isAutoBackup) notifier.showBackupComplete(UniFile.fromUri(context, location.toUri()))
             Result.success()
         } catch (e: Exception) {
@@ -48,6 +55,10 @@ class BackupCreatorJob(private val context: Context, workerParams: WorkerParamet
         }
     }
 
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        return ForegroundInfo(Notifications.ID_BACKUP_PROGRESS, notifier.showBackupProgress().build())
+    }
+
     companion object {
         fun isManualJobRunning(context: Context): Boolean {
             val list = WorkManager.getInstance(context).getWorkInfosByTag(TAG_MANUAL).get()
@@ -55,9 +66,9 @@ class BackupCreatorJob(private val context: Context, workerParams: WorkerParamet
         }
 
         fun setupTask(context: Context, prefInterval: Int? = null, prefFlags: Int? = null) {
-            val preferences = Injekt.get<PreferencesHelper>()
-            val interval = prefInterval ?: preferences.backupInterval().get()
-            val flags = prefFlags ?: preferences.backupFlags().get().sumOf { s ->
+            val backupPreferences = Injekt.get<BackupPreferences>()
+            val interval = prefInterval ?: backupPreferences.backupInterval().get()
+            val flags = prefFlags ?: backupPreferences.backupFlags().get().sumOf { s ->
                 s.toInt(16)
             }
             val workManager = WorkManager.getInstance(context)
@@ -77,7 +88,7 @@ class BackupCreatorJob(private val context: Context, workerParams: WorkerParamet
                     )
                     .build()
 
-                workManager.enqueueUniquePeriodicWork(TAG_AUTO, ExistingPeriodicWorkPolicy.REPLACE, request)
+                workManager.enqueueUniquePeriodicWork(TAG_AUTO, ExistingPeriodicWorkPolicy.UPDATE, request)
             } else {
                 workManager.cancelUniqueWork(TAG_AUTO)
             }

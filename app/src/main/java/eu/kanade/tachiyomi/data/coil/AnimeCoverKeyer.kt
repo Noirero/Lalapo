@@ -2,21 +2,21 @@ package eu.kanade.tachiyomi.data.coil
 
 import coil.key.Keyer
 import coil.request.Options
-import eu.kanade.domain.anime.model.AnimeCover
-import eu.kanade.domain.anime.model.hasCustomCover
+import eu.kanade.domain.entries.anime.model.AnimeCover
+import eu.kanade.domain.entries.anime.model.hasCustomCover
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
-import eu.kanade.tachiyomi.data.database.models.Anime
-import eu.kanade.tachiyomi.data.database.models.toDomainAnime
+import eu.kanade.tachiyomi.data.database.models.anime.Anime
+import eu.kanade.tachiyomi.data.database.models.anime.toDomainAnime
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import eu.kanade.domain.anime.model.Anime as DomainAnime
+import eu.kanade.domain.entries.anime.model.Anime as DomainAnime
 
 class AnimeKeyer : Keyer<Anime> {
     override fun key(data: Anime, options: Options): String {
         return if (data.toDomainAnime()!!.hasCustomCover()) {
-            "${data.id};${data.cover_last_modified}"
+            "anime;${data.id};${data.cover_last_modified}"
         } else {
-            "${data.thumbnail_url};${data.cover_last_modified}"
+            "anime;${data.thumbnail_url};${data.cover_last_modified}"
         }
     }
 }
@@ -24,9 +24,9 @@ class AnimeKeyer : Keyer<Anime> {
 class DomainAnimeKeyer : Keyer<DomainAnime> {
     override fun key(data: DomainAnime, options: Options): String {
         return if (data.hasCustomCover()) {
-            "${data.id};${data.coverLastModified}"
+            "anime;${data.id};${data.coverLastModified}"
         } else {
-            "${data.thumbnailUrl};${data.coverLastModified}"
+            "anime;${data.thumbnailUrl};${data.coverLastModified}"
         }
     }
 }
@@ -34,9 +34,9 @@ class DomainAnimeKeyer : Keyer<DomainAnime> {
 class AnimeCoverKeyer : Keyer<AnimeCover> {
     override fun key(data: AnimeCover, options: Options): String {
         return if (Injekt.get<AnimeCoverCache>().getCustomCoverFile(data.animeId).exists()) {
-            "${data.animeId};${data.lastModified}"
+            "anime;${data.animeId};${data.lastModified}"
         } else {
-            "${data.url};${data.lastModified}"
+            "anime;${data.url};${data.lastModified}"
         }
     }
 }

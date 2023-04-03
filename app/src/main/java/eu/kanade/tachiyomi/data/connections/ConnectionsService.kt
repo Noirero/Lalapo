@@ -1,18 +1,18 @@
-// AM -->
+// AM (CN) -->
 package eu.kanade.tachiyomi.data.connections
 
 import androidx.annotation.CallSuper
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.tachiyomi.network.NetworkHelper
 import okhttp3.OkHttpClient
 import uy.kohesive.injekt.injectLazy
 
 abstract class ConnectionsService(val id: Long) {
 
-    val preferences: PreferencesHelper by injectLazy()
+    val connectionsPreferences: ConnectionsPreferences by injectLazy()
     val networkService: NetworkHelper by injectLazy()
 
     open val client: OkHttpClient
@@ -30,10 +30,22 @@ abstract class ConnectionsService(val id: Long) {
 
     @CallSuper
     open fun logout() {
-        preferences.connectionToken(this).set("")
+        connectionsPreferences.setConnectionsCredentials(this, "", "")
+        connectionsPreferences.connectionsToken(this).set("")
+    }
+
+    abstract suspend fun login(username: String, password: String)
+
+    fun getUsername() = connectionsPreferences.connectionsUsername(this).get()
+
+    fun getPassword() = connectionsPreferences.connectionsPassword(this).get()
+
+    fun saveCredentials(username: String, password: String) {
+        connectionsPreferences.setConnectionsCredentials(this, username, password)
     }
 
     open val isLogged: Boolean
-        get() = preferences.connectionToken(this).get().isNotEmpty()
+        get() = getUsername().isNotEmpty() &&
+            getPassword().isNotEmpty()
 }
-// AM <--
+// AM (CN) <--

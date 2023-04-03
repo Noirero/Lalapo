@@ -1,4 +1,4 @@
-// AM -->
+// AM (CN) -->
 package eu.kanade.tachiyomi.data.connections
 
 import android.content.Context
@@ -16,4 +16,4 @@ class ConnectionsManager(context: Context) {
 
     fun getService(id: Long) = services.find { it.id == id }
 }
-// AM <--
+// AM (CN) <--

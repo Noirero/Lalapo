@@ -1,9 +1,10 @@
 package eu.kanade.tachiyomi.data.track.anilist
 
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.domain.track.service.TrackPreferences
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
+import kotlinx.serialization.Serializable
 import uy.kohesive.injekt.injectLazy
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -72,6 +73,16 @@ data class ALUserAnime(
     }
 }
 
+@Serializable
+data class OAuth(
+    val access_token: String,
+    val token_type: String,
+    val expires: Long,
+    val expires_in: Long,
+)
+
+fun OAuth.isExpired() = System.currentTimeMillis() > expires
+
 fun AnimeTrack.toAnilistStatus() = when (status) {
     Anilist.WATCHING -> "CURRENT"
     Anilist.COMPLETED -> "COMPLETED"
@@ -82,7 +93,7 @@ fun AnimeTrack.toAnilistStatus() = when (status) {
     else -> throw NotImplementedError("Unknown status: $status")
 }
 
-private val preferences: PreferencesHelper by injectLazy()
+private val preferences: TrackPreferences by injectLazy()
 
 fun AnimeTrack.toAnilistScore(): String = when (preferences.anilistScoreType().get()) {
 // 10 point

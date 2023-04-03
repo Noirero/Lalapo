@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.track.bangumi
 
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.network.GET
@@ -173,14 +173,15 @@ class BangumiApi(private val client: OkHttpClient, interceptor: BangumiIntercept
     )
 
     companion object {
-        private const val clientId = "bgm2204622cb426b1e78"
-        private const val clientSecret = "5c9fd8953ebe3d10d6ea3f5e2d5f8508"
+        private const val clientId = "bgm10555cda0762e80ca"
+        private const val clientSecret = "8fff394a8627b4c388cbf349ec865775"
 
         private const val apiUrl = "https://api.bgm.tv"
         private const val oauthUrl = "https://bgm.tv/oauth/access_token"
         private const val loginUrl = "https://bgm.tv/oauth/authorize"
 
-        private const val redirectUrl = "animiru://bangumi-auth"
+        private const val redirectUrl = "tachiyomi://bangumi-auth"
+        private const val baseMangaUrl = "$apiUrl/mangas"
 
         fun authUrl(): Uri =
             loginUrl.toUri().buildUpon()

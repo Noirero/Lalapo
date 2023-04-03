@@ -1,4 +1,4 @@
-// AM -->
+// AM (DC) -->
 package eu.kanade.tachiyomi.ui.setting.connections
 
 import android.annotation.SuppressLint
@@ -9,6 +9,7 @@ import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -23,6 +24,7 @@ class DiscordLoginActivity : BaseActivity() {
     private var authToken: String? = null
     private lateinit var webView: WebView
     private val connectionsManager: ConnectionsManager by injectLazy()
+    private val connectionsPreferences: ConnectionsPreferences by injectLazy()
 
     @Suppress("DEPRECATION")
     @SuppressLint("SetJavaScriptEnabled")
@@ -54,7 +56,6 @@ class DiscordLoginActivity : BaseActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     private fun initialiseWebView() {
         webView.settings.javaScriptEnabled = true
-        webView.settings.setAppCacheEnabled(true)
         webView.settings.databaseEnabled = true
         webView.settings.domStorageEnabled = true
         webView.clearCache(true)
@@ -72,7 +73,8 @@ class DiscordLoginActivity : BaseActivity() {
             webView.visibility = View.GONE
         } else if (authToken != null) {
             setResult(Activity.RESULT_OK)
-            preferences.connectionToken(connectionsManager.discord).set(authToken!!)
+            connectionsPreferences.connectionsToken(connectionsManager.discord).set(authToken!!)
+            connectionsPreferences.setConnectionsCredentials(connectionsManager.discord, "Discord", "Logged In")
             toast(R.string.login_success)
             applicationInfo.dataDir.let { File("$it/app_webview/").deleteRecursively() }
             finish()
@@ -112,4 +114,4 @@ class DiscordLoginActivity : BaseActivity() {
         }
     }
 }
-// AM <--
+// AM (DC) <--

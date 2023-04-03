@@ -30,6 +30,18 @@ SELECT *
 FROM episodes
 WHERE anime_id = :animeId;
 
+getBookmarkedEpisodesByAnimeId:
+SELECT *
+FROM episodes
+WHERE bookmark
+AND anime_id = :animeId;
+
+getFillermarkedEpisodesByAnimeId:
+SELECT *
+FROM episodes
+WHERE fillermark
+AND anime_id = :animeId;
+
 getEpisodeByUrl:
 SELECT *
 FROM episodes
@@ -47,7 +59,7 @@ WHERE _id IN :episodeIds;
 
 insert:
 INSERT INTO episodes(anime_id,url,name,scanlator,seen,bookmark,fillermark,last_second_seen,total_seconds,episode_number,source_order,date_fetch,date_upload)
-VALUES (:animeId,:url,:name,:scanlator,:seen,:bookmark,:fillermark,:lastSecondSeen,:totalSeconds,:episodeNumber,:sourceOrder,:dateFetch,:dateUpload);
+VALUES (:animeId,:url,:name,:scanlator,:seen,:bookmark, :fillermark, :lastSecondSeen,:totalSeconds,:episodeNumber,:sourceOrder,:dateFetch,:dateUpload);
 
 update:
 UPDATE episodes

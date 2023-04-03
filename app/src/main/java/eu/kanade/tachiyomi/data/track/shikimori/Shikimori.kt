@@ -4,7 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.decodeFromString
@@ -12,15 +13,15 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.injectLazy
 
-class Shikimori(private val context: Context, id: Long) : TrackService(id) {
+class Shikimori(private val context: Context, id: Long) : TrackService(id), AnimeTrackService {
 
     companion object {
-        const val WATCHING = 1
+        const val READING = 1
         const val COMPLETED = 2
         const val ON_HOLD = 3
         const val DROPPED = 4
-        const val PLAN_TO_WATCH = 5
-        const val REWATCHING = 6
+        const val PLAN_TO_READ = 5
+        const val REREADING = 6
     }
 
     private val json: Json by injectLazy()
@@ -36,6 +37,10 @@ class Shikimori(private val context: Context, id: Long) : TrackService(id) {
         return IntRange(0, 10).map(Int::toString)
     }
 
+    override fun indexToScore(index: Int): Float {
+        return index.toFloat()
+    }
+
     override fun displayScore(track: AnimeTrack): String {
         return track.score.toInt().toString()
     }
@@ -49,8 +54,8 @@ class Shikimori(private val context: Context, id: Long) : TrackService(id) {
             if (didWatchEpisode) {
                 if (track.last_episode_seen.toInt() == track.total_episodes && track.total_episodes > 0) {
                     track.status = COMPLETED
-                } else if (track.status != REWATCHING) {
-                    track.status = WATCHING
+                } else if (track.status != REREADING) {
+                    track.status = READING
                 }
             }
         }
@@ -58,21 +63,21 @@ class Shikimori(private val context: Context, id: Long) : TrackService(id) {
         return api.updateLibAnime(track, getUsername())
     }
 
-    override suspend fun bind(track: AnimeTrack, hasReadChapters: Boolean): AnimeTrack {
+    override suspend fun bind(track: AnimeTrack, hasSeenEpisodes: Boolean): AnimeTrack {
         val remoteTrack = api.findLibAnime(track, getUsername())
         return if (remoteTrack != null) {
             track.copyPersonalFrom(remoteTrack)
             track.library_id = remoteTrack.library_id
 
             if (track.status != COMPLETED) {
-                val isRereading = track.status == REWATCHING
-                track.status = if (isRereading.not() && hasReadChapters) WATCHING else track.status
+                val isRereading = track.status == REREADING
+                track.status = if (isRereading.not() && hasSeenEpisodes) READING else track.status
             }
 
             update(track)
         } else {
             // Set default fields if it's not found in the list
-            track.status = if (hasReadChapters) WATCHING else PLAN_TO_WATCH
+            track.status = if (hasSeenEpisodes) READING else PLAN_TO_READ
             track.score = 0F
             add(track)
         }
@@ -95,24 +100,24 @@ class Shikimori(private val context: Context, id: Long) : TrackService(id) {
     override fun getLogoColor() = Color.rgb(40, 40, 40)
 
     override fun getStatusListAnime(): List<Int> {
-        return listOf(WATCHING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_WATCH, REWATCHING)
+        return listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ, REREADING)
     }
 
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
-            WATCHING -> getString(R.string.watching)
-            PLAN_TO_WATCH -> getString(R.string.plan_to_watch)
+            READING -> getString(R.string.reading)
+            PLAN_TO_READ -> getString(R.string.plan_to_read)
             COMPLETED -> getString(R.string.completed)
             ON_HOLD -> getString(R.string.on_hold)
             DROPPED -> getString(R.string.dropped)
-            REWATCHING -> getString(R.string.repeating_anime)
+            REREADING -> getString(R.string.repeating)
             else -> ""
         }
     }
 
-    override fun getWatchingStatus(): Int = WATCHING
+    override fun getWatchingStatus(): Int = READING
 
-    override fun getRewatchingStatus(): Int = REWATCHING
+    override fun getRewatchingStatus(): Int = REREADING
 
     override fun getCompletionStatus(): Int = COMPLETED
 
@@ -130,12 +135,12 @@ class Shikimori(private val context: Context, id: Long) : TrackService(id) {
     }
 
     fun saveToken(oauth: OAuth?) {
-        preferences.trackToken(this).set(json.encodeToString(oauth))
+        trackPreferences.trackToken(this).set(json.encodeToString(oauth))
     }
 
     fun restoreToken(): OAuth? {
         return try {
-            json.decodeFromString<OAuth>(preferences.trackToken(this).get())
+            json.decodeFromString<OAuth>(trackPreferences.trackToken(this).get())
         } catch (e: Exception) {
             null
         }
@@ -143,7 +148,7 @@ class Shikimori(private val context: Context, id: Long) : TrackService(id) {
 
     override fun logout() {
         super.logout()
-        preferences.trackToken(this).delete()
+        trackPreferences.trackToken(this).delete()
         interceptor.newAuth(null)
     }
 }

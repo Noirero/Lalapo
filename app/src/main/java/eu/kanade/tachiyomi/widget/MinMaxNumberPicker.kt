@@ -3,11 +3,12 @@ package eu.kanade.tachiyomi.widget
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.NumberPicker
+import androidx.core.view.descendants
 import androidx.core.view.doOnLayout
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.util.view.findDescendant
 
 class MinMaxNumberPicker @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     NumberPicker(context, attrs) {
@@ -37,4 +38,11 @@ class MinMaxNumberPicker @JvmOverloads constructor(context: Context, attrs: Attr
             findDescendant<EditText>()?.setRawInputType(InputType.TYPE_CLASS_NUMBER)
         }
     }
+}
+
+/**
+ * Returns this ViewGroup's first descendant of specified class
+ */
+inline fun <reified T> ViewGroup.findDescendant(): T? {
+    return descendants.find { it is T } as? T
 }

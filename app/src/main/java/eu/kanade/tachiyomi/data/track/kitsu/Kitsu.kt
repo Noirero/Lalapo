@@ -4,7 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.decodeFromString
@@ -13,13 +14,15 @@ import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.injectLazy
 import java.text.DecimalFormat
 
-class Kitsu(private val context: Context, id: Long) : TrackService(id) {
+class Kitsu(private val context: Context, id: Long) : TrackService(id), AnimeTrackService {
 
     companion object {
+        const val READING = 1
         const val WATCHING = 11
         const val COMPLETED = 2
         const val ON_HOLD = 3
         const val DROPPED = 4
+        const val PLAN_TO_READ = 5
         const val PLAN_TO_WATCH = 15
     }
 
@@ -44,7 +47,9 @@ class Kitsu(private val context: Context, id: Long) : TrackService(id) {
 
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
+            READING -> getString(R.string.currently_reading)
             WATCHING -> getString(R.string.currently_watching)
+            PLAN_TO_READ -> getString(R.string.want_to_read)
             PLAN_TO_WATCH -> getString(R.string.want_to_watch)
             COMPLETED -> getString(R.string.completed)
             ON_HOLD -> getString(R.string.on_hold)
@@ -95,19 +100,19 @@ class Kitsu(private val context: Context, id: Long) : TrackService(id) {
         return api.updateLibAnime(track)
     }
 
-    override suspend fun bind(track: AnimeTrack, hasReadChapters: Boolean): AnimeTrack {
+    override suspend fun bind(track: AnimeTrack, hasSeenEpisodes: Boolean): AnimeTrack {
         val remoteTrack = api.findLibAnime(track, getUserId())
         return if (remoteTrack != null) {
             track.copyPersonalFrom(remoteTrack)
             track.media_id = remoteTrack.media_id
 
             if (track.status != COMPLETED) {
-                track.status = if (hasReadChapters) WATCHING else track.status
+                track.status = if (hasSeenEpisodes) WATCHING else track.status
             }
 
             update(track)
         } else {
-            track.status = if (hasReadChapters) WATCHING else PLAN_TO_WATCH
+            track.status = if (hasSeenEpisodes) WATCHING else PLAN_TO_WATCH
             track.score = 0F
             add(track)
         }
@@ -141,12 +146,12 @@ class Kitsu(private val context: Context, id: Long) : TrackService(id) {
     }
 
     fun saveToken(oauth: OAuth?) {
-        preferences.trackToken(this).set(json.encodeToString(oauth))
+        trackPreferences.trackToken(this).set(json.encodeToString(oauth))
     }
 
     fun restoreToken(): OAuth? {
         return try {
-            json.decodeFromString<OAuth>(preferences.trackToken(this).get())
+            json.decodeFromString<OAuth>(trackPreferences.trackToken(this).get())
         } catch (e: Exception) {
             null
         }

@@ -1,37 +1,56 @@
-// AM -->
+// AM (DC) -->
 package eu.kanade.tachiyomi.data.connections.discord
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.os.Build
 import android.os.IBinder
-import android.util.Log
-import com.my.discordrpc.DiscordRPC
+import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
-import eu.kanade.tachiyomi.util.lang.launchUI
+import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.util.lang.withIOContext
 import uy.kohesive.injekt.injectLazy
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class DiscordRPCService : Service() {
 
-    private var context: Context? = null
+    private val connectionsManager: ConnectionsManager by injectLazy()
 
     override fun onCreate() {
         super.onCreate()
-        context = this
-        rpc!!.setStartTimestamps(System.currentTimeMillis())
-        rpc!!.build()
-        isBuilt = true
+        val token = connectionsPreferences.connectionsToken(connectionsManager.discord).get()
+        rpc = if (token.isNotBlank()) DiscordRPC(token) else null
+        val status = when (connectionsPreferences.discordRPCStatus().get()) {
+            -1 -> "dnd"
+            0 -> "idle"
+            else -> "online"
+        }
+        if (rpc != null) {
+            rpc!!.setApplicationId("952899285983326208")
+                .setName("Animiru")
+                .setLargeImage("mp:$animiruDiscordImageUrl", "Animiru")
+                .setSmallImage("mp:$animiruDiscordImageUrl", "Animiru")
+                .setType(0)
+                .setStartTimestamps(System.currentTimeMillis())
+                .setStatus(status)
+                .setButton1("Get the app!", "https://github.com/Quickdesh/Animiru")
+                .setButton2("Join the Discord!", "https://discord.gg/yDuHDMwxhv")
+                .build()
+        }
+        notification()
     }
 
     override fun onDestroy() {
-        launchUI {
-            rpc!!.closeRPC()
-            isBuilt = false
-        }
-        Log.i("RPCYO", "ITS DESTROYED BRUV")
+        rpc!!.closeRPC()
+        rpc = null
         super.onDestroy()
     }
 
@@ -39,54 +58,140 @@ class DiscordRPCService : Service() {
         return null
     }
 
+    private fun notification() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL,
+                "Background Service",
+                NotificationManager.IMPORTANCE_LOW,
+            ),
+        )
+        val builder = Notification.Builder(this, CHANNEL)
+        builder.setSmallIcon(R.drawable.ic_discord_24dp)
+        builder.setContentText("Discord Rpc Running")
+        builder.setUsesChronometer(true)
+        startForeground(11234, builder.build())
+    }
+
     companion object {
-        internal var isBuilt = false
-        internal var isPip = false
+        const val CHANNEL = "Discord RPC"
 
-        private val preferences: PreferencesHelper by injectLazy()
+        internal var rpc: DiscordRPC? = null
 
-        private val connectionsManager: ConnectionsManager by injectLazy()
+        private val connectionsPreferences: ConnectionsPreferences by injectLazy()
 
-        private val token = preferences.connectionToken(connectionsManager.discord).get()
+        internal lateinit var resources: Resources
 
-        internal const val animiru = "attachments/951705840031780865/1005845418405535784/Animiru.png"
-        internal const val browse = "attachments/951705840031780865/1006843590980415518/browse.png"
-        internal const val history = "attachments/951705840031780865/1006843591299178588/history.png"
-        internal const val library = "attachments/951705840031780865/1006843591777341520/library.png"
-        internal const val more = "attachments/951705840031780865/1006843592045760533/more.png"
-        internal const val updates = "attachments/951705840031780865/1006843592339365888/updates.png"
-        internal const val video = "attachments/951705840031780865/1006843592637169714/video.png"
-        internal const val webview = "attachments/951705840031780865/1006843593467629568/webview.png"
+        internal var videoInPip = false
 
-        fun setDRPC(type: String?, resources: Resources, image: String? = null, imageText: String? = null, details: String? = null, state: String? = null) {
-            if (isPip) return
-            if (preferences.enableDiscordRPC().get()) launchUI {
-                if (type == null) {
-                    rpc!!.setLargeImage(image!!, imageText!!, true)
-                        .setDetails(details)
-                        .setState(state)
-                        .sendData()
-                }
-                when (type) {
-                    "library" -> setDRPC(null, resources, library, resources.getString(R.string.label_animelib), resources.getString(R.string.browsing), resources.getString(R.string.label_animelib))
-                    "browse" -> setDRPC(null, resources, browse, resources.getString(R.string.browse), resources.getString(R.string.browsing), resources.getString(R.string.sources))
-                    "more" -> setDRPC(null, resources, more, resources.getString(R.string.label_more), resources.getString(R.string.messing), resources.getString(R.string.settings))
-                    "history" -> setDRPC(null, resources, history, resources.getString(R.string.label_recent_history), resources.getString(R.string.scrolling), resources.getString(R.string.label_recent_history))
-                    "updates" -> setDRPC(null, resources, updates, resources.getString(R.string.label_recent_updates), resources.getString(R.string.scrolling), resources.getString(R.string.label_recent_updates))
-                    "animiru" -> setDRPC(null, resources, animiru, resources.getString(R.string.app_name))
-                }
+        private const val animiruDiscordImageUrl = "attachments/951705840031780865/1005845418405535784/Animiru.png"
+        private const val browseDiscordImageUrl = "attachments/951705840031780865/1006843590980415518/browse.png"
+        private const val historyDiscordImageUrl = "attachments/951705840031780865/1006843591299178588/history.png"
+        private const val libraryDiscordImageUrl = "attachments/951705840031780865/1006843591777341520/library.png"
+        private const val moreDiscordImageUrl = "attachments/951705840031780865/1006843592045760533/more.png"
+        private const val updatesDiscordImageUrl = "attachments/951705840031780865/1006843592339365888/updates.png"
+        private const val videoDiscordImageUrl = "attachments/951705840031780865/1006843592637169714/video.png"
+        private const val webviewDiscordImageUrl = "attachments/951705840031780865/1006843593467629568/webview.png"
+
+        internal var lastUsedPage = -1
+
+        internal fun setDiscordPage(pageNumber: Int) {
+            lastUsedPage = pageNumber
+            if (rpc == null || videoInPip || pageNumber == -1) return
+
+            val largeImage = when (pageNumber) {
+                1 -> updatesDiscordImageUrl
+                2 -> historyDiscordImageUrl
+                3 -> browseDiscordImageUrl
+                4 -> moreDiscordImageUrl
+                else -> libraryDiscordImageUrl
             }
+            val largeText = when (pageNumber) {
+                1 -> resources.getString(R.string.label_recent_updates)
+                2 -> resources.getString(R.string.label_recent_manga)
+                3 -> resources.getString(R.string.browse)
+                4 -> resources.getString(R.string.label_settings)
+                else -> resources.getString(R.string.label_library)
+            }
+            val details = when (pageNumber) {
+                1 -> resources.getString(R.string.scrolling)
+                2 -> resources.getString(R.string.scrolling)
+                3 -> resources.getString(R.string.browsing)
+                4 -> resources.getString(R.string.messing)
+                else -> resources.getString(R.string.browsing)
+            }
+            val state = when (pageNumber) {
+                1 -> resources.getString(R.string.label_recent_updates)
+                2 -> resources.getString(R.string.label_recent_manga)
+                3 -> resources.getString(R.string.label_sources)
+                4 -> resources.getString(R.string.label_settings)
+                else -> resources.getString(R.string.label_library)
+            }
+
+            try {
+                rpc!!.setLargeImage("mp:$largeImage", largeText)
+                    .setType(0)
+                    .setDetails(details)
+                    .setState(state)
+                    .sendData()
+            } catch (_: Exception) {}
         }
 
-        internal var rpc: DiscordRPC? = DiscordRPC(token)
-            .setApplicationId("962990036020756480")
-            .setName("Animiru")
-            .setLargeImage(animiru, "Animiru", true)
-            .setSmallImage(animiru, "Animiru", true)
-            .setType(0)
-            .setStatus(preferences.discordRPCStatus().get())
-            .setButton1("Get the app!", "https://github.com/Quickdesh/Animiru")
-            .setButton2("Join the Discord!", "https://discord.gg/yDuHDMwxhv")
+        internal suspend fun setDiscordVideo(isNsfwSource: Boolean, episodeNumber: Float?, thumbnailUrl: String?, animeTitle: String?) {
+            if (rpc == null || episodeNumber == null || thumbnailUrl == null || animeTitle == null) return
+            val basePreferences: BasePreferences by injectLazy()
+
+            val discordIncognito = basePreferences.incognitoMode().get() || connectionsPreferences.discordRPCIncognito().get() || isNsfwSource
+
+            val animeName = if (discordIncognito) "" else animeTitle
+
+            val epNum =
+                if (discordIncognito) {
+                    ""
+                } else if (ceil(episodeNumber) == floor(episodeNumber)) {
+                    "Episode ${episodeNumber.toInt()}"
+                } else {
+                    "Episode $episodeNumber"
+                }
+
+            withIOContext {
+                val networkService: NetworkHelper by injectLazy()
+                val client = networkService.client
+                var animeThumbnail =
+                    if (discordIncognito) {
+                        videoDiscordImageUrl
+                    } else {
+                        try {
+                            "external/" +
+                                client.newCall(GET("http://140.83.62.114:5000/link?imageLink=$thumbnailUrl"))
+                                    .execute()
+                                    .header("discord-image-link")
+                                    .toString().split("external/")[1]
+                        } catch (e: Throwable) {
+                            try {
+                                "external/" +
+                                    client.newCall(GET("http://140.83.62.114:5000/link?imageLink=$thumbnailUrl"))
+                                        .execute()
+                                        .header("discord-image-link")
+                                        .toString().split("external/")[1]
+                            } catch (e: Throwable) {
+                                videoDiscordImageUrl
+                            }
+                        }
+                    }
+
+                if (animeThumbnail == "external/Not Found") animeThumbnail = videoDiscordImageUrl
+                try {
+                    rpc!!.setLargeImage("mp:$animeThumbnail", animeName)
+                        .setType(3)
+                        .setDetails(resources.getString(R.string.watching) + "\n$animeName")
+                        .setState(epNum)
+                        .sendData()
+                } catch (_: Exception) {}
+            }
+        }
     }
 }
-// AM <--
+// <-- AM (DC)

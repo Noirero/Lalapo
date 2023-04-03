@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.player
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
@@ -14,9 +15,9 @@ import android.widget.SeekBar
 import androidx.annotation.StringRes
 import androidx.core.view.isVisible
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.PlayerControlsBinding
 import eu.kanade.tachiyomi.databinding.PrefSkipIntroLengthBinding
+import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.PickerDialog
 import `is`.xyz.mpv.SpeedPickerDialog
@@ -61,7 +62,7 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
         override fun onStopTrackingTouch(seekBar: SeekBar) {
             val newPos = seekBar.progress
-            if (preferences.getPlayerSmoothSeek()) activity.player.timePos = newPos else MPVLib.command(arrayOf("seek", newPos.toString(), "absolute+keyframes"))
+            if (playerPreferences.playerSmoothSeek().get()) activity.player.timePos = newPos else MPVLib.command(arrayOf("seek", newPos.toString(), "absolute+keyframes"))
             userIsOperatingSeekbar = false
             animationHandler.removeCallbacks(hideUiForSeekRunnable)
             animationHandler.postDelayed(hideUiForSeekRunnable, 500L)
@@ -130,7 +131,7 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
         animationHandler.postDelayed(hideUiForSeekRunnable, delay)
     }
 
-    private val preferences: PreferencesHelper by injectLazy()
+    private val playerPreferences: PlayerPreferences by injectLazy()
 
     private tailrec fun Context.getActivity(): PlayerActivity? = this as? PlayerActivity
         ?: (this as? ContextWrapper)?.baseContext?.getActivity()
@@ -148,6 +149,7 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
         // Long click controls
         binding.cycleSpeedBtn.setOnLongClickListener { pickSpeed(); true }
+        binding.cycleDecoderBtn.setOnLongClickListener { pickDecoder(); true }
 
         binding.playbackSeekbar.setOnSeekBarChangeListener(seekBarChangeListener)
 
@@ -156,14 +158,14 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
         binding.pipBtn.setOnClickListener { activity.startPiP() }
 
-        binding.pipBtn.isVisible = !preferences.pipOnExit() && activity.deviceSupportsPip
+        binding.pipBtn.isVisible = !playerPreferences.pipOnExit().get() && activity.deviceSupportsPip
 
         binding.controlsSkipIntroBtn.setOnLongClickListener { skipIntroLengthDialog(); true }
 
         binding.playbackPositionBtn.setOnClickListener {
             if (activity.player.timePos != null && activity.player.duration != null) {
-                preferences.invertedDurationTxt().set(false)
-                preferences.invertedPlaybackTxt().set(!preferences.invertedPlaybackTxt().get())
+                playerPreferences.invertedDurationTxt().set(false)
+                playerPreferences.invertedPlaybackTxt().set(!playerPreferences.invertedPlaybackTxt().get())
                 updatePlaybackPos(activity.player.timePos!!)
                 updatePlaybackDuration(activity.player.duration!!)
             }
@@ -171,8 +173,8 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
         binding.playbackDurationBtn.setOnClickListener {
             if (activity.player.timePos != null && activity.player.duration != null) {
-                preferences.invertedPlaybackTxt().set(false)
-                preferences.invertedDurationTxt().set(!preferences.invertedDurationTxt().get())
+                playerPreferences.invertedPlaybackTxt().set(false)
+                playerPreferences.invertedDurationTxt().set(!playerPreferences.invertedDurationTxt().get())
                 updatePlaybackPos(activity.player.timePos!!)
                 updatePlaybackDuration(activity.player.duration!!)
             }
@@ -228,20 +230,27 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
         if (hide) {
             binding.controlsView.isVisible = false
             binding.lockedView.isVisible = false
-        } else showAndFadeControls()
+        } else {
+            showAndFadeControls()
+        }
     }
 
     @SuppressLint("SetTextI18n")
     internal fun updatePlaybackPos(position: Int) {
-        if (activity.player.duration != null) {
-            if (preferences.invertedPlaybackTxt().get()) {
-                binding.playbackPositionTxt.text =
-                    "-${Utils.prettyTime(activity.player.duration!! - position)}"
-            } else if (preferences.invertedDurationTxt().get()) {
+        val duration = activity.player.duration
+        val invertedPlayback = playerPreferences.invertedPlaybackTxt().get()
+        val invertedDuration = playerPreferences.invertedDurationTxt().get()
+
+        if (duration != null) {
+            if (invertedPlayback) {
+                binding.playbackPositionTxt.text = "-${Utils.prettyTime(duration - position)}"
+            } else if (invertedDuration) {
                 binding.playbackPositionTxt.text = Utils.prettyTime(position)
-                binding.playbackDurationTxt.text =
-                    "-${Utils.prettyTime(activity.player.duration!! - position)}"
-            } else binding.playbackPositionTxt.text = Utils.prettyTime(position)
+                binding.playbackDurationTxt.text = "-${Utils.prettyTime(duration - position)}"
+            } else {
+                binding.playbackPositionTxt.text = Utils.prettyTime(position)
+            }
+            activity.viewModel.onSecondReached(position, duration)
         }
 
         binding.playbackSeekbar.progress = position
@@ -251,7 +260,7 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
     @SuppressLint("SetTextI18n")
     internal fun updatePlaybackDuration(duration: Int) {
-        if (!preferences.invertedDurationTxt().get() && activity.player.duration != null) {
+        if (!playerPreferences.invertedDurationTxt().get() && activity.player.duration != null) {
             binding.playbackDurationTxt.text = Utils.prettyTime(duration)
         }
 
@@ -268,12 +277,16 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
         if (binding.cycleDecoderBtn.visibility != View.VISIBLE && binding.cycleDecoderBtn.visibility != View.VISIBLE) {
             return
         }
-        binding.cycleDecoderBtn.text = if (activity.player.hwdecActive) "HW" else "SW"
+        binding.cycleDecoderBtn.text = when (activity.player.hwdecActive) {
+            "mediacodec" -> "HW+"
+            "no" -> "SW"
+            else -> "HW"
+        }
     }
 
     internal fun updateSpeedButton() {
         binding.cycleSpeedBtn.text = context.getString(R.string.ui_speed, activity.player.playbackSpeed)
-        activity.player.playbackSpeed?.let { preferences.setPlayerSpeed(it.toFloat()) }
+        activity.player.playbackSpeed?.let { playerPreferences.playerSpeed().set(it.toFloat()) }
     }
 
     internal fun showAndFadeControls() {
@@ -354,6 +367,34 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
         }
     }
 
+    private fun pickDecoder() {
+        val restore = pauseForDialog()
+
+        val items = mutableListOf(
+            Pair("HW (mediacodec-copy)", "mediacodec-copy"),
+            Pair("SW", "no"),
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            items.add(0, Pair("HW+ (mediacodec)", "mediacodec"))
+        }
+        var hwdecActive = playerPreferences.standardHwDec().get()
+        val selectedIndex = items.indexOfFirst { it.second == hwdecActive }
+        with(activity.HideBarsMaterialAlertDialogBuilder(activity)) {
+            setTitle(R.string.player_hwdec_dialog_title)
+            setSingleChoiceItems(items.map { it.first }.toTypedArray(), selectedIndex) { _, idx ->
+                hwdecActive = items[idx].second
+            }
+            setPositiveButton(R.string.dialog_ok) { _, _ ->
+                playerPreferences.standardHwDec().set(hwdecActive)
+                MPVLib.setPropertyString("hwdec", hwdecActive)
+            }
+            setNegativeButton(R.string.dialog_cancel) { dialog, _ -> dialog.cancel() }
+            setOnDismissListener { restore() }
+            create()
+            show()
+        }
+    }
+
     private fun speedPickerDialog(
         picker: PickerDialog,
         @StringRes titleRes: Int,
@@ -364,7 +405,7 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
             setView(picker.buildView(LayoutInflater.from(context)))
             setPositiveButton(R.string.dialog_ok) { _, _ ->
                 picker.number?.let {
-                    preferences.setPlayerSpeed(it.toFloat())
+                    playerPreferences.playerSpeed().set(it.toFloat())
                     if (picker.isInteger()) {
                         MPVLib.setPropertyInt("speed", it.toInt())
                     } else {
@@ -383,14 +424,14 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
     private fun skipIntroLengthDialog() {
         val restore = pauseForDialog()
 
-        var newSkipIntroLength = activity.presenter.getAnimeSkipIntroLength()
+        var newSkipIntroLength = activity.viewModel.getAnimeSkipIntroLength()
 
         with(activity.HideBarsMaterialAlertDialogBuilder(context)) {
             setTitle(R.string.pref_intro_length)
             val binding = PrefSkipIntroLengthBinding.inflate(LayoutInflater.from(activity))
 
             with(binding.skipIntroColumn) {
-                value = activity.presenter.getAnimeSkipIntroLength()
+                value = activity.viewModel.getAnimeSkipIntroLength()
                 setOnValueChangedListener { _, _, newValue ->
                     newSkipIntroLength = newValue
                 }
@@ -398,13 +439,13 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
             setView(binding.root)
             setNeutralButton(R.string.label_default) { _, _ ->
-                activity.presenter.setAnimeSkipIntroLength(preferences.defaultIntroLength().get())
+                activity.viewModel.setAnimeSkipIntroLength(playerPreferences.defaultIntroLength().get())
             }
             setPositiveButton(R.string.dialog_ok) { dialog, _ ->
                 when (newSkipIntroLength) {
-                    0 -> activity.presenter.setAnimeSkipIntroLength(preferences.defaultIntroLength().get())
-                    activity.presenter.getAnimeSkipIntroLength() -> dialog.cancel()
-                    else -> activity.presenter.setAnimeSkipIntroLength(newSkipIntroLength)
+                    0 -> activity.viewModel.setAnimeSkipIntroLength(playerPreferences.defaultIntroLength().get())
+                    activity.viewModel.getAnimeSkipIntroLength() -> dialog.cancel()
+                    else -> activity.viewModel.setAnimeSkipIntroLength(newSkipIntroLength)
                 }
             }
             setNegativeButton(R.string.dialog_cancel) { dialog, _ -> dialog.cancel() }

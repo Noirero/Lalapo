@@ -4,7 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.decodeFromString
@@ -12,7 +13,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.injectLazy
 
-class Bangumi(private val context: Context, id: Long) : TrackService(id) {
+class Bangumi(private val context: Context, id: Long) : TrackService(id), AnimeTrackService {
 
     private val json: Json by injectLazy()
 
@@ -25,6 +26,10 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
 
     override fun getScoreList(): List<String> {
         return IntRange(0, 10).map(Int::toString)
+    }
+
+    override fun indexToScore(index: Int): Float {
+        return index.toFloat()
     }
 
     override fun displayScore(track: AnimeTrack): String {
@@ -41,7 +46,7 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
                 if (track.last_episode_seen.toInt() == track.total_episodes && track.total_episodes > 0) {
                     track.status = COMPLETED
                 } else {
-                    track.status = WATCHING
+                    track.status = READING
                 }
             }
         }
@@ -49,7 +54,7 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
         return api.updateLibAnime(track)
     }
 
-    override suspend fun bind(track: AnimeTrack, hasReadChapters: Boolean): AnimeTrack {
+    override suspend fun bind(track: AnimeTrack, hasSeenEpisodes: Boolean): AnimeTrack {
         val statusTrack = api.statusLibAnime(track)
         val remoteTrack = api.findLibAnime(track)
         return if (remoteTrack != null && statusTrack != null) {
@@ -57,7 +62,7 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
             track.library_id = remoteTrack.library_id
 
             if (track.status != COMPLETED) {
-                track.status = if (hasReadChapters) WATCHING else statusTrack.status
+                track.status = if (hasSeenEpisodes) READING else statusTrack.status
             }
 
             track.status = statusTrack.status
@@ -67,7 +72,7 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
             refresh(track)
         } else {
             // Set default fields if it's not found in the list
-            track.status = if (hasReadChapters) WATCHING else PLAN_TO_WATCH
+            track.status = if (hasSeenEpisodes) READING else PLAN_TO_READ
             track.score = 0F
             add(track)
             update(track)
@@ -92,13 +97,13 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
     override fun getLogoColor() = Color.rgb(240, 145, 153)
 
     override fun getStatusListAnime(): List<Int> {
-        return listOf(WATCHING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_WATCH)
+        return listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ)
     }
 
     override fun getStatus(status: Int): String = with(context) {
         when (status) {
-            WATCHING -> getString(R.string.watching)
-            PLAN_TO_WATCH -> getString(R.string.plan_to_watch)
+            READING -> getString(R.string.reading)
+            PLAN_TO_READ -> getString(R.string.plan_to_read)
             COMPLETED -> getString(R.string.completed)
             ON_HOLD -> getString(R.string.on_hold)
             DROPPED -> getString(R.string.dropped)
@@ -106,7 +111,7 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
         }
     }
 
-    override fun getWatchingStatus(): Int = WATCHING
+    override fun getWatchingStatus(): Int = READING
 
     override fun getRewatchingStatus(): Int = -1
 
@@ -125,12 +130,12 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
     }
 
     fun saveToken(oauth: OAuth?) {
-        preferences.trackToken(this).set(json.encodeToString(oauth))
+        trackPreferences.trackToken(this).set(json.encodeToString(oauth))
     }
 
     fun restoreToken(): OAuth? {
         return try {
-            json.decodeFromString<OAuth>(preferences.trackToken(this).get())
+            json.decodeFromString<OAuth>(trackPreferences.trackToken(this).get())
         } catch (e: Exception) {
             null
         }
@@ -138,15 +143,15 @@ class Bangumi(private val context: Context, id: Long) : TrackService(id) {
 
     override fun logout() {
         super.logout()
-        preferences.trackToken(this).delete()
+        trackPreferences.trackToken(this).delete()
         interceptor.newAuth(null)
     }
 
     companion object {
-        const val WATCHING = 3
+        const val READING = 3
         const val COMPLETED = 2
         const val ON_HOLD = 4
         const val DROPPED = 5
-        const val PLAN_TO_WATCH = 1
+        const val PLAN_TO_READ = 1
     }
 }

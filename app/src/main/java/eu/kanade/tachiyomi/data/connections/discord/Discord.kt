@@ -1,4 +1,4 @@
-// AM -->
+// AM (DC) -->
 package eu.kanade.tachiyomi.data.connections.discord
 
 import android.content.Context
@@ -8,8 +8,9 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsService
 
 class Discord(private val context: Context, id: Long) : ConnectionsService(id) {
+
     @StringRes
-    override fun nameRes() = R.string.connection_discord
+    override fun nameRes() = R.string.connections_discord
 
     override fun getLogo() = R.drawable.ic_discord_24dp
 
@@ -17,7 +18,11 @@ class Discord(private val context: Context, id: Long) : ConnectionsService(id) {
 
     override fun logout() {
         super.logout()
-        preferences.connectionToken(this).delete()
+        connectionsPreferences.connectionsToken(this).delete()
+    }
+
+    override suspend fun login(username: String, password: String) {
+        TODO("Not yet implemented")
     }
 }
-// AM <--
+// AM (DC) <--

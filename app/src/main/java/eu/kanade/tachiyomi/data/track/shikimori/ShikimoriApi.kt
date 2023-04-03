@@ -1,8 +1,7 @@
 package eu.kanade.tachiyomi.data.track.shikimori
 
-import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.network.GET
@@ -11,7 +10,6 @@ import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.network.parseAs
 import eu.kanade.tachiyomi.util.lang.withIOContext
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -83,7 +81,7 @@ class ShikimoriApi(private val client: OkHttpClient, interceptor: ShikimoriInter
             tracking_url = baseUrl + obj["url"]!!.jsonPrimitive.content
             publishing_status = obj["status"]!!.jsonPrimitive.content
             publishing_type = obj["kind"]!!.jsonPrimitive.content
-            start_date = obj["aired_on"]!!.jsonPrimitive.contentOrNull ?: ""
+            start_date = obj.get("aired_on")!!.jsonPrimitive.contentOrNull ?: ""
         }
     }
 
@@ -93,7 +91,7 @@ class ShikimoriApi(private val client: OkHttpClient, interceptor: ShikimoriInter
             media_id = obj["id"]!!.jsonPrimitive.long
             total_episodes = animes["episodes"]!!.jsonPrimitive.int
             last_episode_seen = obj["episodes"]!!.jsonPrimitive.float
-            score = obj["score"]!!.jsonPrimitive.int.toFloat()
+            score = (obj["score"]!!.jsonPrimitive.int).toFloat()
             status = toTrackStatus(obj["status"]!!.jsonPrimitive.content)
             tracking_url = baseUrl + animes["url"]!!.jsonPrimitive.content
         }
@@ -128,15 +126,13 @@ class ShikimoriApi(private val client: OkHttpClient, interceptor: ShikimoriInter
         }
     }
 
-    fun getCurrentUser(): Int {
-        return runBlocking {
-            authClient.newCall(GET("$apiUrl/users/whoami"))
-                .await()
-                .parseAs<JsonObject>()
-                .let {
-                    it["id"]!!.jsonPrimitive.int
-                }
-        }
+    suspend fun getCurrentUser(): Int {
+        return authClient.newCall(GET("$apiUrl/users/whoami"))
+            .await()
+            .parseAs<JsonObject>()
+            .let {
+                it["id"]!!.jsonPrimitive.int
+            }
     }
 
     suspend fun accessToken(code: String): OAuth {
@@ -159,17 +155,22 @@ class ShikimoriApi(private val client: OkHttpClient, interceptor: ShikimoriInter
     )
 
     companion object {
-        private const val clientId = "tQLOaRzbA0gJ4WSlsq6sQcsRWAAk-t8RIhssui6fQ1w"
-        private const val clientSecret = "95WTl3ePbcXJtVYkiWiP4bQUtJL9oGbbneqKZ6VOwhs"
+        private const val clientId = "1aaf4cf232372708e98b5abc813d795b539c5a916dbbfe9ac61bf02a360832cc"
+        private const val clientSecret = "229942c742dd4cde803125d17d64501d91c0b12e14cb1e5120184d77d67024c0"
 
         private const val baseUrl = "https://shikimori.one"
         private const val apiUrl = "$baseUrl/api"
         private const val oauthUrl = "$baseUrl/oauth/token"
         private const val loginUrl = "$baseUrl/oauth/authorize"
 
-        private const val redirectUrl = "animiru://shikimori-auth"
+        private const val redirectUrl = "tachiyomi://shikimori-auth"
+        private const val baseMangaUrl = "$apiUrl/mangas"
 
-        fun authUrl(): Uri =
+        fun mangaUrl(remoteId: Int): String {
+            return "$baseMangaUrl/$remoteId"
+        }
+
+        fun authUrl() =
             loginUrl.toUri().buildUpon()
                 .appendQueryParameter("client_id", clientId)
                 .appendQueryParameter("redirect_uri", redirectUrl)

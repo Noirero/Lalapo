@@ -1,157 +1,206 @@
 package eu.kanade.presentation.more
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Label
+import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.Divider
-import eu.kanade.presentation.components.PreferenceRow
+import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.components.ScrollbarLazyColumn
-import eu.kanade.presentation.components.SwitchPreference
-import eu.kanade.presentation.util.quantityStringResource
+import eu.kanade.presentation.components.WarningBanner
+import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
+import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
-import eu.kanade.tachiyomi.ui.more.MoreController
-import eu.kanade.tachiyomi.ui.more.MorePresenter
-import uy.kohesive.injekt.api.get
+import eu.kanade.tachiyomi.util.Constants
+import uy.kohesive.injekt.injectLazy
 
 @Composable
 fun MoreScreen(
-    nestedScrollInterop: NestedScrollConnection,
-    presenter: MorePresenter,
+    downloadQueueStateProvider: () -> DownloadQueueState,
+    downloadedOnly: Boolean,
+    onDownloadedOnlyChange: (Boolean) -> Unit,
+    incognitoMode: Boolean,
+    onIncognitoModeChange: (Boolean) -> Unit,
+    isFDroid: Boolean,
+    // AM (UH) -->
+    onClickUpdates: () -> Unit,
+    onClickHistory: () -> Unit,
+    // <-- AM (UH)
     onClickDownloadQueue: () -> Unit,
-    onClickAnimeCategories: () -> Unit,
+    onClickCategories: () -> Unit,
+    onClickStats: () -> Unit,
     onClickBackupAndRestore: () -> Unit,
     onClickSettings: () -> Unit,
     onClickAbout: () -> Unit,
-    onClickUpdates: () -> Unit,
-    onClickHistory: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val downloadQueueState by presenter.downloadQueueState.collectAsState()
 
-    ScrollbarLazyColumn(
-        modifier = Modifier.nestedScroll(nestedScrollInterop),
-        contentPadding = WindowInsets.navigationBars.asPaddingValues(),
-    ) {
-        item {
-            LogoHeader()
-        }
-
-        item {
-            SwitchPreference(
-                preference = presenter.downloadedOnly,
-                title = stringResource(R.string.label_downloaded_only),
-                subtitle = stringResource(R.string.downloaded_only_summary),
-                painter = rememberVectorPainter(Icons.Outlined.CloudOff),
-            )
-        }
-        item {
-            SwitchPreference(
-                preference = presenter.incognitoMode,
-                title = stringResource(R.string.pref_incognito_mode),
-                subtitle = stringResource(R.string.pref_incognito_mode_summary),
-                painter = painterResource(R.drawable.ic_glasses_24dp),
-            )
-        }
-
-        item { Divider() }
-
-        if (!presenter.showNavUpdates.value) {
+    Scaffold(
+        topBar = {
+            Column(
+                modifier = Modifier.windowInsetsPadding(
+                    WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                ),
+            ) {
+                if (isFDroid) {
+                    WarningBanner(
+                        textRes = R.string.fdroid_warning,
+                        modifier = Modifier.clickable {
+                            uriHandler.openUri("https://tachiyomi.org/help/faq/#how-do-i-migrate-from-the-f-droid-version")
+                        },
+                    )
+                }
+            }
+        },
+    ) { contentPadding ->
+        ScrollbarLazyColumn(
+            modifier = Modifier.padding(contentPadding),
+        ) {
             item {
-                PreferenceRow(
-                    title = stringResource(R.string.label_recent_updates),
-                    painter = painterResource(R.drawable.ic_updates_outline_24dp),
-                    onClick = onClickUpdates,
+                LogoHeader()
+            }
+            item {
+                SwitchPreferenceWidget(
+                    title = stringResource(R.string.label_downloaded_only),
+                    subtitle = stringResource(R.string.downloaded_only_summary),
+                    icon = Icons.Outlined.CloudOff,
+                    checked = downloadedOnly,
+                    onCheckedChanged = onDownloadedOnlyChange,
                 )
             }
-        }
-        if (!presenter.showNavHistory.value) {
             item {
-                PreferenceRow(
-                    title = stringResource(R.string.label_recent_history),
-                    painter = painterResource(R.drawable.ic_history_24dp),
-                    onClick = onClickHistory,
+                SwitchPreferenceWidget(
+                    title = stringResource(R.string.pref_incognito_mode),
+                    subtitle = stringResource(R.string.pref_incognito_mode_summary),
+                    icon = ImageVector.vectorResource(R.drawable.ic_glasses_24dp),
+                    checked = incognitoMode,
+                    onCheckedChanged = onIncognitoModeChange,
                 )
             }
-        }
 
-        item {
-            PreferenceRow(
-                title = stringResource(R.string.label_download_queue),
-                subtitle = when (downloadQueueState) {
-                    DownloadQueueState.Stopped -> null
-                    is DownloadQueueState.Paused -> {
-                        val pending = (downloadQueueState as DownloadQueueState.Paused).pending
-                        if (pending == 0) {
-                            stringResource(R.string.paused)
-                        } else {
-                            "${stringResource(R.string.paused)} • ${quantityStringResource(R.plurals.download_queue_summary, pending, pending)}"
+            item { Divider() }
+
+            // AM (UH) -->
+            val uiPreferences: UiPreferences by injectLazy()
+
+            if (!uiPreferences.showNavUpdates().get()) {
+                item {
+                    TextPreferenceWidget(
+                        title = stringResource(R.string.label_recent_updates),
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_updates_outline_24dp),
+                        onPreferenceClick = onClickUpdates,
+                    )
+                }
+            }
+
+            if (!uiPreferences.showNavHistory().get()) {
+                item {
+                    TextPreferenceWidget(
+                        title = stringResource(R.string.label_recent_manga),
+                        icon = Icons.Outlined.History,
+                        onPreferenceClick = onClickHistory,
+                    )
+                }
+            }
+            // <-- AM (UH)
+
+            item {
+                val downloadQueueState = downloadQueueStateProvider()
+                TextPreferenceWidget(
+                    title = stringResource(R.string.label_download_queue),
+                    subtitle = when (downloadQueueState) {
+                        DownloadQueueState.Stopped -> null
+                        is DownloadQueueState.Paused -> {
+                            val pending = downloadQueueState.pending
+                            if (pending == 0) {
+                                stringResource(R.string.paused)
+                            } else {
+                                "${stringResource(R.string.paused)} • ${
+                                pluralStringResource(
+                                    id = R.plurals.download_queue_summary,
+                                    count = pending,
+                                    pending,
+                                )
+                                }"
+                            }
                         }
-                    }
-                    is DownloadQueueState.Downloading -> {
-                        val pending = (downloadQueueState as DownloadQueueState.Downloading).pending
-                        quantityStringResource(R.plurals.download_queue_summary, pending, pending)
-                    }
-                },
-                painter = rememberVectorPainter(Icons.Outlined.GetApp),
-                onClick = onClickDownloadQueue,
-            )
-        }
-        item {
-            PreferenceRow(
-                title = stringResource(R.string.categories),
-                painter = rememberVectorPainter(Icons.Outlined.Label),
-                onClick = onClickAnimeCategories,
-            )
-        }
-        item {
-            PreferenceRow(
-                title = stringResource(R.string.label_backup),
-                painter = rememberVectorPainter(Icons.Outlined.SettingsBackupRestore),
-                onClick = onClickBackupAndRestore,
-            )
-        }
+                        is DownloadQueueState.Downloading -> {
+                            val pending = downloadQueueState.pending
+                            pluralStringResource(id = R.plurals.download_queue_summary, count = pending, pending)
+                        }
+                    },
+                    icon = Icons.Outlined.GetApp,
+                    onPreferenceClick = onClickDownloadQueue,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(R.string.general_categories),
+                    icon = Icons.Outlined.Label,
+                    onPreferenceClick = onClickCategories,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(R.string.label_stats),
+                    icon = Icons.Outlined.QueryStats,
+                    onPreferenceClick = onClickStats,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(R.string.label_backup),
+                    icon = Icons.Outlined.SettingsBackupRestore,
+                    onPreferenceClick = onClickBackupAndRestore,
+                )
+            }
 
-        item { Divider() }
+            item { Divider() }
 
-        item {
-            PreferenceRow(
-                title = stringResource(R.string.label_settings),
-                painter = rememberVectorPainter(Icons.Outlined.Settings),
-                onClick = onClickSettings,
-            )
-        }
-        item {
-            PreferenceRow(
-                title = stringResource(R.string.pref_category_about),
-                painter = rememberVectorPainter(Icons.Outlined.Info),
-                onClick = onClickAbout,
-            )
-        }
-        item {
-            PreferenceRow(
-                title = stringResource(R.string.label_help),
-                painter = rememberVectorPainter(Icons.Outlined.HelpOutline),
-                onClick = { uriHandler.openUri(MoreController.URL_HELP) },
-            )
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(R.string.label_settings),
+                    icon = Icons.Outlined.Settings,
+                    onPreferenceClick = onClickSettings,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(R.string.pref_category_about),
+                    icon = Icons.Outlined.Info,
+                    onPreferenceClick = onClickAbout,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(R.string.label_help),
+                    icon = Icons.Outlined.HelpOutline,
+                    onPreferenceClick = { uriHandler.openUri(Constants.URL_HELP) },
+                )
+            }
         }
     }
 }

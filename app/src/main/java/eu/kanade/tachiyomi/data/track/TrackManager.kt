@@ -26,9 +26,9 @@ class TrackManager(context: Context) {
     val bangumi = Bangumi(context, BANGUMI)
     val simkl = Simkl(context, SIMKL)
 
-    val services = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi, simkl)
+    val services: List<TrackService> = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi, simkl)
 
     fun getService(id: Long) = services.find { it.id == id }
 
-    fun hasLoggedAnimeServices() = services.any { it.isLogged }
+    fun hasLoggedServices() = services.any { it.isLogged }
 }
