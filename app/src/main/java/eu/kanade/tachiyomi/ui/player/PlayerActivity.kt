@@ -1071,7 +1071,8 @@ class PlayerActivity :
 
         val intent = uri.toShareIntent(
             context = applicationContext,
-            message = getString(R.string.share_screenshot_info, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, episode.name, seconds),
+            // AM (CU)>
+            message = getString(R.string.share_screenshot_info, anime.ogTitle, episode.name, seconds),
         )
         startActivity(Intent.createChooser(intent, getString(R.string.action_share)))
     }

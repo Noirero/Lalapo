@@ -105,7 +105,8 @@ data class BackupAnime(
     }
 
     companion object {
-        fun copyFrom(anime: Anime, /* AM (CU) --> */ customAnimeInfo: CustomAnimeInfo? /* <-- AM (CU) */): BackupAnime {
+        // AM (CU)>
+        fun copyFrom(anime: Anime, customAnimeInfo: CustomAnimeInfo?): BackupAnime {
             return BackupAnime(
                 url = anime.url,
                 // AM (CU) -->

@@ -146,13 +146,15 @@ class BackupRestorer(
             val dbAnime = backupManager.getAnimeFromDatabase(anime.url, anime.source)
             if (dbAnime == null) {
                 // Anime not in database
-                restoreExistingAnime(anime, episodes, categories, history, tracks, backupCategories, /* AM (CU) --> */ customAnime /* <-- AM (CU) */)
+                // AM (CU)>
+                restoreExistingAnime(anime, episodes, categories, history, tracks, backupCategories, customAnime)
             } else {
                 // Anime in database
                 // Copy information from anime already in database
                 backupManager.restoreExistingAnime(anime, dbAnime)
                 // Fetch rest of anime information
-                restoreNewAnime(anime, episodes, categories, history, tracks, backupCategories, /* AM (CU) --> */ customAnime /* <-- AM (CU) */)
+                // AM (CU)>
+                restoreNewAnime(anime, episodes, categories, history, tracks, backupCategories, customAnime)
             }
         } catch (e: Exception) {
             val sourceName = sourceMapping[anime.source] ?: anime.source.toString()
@@ -185,7 +187,8 @@ class BackupRestorer(
         fetchedAnime.id ?: return
 
         backupManager.restoreEpisodes(fetchedAnime, episodes)
-        restoreExtras(fetchedAnime, categories, history, tracks, backupCategories, /* AM (CU) --> */ customAnime /* <-- AM (CU) */)
+        // AM (CU)>
+        restoreExtras(fetchedAnime, categories, history, tracks, backupCategories, customAnime)
     }
 
     private suspend fun restoreNewAnime(
@@ -200,7 +203,8 @@ class BackupRestorer(
         // <-- AM (CU)
     ) {
         backupManager.restoreEpisodes(backupAnime, episodes)
-        restoreExtras(backupAnime, categories, history, tracks, backupCategories, /* AM (CU) --> */ customAnime /* <-- AM (CU) */)
+        // AM (CU)>
+        restoreExtras(backupAnime, categories, history, tracks, backupCategories, customAnime)
     }
 
     private suspend fun restoreExtras(

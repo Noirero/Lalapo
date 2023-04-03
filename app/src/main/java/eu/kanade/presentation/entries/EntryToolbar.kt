@@ -114,8 +114,8 @@ fun EntryToolbar(
                     IconButton(onClick = onClickFilter) {
                         Icon(Icons.Outlined.FilterList, contentDescription = stringResource(R.string.action_filter), tint = filterTint)
                     }
-
-                    if (onClickEditCategory != null || onClickMigrate != null || onClickShare != null || changeAnimeSkipIntro != null || /* AM (CU) --> */ onClickEditInfo != null /* <-- AM (CU) */) {
+                    // AM (CU)>
+                    if (onClickEditCategory != null || onClickMigrate != null || onClickShare != null || changeAnimeSkipIntro != null || onClickEditInfo != null) {
                         OverflowMenu { closeMenu ->
                             if (onClickEditCategory != null) {
                                 DropdownMenuItem(

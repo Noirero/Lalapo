@@ -412,7 +412,8 @@ class AnimeInfoScreenModel(
                                 }
                             } catch (e: Exception) {
                                 logcat(LogPriority.WARN, e) {
-                                    "Could not match anime: ${/*  AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */} with service $service"
+                                    // AM (CU)>
+                                    "Could not match anime: ${anime.ogTitle} with service $service"
                                 }
                             }
                         }
@@ -572,7 +573,8 @@ class AnimeInfoScreenModel(
             val downloaded = if (isLocal) {
                 true
             } else {
-                downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
+                // AM (CU)>
+                downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.ogTitle, anime.source)
             }
             val downloadState = when {
                 activeDownload != null -> activeDownload.status

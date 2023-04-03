@@ -189,7 +189,9 @@ class AnimeDownloadManager(
      * @return an observable containing the list of pages from the episode.
      */
     fun buildVideo(source: AnimeSource, anime: Anime, episode: Episode): Observable<Video> {
-        val episodeDir = provider.findEpisodeDir(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
+        // AM (CU) -->
+        val episodeDir = provider.findEpisodeDir(episode.name, episode.scanlator, anime.ogTitle, source)
+        // <-- AM (CU)
         return Observable.fromCallable {
             val files = episodeDir?.listFiles().orEmpty()
                 .filter { "video" in it.type.orEmpty() }
@@ -277,7 +279,9 @@ class AnimeDownloadManager(
             if (removeQueued) {
                 queue.remove(anime)
             }
-            provider.findAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)?.delete()
+            // AM (CU) -->
+            provider.findAnimeDir(anime.ogTitle, source)?.delete()
+            // <-- AM (CU)
             cache.removeAnime(anime)
             // Delete source directory if empty
             val sourceDir = provider.findSourceDir(source)
@@ -325,7 +329,8 @@ class AnimeDownloadManager(
         var cleaned = 0
 
         if (removeNonFavorite && !anime.favorite) {
-            val animeFolder = provider.getAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
+            // AM (CU)>
+            val animeFolder = provider.getAnimeDir(anime.ogTitle, source)
             cleaned += 1 + animeFolder.listFiles().orEmpty().size
             animeFolder.delete()
             cache.removeAnime(anime)
@@ -346,12 +351,14 @@ class AnimeDownloadManager(
         }
 
         if (cache.getDownloadCount(anime) == 0) {
-            val animeFolder = provider.getAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
+            // AM (CU)>
+            val animeFolder = provider.getAnimeDir(anime.ogTitle, source)
             if (!animeFolder.listFiles().isNullOrEmpty()) {
                 animeFolder.delete()
                 cache.removeAnime(anime)
             } else {
-                Log.e("", "Cache and download folder doesn't match for " + /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */)
+                // AM (CU)>
+                Log.e("", "Cache and download folder doesn't match for " + anime.ogTitle)
             }
         }
         return cleaned
@@ -413,7 +420,8 @@ class AnimeDownloadManager(
      */
     fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
         val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator)
-        val animeDir = provider.getAnimeDir(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source)
+        // AM (CU)>
+        val animeDir = provider.getAnimeDir(anime.ogTitle, source)
 
         // Assume there's only 1 version of the episode name formats present
         val oldFolder = oldNames.asSequence()

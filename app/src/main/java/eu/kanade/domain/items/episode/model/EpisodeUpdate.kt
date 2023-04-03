@@ -20,5 +20,6 @@ data class EpisodeUpdate(
 )
 
 fun Episode.toEpisodeUpdate(): EpisodeUpdate {
-    return EpisodeUpdate(id, animeId, seen, bookmark, /* AM (FM) --> */ fillermark, /* AM (FM) <-- */ lastSecondSeen, totalSeconds, dateFetch, sourceOrder, url, name, dateUpload, episodeNumber, scanlator)
+    // AM (FM)>
+    return EpisodeUpdate(id, animeId, seen, bookmark, fillermark, lastSecondSeen, totalSeconds, dateFetch, sourceOrder, url, name, dateUpload, episodeNumber, scanlator)
 }

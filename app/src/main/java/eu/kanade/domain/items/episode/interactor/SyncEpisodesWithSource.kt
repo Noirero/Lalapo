@@ -107,7 +107,8 @@ class SyncEpisodesWithSource(
             } else {
                 if (shouldUpdateDbEpisode.await(dbEpisode, episode)) {
                     val shouldRenameEpisode = downloadProvider.isEpisodeDirNameChanged(dbEpisode, episode) &&
-                        downloadManager.isEpisodeDownloaded(dbEpisode.name, dbEpisode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
+                        // AM (CU)>
+                        downloadManager.isEpisodeDownloaded(dbEpisode.name, dbEpisode.scanlator, anime.ogTitle, anime.source)
 
                     if (shouldRenameEpisode) {
                         downloadManager.renameEpisode(source, anime, dbEpisode, episode)

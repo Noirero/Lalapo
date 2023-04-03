@@ -33,7 +33,8 @@ fun List<Episode>.applyFilters(anime: Anime, downloadManager: AnimeDownloadManag
             }
         }
         .filter { episode ->
-            val downloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source)
+            // AM (CU)>
+            val downloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.ogTitle, anime.source)
             val downloadState = when {
                 downloaded -> AnimeDownload.State.DOWNLOADED
                 else -> AnimeDownload.State.NOT_DOWNLOADED

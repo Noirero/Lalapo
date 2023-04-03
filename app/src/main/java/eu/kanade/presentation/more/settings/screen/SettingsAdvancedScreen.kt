@@ -493,7 +493,8 @@ object SettingsAdvancedScreen : SearchableSettings {
                             val sourceAnime = animeList
                                 .asSequence()
                                 .filter { it.source == source.id }
-                                .map { it to DiskUtil.buildValidFilename(/* AM (CU) --> */ it.ogTitle /* <-- AM (CU) */) }
+                                // AM (CU)>
+                                .map { it to DiskUtil.buildValidFilename(it.ogTitle) }
                                 .toList()
 
                             animeFolders.forEach mangaFolder@{ animeFolder ->

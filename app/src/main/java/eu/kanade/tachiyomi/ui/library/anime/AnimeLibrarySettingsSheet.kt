@@ -115,7 +115,8 @@ class AnimeLibrarySettingsSheet(
                         trackFilters = services.associate { service ->
                             Pair(service.id, Item.TriStateGroup(getServiceResId(service, size), this))
                         }
-                        val list: MutableList<Item> = mutableListOf(downloaded, unseen, started, bookmarked, /* AM (FM) --> */ fillermarked, /* <-- AM (FM) */ completed)
+                        // AM (FM)>
+                        val list: MutableList<Item> = mutableListOf(downloaded, unseen, started, bookmarked, fillermarked, completed)
                         if (size > 1) list.add(Item.Header(R.string.action_filter_tracked))
                         list.addAll(trackFilters.values)
                         items = list

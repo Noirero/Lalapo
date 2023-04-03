@@ -147,10 +147,14 @@ class PlayerViewModel(
         val episodesForPlayer = episodes.filterNot {
             anime.unseenFilterRaw == Anime.EPISODE_SHOW_SEEN && !it.seen ||
                 anime.unseenFilterRaw == Anime.EPISODE_SHOW_UNSEEN && it.seen ||
-                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(it.name, it.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source) ||
-                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, anime.source) ||
+                // AM (CU)>
+                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.ogTitle, anime.source) ||
+                anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.ogTitle, anime.source) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
-                anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark
+                anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
+                // AM (FM)
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
         }.toMutableList()
 
         if (episodesForPlayer.all { it.id != episodeId }) {
@@ -483,7 +487,8 @@ class PlayerViewModel(
         val filename = generateFilename(anime, seconds) ?: return
 
         // Pictures directory.
-        val relativePath = DiskUtil.buildValidFilename(/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */)
+        // AM (CU)>
+        val relativePath = DiskUtil.buildValidFilename(anime.ogTitle)
 
         // Copy file in background.
         viewModelScope.launchNonCancellable {
@@ -676,7 +681,7 @@ class PlayerViewModel(
         val episode = currentEpisode ?: return null
         val filenameSuffix = " - $timePos"
         return DiskUtil.buildValidFilename(
-            "${/* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */} - ${episode.name}".takeBytes(MAX_FILE_NAME_BYTES - filenameSuffix.byteSize()),
+            "${anime.ogTitle} - ${episode.name}".takeBytes(MAX_FILE_NAME_BYTES - filenameSuffix.byteSize()),
         ) + filenameSuffix
     }
 

@@ -199,7 +199,8 @@ class AnimeDownloader(
             queue
                 .filter { it.status == AnimeDownload.State.QUEUE }
                 .forEach {
-                    val animeDir = provider.getAnimeDir(/* AM (CU) --> */ it.anime.ogTitle /* <-- AM (CU) */, it.source)
+                    // AM (CU)>
+                    val animeDir = provider.getAnimeDir(it.anime.ogTitle, it.source)
                     val episodeDirname = provider.getEpisodeDirName(it.episode.name, it.episode.scanlator)
                     val tmpDir = animeDir.findFile(episodeDirname + TMP_DIR_SUFFIX)
                     tmpDir?.delete()
@@ -278,7 +279,8 @@ class AnimeDownloader(
         val episodesWithoutDir = async {
             episodes
                 // Filter out those already downloaded.
-                .filter { provider.findEpisodeDir(it.name, it.scanlator, /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */, source) == null }
+                // AM (CU)>
+                .filter { provider.findEpisodeDir(it.name, it.scanlator, anime.ogTitle, source) == null }
                 // Add episodes to queue from the start.
                 .sortedByDescending { it.sourceOrder }
         }
@@ -330,7 +332,8 @@ class AnimeDownloader(
      * @param download the episode to be downloaded.
      */
     private fun downloadEpisode(download: AnimeDownload): Observable<AnimeDownload> = Observable.defer {
-        val animeDir = provider.getAnimeDir(/* AM (CU) --> */ download.anime.ogTitle /* <-- AM (CU) */, download.source)
+        // AM (CU)>
+        val animeDir = provider.getAnimeDir(download.anime.ogTitle, download.source)
 
         val availSpace = DiskUtil.getAvailableStorageSpace(animeDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
@@ -445,7 +448,8 @@ class AnimeDownloader(
                 if (preferences.useExternalDownloader().get() == download.changeDownloader) {
                     downloadVideo(video, download, tmpDir, filename)
                 } else {
-                    val betterFileName = DiskUtil.buildValidFilename("${/* AM (CU) --> */ download.anime.ogTitle /* <-- AM (CU) */} - ${download.episode.name}")
+                    // AM (CU)>
+                    val betterFileName = DiskUtil.buildValidFilename("${ download.anime.ogTitle} - ${download.episode.name}")
                     downloadVideoExternal(video, download.source, tmpDir, betterFileName)
                 }
             }
@@ -464,7 +468,8 @@ class AnimeDownloader(
             .onErrorReturn {
                 video.progress = 0
                 video.status = Video.State.ERROR
-                notifier.onError(it.message, download.episode.name, /* AM (CU) --> */ download.anime.ogTitle /* <-- AM (CU) */)
+                // AM (CU)>
+                notifier.onError(it.message, download.episode.name, download.anime.ogTitle)
                 video
             }
     }

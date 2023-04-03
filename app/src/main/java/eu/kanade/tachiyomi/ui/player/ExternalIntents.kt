@@ -128,7 +128,8 @@ class ExternalIntents {
                 isNsfwSource = isSourceNsfw,
                 episodeNumber = episode.episodeNumber,
                 thumbnailUrl = anime.thumbnailUrl,
-                animeTitle = /* AM (CU) --> */ anime.ogTitle /* <-- AM (CU) */,
+                // AM (CU)>
+                animeTitle = anime.ogTitle,
             )
         }
         // <-- AM (DC)

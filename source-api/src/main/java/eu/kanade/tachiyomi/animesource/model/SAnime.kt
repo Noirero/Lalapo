@@ -47,19 +47,23 @@ interface SAnime : Serializable {
         // <-- AM (CU)
 
         if (other.author != null) {
-            author = /* AM (CU) --> */ other.originalAuthor // <-- AM (CU)
+            // AM (CU)>
+            author = other.originalAuthor
         }
 
         if (other.artist != null) {
-            artist = /* AM (CU) --> */ other.originalArtist // <-- AM (CU)
+            // AM (CU)>
+            artist = other.originalArtist
         }
 
         if (other.description != null) {
-            description = /* AM (CU) --> */ other.originalDescription // <-- AM (CU)
+            // AM (CU)>
+            description = other.originalDescription
         }
 
         if (other.genre != null) {
-            genre = /* AM (CU) --> */ other.originalGenre // <-- AM (CU)
+            // AM (CU)>
+            genre = other.originalGenre
         }
 
         if (other.thumbnail_url != null) {

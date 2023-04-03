@@ -3,8 +3,9 @@ package eu.kanade.data.updates.anime
 import eu.kanade.domain.entries.anime.model.AnimeCover
 import eu.kanade.domain.updates.anime.model.AnimeUpdatesWithRelations
 
-val animeUpdateWithRelationMapper: (Long, String, Long, String, String?, Boolean, Boolean, /* AM (FM) --> */ Boolean, /* <-- AM (FM) */ Long, Boolean, String?, Long, Long, Long) -> AnimeUpdatesWithRelations = {
-        animeId, animeTitle, episodeId, episodeName, scanlator, seen, bookmark, /* AM (FM) --> */ fillermark, /* <-- AM (FM) */ sourceId, favorite, thumbnailUrl, coverLastModified, _, dateFetch ->
+// AM (FM)>
+val animeUpdateWithRelationMapper: (Long, String, Long, String, String?, Boolean, Boolean, Boolean, Long, Boolean, String?, Long, Long, Long) -> AnimeUpdatesWithRelations = {
+        animeId, animeTitle, episodeId, episodeName, scanlator, seen, bookmark, fillermark, sourceId, favorite, thumbnailUrl, coverLastModified, _, dateFetch ->
     AnimeUpdatesWithRelations(
         animeId = animeId,
         // AM (CU) -->
