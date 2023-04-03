@@ -22,6 +22,9 @@ fun BaseAnimeSourceItem(
     showLanguageInContent: Boolean = true,
     onClickItem: () -> Unit = {},
     onLongClickItem: () -> Unit = {},
+    // AM (BR) -->
+    pin: @Composable (RowScope.(AnimeSource) -> Unit)? = null,
+    // <-- AM (BR)
     icon: @Composable RowScope.(AnimeSource) -> Unit = defaultIcon,
     action: @Composable RowScope.(AnimeSource) -> Unit = {},
     content: @Composable RowScope.(AnimeSource, String?) -> Unit = defaultContent,
@@ -31,6 +34,9 @@ fun BaseAnimeSourceItem(
         modifier = modifier,
         onClickItem = onClickItem,
         onLongClickItem = onLongClickItem,
+        // AM (BR) -->
+        pin = if (pin != null) { { pin.invoke(this, source) } } else null,
+        // <-- AM (BR)
         icon = { icon.invoke(this, source) },
         action = { action.invoke(this, source) },
         content = { content.invoke(this, source, sourceLangString) },

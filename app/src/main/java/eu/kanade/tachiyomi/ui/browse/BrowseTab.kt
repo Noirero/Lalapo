@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -10,18 +11,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.presentation.components.TabbedScreen
+import eu.kanade.presentation.browse.anime.AnimeSourceOptionsDialog
+import eu.kanade.presentation.browse.anime.AnimeSourcesScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
-import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreenModel
-import eu.kanade.tachiyomi.ui.browse.anime.extension.animeExtensionsTab
-import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.migrateAnimeSourceTab
-import eu.kanade.tachiyomi.ui.browse.anime.source.animeSourcesTab
+import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
+import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.storage.DiskUtil
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 data class BrowseTab(
     private val toExtensions: Boolean = false,
@@ -42,24 +46,47 @@ data class BrowseTab(
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        // AM (BR) -->
+        val snackbarHostState = SnackbarHostState()
+        val navigator = LocalNavigator.currentOrThrow
+        val screenModel = rememberScreenModel { AnimeSourcesScreenModel() }
+        val state by screenModel.state.collectAsState()
 
-        // Hoisted for extensions tab's search bar
-
-        val animeExtensionsScreenModel = rememberScreenModel { AnimeExtensionsScreenModel() }
-        val animeExtensionsQuery by animeExtensionsScreenModel.query.collectAsState()
-
-        TabbedScreen(
-            titleRes = R.string.browse,
-            tabs = listOf(
-                animeSourcesTab(),
-                animeExtensionsTab(animeExtensionsScreenModel),
-                migrateAnimeSourceTab(),
-            ),
-            startIndex = 2.takeIf { toExtensions },
-            searchQueryAnime = animeExtensionsQuery,
-            onChangeSearchQueryAnime = animeExtensionsScreenModel::search,
-            scrollable = true,
+        AnimeSourcesScreen(
+            state = state,
+            navigator = navigator,
+            onClickItem = { source, listing ->
+                screenModel.onOpenSource(source)
+                navigator.push(BrowseAnimeSourceScreen(source.id, listing.query))
+            },
+            onClickPin = screenModel::togglePin,
+            onLongClickItem = screenModel::showSourceDialog,
         )
+
+        state.dialog?.let { dialog ->
+            val source = dialog.source
+            AnimeSourceOptionsDialog(
+                source = source,
+                onClickPin = {
+                    screenModel.togglePin(source)
+                    screenModel.closeDialog()
+                },
+                onClickDisable = {
+                    screenModel.toggleSource(source)
+                    screenModel.closeDialog()
+                },
+                onClickUpdate = {
+                    screenModel.updateExtension(source.installedExtension)
+                    screenModel.closeDialog()
+                },
+                onClickUninstall = {
+                    screenModel.uninstallExtension(source.installedExtension.pkgName)
+                    screenModel.closeDialog()
+                },
+                onDismiss = screenModel::closeDialog,
+            )
+        }
+        // <-- AM (BR)
 
         // For local source
         DiskUtil.RequestStoragePermission()
@@ -70,5 +97,18 @@ data class BrowseTab(
             DiscordRPCService.setDiscordPage(3)
             // <-- AM (DC)
         }
+
+        // AM (BR) -->
+        val internalErrString = stringResource(R.string.internal_error)
+        LaunchedEffect(Unit) {
+            screenModel.events.collectLatest { event ->
+                when (event) {
+                    AnimeSourcesScreenModel.Event.FailedFetchingSources -> {
+                        launch { snackbarHostState.showSnackbar(internalErrString) }
+                    }
+                }
+            }
+        }
+        // <-- AM (BR)
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -36,6 +37,16 @@ data class AnimeSource(
             else -> "$id"
         }
     }
+
+    // AM (BR) -->
+    val installedExtension: AnimeExtension.Installed
+        get() {
+            return Injekt.get<AnimeExtensionManager>()
+                .installedExtensionsFlow
+                .value
+                .find { ext -> ext.sources.any { it.id == id } }!!
+        }
+    // <-- AM (BR)
 }
 
 sealed class Pin(val code: Int) {

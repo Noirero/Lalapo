@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,13 +37,17 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.Navigator
 import com.google.accompanist.flowlayout.FlowRow
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
+import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.EmptyScreen
 import eu.kanade.presentation.components.FastScrollLazyColumn
 import eu.kanade.presentation.components.LoadingScreen
 import eu.kanade.presentation.components.PullRefresh
+import eu.kanade.presentation.components.Scaffold
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.entries.DotSeparatorNoSpaceText
 import eu.kanade.presentation.theme.header
@@ -53,6 +58,7 @@ import eu.kanade.presentation.util.topSmallPaddingValues
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionFilterScreen
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsState
 import eu.kanade.tachiyomi.util.system.DeviceUtil
@@ -61,8 +67,13 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 @Composable
 fun AnimeExtensionScreen(
     state: AnimeExtensionsState,
-    contentPadding: PaddingValues,
+    // AM (BR) -->
+    navigator: Navigator,
+    // <-- AM (BR)
     searchQuery: String? = null,
+    // AM (BR) -->
+    onChangeSearchQuery: (String?) -> Unit,
+    // <-- AM (BR)
     onLongClickItem: (AnimeExtension) -> Unit,
     onClickItemCancel: (AnimeExtension) -> Unit,
     onInstallExtension: (AnimeExtension.Available) -> Unit,
@@ -73,37 +84,59 @@ fun AnimeExtensionScreen(
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
 ) {
-    PullRefresh(
-        refreshing = state.isRefreshing,
-        onRefresh = onRefresh,
-        enabled = !state.isLoading,
-    ) {
-        when {
-            state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
-            state.isEmpty -> {
-                val msg = if (!searchQuery.isNullOrEmpty()) {
-                    R.string.no_results_found
-                } else {
-                    R.string.empty_screen
+    // AM (BR) -->
+    Scaffold(
+        topBar = { scrollBehavior ->
+            SearchToolbar(
+                titleContent = { AppBarTitle(stringResource(R.string.label_animeextensions)) },
+                searchQuery = searchQuery,
+                onChangeSearchQuery = onChangeSearchQuery,
+                actions = {
+                    IconButton(onClick = { navigator.push(AnimeExtensionFilterScreen()) }) {
+                        Icon(
+                            Icons.Outlined.Translate,
+                            contentDescription = stringResource(R.string.action_filter),
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigator::pop,
+            )
+        },
+    ) { contentPadding ->
+        // <-- AM (BR)
+        PullRefresh(
+            refreshing = state.isRefreshing,
+            onRefresh = onRefresh,
+            enabled = !state.isLoading,
+        ) {
+            when {
+                state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
+                state.isEmpty -> {
+                    val msg = if (!searchQuery.isNullOrEmpty()) {
+                        R.string.no_results_found
+                    } else {
+                        R.string.empty_screen
+                    }
+                    EmptyScreen(
+                        textResource = msg,
+                        modifier = Modifier.padding(contentPadding),
+                    )
                 }
-                EmptyScreen(
-                    textResource = msg,
-                    modifier = Modifier.padding(contentPadding),
-                )
-            }
-            else -> {
-                AnimeExtensionContent(
-                    state = state,
-                    contentPadding = contentPadding,
-                    onLongClickItem = onLongClickItem,
-                    onClickItemCancel = onClickItemCancel,
-                    onInstallExtension = onInstallExtension,
-                    onUninstallExtension = onUninstallExtension,
-                    onUpdateExtension = onUpdateExtension,
-                    onTrustExtension = onTrustExtension,
-                    onOpenExtension = onOpenExtension,
-                    onClickUpdateAll = onClickUpdateAll,
-                )
+                else -> {
+                    AnimeExtensionContent(
+                        state = state,
+                        contentPadding = contentPadding,
+                        onLongClickItem = onLongClickItem,
+                        onClickItemCancel = onClickItemCancel,
+                        onInstallExtension = onInstallExtension,
+                        onUninstallExtension = onUninstallExtension,
+                        onUpdateExtension = onUpdateExtension,
+                        onTrustExtension = onTrustExtension,
+                        onOpenExtension = onOpenExtension,
+                        onClickUpdateAll = onClickUpdateAll,
+                    )
+                }
             }
         }
     }
@@ -140,7 +173,7 @@ private fun AnimeExtensionContent(
                     modifier = Modifier
                         .padding(bottom = MaterialTheme.padding.small)
                         .clickable {
-                            uriHandler.openUri("https://tachiyomi.org/extensions")
+                            uriHandler.openUri("https://aniyomi.org/extensions")
                         },
                 )
             }
@@ -185,38 +218,50 @@ private fun AnimeExtensionContent(
                     )
                 }
                 is AnimeExtensionUiModel.Header.Text -> {
-                    ExtensionHeader(
-                        text = item.text,
-                        modifier = Modifier.animateItemPlacement(),
-                    )
+                    // AM (BR) -->
+                    if (item.text.equals(stringResource(id = R.string.ext_installed))) {
+                        ExtensionHeader(
+                            text = item.text,
+                            modifier = Modifier.animateItemPlacement(),
+                        )
+                    }
+                    // <-- AM (BR)
                 }
                 is AnimeExtensionUiModel.Item -> {
-                    AnimeExtensionItem(
-                        modifier = Modifier.animateItemPlacement(),
-                        item = item,
-                        onClickItem = {
-                            when (it) {
-                                is AnimeExtension.Available -> onInstallExtension(it)
-                                is AnimeExtension.Installed -> onOpenExtension(it)
-                                is AnimeExtension.Untrusted -> { trustState = it }
-                            }
-                        },
-                        onLongClickItem = onLongClickItem,
-                        onClickItemCancel = onClickItemCancel,
-                        onClickItemAction = {
-                            when (it) {
-                                is AnimeExtension.Available -> onInstallExtension(it)
-                                is AnimeExtension.Installed -> {
-                                    if (it.hasUpdate) {
-                                        onUpdateExtension(it)
-                                    } else {
-                                        onOpenExtension(it)
+                    // AM (BR) -->
+                    if (item.extension !is AnimeExtension.Installed || item.extension.hasUpdate) {
+                        AnimeExtensionItem(
+                            modifier = Modifier.animateItemPlacement(),
+                            item = item,
+                            onClickItem = {
+                                when (it) {
+                                    is AnimeExtension.Available -> onInstallExtension(it)
+                                    is AnimeExtension.Installed -> onOpenExtension(it)
+                                    is AnimeExtension.Untrusted -> {
+                                        trustState = it
                                     }
                                 }
-                                is AnimeExtension.Untrusted -> { trustState = it }
-                            }
-                        },
-                    )
+                            },
+                            onLongClickItem = onLongClickItem,
+                            onClickItemCancel = onClickItemCancel,
+                            onClickItemAction = {
+                                when (it) {
+                                    is AnimeExtension.Available -> onInstallExtension(it)
+                                    is AnimeExtension.Installed -> {
+                                        if (it.hasUpdate) {
+                                            onUpdateExtension(it)
+                                        } else {
+                                            onOpenExtension(it)
+                                        }
+                                    }
+                                    is AnimeExtension.Untrusted -> {
+                                        trustState = it
+                                    }
+                                }
+                            },
+                            // <-- AM (BR)
+                        )
+                    }
                 }
             }
         }

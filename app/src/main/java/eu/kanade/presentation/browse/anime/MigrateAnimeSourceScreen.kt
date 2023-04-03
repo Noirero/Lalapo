@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material3.Icon
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,10 +29,12 @@ import eu.kanade.domain.source.anime.model.AnimeSource
 import eu.kanade.domain.source.service.SetMigrateSorting
 import eu.kanade.presentation.browse.anime.components.AnimeSourceIcon
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.Badge
 import eu.kanade.presentation.components.BadgeGroup
 import eu.kanade.presentation.components.EmptyScreen
 import eu.kanade.presentation.components.LoadingScreen
+import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.components.ScrollbarLazyColumn
 import eu.kanade.presentation.components.Scroller.STICKY_HEADER_KEY_PREFIX
 import eu.kanade.presentation.theme.header
@@ -45,32 +49,55 @@ import eu.kanade.tachiyomi.util.system.copyToClipboard
 @Composable
 fun MigrateAnimeSourceScreen(
     state: MigrateAnimeSourceState,
-    contentPadding: PaddingValues,
+    // AM (BR) -->
+    navigateUp: () -> Unit,
+    // <-- AM (BR)
     onClickItem: (AnimeSource) -> Unit,
     onToggleSortingDirection: () -> Unit,
     onToggleSortingMode: () -> Unit,
 ) {
     val context = LocalContext.current
-    when {
-        state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
-        state.isEmpty -> EmptyScreen(
-            textResource = R.string.information_empty_library,
-            modifier = Modifier.padding(contentPadding),
-        )
-        else ->
-            MigrateAnimeSourceList(
-                list = state.items,
-                contentPadding = contentPadding,
-                onClickItem = onClickItem,
-                onLongClickItem = { source ->
-                    val sourceId = source.id.toString()
-                    context.copyToClipboard(sourceId, sourceId)
+    // AM (BR) -->
+    val uriHandler = LocalUriHandler.current
+    Scaffold(
+        topBar = { scrollBehavior ->
+            AppBar(
+                title = stringResource(R.string.label_migration_anime),
+                actions = {
+                    IconButton(onClick = { uriHandler.openUri("https://aniyomi.org/help/guides/source-migration/") }) {
+                        Icon(
+                            imageVector = Icons.Outlined.HelpOutline,
+                            contentDescription = stringResource(R.string.migration_help_guide),
+                        )
+                    }
                 },
-                sortingMode = state.sortingMode,
-                onToggleSortingMode = onToggleSortingMode,
-                sortingDirection = state.sortingDirection,
-                onToggleSortingDirection = onToggleSortingDirection,
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigateUp,
             )
+        },
+    ) { contentPadding ->
+        // <-- AM (BR)
+        when {
+            state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
+            state.isEmpty -> EmptyScreen(
+                textResource = R.string.information_empty_library,
+                modifier = Modifier.padding(contentPadding),
+            )
+            else ->
+                MigrateAnimeSourceList(
+                    list = state.items,
+                    contentPadding = contentPadding,
+                    onClickItem = onClickItem,
+                    onLongClickItem = { source ->
+                        val sourceId = source.id.toString()
+                        context.copyToClipboard(sourceId, sourceId)
+                    },
+                    sortingMode = state.sortingMode,
+                    onToggleSortingMode = onToggleSortingMode,
+                    sortingDirection = state.sortingDirection,
+                    onToggleSortingDirection = onToggleSortingDirection,
+                )
+        }
     }
 }
 

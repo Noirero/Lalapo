@@ -1,14 +1,23 @@
 package eu.kanade.presentation.browse.anime
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SwapCalls
+import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,72 +27,144 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.domain.source.anime.model.AnimeSource
 import eu.kanade.domain.source.anime.model.Pin
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
+import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.EmptyScreen
+import eu.kanade.presentation.components.ExtendedFloatingActionButton
 import eu.kanade.presentation.components.LoadingScreen
+import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.components.ScrollbarLazyColumn
 import eu.kanade.presentation.theme.header
+import eu.kanade.presentation.util.bottomSuperLargePaddingValues
+import eu.kanade.presentation.util.isScrollingDown
+import eu.kanade.presentation.util.isScrollingUp
 import eu.kanade.presentation.util.padding
 import eu.kanade.presentation.util.plus
 import eu.kanade.presentation.util.topSmallPaddingValues
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
+import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreen
+import eu.kanade.tachiyomi.ui.browse.anime.extension.details.AnimeExtensionDetailsScreen
+import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceScreen
+import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesFilterScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesState
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreenModel.Listing
+import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 
 @Composable
 fun AnimeSourcesScreen(
     state: AnimeSourcesState,
-    contentPadding: PaddingValues,
+    // AM (BR) -->
+    navigator: Navigator,
+    // <-- AM (BR)
     onClickItem: (AnimeSource, Listing) -> Unit,
     onClickPin: (AnimeSource) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
 ) {
-    when {
-        state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
-        state.isEmpty -> EmptyScreen(
-            textResource = R.string.source_empty_screen,
-            modifier = Modifier.padding(contentPadding),
-        )
-        else -> {
-            ScrollbarLazyColumn(
-                contentPadding = contentPadding + topSmallPaddingValues,
-            ) {
-                items(
-                    items = state.items,
-                    contentType = {
-                        when (it) {
-                            is AnimeSourceUiModel.Header -> "header"
-                            is AnimeSourceUiModel.Item -> "item"
-                        }
-                    },
-                    key = {
-                        when (it) {
-                            is AnimeSourceUiModel.Header -> it.hashCode()
-                            is AnimeSourceUiModel.Item -> "source-${it.source.key()}"
-                        }
-                    },
-                ) { model ->
-                    when (model) {
-                        is AnimeSourceUiModel.Header -> {
-                            AnimeSourceHeader(
-                                modifier = Modifier.animateItemPlacement(),
-                                language = model.language,
+    // AM (BR) -->
+    Scaffold(
+        topBar = { scrollBehavior ->
+            AppBar(
+                titleContent = { AppBarTitle(stringResource(R.string.browse)) },
+                actions = {
+                    IconButton(onClick = { navigator.push(GlobalAnimeSearchScreen()) }) {
+                        Icon(
+                            Icons.Outlined.TravelExplore,
+                            contentDescription = stringResource(R.string.action_global_search),
+                        )
+                    }
+                    IconButton(onClick = { navigator.push(AnimeSourcesFilterScreen()) }) {
+                        Icon(
+                            Icons.Outlined.FilterList,
+                            contentDescription = stringResource(R.string.action_filter),
+                        )
+                    }
+                    IconButton(onClick = { navigator.push(MigrateAnimeSourceScreen()) }) {
+                        Icon(
+                            Icons.Outlined.SwapCalls,
+                            contentDescription = stringResource(R.string.action_migrate),
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+            )
+        },
+    ) { contentPadding ->
+        // <-- AM (BR)
+        when {
+            state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
+            state.isEmpty -> EmptyScreen(
+                textResource = R.string.source_empty_screen,
+                modifier = Modifier.padding(contentPadding),
+            )
+            else -> {
+                val extensionsListState = rememberLazyListState()
+                Scaffold(
+                    floatingActionButton = {
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                        ) {
+                            ExtendedFloatingActionButton(
+                                text = { Text(text = stringResource(R.string.ext_install)) },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.Download,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = { navigator.push(AnimeExtensionsScreen()) },
+                                expanded = !(extensionsListState.isScrollingUp() && extensionsListState.isScrollingDown()),
                             )
                         }
-                        is AnimeSourceUiModel.Item -> AnimeSourceItem(
-                            modifier = Modifier.animateItemPlacement(),
-                            source = model.source,
-                            onClickItem = onClickItem,
-                            onLongClickItem = onLongClickItem,
-                            onClickPin = onClickPin,
-                        )
+                    },
+                ) {
+                    ScrollbarLazyColumn(
+                        state = extensionsListState,
+                        contentPadding = contentPadding + topSmallPaddingValues + bottomSuperLargePaddingValues,
+                    ) {
+                        items(
+                            items = state.items,
+                            contentType = {
+                                when (it) {
+                                    is AnimeSourceUiModel.Header -> "header"
+                                    is AnimeSourceUiModel.Item -> "item"
+                                }
+                            },
+                            key = {
+                                when (it) {
+                                    is AnimeSourceUiModel.Header -> it.hashCode()
+                                    is AnimeSourceUiModel.Item -> "source-${it.source.key()}"
+                                }
+                            },
+                        ) { model ->
+                            when (model) {
+                                is AnimeSourceUiModel.Header -> {
+                                    AnimeSourceHeader(
+                                        modifier = Modifier.animateItemPlacement(),
+                                        language = model.language,
+                                    )
+                                }
+                                is AnimeSourceUiModel.Item -> AnimeSourceItem(
+                                    modifier = Modifier.animateItemPlacement(),
+                                    navigator = navigator,
+                                    source = model.source,
+                                    onClickItem = onClickItem,
+                                    onLongClickItem = onLongClickItem,
+                                    onClickPin = onClickPin,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -108,6 +189,9 @@ private fun AnimeSourceHeader(
 @Composable
 private fun AnimeSourceItem(
     modifier: Modifier = Modifier,
+    // AM (BR) -->
+    navigator: Navigator,
+    // <-- AM (BR)
     source: AnimeSource,
     onClickItem: (AnimeSource, Listing) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
@@ -120,7 +204,16 @@ private fun AnimeSourceItem(
         onLongClickItem = { onLongClickItem(source) },
         action = {
             if (source.supportsLatest) {
-                TextButton(onClick = { onClickItem(source, Listing.Latest) }) {
+                // AM (BR) -->
+                TextButton(
+                    onClick = { onClickItem(source, Listing.Latest) },
+                    modifier = if (source.id == LocalAnimeSource.ID) {
+                        modifier.padding(end = 48.dp)
+                    } else {
+                        Modifier
+                    },
+                ) {
+                    // <-- AM (BR)
                     Text(
                         text = stringResource(id = R.string.latest),
                         style = LocalTextStyle.current.copy(
@@ -129,6 +222,16 @@ private fun AnimeSourceItem(
                     )
                 }
             }
+            // AM (BR) -->
+            if (source.id != LocalAnimeSource.ID) {
+                AnimeSourceSettingsButton(
+                    navigator = navigator,
+                    source = source,
+                )
+            }
+        },
+        pin = {
+            // <-- AM (BR)
             AnimeSourcePinButton(
                 isPinned = Pin.Pinned in source.pin,
                 onClick = { onClickPin(source) },
@@ -149,16 +252,41 @@ private fun AnimeSourcePinButton(
         Icon(
             imageVector = icon,
             tint = tint,
+            // AM (BR) -->
+            modifier = Modifier
+                .size(16.dp)
+                .rotate(-30f),
+            // <-- AM (BR)
             contentDescription = stringResource(description),
         )
     }
 }
+
+// AM (BR) -->
+@Composable
+private fun AnimeSourceSettingsButton(
+    navigator: Navigator,
+    source: AnimeSource,
+) {
+    IconButton(onClick = { navigator.push(AnimeExtensionDetailsScreen(source.installedExtension.pkgName)) }) {
+        Icon(
+            imageVector = Icons.Outlined.Settings,
+            tint = MaterialTheme.colorScheme.primary,
+            contentDescription = stringResource(R.string.settings),
+        )
+    }
+}
+// <-- AM (BR)
 
 @Composable
 fun AnimeSourceOptionsDialog(
     source: AnimeSource,
     onClickPin: () -> Unit,
     onClickDisable: () -> Unit,
+    // AM (BR) -->
+    onClickUpdate: () -> Unit,
+    onClickUninstall: () -> Unit,
+    // <-- AM (BR)
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -183,6 +311,24 @@ fun AnimeSourceOptionsDialog(
                             .fillMaxWidth()
                             .padding(vertical = 16.dp),
                     )
+                    // AM (BR) -->
+                    if (source.installedExtension.hasUpdate) {
+                        Text(
+                            text = stringResource(id = R.string.ext_update),
+                            modifier = Modifier
+                                .clickable(onClick = onClickUpdate)
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                        )
+                    }
+                    Text(
+                        text = stringResource(id = R.string.ext_uninstall),
+                        modifier = Modifier
+                            .clickable(onClick = onClickUninstall)
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                    )
+                    // <-- AM (BR)
                 }
             }
         },

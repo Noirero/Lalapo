@@ -11,6 +11,8 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions
+import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.subscribeToInstallUpdate
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
@@ -22,7 +24,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import rx.Observable
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
@@ -36,7 +37,9 @@ class AnimeExtensionsScreenModel(
     private val _query: MutableStateFlow<String?> = MutableStateFlow(null)
     val query: StateFlow<String?> = _query.asStateFlow()
 
-    private var _currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
+    // AM (BR) -->
+    private var _currentDownloads = AnimeSourceExtensionFunctions.currentDownloads
+    // <-- AM (BR)
 
     init {
         val context = Injekt.get<Application>()
@@ -163,31 +166,6 @@ class AnimeExtensionsScreenModel(
 
     fun cancelInstallUpdateExtension(extension: AnimeExtension) {
         extensionManager.cancelInstallUpdateExtension(extension)
-    }
-
-    private fun removeDownloadState(extension: AnimeExtension) {
-        _currentDownloads.update { _map ->
-            val map = _map.toMutableMap()
-            map.remove(extension.pkgName)
-            map
-        }
-    }
-
-    private fun addDownloadState(extension: AnimeExtension, installStep: InstallStep) {
-        _currentDownloads.update { _map ->
-            val map = _map.toMutableMap()
-            map[extension.pkgName] = installStep
-            map
-        }
-    }
-
-    private fun Observable<InstallStep>.subscribeToInstallUpdate(extension: AnimeExtension) {
-        this
-            .doOnUnsubscribe { removeDownloadState(extension) }
-            .subscribe(
-                { installStep -> addDownloadState(extension, installStep) },
-                { removeDownloadState(extension) },
-            )
     }
 
     fun uninstallExtension(pkgName: String) {
