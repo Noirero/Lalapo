@@ -13,6 +13,7 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.preference.PreferenceStore
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupCreatorJob
+import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
@@ -51,6 +52,7 @@ object Migrations {
         backupPreferences: BackupPreferences,
         // AM (CN) -->
         connectionsPreferences: ConnectionsPreferences,
+        connectionsManager: ConnectionsManager,
         // <-- AM (CN)
     ): Boolean {
         val lastVersionCode = preferenceStore.getInt("last_version_code", 0)
@@ -304,6 +306,10 @@ object Migrations {
                         }
                         putInt(connectionsPreferences.discordRPCStatus().key(), newInt)
                     }
+                }
+
+                if(connectionsPreferences.connectionsToken(connectionsManager.discord).get().isNotBlank()) {
+                    connectionsPreferences.setConnectionsCredentials(connectionsManager.discord, "Discord", "Logged In")
                 }
                 // <-- AM (DC)
             }

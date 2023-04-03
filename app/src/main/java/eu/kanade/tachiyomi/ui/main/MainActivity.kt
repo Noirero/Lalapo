@@ -152,6 +152,7 @@ class MainActivity : BaseActivity() {
                 backupPreferences = Injekt.get(),
                 // AM (CN) -->
                 connectionsPreferences = connectionsPreferences,
+                connectionsManager = Injekt.get(),
                 // <-- AM (CN)
             )
         } else {
