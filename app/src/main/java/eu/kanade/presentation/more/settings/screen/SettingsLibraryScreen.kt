@@ -46,13 +46,13 @@ import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
 import eu.kanade.tachiyomi.data.preference.DEVICE_BATTERY_NOT_LOW
 import eu.kanade.tachiyomi.data.preference.DEVICE_CHARGING
 import eu.kanade.tachiyomi.data.preference.DEVICE_NETWORK_NOT_METERED
 import eu.kanade.tachiyomi.data.preference.DEVICE_ONLY_ON_WIFI
-import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
-import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
-import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.coroutines.launch
