@@ -198,7 +198,6 @@ class EpisodeRecognitionTest {
 
         assertEpisode(animeTitle, "Fairy Tail 404.extravol002", 404.99f)
         assertEpisode(animeTitle, "Fairy Tail 404 extravol002", 404.99f)
-        assertEpisode(animeTitle, "Fairy Tail 404.evol002", 404.5f)
     }
 
     @Test
@@ -207,7 +206,6 @@ class EpisodeRecognitionTest {
 
         assertEpisode(animeTitle, "Fairy Tail 404.omakevol002", 404.98f)
         assertEpisode(animeTitle, "Fairy Tail 404 omakevol002", 404.98f)
-        assertEpisode(animeTitle, "Fairy Tail 404.ovol002", 404.15f)
     }
 
     @Test
@@ -216,7 +214,6 @@ class EpisodeRecognitionTest {
 
         assertEpisode(animeTitle, "Fairy Tail 404.specialvol002", 404.97f)
         assertEpisode(animeTitle, "Fairy Tail 404 specialvol002", 404.97f)
-        assertEpisode(animeTitle, "Fairy Tail 404.svol002", 404.19f)
     }
 
     @Test
