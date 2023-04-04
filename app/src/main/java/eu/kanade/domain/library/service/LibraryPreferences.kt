@@ -4,10 +4,10 @@ import eu.kanade.domain.entries.anime.model.Anime
 import eu.kanade.domain.library.model.LibraryDisplayMode
 import eu.kanade.domain.library.model.LibrarySort
 import eu.kanade.tachiyomi.core.preference.PreferenceStore
-import eu.kanade.tachiyomi.data.preference.DEVICE_ONLY_ON_WIFI
 import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
 import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
 import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
+import eu.kanade.tachiyomi.data.preference.DEVICE_ONLY_ON_WIFI
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView
 
 class LibraryPreferences(
@@ -15,8 +15,6 @@ class LibraryPreferences(
 ) {
 
     // Common options
-
-    fun bottomNavStyle() = preferenceStore.getInt("bottom_nav_style", 0)
 
     fun libraryDisplayMode() = preferenceStore.getObject("pref_display_mode_library", LibraryDisplayMode.default, LibraryDisplayMode.Serializer::serialize, LibraryDisplayMode.Serializer::deserialize)
 
