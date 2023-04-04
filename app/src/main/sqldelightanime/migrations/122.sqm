@@ -20,7 +20,7 @@ LEFT JOIN(
         coalesce(max(episodes.date_upload), 0) AS latestUpload,
         coalesce(max(animehistory.last_seen), 0) AS lastSeen,
         coalesce(max(episodes.date_fetch), 0) AS fetchedAt,
-        sum(episodes.bookmark) AS bookmarkCount
+        sum(episodes.bookmark) AS bookmarkCount,
         sum(episodes.fillermark) AS fillermarkCount
     FROM episodes
     LEFT JOIN animehistory
