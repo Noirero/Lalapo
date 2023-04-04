@@ -15,7 +15,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupCreatorJob
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
-import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.updater.AppUpdateJob
@@ -217,7 +217,7 @@ object Migrations {
             if (oldVersion < 72) {
                 val oldUpdateOngoingOnly = prefs.getBoolean("pref_update_only_non_completed_key", true)
                 if (!oldUpdateOngoingOnly) {
-                    libraryPreferences.libraryUpdateItemRestriction() -= MANGA_NON_COMPLETED
+                    libraryPreferences.libraryUpdateItemRestriction() -= ANIME_NON_COMPLETED
                 }
             }
             if (oldVersion < 75) {

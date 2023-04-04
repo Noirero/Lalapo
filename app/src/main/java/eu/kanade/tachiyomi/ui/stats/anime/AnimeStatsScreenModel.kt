@@ -18,9 +18,9 @@ import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.data.StatsData
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.preference.MANGA_HAS_UNREAD
-import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
-import eu.kanade.tachiyomi.data.preference.MANGA_NON_READ
+import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.util.lang.launchIO
@@ -109,9 +109,9 @@ class AnimeStatsScreenModel(
             .fastFilterNot { it.anime.id in excludedMangaIds }
             .fastDistinctBy { it.anime.id }
             .fastCountNot {
-                (MANGA_NON_COMPLETED in updateRestrictions && it.anime.status.toInt() == SAnime.COMPLETED) ||
-                    (MANGA_HAS_UNREAD in updateRestrictions && it.unseenCount != 0L) ||
-                    (MANGA_NON_READ in updateRestrictions && it.totalEpisodes > 0 && !it.hasStarted)
+                (ANIME_NON_COMPLETED in updateRestrictions && it.anime.status.toInt() == SAnime.COMPLETED) ||
+                    (ANIME_HAS_UNSEEN in updateRestrictions && it.unseenCount != 0L) ||
+                    (ANIME_NON_SEEN in updateRestrictions && it.totalEpisodes > 0 && !it.hasStarted)
             }
     }
 

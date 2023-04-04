@@ -34,9 +34,9 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateService.Companion.start
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.data.preference.MANGA_HAS_UNREAD
-import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
-import eu.kanade.tachiyomi.data.preference.MANGA_NON_READ
+import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
+import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
@@ -339,13 +339,13 @@ class AnimeLibraryUpdateService(
                                     anime,
                                 ) {
                                     when {
-                                        MANGA_NON_COMPLETED in restrictions && anime.status.toInt() == SAnime.COMPLETED ->
+                                        ANIME_NON_COMPLETED in restrictions && anime.status.toInt() == SAnime.COMPLETED ->
                                             skippedUpdates.add(anime to getString(R.string.skipped_reason_completed))
 
-                                        MANGA_HAS_UNREAD in restrictions && animelibAnime.unseenCount != 0L ->
+                                        ANIME_HAS_UNSEEN in restrictions && animelibAnime.unseenCount != 0L ->
                                             skippedUpdates.add(anime to getString(R.string.skipped_reason_not_caught_up))
 
-                                        MANGA_NON_READ in restrictions && animelibAnime.totalEpisodes > 0L && !animelibAnime.hasStarted ->
+                                        ANIME_NON_SEEN in restrictions && animelibAnime.totalEpisodes > 0L && !animelibAnime.hasStarted ->
                                             skippedUpdates.add(anime to getString(R.string.skipped_reason_not_started))
 
                                         anime.updateStrategy != UpdateStrategy.ALWAYS_UPDATE ->
