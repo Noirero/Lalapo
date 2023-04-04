@@ -237,8 +237,7 @@ class MyAnimeListApi(private val client: OkHttpClient, interceptor: MyAnimeListI
     }
 
     companion object {
-        // Registered under arkon's MAL account
-        private const val clientId = "8fd3313bc138e8b890551aa1de1a2589"
+        private const val clientId = "9d84f771b558696ffc83110a28d55d3d"
 
         private const val baseOAuthUrl = "https://myanimelist.net/v1/oauth2"
         private const val baseApiUrl = "https://api.myanimelist.net/v2"
