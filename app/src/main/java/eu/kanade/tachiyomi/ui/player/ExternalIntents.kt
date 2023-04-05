@@ -92,6 +92,7 @@ class ExternalIntents {
                     anime.ogTitle,
                     // <-- AM (CU)
                     anime.source,
+                    skipCache = true,
                 )
             }
             if (isOnDevice && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && uri.scheme != "content") {

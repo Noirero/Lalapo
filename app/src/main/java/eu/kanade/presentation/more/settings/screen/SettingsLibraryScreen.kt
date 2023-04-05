@@ -242,7 +242,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
                     pref = libraryUpdateMangaRestrictionPref,
-                    title = stringResource(R.string.pref_library_update_manga_restriction),
+                    title = stringResource(R.string.pref_library_update_restriction),
                     entries = mapOf(
                         ANIME_HAS_UNSEEN to stringResource(R.string.pref_update_only_completely_seen),
                         ANIME_NON_SEEN to stringResource(R.string.pref_update_only_started),

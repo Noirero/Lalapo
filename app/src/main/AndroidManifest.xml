@@ -70,7 +70,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".ui.main.DeepLinkActivity"
+            android:name=".ui.main.DeepLinkAnimeActivity"
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.NoDisplay"
             android:label="@string/action_global_search"

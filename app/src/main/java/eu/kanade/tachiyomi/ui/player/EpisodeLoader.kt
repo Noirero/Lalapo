@@ -23,7 +23,7 @@ class EpisodeLoader {
         fun getLinks(episode: Episode, anime: Anime, source: AnimeSource): Observable<List<Video>> {
             val downloadManager: AnimeDownloadManager = Injekt.get()
             // AM (CU)>
-            val isDownloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.ogTitle, anime.source)
+            val isDownloaded = downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.ogTitle, anime.source, skipCache = true)
             return when {
                 isDownloaded -> isDownloaded(episode, anime, source, downloadManager)
                 source is AnimeHttpSource -> isHttp(episode, source)
@@ -35,7 +35,7 @@ class EpisodeLoader {
         fun isDownloaded(episode: Episode, anime: Anime): Boolean {
             val downloadManager: AnimeDownloadManager = Injekt.get()
             // AM (CU)>
-            return downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.ogTitle, anime.source)
+            return downloadManager.isEpisodeDownloaded(episode.name, episode.scanlator, anime.ogTitle, anime.source, skipCache = true)
         }
 
         fun getLink(episode: Episode, anime: Anime, source: AnimeSource): Observable<Video?> {
