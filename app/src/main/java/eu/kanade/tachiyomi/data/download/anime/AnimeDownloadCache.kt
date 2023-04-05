@@ -164,29 +164,27 @@ class AnimeDownloadCache(
      * @param animeUniFile the directory of the anime.
      * @param anime the anime of the episode.
      */
-    suspend fun addEpisode(episodeDirName: String, animeUniFile: UniFile, anime: Anime) {
-        rootDownloadsDirLock.withLock {
-            // Retrieve the cached source directory or cache a new one
-            var sourceDir = rootDownloadsDir.sourceDirs[anime.source]
-            if (sourceDir == null) {
-                val source = sourceManager.get(anime.source) ?: return
-                val sourceUniFile = provider.findSourceDir(source) ?: return
-                sourceDir = SourceDirectory(sourceUniFile)
-                rootDownloadsDir.sourceDirs += anime.source to sourceDir
-            }
-
-            // Retrieve the cached anime directory or cache a new one
-            // AM (CU)>
-            val animeDirName = provider.getAnimeDirName(anime.ogTitle)
-            var animeDir = sourceDir.animeDirs[animeDirName]
-            if (animeDir == null) {
-                animeDir = AnimeDirectory(animeUniFile)
-                sourceDir.animeDirs += animeDirName to animeDir
-            }
-
-            // Save the episode directory
-            animeDir.episodeDirs += episodeDirName
+    fun addEpisode(episodeDirName: String, animeUniFile: UniFile, anime: Anime) {
+        // Retrieve the cached source directory or cache a new one
+        var sourceDir = rootDownloadsDir.sourceDirs[anime.source]
+        if (sourceDir == null) {
+            val source = sourceManager.get(anime.source) ?: return
+            val sourceUniFile = provider.findSourceDir(source) ?: return
+            sourceDir = SourceDirectory(sourceUniFile)
+            rootDownloadsDir.sourceDirs += anime.source to sourceDir
         }
+
+        // Retrieve the cached anime directory or cache a new one
+        // AM (CU)>
+        val animeDirName = provider.getAnimeDirName(anime.ogTitle)
+        var animeDir = sourceDir.animeDirs[animeDirName]
+        if (animeDir == null) {
+            animeDir = AnimeDirectory(animeUniFile)
+            sourceDir.animeDirs += animeDirName to animeDir
+        }
+
+        // Save the episode directory
+        animeDir.episodeDirs += episodeDirName
 
         notifyChanges()
     }

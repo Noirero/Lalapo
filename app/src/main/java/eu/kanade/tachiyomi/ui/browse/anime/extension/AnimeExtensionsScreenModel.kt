@@ -104,9 +104,15 @@ class AnimeExtensionsScreenModel(
 
                 val installed = _installed.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
                 val untrusted = _untrusted.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
-                if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
+                if ( // AM (BR) -->
+                    // installed.isNotEmpty() ||
+                    // <-- AM (BR)
+                    untrusted.isNotEmpty()
+                ) {
                     items.add(AnimeExtensionUiModel.Header.Resource(R.string.ext_installed))
-                    items.addAll(installed)
+                    // AM (BR) -->
+                    // items.addAll(installed)
+                    // <-- AM (BR)
                     items.addAll(untrusted)
                 }
 

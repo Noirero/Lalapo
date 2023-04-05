@@ -218,50 +218,42 @@ private fun AnimeExtensionContent(
                     )
                 }
                 is AnimeExtensionUiModel.Header.Text -> {
-                    // AM (BR) -->
-                    if (item.text != stringResource(id = R.string.ext_installed)) {
-                        ExtensionHeader(
-                            text = item.text,
-                            modifier = Modifier.animateItemPlacement(),
-                        )
-                    }
-                    // <-- AM (BR)
+                    ExtensionHeader(
+                        text = item.text,
+                        modifier = Modifier.animateItemPlacement(),
+                    )
                 }
                 is AnimeExtensionUiModel.Item -> {
-                    // AM (BR) -->
-                    if (item.extension !is AnimeExtension.Installed || item.extension.hasUpdate) {
-                        AnimeExtensionItem(
-                            modifier = Modifier.animateItemPlacement(),
-                            item = item,
-                            onClickItem = {
-                                when (it) {
-                                    is AnimeExtension.Available -> onInstallExtension(it)
-                                    is AnimeExtension.Installed -> onOpenExtension(it)
-                                    is AnimeExtension.Untrusted -> {
-                                        trustState = it
+                    AnimeExtensionItem(
+                        modifier = Modifier.animateItemPlacement(),
+                        item = item,
+                        onClickItem = {
+                            when (it) {
+                                is AnimeExtension.Available -> onInstallExtension(it)
+                                is AnimeExtension.Installed -> onOpenExtension(it)
+                                is AnimeExtension.Untrusted -> {
+                                    trustState = it
+                                }
+                            }
+                        },
+                        onLongClickItem = onLongClickItem,
+                        onClickItemCancel = onClickItemCancel,
+                        onClickItemAction = {
+                            when (it) {
+                                is AnimeExtension.Available -> onInstallExtension(it)
+                                is AnimeExtension.Installed -> {
+                                    if (it.hasUpdate) {
+                                        onUpdateExtension(it)
+                                    } else {
+                                        onOpenExtension(it)
                                     }
                                 }
-                            },
-                            onLongClickItem = onLongClickItem,
-                            onClickItemCancel = onClickItemCancel,
-                            onClickItemAction = {
-                                when (it) {
-                                    is AnimeExtension.Available -> onInstallExtension(it)
-                                    is AnimeExtension.Installed -> {
-                                        if (it.hasUpdate) {
-                                            onUpdateExtension(it)
-                                        } else {
-                                            onOpenExtension(it)
-                                        }
-                                    }
-                                    is AnimeExtension.Untrusted -> {
-                                        trustState = it
-                                    }
+                                is AnimeExtension.Untrusted -> {
+                                    trustState = it
                                 }
-                            },
-                            // <-- AM (BR)
-                        )
-                    }
+                            }
+                        },
+                    )
                 }
             }
         }
