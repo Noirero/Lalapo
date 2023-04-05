@@ -130,8 +130,8 @@ class AnimeDownloadProvider(
         // AM (CU)>
         val animeDir = findAnimeDir(anime.ogTitle, source) ?: return emptyList()
         return animeDir.listFiles().orEmpty().asList().filter {
-            episodes.find { chp ->
-                getValidEpisodeDirNames(chp.name, chp.scanlator).any { dir ->
+            episodes.find { ep ->
+                getValidEpisodeDirNames(ep.name, ep.scanlator).any { dir ->
                     animeDir.findFile(dir) != null
                 }
             } == null || it.name?.endsWith(AnimeDownloader.TMP_DIR_SUFFIX) == true

@@ -56,9 +56,9 @@ fun AnimeEpisodeListItem(
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((EpisodeDownloadAction) -> Unit)?,
-    // AM (DS) -->
+    // AM (FS) -->
     fileSize: Long?,
-    // <-- AM (DS)
+    // <-- AM (FS)
 ) {
     Row(
         modifier = modifier
@@ -147,9 +147,9 @@ fun AnimeEpisodeListItem(
                 downloadStateProvider = downloadStateProvider,
                 downloadProgressProvider = downloadProgressProvider,
                 onClick = onDownloadClick,
-                // AM (DS) -->
+                // AM (FS) -->
                 fileSize = fileSize,
-                // <-- AM (DS)
+                // <-- AM (FS)
             )
         }
     }

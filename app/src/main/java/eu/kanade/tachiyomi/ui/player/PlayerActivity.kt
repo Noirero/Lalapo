@@ -105,7 +105,7 @@ class PlayerActivity :
     private val networkPreferences: NetworkPreferences = Injekt.get()
 
     // AM (CN) -->
-    private val connectionsPreferences: ConnectionsPreferences by injectLazy()
+    private val connectionsPreferences: ConnectionsPreferences = Injekt.get()
     // <-- AM (CN)
 
     val viewModel by viewModels<PlayerViewModel>()

@@ -417,9 +417,9 @@ private fun AnimeScreenSmallImpl(
                     }
 
                     sharedEpisodeItems(
-                        // AM (DS) -->
+                        // AM (FS) -->
                         state = state,
-                        // <-- AM (DS)
+                        // <-- AM (FS)
                         episodes = episodes,
                         onEpisodeClicked = onEpisodeClicked,
                         onDownloadEpisode = onDownloadEpisode,
@@ -639,9 +639,9 @@ fun AnimeScreenLargeImpl(
                             }
 
                             sharedEpisodeItems(
-                                // AM (DS) -->
+                                // AM (FS) -->
                                 state = state,
-                                // <-- AM (DS)
+                                // <-- AM (FS)
                                 episodes = episodes,
                                 onEpisodeClicked = onEpisodeClicked,
                                 onDownloadEpisode = onDownloadEpisode,
@@ -718,9 +718,9 @@ private fun SharedAnimeBottomActionMenu(
 }
 
 private fun LazyListScope.sharedEpisodeItems(
-    // AM (DS) -->
+    // AM (FS) -->
     state: AnimeScreenState.Success,
-    // <-- AM (DS)
+    // <-- AM (FS)
     episodes: List<EpisodeItem>,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -733,9 +733,9 @@ private fun LazyListScope.sharedEpisodeItems(
     ) { episodeItem ->
         val haptic = LocalHapticFeedback.current
 
-        // AM (DS) -->
+        // AM (FS) -->
         val downloadPreferences: DownloadPreferences by injectLazy()
-        // <-- AM (DS)
+        // <-- AM (FS)
 
         AnimeEpisodeListItem(
             title = episodeItem.episodeTitleString,
@@ -768,7 +768,7 @@ private fun LazyListScope.sharedEpisodeItems(
             } else {
                 null
             },
-            // AM (DS) -->
+            // AM (FS) -->
             fileSize = if (downloadPreferences.showDownloadedEpisodeSize().get() && episodeItem.isDownloaded) {
                 val provider = AnimeDownloadProvider(LocalContext.current)
                 provider.findEpisodeDir(
@@ -782,7 +782,7 @@ private fun LazyListScope.sharedEpisodeItems(
             } else {
                 null
             },
-            // <-- AM (DS)
+            // <-- AM (FS)
         )
     }
 }

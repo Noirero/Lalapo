@@ -219,7 +219,7 @@ private fun AnimeExtensionContent(
                 }
                 is AnimeExtensionUiModel.Header.Text -> {
                     // AM (BR) -->
-                    if (item.text.equals(stringResource(id = R.string.ext_installed))) {
+                    if (item.text != stringResource(id = R.string.ext_installed)) {
                         ExtensionHeader(
                             text = item.text,
                             modifier = Modifier.animateItemPlacement(),

@@ -480,7 +480,7 @@ object SettingsAdvancedScreen : SearchableSettings {
         if (dialogOpen) {
             CleanupDownloadsDialog(
                 onDismissRequest = { dialogOpen = false },
-                onCleanupDownloads = { removeRead, removeNonFavorite ->
+                onCleanupDownloads = { removeSeen, removeNonFavorite ->
                     dialogOpen = false
                     if (job?.isActive == true) return@CleanupDownloadsDialog
                     context.toast(R.string.starting_cleanup)
@@ -497,7 +497,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 .map { it to DiskUtil.buildValidFilename(it.ogTitle) }
                                 .toList()
 
-                            animeFolders.forEach mangaFolder@{ animeFolder ->
+                            animeFolders.forEach animeFolder@{ animeFolder ->
                                 val anime =
                                     sourceAnime.find { (_, folderName) -> folderName == animeFolder.name }?.first
                                 if (anime == null) {
@@ -513,7 +513,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                         episodeList,
                                         anime,
                                         source,
-                                        removeRead,
+                                        removeSeen,
                                         removeNonFavorite,
                                     )
                                 }

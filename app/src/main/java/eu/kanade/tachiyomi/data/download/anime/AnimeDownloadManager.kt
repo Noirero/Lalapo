@@ -324,10 +324,10 @@ class AnimeDownloadManager(
      * Deletes the directories of episodes that were read or have no match
      *
      * @param allEpisodes the list of episodes to delete.
-     * @param anime the manga of the chapters.
-     * @param source the source of the chapters.
+     * @param anime the anime of the episodes.
+     * @param source the source of the episodes.
      */
-    suspend fun cleanupEpisodes(allEpisodes: List<Episode>, anime: Anime, source: AnimeSource, removeRead: Boolean, removeNonFavorite: Boolean): Int {
+    suspend fun cleanupEpisodes(allEpisodes: List<Episode>, anime: Anime, source: AnimeSource, removeSeen: Boolean, removeNonFavorite: Boolean): Int {
         var cleaned = 0
 
         if (removeNonFavorite && !anime.favorite) {
@@ -344,12 +344,12 @@ class AnimeDownloadManager(
         cache.removeFolders(filesWithNoEpisode.mapNotNull { it.name }, anime)
         filesWithNoEpisode.forEach { it.delete() }
 
-        if (removeRead) {
-            val readEpisodes = allEpisodes.filter { it.seen }
-            val readEpisodeDirs = provider.findEpisodeDirs(readEpisodes, anime, source)
-            readEpisodeDirs.second.forEach { it.delete() }
-            cleaned += readEpisodeDirs.second.size
-            cache.removeEpisodes(readEpisodes, anime)
+        if (removeSeen) {
+            val seenEpisodes = allEpisodes.filter { it.seen }
+            val seenEpisodeDirs = provider.findEpisodeDirs(seenEpisodes, anime, source)
+            seenEpisodeDirs.second.forEach { it.delete() }
+            cleaned += seenEpisodeDirs.second.size
+            cache.removeEpisodes(seenEpisodes, anime)
         }
 
         if (cache.getDownloadCount(anime) == 0) {
@@ -420,7 +420,7 @@ class AnimeDownloadManager(
      * @param oldEpisode the existing episode with the old name.
      * @param newEpisode the target episode with the new name.
      */
-    fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
+    suspend fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
         val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator)
         // AM (CU)>
         val animeDir = provider.getAnimeDir(anime.ogTitle, source)

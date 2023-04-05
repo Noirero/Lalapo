@@ -156,10 +156,10 @@ fun AnimeUpdatesUiItem(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    // AM (DS) -->
+    // AM (FS) -->
     val downloadPreferences: DownloadPreferences by injectLazy()
     val sourceManager: AnimeSourceManager by injectLazy()
-    // <-- AM (DS)
+    // <-- AM (FS)
 
     Row(
         modifier = modifier
@@ -234,7 +234,7 @@ fun AnimeUpdatesUiItem(
             downloadStateProvider = downloadStateProvider,
             downloadProgressProvider = downloadProgressProvider,
             onClick = { onDownloadEpisode?.invoke(it) },
-            // AM (DS) -->
+            // AM (FS) -->
             fileSize = if (downloadPreferences.showDownloadedEpisodeSize().get() && downloadStateProvider() == AnimeDownload.State.DOWNLOADED) {
                 val provider = AnimeDownloadProvider(LocalContext.current)
                 provider.findEpisodeDir(
@@ -248,7 +248,7 @@ fun AnimeUpdatesUiItem(
             } else {
                 null
             },
-            // <-- AM (DS)
+            // <-- AM (FS)
         )
     }
 }

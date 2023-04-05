@@ -22,6 +22,7 @@ import eu.kanade.domain.category.anime.interactor.SetSortModeForAnimeCategory
 import eu.kanade.domain.category.anime.interactor.UpdateAnimeCategory
 import eu.kanade.domain.category.anime.repository.AnimeCategoryRepository
 import eu.kanade.domain.download.anime.interactor.DeleteAnimeDownload
+import eu.kanade.domain.entries.anime.interactor.GetAllAnime
 import eu.kanade.domain.entries.anime.interactor.GetAnime
 import eu.kanade.domain.entries.anime.interactor.GetAnimeFavorites
 import eu.kanade.domain.entries.anime.interactor.GetAnimeWithEpisodes
@@ -147,7 +148,8 @@ class DomainModule : InjektModule {
         addFactory { SetMigrateSorting(get()) }
         addFactory { ToggleLanguage(get()) }
 
-        // AM (CU) --?
+        // AM (CU) -->
+        addFactory { GetAllAnime(get()) }
         addSingletonFactory<CustomAnimeRepository> { CustomAnimeRepositoryImpl(get<Application>()) }
         addFactory { GetCustomAnimeInfo(get()) }
         addFactory { SetCustomAnimeInfo(get()) }

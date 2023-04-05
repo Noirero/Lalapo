@@ -62,10 +62,10 @@
     <string name="pref_library_anime_update_show_tab_badge">Show unseen count on Updates icon</string>
     <string name="pref_auto_update_anime_sync">Update progress after watching</string>
 
-    <string name="last_read_episode">Last read chapter</string>
-    <string name="second_to_last_episode">Second to last read episode</string>
-    <string name="third_to_last_episode">Third to last read episode</string>
-    <string name="fourth_to_last_episode">Fourth to last read episode</string>
-    <string name="fifth_to_last_episode">Fifth to last read episode</string>
+    <string name="last_read_episode">Last seen chapter</string>
+    <string name="second_to_last_episode">Second to last seen episode</string>
+    <string name="third_to_last_episode">Third to last seen episode</string>
+    <string name="fourth_to_last_episode">Fourth to last seen episode</string>
+    <string name="fifth_to_last_episode">Fifth to last seen episode</string>
     <string name="pref_remove_bookmarked_episodes">Allow deleting bookmarked episodes</string>
 </resources>

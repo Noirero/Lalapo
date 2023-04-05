@@ -54,12 +54,12 @@ object SettingsDownloadScreen : SearchableSettings {
                 pref = downloadPreferences.downloadOnlyOverWifi(),
                 title = stringResource(R.string.connected_to_wifi),
             ),
-            // AM (DS) -->
+            // AM (FS) -->
             Preference.PreferenceItem.SwitchPreference(
                 pref = downloadPreferences.showDownloadedEpisodeSize(),
                 title = stringResource(R.string.pref_show_downloaded_episode_size),
             ),
-            // <-- AM (DS)
+            // <-- AM (FS)
             getDeleteEpisodesGroup(
                 downloadPreferences = downloadPreferences,
                 categories = allAnimeCategories,

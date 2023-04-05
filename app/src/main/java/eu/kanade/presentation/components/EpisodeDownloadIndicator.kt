@@ -55,9 +55,9 @@ fun EpisodeDownloadIndicator(
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
     onClick: (EpisodeDownloadAction) -> Unit,
-    // AM (DS) -->
+    // AM (FS) -->
     fileSize: Long?,
-    // <-- AM (DS)
+    // <-- AM (FS)
 ) {
     when (val downloadState = downloadStateProvider()) {
         AnimeDownload.State.NOT_DOWNLOADED -> NotDownloadedIndicator(
@@ -76,9 +76,9 @@ fun EpisodeDownloadIndicator(
             enabled = enabled,
             modifier = modifier,
             onClick = onClick,
-            // AM (DS) -->
+            // AM (FS) -->
             fileSize = fileSize,
-            // <-- AM (DS)
+            // <-- AM (FS)
         )
         AnimeDownload.State.ERROR -> ErrorIndicator(
             enabled = enabled,
@@ -210,7 +210,7 @@ private fun DownloadedIndicator(
     fileSize: Long?,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
-    // AM (DS) -->
+    // AM (FS) -->
     if (fileSize != null) {
         Text(
             text = "${fileSize / 1024 / 1024}MB",
@@ -220,7 +220,7 @@ private fun DownloadedIndicator(
             modifier = modifier.padding(all = 10.dp),
         )
     }
-    // <-- AM (DS)
+    // <-- AM (FS)
     Box(
         modifier = modifier.size(IconButtonTokens.StateLayerSize),
         contentAlignment = Alignment.Center,

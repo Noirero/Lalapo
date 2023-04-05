@@ -26,12 +26,6 @@ sealed class StatsData {
         val localAnimeCount: Int,
     ) : StatsData()
 
-    data class Chapters(
-        val totalChapterCount: Int,
-        val readChapterCount: Int,
-        val downloadCount: Int,
-    ) : StatsData()
-
     data class Episodes(
         val totalEpisodeCount: Int,
         val readEpisodeCount: Int,
