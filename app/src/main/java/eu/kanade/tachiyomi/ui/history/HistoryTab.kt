@@ -133,7 +133,7 @@ data class HistoryTab(
         }
     }
 
-    suspend fun openEpisode(context: Context, episode: Episode?) {
+    private suspend fun openEpisode(context: Context, episode: Episode?) {
         if (episode != null) {
             val intent = if (externalPlayer) {
                 ExternalIntents.newIntent(context, episode.animeId, episode.id)

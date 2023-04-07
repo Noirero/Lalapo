@@ -101,10 +101,12 @@ class AnimeExtensionsScreenModel(
                     items.add(AnimeExtensionUiModel.Header.Resource(R.string.ext_updates_pending))
                     items.addAll(updates)
                 }
-
-                val installed = _installed.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
+                // AM (BR) -->
+                // val installed = _installed.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
+                // <-- AM (BR)
                 val untrusted = _untrusted.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
-                if ( // AM (BR) -->
+                if (
+                    // AM (BR) -->
                     // installed.isNotEmpty() ||
                     // <-- AM (BR)
                     untrusted.isNotEmpty()

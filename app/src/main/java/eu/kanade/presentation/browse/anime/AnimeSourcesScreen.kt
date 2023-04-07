@@ -69,6 +69,9 @@ fun AnimeSourcesScreen(
     onClickItem: (AnimeSource, Listing) -> Unit,
     onClickPin: (AnimeSource) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
+    // AM (BR) -->
+    extHasUpdate: Boolean,
+    // <-- AM (BR)
 ) {
     // AM (BR) -->
     Scaffold(
@@ -115,8 +118,11 @@ fun AnimeSourcesScreen(
                             enter = fadeIn(),
                             exit = fadeOut(),
                         ) {
+                            // AM (BR) -->
+                            val buttonText = if (extHasUpdate) R.string.ext_update else R.string.ext_install
                             ExtendedFloatingActionButton(
-                                text = { Text(text = stringResource(R.string.ext_install)) },
+                                text = { Text(text = stringResource(buttonText)) },
+                            // <-- AM (BR)
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Filled.Download,

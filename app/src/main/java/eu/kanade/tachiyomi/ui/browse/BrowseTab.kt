@@ -20,14 +20,20 @@ import eu.kanade.presentation.browse.anime.AnimeSourcesScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 data class BrowseTab(
+    // AM (BR) -->
+    private val extHasUpdate: Boolean,
+    // <-- AM (BR)
     private val toExtensions: Boolean = false,
 ) : Tab {
 
@@ -61,6 +67,7 @@ data class BrowseTab(
             },
             onClickPin = screenModel::togglePin,
             onLongClickItem = screenModel::showSourceDialog,
+            extHasUpdate = extHasUpdate,
         )
 
         state.dialog?.let { dialog ->
@@ -101,6 +108,7 @@ data class BrowseTab(
         // AM (BR) -->
         val internalErrString = stringResource(R.string.internal_error)
         LaunchedEffect(Unit) {
+            Injekt.get<AnimeExtensionManager>().updatePendingUpdatesCount()
             screenModel.events.collectLatest { event ->
                 when (event) {
                     AnimeSourcesScreenModel.Event.FailedFetchingSources -> {
