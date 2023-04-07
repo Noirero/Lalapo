@@ -2,6 +2,7 @@ package eu.kanade.domain.library.service
 
 import eu.kanade.domain.entries.anime.model.Anime
 import eu.kanade.domain.library.model.LibraryDisplayMode
+import eu.kanade.domain.library.model.LibraryGroup
 import eu.kanade.domain.library.model.LibrarySort
 import eu.kanade.tachiyomi.core.preference.PreferenceStore
 import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
@@ -126,4 +127,8 @@ class LibraryPreferences(
         displayEpisodeByNameOrNumber().set(anime.displayMode)
         sortEpisodeByAscendingOrDescending().set(if (anime.sortDescending()) Anime.EPISODE_SORT_DESC else Anime.EPISODE_SORT_ASC)
     }
+
+    // AM (GU) -->
+    fun groupLibraryBy() = preferenceStore.getInt("group_library_by", LibraryGroup.BY_DEFAULT)
+    // <-- AM (GU)
 }

@@ -4,6 +4,7 @@ import eu.kanade.domain.category.anime.repository.AnimeCategoryRepository
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.category.model.CategoryUpdate
 import eu.kanade.domain.library.model.LibraryDisplayMode
+import eu.kanade.domain.library.model.LibraryGroup
 import eu.kanade.domain.library.model.plus
 import eu.kanade.domain.library.service.LibraryPreferences
 
@@ -13,6 +14,12 @@ class SetDisplayModeForAnimeCategory(
 ) {
 
     suspend fun await(categoryId: Long, display: LibraryDisplayMode) {
+        // AM (GU) -->
+        if (preferences.groupLibraryBy().get() != LibraryGroup.BY_DEFAULT) {
+            preferences.libraryDisplayMode().set(display)
+            return
+        }
+        // <-- AM (GU)
         val category = categoryRepository.getAnimeCategory(categoryId) ?: return
         val flags = category.flags + display
         if (preferences.categorizedDisplaySettings().get()) {

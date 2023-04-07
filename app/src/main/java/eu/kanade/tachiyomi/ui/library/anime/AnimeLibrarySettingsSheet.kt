@@ -5,10 +5,12 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
 import eu.kanade.domain.category.anime.interactor.SetDisplayModeForAnimeCategory
 import eu.kanade.domain.category.anime.interactor.SetSortModeForAnimeCategory
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.library.model.LibraryDisplayMode
+import eu.kanade.domain.library.model.LibraryGroup
 import eu.kanade.domain.library.model.LibrarySort
 import eu.kanade.domain.library.model.display
 import eu.kanade.domain.library.model.sort
@@ -24,6 +26,7 @@ import eu.kanade.tachiyomi.widget.sheet.TabbedBottomSheetDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -39,12 +42,19 @@ class AnimeLibrarySettingsSheet(
     private val sort: Sort
     private val display: Display
 
+    // AM (GU) -->
+    private val grouping: Grouping
+    // <-- AM (GU)
+
     val sheetScope = CoroutineScope(Job() + Dispatchers.IO)
 
     init {
         filters = Filter(activity)
         sort = Sort(activity)
         display = Display(activity)
+        // AM (GU) -->
+        grouping = Grouping(activity)
+        // <-- AM (GU)
     }
 
     /**
@@ -63,12 +73,18 @@ class AnimeLibrarySettingsSheet(
         filters,
         sort,
         display,
+        // AM (GU) -->
+        grouping,
+        // <-- AM (GU)
     )
 
     override fun getTabTitles(): List<Int> = listOf(
         R.string.action_filter,
         R.string.action_sort,
         R.string.action_display,
+        // AM (GU) -->
+        R.string.group,
+        // <-- AM (GU)
     )
 
     /**
@@ -214,7 +230,13 @@ class AnimeLibrarySettingsSheet(
             override val footer = null
 
             override fun initModels() {
-                val sort = currentCategory?.sort ?: LibrarySort.default
+                // AM (GU) -->
+                val sort = if (libraryPreferences.groupLibraryBy().get() == LibraryGroup.BY_DEFAULT) {
+                    currentCategory?.sort ?: LibrarySort.default
+                } else {
+                    libraryPreferences.librarySortingMode().get()
+                }
+                // <-- AM (GU)
                 val order = if (sort.isAscending) Item.MultiSort.SORT_ASC else Item.MultiSort.SORT_DESC
 
                 alphabetically.state =
@@ -308,7 +330,13 @@ class AnimeLibrarySettingsSheet(
 
         // Gets user preference of currently selected display mode at current category
         private fun getDisplayModePreference(): LibraryDisplayMode {
-            return currentCategory?.display ?: LibraryDisplayMode.default
+            // AM (GU) -->
+            return if (libraryPreferences.groupLibraryBy().get() == LibraryGroup.BY_DEFAULT) {
+                currentCategory?.display ?: LibraryDisplayMode.default
+            } else {
+                libraryPreferences.libraryDisplayMode().get()
+            }
+            // <-- AM (GU)
         }
 
         inner class DisplayGroup : Group {
@@ -440,6 +468,75 @@ class AnimeLibrarySettingsSheet(
             }
         }
     }
+
+    // AM (GU) -->
+    inner class Grouping @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
+        Settings(context, attrs) {
+
+        init {
+            setGroups(listOf(InternalGroup()))
+        }
+
+        inner class InternalGroup : Group {
+            private val groupItems = mutableListOf<Item.DrawableSelection>()
+            private val trackManager: TrackManager = Injekt.get()
+            private val hasCategories = runBlocking {
+                Injekt.get<GetAnimeCategories>().await().filterNot(Category::isSystemCategory).isNotEmpty()
+            }
+
+            init {
+                val groupingItems = mutableListOf(
+                    LibraryGroup.BY_DEFAULT,
+                    LibraryGroup.BY_SOURCE,
+                    LibraryGroup.BY_STATUS,
+                )
+                if (trackManager.hasLoggedServices()) {
+                    groupingItems.add(LibraryGroup.BY_TRACK_STATUS)
+                }
+                if (hasCategories) {
+                    groupingItems.add(LibraryGroup.UNGROUPED)
+                }
+                groupItems += groupingItems.map { id ->
+                    Item.DrawableSelection(
+                        id,
+                        this,
+                        LibraryGroup.groupTypeStringRes(id, hasCategories),
+                        LibraryGroup.groupTypeDrawableRes(id),
+                    )
+                }
+            }
+
+            override val header = null
+            override val items = groupItems
+            override val footer = null
+
+            override fun initModels() {
+                val groupType = libraryPreferences.groupLibraryBy().get()
+
+                items.forEach {
+                    it.state = if (it.id == groupType) {
+                        Item.DrawableSelection.SELECTED
+                    } else {
+                        Item.DrawableSelection.NOT_SELECTED
+                    }
+                }
+            }
+
+            override fun onItemClicked(item: Item) {
+                item as Item.DrawableSelection
+                item.group.items.forEach {
+                    (it as Item.DrawableSelection).state =
+                        Item.DrawableSelection.NOT_SELECTED
+                }
+                item.state = Item.DrawableSelection.SELECTED
+
+                libraryPreferences.groupLibraryBy().set(item.id)
+
+                item.group.items.forEach { adapter.notifyItemChanged(it) }
+            }
+        }
+    }
+    // <-- AM (GU)
 
     open inner class Settings(context: Context, attrs: AttributeSet?) :
         ExtendedNavigationView(context, attrs) {

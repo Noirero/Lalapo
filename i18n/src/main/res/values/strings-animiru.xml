@@ -68,4 +68,11 @@
     <string name="fourth_to_last_episode">Fourth to last seen episode</string>
     <string name="fifth_to_last_episode">Fifth to last seen episode</string>
     <string name="pref_remove_bookmarked_episodes">Allow deleting bookmarked episodes</string>
+
+    <!-- Library Grouping -->
+    <string name="tracking_status">Tracking status</string>
+    <string name="ungrouped">Ungrouped</string>
+    <string name="not_tracked">Not tracked</string>
+    <string name="group">Group</string>
+
 </resources>

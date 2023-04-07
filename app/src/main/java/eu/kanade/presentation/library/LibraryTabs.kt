@@ -19,6 +19,10 @@ fun LibraryTabs(
     getNumberOfItemsForCategory: (Category) -> Int?,
     onTabItemClick: (Int) -> Unit,
 ) {
+    // AM (GU) -->
+    @Suppress("NAME_SHADOWING")
+    val currentPageIndex = currentPageIndex.coerceAtMost(categories.lastIndex)
+    // <-- AM (GU)
     Column {
         ScrollableTabRow(
             selectedTabIndex = currentPageIndex,

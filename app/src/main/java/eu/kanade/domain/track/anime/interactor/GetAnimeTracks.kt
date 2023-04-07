@@ -19,6 +19,17 @@ class GetAnimeTracks(
         }
     }
 
+    // AM (GU) -->
+    suspend fun await(): List<AnimeTrack> {
+        return try {
+            animetrackRepository.getTracks()
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e)
+            emptyList()
+        }
+    }
+    // <-- AM (GU)
+
     suspend fun await(animeId: Long): List<AnimeTrack> {
         return try {
             animetrackRepository.getTracksByAnimeId(animeId)

@@ -337,7 +337,7 @@ object HomeScreen : Screen {
                     BrowseTab::class.isInstance(tab) -> {
                         val count by produceState(initialValue = 0) {
                             val pref = Injekt.get<SourcePreferences>()
-                                pref.animeExtensionUpdatesCount().changes()
+                            pref.animeExtensionUpdatesCount().changes()
                                 .collectLatest { value = it }
                         }
                         if (count > 0) {

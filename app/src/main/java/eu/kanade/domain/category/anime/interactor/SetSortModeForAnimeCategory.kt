@@ -3,6 +3,7 @@ package eu.kanade.domain.category.anime.interactor
 import eu.kanade.domain.category.anime.repository.AnimeCategoryRepository
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.category.model.CategoryUpdate
+import eu.kanade.domain.library.model.LibraryGroup
 import eu.kanade.domain.library.model.LibrarySort
 import eu.kanade.domain.library.model.plus
 import eu.kanade.domain.library.service.LibraryPreferences
@@ -13,6 +14,12 @@ class SetSortModeForAnimeCategory(
 ) {
 
     suspend fun await(categoryId: Long, type: LibrarySort.Type, direction: LibrarySort.Direction) {
+        // AM (GU) -->
+        if (preferences.groupLibraryBy().get() != LibraryGroup.BY_DEFAULT) {
+            preferences.librarySortingMode().set(LibrarySort(type, direction))
+            return
+        }
+        // <-- AM (GU)
         val category = categoryRepository.getAnimeCategory(categoryId) ?: return
         val flags = category.flags + type + direction
         if (preferences.categorizedDisplaySettings().get()) {
