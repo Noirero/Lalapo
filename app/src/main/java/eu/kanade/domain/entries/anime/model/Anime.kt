@@ -2,9 +2,9 @@ package eu.kanade.domain.entries.anime.model
 
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.entries.TriStateFilter
-import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import uy.kohesive.injekt.Injekt
@@ -37,7 +37,7 @@ data class Anime(
 
     // AM (CU) -->
     private val customAnimeInfo = if (favorite) {
-        getCustomAnimeInfo.get(id)
+        customAnimeManager.getAnime(this)
     } else {
         null
     }
@@ -136,25 +136,29 @@ data class Anime(
 
     fun toSAnime(): SAnime = SAnime.create().also {
         it.url = url
-        it.title = title
-        it.artist = artist
-        it.author = author
-        it.description = description
-        it.genre = genre.orEmpty().joinToString()
-        it.status = status.toInt()
+        // AM (CU) -->
+        it.title = ogTitle
+        it.artist = ogArtist
+        it.author = ogAuthor
+        it.description = ogDescription
+        it.genre = ogGenre.orEmpty().joinToString()
+        it.status = ogStatus.toInt()
+        // <-- AM (CU)
         it.thumbnail_url = thumbnailUrl
         it.initialized = initialized
     }
 
     fun copyFrom(other: SAnime): Anime {
-        val author = other.author ?: author
-        val artist = other.artist ?: artist
-        val description = other.description ?: description
+        // AM (CU) -->
+        val author = other.author ?: ogAuthor
+        val artist = other.artist ?: ogArtist
+        val description = other.description ?: ogDescription
         val genres = if (other.genre != null) {
             other.getGenres()
         } else {
-            genre
+            ogGenre
         }
+        // <-- AM (CU)
         val thumbnailUrl = other.thumbnail_url ?: thumbnailUrl
         return this.copy(
             // AM (CU) -->
@@ -233,7 +237,7 @@ data class Anime(
         )
 
         // AM (CU) -->
-        private val getCustomAnimeInfo: GetCustomAnimeInfo by injectLazy()
+        private val customAnimeManager: CustomAnimeManager by injectLazy()
         // <-- AM (CU)
     }
 }

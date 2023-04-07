@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.data.backup.models
 
 import eu.kanade.domain.entries.anime.model.Anime
-import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeImpl
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrackImpl
 import eu.kanade.tachiyomi.data.database.models.anime.EpisodeImpl
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
@@ -76,7 +76,7 @@ data class BackupAnime(
     }
 
     // AM (CU) -->
-    fun getCustomAnimeInfo(): CustomAnimeInfo? {
+    fun getCustomAnimeInfo(): CustomAnimeManager.AnimeJson? {
         if (customTitle != null ||
             customArtist != null ||
             customAuthor != null ||
@@ -84,7 +84,7 @@ data class BackupAnime(
             customGenre != null ||
             customStatus != 0
         ) {
-            return CustomAnimeInfo(
+            return CustomAnimeManager.AnimeJson(
                 id = 0L,
                 title = customTitle,
                 author = customAuthor,
@@ -106,7 +106,7 @@ data class BackupAnime(
 
     companion object {
         // AM (CU)>
-        fun copyFrom(anime: Anime, customAnimeInfo: CustomAnimeInfo?): BackupAnime {
+        fun copyFrom(anime: Anime, customAnimeManager: CustomAnimeManager?): BackupAnime {
             return BackupAnime(
                 url = anime.url,
                 // AM (CU) -->
@@ -126,7 +126,7 @@ data class BackupAnime(
                 updateStrategy = anime.updateStrategy,
                 // AM (CU) -->
             ).also { backupAnime ->
-                customAnimeInfo?.let {
+                customAnimeManager?.getAnime(anime.id)?.let {
                     backupAnime.customTitle = it.title
                     backupAnime.customArtist = it.artist
                     backupAnime.customAuthor = it.author

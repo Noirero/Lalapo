@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.data.backup
 import android.content.Context
 import android.net.Uri
 import androidx.preference.PreferenceManager
-import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeHistory
@@ -20,6 +19,7 @@ import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.database.models.anime.Anime
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.anime.Episode
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.Job
 import okio.buffer
@@ -180,7 +180,7 @@ class BackupRestorer(
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
         // AM (CU) -->
-        customAnime: CustomAnimeInfo?,
+        customAnime: CustomAnimeManager.AnimeJson?,
         // <-- AM (CU)
     ) {
         val fetchedAnime = backupManager.restoreNewAnime(anime)
@@ -199,7 +199,7 @@ class BackupRestorer(
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
         // AM (CU) -->
-        customAnime: CustomAnimeInfo?,
+        customAnime: CustomAnimeManager.AnimeJson?,
         // <-- AM (CU)
     ) {
         backupManager.restoreEpisodes(backupAnime, episodes)
@@ -214,14 +214,15 @@ class BackupRestorer(
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
         // AM (CU) -->
-        customAnime: CustomAnimeInfo?,
+        customAnime: CustomAnimeManager.AnimeJson?,
         // <-- AM (CU)
     ) {
         backupManager.restoreAnimeCategories(anime, categories, backupCategories)
         backupManager.restoreAnimeHistory(history)
         backupManager.restoreAnimeTracking(anime, tracks)
         // AM (CU) -->
-        backupManager.restoreEditedInfo(customAnime?.copy(id = anime.id!!))
+        customAnime?.id = anime.id!!
+        backupManager.restoreEditedInfo(customAnime)
         // <-- AM (CU)
     }
 

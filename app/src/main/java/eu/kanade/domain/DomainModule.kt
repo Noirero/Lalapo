@@ -1,9 +1,7 @@
 package eu.kanade.domain
 
-import android.app.Application
 import eu.kanade.data.category.anime.AnimeCategoryRepositoryImpl
 import eu.kanade.data.entries.anime.AnimeRepositoryImpl
-import eu.kanade.data.entries.anime.CustomAnimeRepositoryImpl
 import eu.kanade.data.history.anime.AnimeHistoryRepositoryImpl
 import eu.kanade.data.items.episode.EpisodeRepositoryImpl
 import eu.kanade.data.source.anime.AnimeSourceDataRepositoryImpl
@@ -26,17 +24,14 @@ import eu.kanade.domain.entries.anime.interactor.GetAllAnime
 import eu.kanade.domain.entries.anime.interactor.GetAnime
 import eu.kanade.domain.entries.anime.interactor.GetAnimeFavorites
 import eu.kanade.domain.entries.anime.interactor.GetAnimeWithEpisodes
-import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
 import eu.kanade.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import eu.kanade.domain.entries.anime.interactor.GetLibraryAnime
 import eu.kanade.domain.entries.anime.interactor.NetworkToLocalAnime
 import eu.kanade.domain.entries.anime.interactor.ResetAnimeViewerFlags
 import eu.kanade.domain.entries.anime.interactor.SetAnimeEpisodeFlags
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
-import eu.kanade.domain.entries.anime.interactor.SetCustomAnimeInfo
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.repository.AnimeRepository
-import eu.kanade.domain.entries.anime.repository.CustomAnimeRepository
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionLanguages
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionSources
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionsByType
@@ -150,9 +145,6 @@ class DomainModule : InjektModule {
 
         // AM (CU) -->
         addFactory { GetAllAnime(get()) }
-        addSingletonFactory<CustomAnimeRepository> { CustomAnimeRepositoryImpl(get<Application>()) }
-        addFactory { GetCustomAnimeInfo(get()) }
-        addFactory { SetCustomAnimeInfo(get()) }
         // <-- AM (CU)
     }
 }

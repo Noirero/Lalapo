@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.data.database.models.anime
 
-import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
-import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import uy.kohesive.injekt.injectLazy
 
@@ -14,12 +13,12 @@ open class AnimeImpl : Anime {
     override lateinit var url: String
 
     // AM (CU) -->
-    private val customManga: CustomAnimeInfo?
-        get() = getCustomAnimeInfo.get(id!!)
+    private val customAnime: CustomAnimeManager.CustomAnimeInfo?
+        get() = customAnimeManager.getAnime(this)
 
     override var title: String
         get() = if (favorite) {
-            customManga?.title ?: ogTitle
+            customAnime?.title ?: ogTitle
         } else {
             ogTitle
         }
@@ -28,23 +27,23 @@ open class AnimeImpl : Anime {
         }
 
     override var author: String?
-        get() = if (favorite) customManga?.author ?: ogAuthor else ogAuthor
+        get() = if (favorite) customAnime?.author ?: ogAuthor else ogAuthor
         set(value) { ogAuthor = value }
 
     override var artist: String?
-        get() = if (favorite) customManga?.artist ?: ogArtist else ogArtist
+        get() = if (favorite) customAnime?.artist ?: ogArtist else ogArtist
         set(value) { ogArtist = value }
 
     override var description: String?
-        get() = if (favorite) customManga?.description ?: ogDesc else ogDesc
+        get() = if (favorite) customAnime?.description ?: ogDesc else ogDesc
         set(value) { ogDesc = value }
 
     override var genre: String?
-        get() = if (favorite) customManga?.genre?.joinToString() ?: ogGenre else ogGenre
+        get() = if (favorite) customAnime?.genre?.joinToString() ?: ogGenre else ogGenre
         set(value) { ogGenre = value }
 
     override var status: Int
-        get() = if (favorite) customManga?.status?.toInt() ?: ogStatus else ogStatus
+        get() = if (favorite) customAnime?.status?.toInt() ?: ogStatus else ogStatus
         set(value) { ogStatus = value }
     // <-- AM (CU)
 
@@ -109,7 +108,7 @@ open class AnimeImpl : Anime {
 
     // AM (CU) -->
     companion object {
-        private val getCustomAnimeInfo: GetCustomAnimeInfo by injectLazy()
+        private val customAnimeManager: CustomAnimeManager by injectLazy()
     }
     // <-- AM (CU)
 }

@@ -17,7 +17,6 @@ import eu.kanade.domain.backup.service.BackupPreferences
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.domain.download.service.DownloadPreferences
-import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.anime.store.DelayedAnimeTrackingStore
@@ -34,6 +33,7 @@ import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
@@ -144,6 +144,10 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { ConnectionsManager(app) }
         // AM (CN) <--
 
+        // AM (CU) -->
+        addSingletonFactory { CustomAnimeManager(app) }
+        // <-- AM (CU)
+
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(app).execute {
             get<NetworkHelper>()
@@ -155,8 +159,8 @@ class AppModule(val app: Application) : InjektModule {
             get<AnimeDownloadManager>()
 
             // AM (CU) -->
-            get<GetCustomAnimeInfo>()
-            // AM (CU) <--
+            get<CustomAnimeManager>()
+            // <-- AM (CU)
         }
     }
 }

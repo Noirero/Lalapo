@@ -163,12 +163,7 @@ class ShikimoriApi(private val client: OkHttpClient, interceptor: ShikimoriInter
         private const val oauthUrl = "$baseUrl/oauth/token"
         private const val loginUrl = "$baseUrl/oauth/authorize"
 
-        private const val redirectUrl = "tachiyomi://shikimori-auth"
-        private const val baseMangaUrl = "$apiUrl/mangas"
-
-        fun mangaUrl(remoteId: Int): String {
-            return "$baseMangaUrl/$remoteId"
-        }
+        private const val redirectUrl = "animiru://shikimori-auth"
 
         fun authUrl() =
             loginUrl.toUri().buildUpon()

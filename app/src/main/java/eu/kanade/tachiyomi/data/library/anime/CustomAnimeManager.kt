@@ -1,21 +1,23 @@
-// AM (CU) -->
-package eu.kanade.data.entries.anime
+package eu.kanade.tachiyomi.data.library.anime
 
 import android.content.Context
-import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
-import eu.kanade.domain.entries.anime.repository.CustomAnimeRepository
+import eu.kanade.tachiyomi.data.database.models.anime.Anime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import eu.kanade.domain.entries.anime.model.Anime as DomainAnime
 
-class CustomAnimeRepositoryImpl(context: Context) : CustomAnimeRepository {
+class CustomAnimeManager(val context: Context) {
+
     private val editJson = File(context.getExternalFilesDir(null), "edits.json")
 
     private val customAnimeMap = fetchCustomData()
 
-    override fun get(animeId: Long) = customAnimeMap[animeId]
+    fun getAnime(anime: Anime): CustomAnimeInfo? = customAnimeMap[anime.id]
+    fun getAnime(anime: DomainAnime): CustomAnimeInfo? = customAnimeMap[anime.id]
+    fun getAnime(animeId: Long): CustomAnimeInfo? = customAnimeMap[animeId]
 
     private fun fetchCustomData(): MutableMap<Long, CustomAnimeInfo> {
         if (!editJson.exists() || !editJson.isFile) return mutableMapOf()
@@ -38,18 +40,18 @@ class CustomAnimeRepositoryImpl(context: Context) : CustomAnimeRepository {
             .toMutableMap()
     }
 
-    override fun set(animeInfo: CustomAnimeInfo) {
+    fun saveAnimeInfo(anime: AnimeJson) {
         if (
-            animeInfo.title == null &&
-            animeInfo.author == null &&
-            animeInfo.artist == null &&
-            animeInfo.description == null &&
-            animeInfo.genre == null &&
-            animeInfo.status == null
+            anime.title == null &&
+            anime.author == null &&
+            anime.artist == null &&
+            anime.description == null &&
+            anime.genre == null &&
+            anime.status == null
         ) {
-            customAnimeMap.remove(animeInfo.id)
+            customAnimeMap.remove(anime.id!!)
         } else {
-            customAnimeMap[animeInfo.id] = animeInfo
+            customAnimeMap[anime.id!!] = anime.toAnime()
         }
         saveCustomInfo()
     }
@@ -89,16 +91,29 @@ class CustomAnimeRepositoryImpl(context: Context) : CustomAnimeRepository {
         )
     }
 
-    fun CustomAnimeInfo.toJson(): AnimeJson {
-        return AnimeJson(
-            id,
-            title,
-            author,
-            artist,
-            description,
-            genre,
-            status,
-        )
+    data class CustomAnimeInfo(
+        val id: Long,
+        val title: String?,
+        val author: String? = null,
+        val artist: String? = null,
+        val description: String? = null,
+        val genre: List<String>? = null,
+        val status: Long? = null,
+    ) {
+        val genreString by lazy {
+            genre?.joinToString()
+        }
+
+        fun toJson(): AnimeJson {
+            return AnimeJson(
+                id,
+                title,
+                author,
+                artist,
+                description,
+                genre,
+                status,
+            )
+        }
     }
 }
-// <-- AM (CU)

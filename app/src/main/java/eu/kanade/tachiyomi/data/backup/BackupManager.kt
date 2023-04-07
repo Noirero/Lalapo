@@ -14,9 +14,6 @@ import eu.kanade.domain.backup.service.BackupPreferences
 import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
 import eu.kanade.domain.category.model.Category
 import eu.kanade.domain.entries.anime.interactor.GetAnimeFavorites
-import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
-import eu.kanade.domain.entries.anime.interactor.SetCustomAnimeInfo
-import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
 import eu.kanade.domain.history.anime.model.AnimeHistoryUpdate
 import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.tachiyomi.R
@@ -51,6 +48,7 @@ import eu.kanade.tachiyomi.data.backup.models.backupEpisodeMapper
 import eu.kanade.tachiyomi.data.database.models.anime.Anime
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.database.models.anime.Episode
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.anime.model.copyFrom
 import eu.kanade.tachiyomi.util.system.hasPermission
@@ -79,8 +77,7 @@ class BackupManager(
     private val getAnimeFavorites: GetAnimeFavorites = Injekt.get()
 
     // AM (CU) -->
-    private val getCustomAnimeInfo: GetCustomAnimeInfo = Injekt.get()
-    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get()
+    private val customAnimeManager: CustomAnimeManager = Injekt.get()
     // <-- AM (CU)
 
     internal val parser = ProtoBuf
@@ -204,7 +201,7 @@ class BackupManager(
         val animeObject = BackupAnime.copyFrom(
             anime,
             // AM (CU) -->
-            if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) getCustomAnimeInfo.get(anime.id) else null,
+            if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) customAnimeManager else null,
             // <-- AM (CU)
         )
 
@@ -688,9 +685,9 @@ class BackupManager(
     }
 
     // AM (CU) -->
-    internal fun restoreEditedInfo(animeJson: CustomAnimeInfo?) {
+    internal fun restoreEditedInfo(animeJson: CustomAnimeManager.AnimeJson?) {
         animeJson ?: return
-        setCustomAnimeInfo.set(animeJson)
+        customAnimeManager.saveAnimeInfo(animeJson)
     }
     // <-- AM (CU)
 }

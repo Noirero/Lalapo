@@ -6,7 +6,9 @@ class SAnimeImpl : SAnime {
 
     override lateinit var url: String
 
-    override lateinit var title: String
+    // AM (CU) -->
+    override var title: String = ""
+    // <-- AM (CU)
 
     override var artist: String? = null
 

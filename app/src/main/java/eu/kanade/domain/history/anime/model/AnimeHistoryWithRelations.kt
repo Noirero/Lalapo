@@ -1,7 +1,7 @@
 package eu.kanade.domain.history.anime.model
 
-import eu.kanade.domain.entries.anime.interactor.GetCustomAnimeInfo
 import eu.kanade.domain.entries.anime.model.AnimeCover
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import uy.kohesive.injekt.injectLazy
 import java.util.Date
 
@@ -17,10 +17,10 @@ data class AnimeHistoryWithRelations(
     val coverData: AnimeCover,
 ) {
     // AM (CU) -->
-    val title: String = customAnimeManager.get(animeId)?.title ?: ogTitle
+    val title: String = customAnimeManager.getAnime(animeId)?.title ?: ogTitle
 
     companion object {
-        private val customAnimeManager: GetCustomAnimeInfo by injectLazy()
+        private val customAnimeManager: CustomAnimeManager by injectLazy()
     }
     // <-- AM (CU)
 }

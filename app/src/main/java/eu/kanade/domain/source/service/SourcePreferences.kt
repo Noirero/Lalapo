@@ -32,7 +32,6 @@ class SourcePreferences(
     fun lastUsedAnimeSource() = preferenceStore.getLong("last_anime_catalogue_source", -1)
 
     fun animeExtensionUpdatesCount() = preferenceStore.getInt("animeext_updates_count", 0)
-    fun mangaExtensionUpdatesCount() = preferenceStore.getInt("ext_updates_count", 0)
 
     fun searchPinnedAnimeSourcesOnly() = preferenceStore.getBoolean("search_pinned_anime_sources_only", false)
 }

@@ -18,11 +18,9 @@ import eu.kanade.domain.entries.TriStateFilter
 import eu.kanade.domain.entries.anime.interactor.GetAnimeWithEpisodes
 import eu.kanade.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import eu.kanade.domain.entries.anime.interactor.SetAnimeEpisodeFlags
-import eu.kanade.domain.entries.anime.interactor.SetCustomAnimeInfo
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.Anime
 import eu.kanade.domain.entries.anime.model.AnimeUpdate
-import eu.kanade.domain.entries.anime.model.CustomAnimeInfo
 import eu.kanade.domain.entries.anime.model.isLocal
 import eu.kanade.domain.items.episode.interactor.SetAnimeDefaultEpisodeFlags
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
@@ -44,6 +42,7 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
+import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
@@ -78,6 +77,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import java.text.DateFormat
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -101,9 +101,6 @@ class AnimeInfoScreenModel(
     private val downloadProvider: AnimeDownloadProvider = Injekt.get(),
     // <-- AM (FS)
     private val getAnimeAndEpisodes: GetAnimeWithEpisodes = Injekt.get(),
-    // AM (CU) -->
-    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get(),
-    // <-- AM (CU)
     private val getDuplicateLibraryAnime: GetDuplicateLibraryAnime = Injekt.get(),
     private val setAnimeEpisodeFlags: SetAnimeEpisodeFlags = Injekt.get(),
     private val setAnimeDefaultEpisodeFlags: SetAnimeDefaultEpisodeFlags = Injekt.get(),
@@ -141,6 +138,10 @@ class AnimeInfoScreenModel(
 
     internal val autoOpenTrack: Boolean
         get() = successState?.trackingAvailable == true && trackPreferences.trackOnAddingToLibrary().get()
+
+    // AM (CU) -->
+    private val customAnimeManager: CustomAnimeManager by injectLazy()
+    // <-- AM (CU)
 
     /**
      * Helper function to update the UI state only if it's currently in success state
@@ -297,8 +298,8 @@ class AnimeInfoScreenModel(
             } else {
                 null
             }
-            setCustomAnimeInfo.set(
-                CustomAnimeInfo(
+            customAnimeManager.saveAnimeInfo(
+                CustomAnimeManager.AnimeJson(
                     state.anime.id,
                     title?.trimOrNull(),
                     author?.trimOrNull(),

@@ -49,7 +49,7 @@ class DiscordRPCService : Service() {
     }
 
     override fun onDestroy() {
-        rpc!!.closeRPC()
+        rpc?.closeRPC()
         rpc = null
         super.onDestroy()
     }

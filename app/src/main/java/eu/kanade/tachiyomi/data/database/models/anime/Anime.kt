@@ -22,6 +22,12 @@ interface Anime : SAnime {
 
     var cover_last_modified: Long
 
+    // AM (CU) -->
+    fun getOriginalGenres(): List<String>? {
+        return originalGenre?.split(", ")?.map { it.trim() }
+    }
+    // <-- AM (CU)
+
     private fun setViewerFlags(flag: Int, mask: Int) {
         viewer_flags = viewer_flags and mask.inv() or (flag and mask)
     }
@@ -48,7 +54,7 @@ fun Anime.toDomainAnime(): DomainAnime? {
         ogArtist = artist,
         ogAuthor = author,
         ogDescription = description,
-        ogGenre = getGenres(),
+        ogGenre = getOriginalGenres(),
         ogStatus = status.toLong(),
         // <-- AM (CU)
         thumbnailUrl = thumbnail_url,
