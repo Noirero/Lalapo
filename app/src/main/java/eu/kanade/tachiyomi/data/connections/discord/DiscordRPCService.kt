@@ -44,6 +44,9 @@ class DiscordRPCService : Service() {
                 .setButton1("Get the app!", "https://github.com/Quickdesh/Animiru")
                 .setButton2("Join the Discord!", "https://discord.gg/yDuHDMwxhv")
                 .build()
+        } else {
+            connectionsPreferences.enableDiscordRPC().set(false)
+            return
         }
         notification()
     }
