@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -47,7 +46,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
-import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.presentation.components.EntryBottomActionMenu
 import eu.kanade.presentation.components.EpisodeDownloadAction
@@ -68,16 +66,13 @@ import eu.kanade.presentation.entries.anime.components.ExpandableAnimeDescriptio
 import eu.kanade.presentation.util.isScrolledToEnd
 import eu.kanade.presentation.util.isScrollingUp
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreenState
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeItem
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import uy.kohesive.injekt.injectLazy
-import java.io.File
 
 @Composable
 fun AnimeScreen(
@@ -417,9 +412,6 @@ private fun AnimeScreenSmallImpl(
                     }
 
                     sharedEpisodeItems(
-                        // AM (FS) -->
-                        state = state,
-                        // <-- AM (FS)
                         episodes = episodes,
                         onEpisodeClicked = onEpisodeClicked,
                         onDownloadEpisode = onDownloadEpisode,
@@ -639,9 +631,6 @@ fun AnimeScreenLargeImpl(
                             }
 
                             sharedEpisodeItems(
-                                // AM (FS) -->
-                                state = state,
-                                // <-- AM (FS)
                                 episodes = episodes,
                                 onEpisodeClicked = onEpisodeClicked,
                                 onDownloadEpisode = onDownloadEpisode,
@@ -718,9 +707,6 @@ private fun SharedAnimeBottomActionMenu(
 }
 
 private fun LazyListScope.sharedEpisodeItems(
-    // AM (FS) -->
-    state: AnimeScreenState.Success,
-    // <-- AM (FS)
     episodes: List<EpisodeItem>,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -732,10 +718,6 @@ private fun LazyListScope.sharedEpisodeItems(
         contentType = { EntryScreenItem.ITEM },
     ) { episodeItem ->
         val haptic = LocalHapticFeedback.current
-
-        // AM (FS) -->
-        val downloadPreferences: DownloadPreferences by injectLazy()
-        // <-- AM (FS)
 
         AnimeEpisodeListItem(
             title = episodeItem.episodeTitleString,
@@ -769,19 +751,7 @@ private fun LazyListScope.sharedEpisodeItems(
                 null
             },
             // AM (FS) -->
-            fileSize = if (downloadPreferences.showDownloadedEpisodeSize().get() && episodeItem.isDownloaded) {
-                val provider = AnimeDownloadProvider(LocalContext.current)
-                provider.findEpisodeDir(
-                    episodeItem.episode.name,
-                    episodeItem.episode.scanlator,
-                    state.anime.ogTitle,
-                    state.source,
-                )?.filePath?.let {
-                    DiskUtil.getDirectorySize(File(it))
-                }
-            } else {
-                null
-            },
+            fileSize = episodeItem.fileSize,
             // <-- AM (FS)
         )
     }

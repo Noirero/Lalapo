@@ -34,7 +34,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.domain.download.service.DownloadPreferences
-import eu.kanade.presentation.util.padding
 import eu.kanade.presentation.util.secondaryItemAlpha
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
@@ -207,7 +206,9 @@ private fun DownloadedIndicator(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     onClick: (EpisodeDownloadAction) -> Unit,
+    // AM (FS) -->
     fileSize: Long?,
+    // <-- AM (FS)
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     // AM (FS) -->

@@ -11,6 +11,7 @@ import cafe.adriel.voyager.core.model.coroutineScope
 import eu.kanade.core.prefs.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
+import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.entries.anime.interactor.GetAnime
 import eu.kanade.domain.items.episode.interactor.GetEpisode
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
@@ -24,6 +25,7 @@ import eu.kanade.presentation.components.EpisodeDownloadAction
 import eu.kanade.presentation.updates.anime.AnimeUpdatesUiModel
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateService
@@ -54,6 +56,10 @@ class AnimeUpdatesScreenModel(
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val downloadCache: AnimeDownloadCache = Injekt.get(),
+    // AM (FS) -->
+    private val downloadPreferences: DownloadPreferences = Injekt.get(),
+    private val downloadProvider: AnimeDownloadProvider = Injekt.get(),
+    // <-- AM (FS)
     private val updateEpisode: UpdateEpisode = Injekt.get(),
     private val setSeenStatus: SetSeenStatus = Injekt.get(),
     private val getUpdates: GetAnimeUpdates = Injekt.get(),
@@ -112,10 +118,11 @@ class AnimeUpdatesScreenModel(
     private fun List<AnimeUpdatesWithRelations>.toUpdateItems(): List<AnimeUpdatesItem> {
         return this.map {
             val activeDownload = downloadManager.getQueuedDownloadOrNull(it.episodeId)
+            // AM (CU)>
             val downloaded = downloadManager.isEpisodeDownloaded(
                 it.episodeName,
                 it.scanlator,
-                it.animeTitle,
+                it.ogAnimeTitle,
                 it.sourceId,
             )
             val downloadState = when {
@@ -128,6 +135,13 @@ class AnimeUpdatesScreenModel(
                 downloadStateProvider = { downloadState },
                 downloadProgressProvider = { activeDownload?.progress ?: 0 },
                 selected = it.episodeId in selectedEpisodeIds,
+                // AM (FS) -->
+                fileSize = if (downloadPreferences.showDownloadedEpisodeSize().get() && downloadState == AnimeDownload.State.DOWNLOADED) {
+                    downloadProvider.getEpisodeFileSize(it.episodeName, it.scanlator, it.ogAnimeTitle, sourceManager.get(it.sourceId))
+                } else {
+                    null
+                },
+                // <-- AM (FS)
             )
         }
     }
@@ -440,4 +454,7 @@ data class AnimeUpdatesItem(
     val downloadStateProvider: () -> AnimeDownload.State,
     val downloadProgressProvider: () -> Int,
     val selected: Boolean = false,
+    // AM (FS) -->
+    val fileSize: Long?,
+    // <-- AM (FS)
 )
