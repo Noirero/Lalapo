@@ -161,7 +161,7 @@ class AnimeLibraryUpdateNotifier(private val context: Context) {
             // Parent group notification
             notify(
                 Notifications.ID_NEW_EPISODES,
-                context.notification(Notifications.CHANNEL_NEW_CHAPTERS_EPISODES) {
+                context.notification(Notifications.CHANNEL_NEW_EPISODES) {
                     setContentTitle(context.getString(R.string.notification_new_episodes))
                     if (updates.size == 1 && !preferences.hideNotificationContent().get()) {
                         setContentText(updates.first().first.title.chop(NOTIF_ANIME_TITLE_MAX_LEN))
@@ -205,7 +205,7 @@ class AnimeLibraryUpdateNotifier(private val context: Context) {
 
     private suspend fun createNewEpisodesNotification(anime: Anime, episodes: Array<Episode>): Notification {
         val icon = getAnimeIcon(anime)
-        return context.notification(Notifications.CHANNEL_NEW_CHAPTERS_EPISODES) {
+        return context.notification(Notifications.CHANNEL_NEW_EPISODES) {
             setContentTitle(anime.title)
 
             val description = getNewEpisodesDescription(episodes)
