@@ -109,6 +109,7 @@ class DiscordRPCService : Service() {
                 2 -> historyDiscordImageUrl
                 3 -> browseDiscordImageUrl
                 4 -> moreDiscordImageUrl
+                5 -> webviewDiscordImageUrl
                 else -> libraryDiscordImageUrl
             }
             val largeText = when (pageNumber) {
@@ -116,6 +117,7 @@ class DiscordRPCService : Service() {
                 2 -> resources.getString(R.string.label_recent_manga)
                 3 -> resources.getString(R.string.browse)
                 4 -> resources.getString(R.string.label_settings)
+                5 -> resources.getString(R.string.action_web_view)
                 else -> resources.getString(R.string.label_library)
             }
             val details = when (pageNumber) {
@@ -123,6 +125,7 @@ class DiscordRPCService : Service() {
                 2 -> resources.getString(R.string.scrolling)
                 3 -> resources.getString(R.string.browsing)
                 4 -> resources.getString(R.string.messing)
+                5 -> resources.getString(R.string.browsing)
                 else -> resources.getString(R.string.browsing)
             }
             val state = when (pageNumber) {
@@ -130,6 +133,7 @@ class DiscordRPCService : Service() {
                 2 -> resources.getString(R.string.label_recent_manga)
                 3 -> resources.getString(R.string.label_sources)
                 4 -> resources.getString(R.string.label_settings)
+                5 -> resources.getString(R.string.action_web_view)
                 else -> resources.getString(R.string.label_library)
             }
 

@@ -9,6 +9,7 @@ import androidx.core.net.toUri
 import eu.kanade.presentation.webview.WebViewScreen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -60,7 +61,17 @@ class WebViewActivity : BaseActivity() {
                 onClearCookies = this::clearCookies,
             )
         }
+        // AM (DC) -->
+        DiscordRPCService.setDiscordPage(5)
+        // <-- AM (DC)
     }
+
+    // AM (DC) -->
+    override fun onDestroy() {
+        DiscordRPCService.setDiscordPage(DiscordRPCService.lastUsedPage)
+        super.onDestroy()
+    }
+    // <-- AM (DC)
 
     override fun onProvideAssistContent(outContent: AssistContent) {
         super.onProvideAssistContent(outContent)

@@ -68,7 +68,7 @@ object SettingsDiscordScreen : SearchableSettings {
 
         return listOf(
             Preference.PreferenceGroup(
-                title = stringResource(R.string.special_services),
+                title = stringResource(R.string.connections_discord),
                 preferenceItems = listOf(
                     Preference.PreferenceItem.SwitchPreference(
                         pref = enableDRPCPref,
