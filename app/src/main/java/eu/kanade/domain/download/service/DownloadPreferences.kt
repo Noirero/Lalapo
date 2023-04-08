@@ -29,7 +29,7 @@ class DownloadPreferences(
     // <-- AM (FM)
 
     // AM (FS) -->
-    fun showDownloadedEpisodeSize() = preferenceStore.getBoolean("pref_show_downloaded_episode_size", true)
+    fun showEpisodeFileSize() = preferenceStore.getBoolean("pref_show_downloaded_episode_size", true)
     // <-- AM (FS)
 
     fun removeExcludeAnimeCategories() = preferenceStore.getStringSet("remove_exclude_anime_categories", emptySet())

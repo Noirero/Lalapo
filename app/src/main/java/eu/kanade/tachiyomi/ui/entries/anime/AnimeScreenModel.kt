@@ -618,7 +618,7 @@ class AnimeInfoScreenModel(
                 selected = episode.id in selectedEpisodeIds,
                 // AM (FS) -->
                 fileSize =
-                if (downloadPreferences.showDownloadedEpisodeSize().get() && downloadState == AnimeDownload.State.DOWNLOADED) {
+                if (downloadPreferences.showEpisodeFileSize().get() && downloadState == AnimeDownload.State.DOWNLOADED) {
                     downloadProvider.getEpisodeFileSize(episode.name, episode.scanlator, anime.ogTitle, source)
                 } else {
                     null

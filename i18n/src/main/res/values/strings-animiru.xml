@@ -7,7 +7,7 @@
     <string name="pref_category_navbar">Navbar</string>
     <string name="pref_hide_updates_button">Show Updates in the nav</string>
     <string name="pref_hide_history_button">Show History in the nav</string>
-    <string name="pref_show_downloaded_episode_size">Show downloaded episode size</string>
+    <string name="pref_show_downloaded_episode_file_size">Show downloaded episode file size</string>
 
     <!-- Entry Info Edit -->
     <string name="reset_tags">Reset Tags</string>

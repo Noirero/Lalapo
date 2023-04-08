@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,6 +29,9 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.runBlocking
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -48,6 +52,18 @@ object SettingsDownloadScreen : SearchableSettings {
         val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
         val basePreferences = remember { Injekt.get<BasePreferences>() }
 
+        // AM (FS) -->
+        LaunchedEffect(Unit) {
+            downloadPreferences.showEpisodeFileSize().changes()
+                .drop(1)
+                .collectLatest { value ->
+                    if (value) {
+                        Injekt.get<AnimeDownloadCache>().invalidateCache()
+                    }
+                }
+        }
+        // <-- AM (FS)
+
         return listOf(
             getDownloadLocationPreference(downloadPreferences = downloadPreferences),
             Preference.PreferenceItem.SwitchPreference(
@@ -56,8 +72,8 @@ object SettingsDownloadScreen : SearchableSettings {
             ),
             // AM (FS) -->
             Preference.PreferenceItem.SwitchPreference(
-                pref = downloadPreferences.showDownloadedEpisodeSize(),
-                title = stringResource(R.string.pref_show_downloaded_episode_size),
+                pref = downloadPreferences.showEpisodeFileSize(),
+                title = stringResource(R.string.pref_show_downloaded_episode_file_size),
             ),
             // <-- AM (FS)
             getDeleteEpisodesGroup(
