@@ -122,7 +122,7 @@ fun AnimeSourcesScreen(
                             val buttonText = if (extHasUpdate) R.string.ext_update else R.string.ext_install
                             ExtendedFloatingActionButton(
                                 text = { Text(text = stringResource(buttonText)) },
-                            // <-- AM (BR)
+                                // <-- AM (BR)
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Filled.Download,

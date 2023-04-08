@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import uy.kohesive.injekt.Injekt
@@ -44,9 +45,11 @@ object SettingsDiscordScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val connectionsPreferences = remember { Injekt.get<ConnectionsPreferences>() }
         val connectionsManager = remember { Injekt.get<ConnectionsManager>() }
-        val enableDRPC = connectionsPreferences.enableDiscordRPC()
+        val enableDRPCPref = connectionsPreferences.enableDiscordRPC()
         val discordRPCStatus = connectionsPreferences.discordRPCStatus()
         val discordRPCIncognito = connectionsPreferences.discordRPCIncognito()
+
+        val enableDRPC by enableDRPCPref.collectAsState()
 
         var dialog by remember { mutableStateOf<Any?>(null) }
         dialog?.run {
@@ -56,7 +59,7 @@ object SettingsDiscordScreen : SearchableSettings {
                         service = service,
                         onDismissRequest = {
                             dialog = null
-                            enableDRPC.set(false)
+                            enableDRPCPref.set(false)
                         },
                     )
                 }
@@ -68,7 +71,7 @@ object SettingsDiscordScreen : SearchableSettings {
                 title = stringResource(R.string.special_services),
                 preferenceItems = listOf(
                     Preference.PreferenceItem.SwitchPreference(
-                        pref = enableDRPC,
+                        pref = enableDRPCPref,
                         title = stringResource(R.string.pref_enable_discord_rpc),
                     ),
                     Preference.PreferenceItem.ListPreference(
@@ -79,13 +82,13 @@ object SettingsDiscordScreen : SearchableSettings {
                             0 to stringResource(R.string.pref_discord_idle),
                             1 to stringResource(R.string.pref_discord_online),
                         ),
-                        enabled = enableDRPC.get(),
+                        enabled = enableDRPC,
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         pref = discordRPCIncognito,
                         title = stringResource(R.string.pref_discord_incognito),
                         subtitle = stringResource(R.string.pref_discord_incognito_summary),
-                        enabled = enableDRPC.get(),
+                        enabled = enableDRPC,
                     ),
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(R.string.logout),
