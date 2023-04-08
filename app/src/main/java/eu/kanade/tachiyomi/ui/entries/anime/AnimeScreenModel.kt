@@ -39,7 +39,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
@@ -97,9 +96,6 @@ class AnimeInfoScreenModel(
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val downloadCache: AnimeDownloadCache = Injekt.get(),
-    // AM (FS) -->
-    private val downloadProvider: AnimeDownloadProvider = Injekt.get(),
-    // <-- AM (FS)
     private val getAnimeAndEpisodes: GetAnimeWithEpisodes = Injekt.get(),
     private val getDuplicateLibraryAnime: GetDuplicateLibraryAnime = Injekt.get(),
     private val setAnimeEpisodeFlags: SetAnimeEpisodeFlags = Injekt.get(),
@@ -616,14 +612,6 @@ class AnimeInfoScreenModel(
                     )
                 },
                 selected = episode.id in selectedEpisodeIds,
-                // AM (FS) -->
-                fileSize =
-                if (downloadPreferences.showEpisodeFileSize().get() && downloadState == AnimeDownload.State.DOWNLOADED) {
-                    downloadProvider.getEpisodeFileSize(episode.name, episode.scanlator, anime.ogTitle, source)
-                } else {
-                    null
-                },
-                // <-- AM (FS)
             )
         }
     }
@@ -1254,9 +1242,6 @@ data class EpisodeItem(
     val seenProgressString: String?,
 
     val selected: Boolean = false,
-    // AM (FS) -->
-    val fileSize: Long?,
-    // <-- AM (FS)
 ) {
     val isDownloaded = downloadState == AnimeDownload.State.DOWNLOADED
 }

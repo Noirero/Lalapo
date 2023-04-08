@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
+import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.presentation.components.EntryBottomActionMenu
 import eu.kanade.presentation.components.EpisodeDownloadAction
@@ -66,6 +68,7 @@ import eu.kanade.presentation.entries.anime.components.ExpandableAnimeDescriptio
 import eu.kanade.presentation.util.isScrolledToEnd
 import eu.kanade.presentation.util.isScrollingUp
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
@@ -412,6 +415,9 @@ private fun AnimeScreenSmallImpl(
                     }
 
                     sharedEpisodeItems(
+                        // AM (FS) -->
+                        state = state,
+                        // <-- AM (FS)
                         episodes = episodes,
                         onEpisodeClicked = onEpisodeClicked,
                         onDownloadEpisode = onDownloadEpisode,
@@ -631,6 +637,9 @@ fun AnimeScreenLargeImpl(
                             }
 
                             sharedEpisodeItems(
+                                // AM (FS) -->
+                                state = state,
+                                // <-- AM (FS)
                                 episodes = episodes,
                                 onEpisodeClicked = onEpisodeClicked,
                                 onDownloadEpisode = onDownloadEpisode,
@@ -707,6 +716,9 @@ private fun SharedAnimeBottomActionMenu(
 }
 
 private fun LazyListScope.sharedEpisodeItems(
+    // AM (FS) -->
+    state: AnimeScreenState.Success,
+    // <-- AM (FS)
     episodes: List<EpisodeItem>,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -718,6 +730,10 @@ private fun LazyListScope.sharedEpisodeItems(
         contentType = { EntryScreenItem.ITEM },
     ) { episodeItem ->
         val haptic = LocalHapticFeedback.current
+
+        // AM (FS) -->
+        val downloadPreferences: DownloadPreferences by injectLazy()
+        // <-- AM (FS)
 
         AnimeEpisodeListItem(
             title = episodeItem.episodeTitleString,
@@ -751,7 +767,12 @@ private fun LazyListScope.sharedEpisodeItems(
                 null
             },
             // AM (FS) -->
-            fileSize = episodeItem.fileSize,
+            fileSize = if (downloadPreferences.showEpisodeFileSize().get()) {
+                AnimeDownloadProvider(LocalContext.current)
+                    .getEpisodeFileSize(episodeItem.episode.name, episodeItem.episode.scanlator, state.anime.ogTitle, state.source)
+            } else {
+                null
+            },
             // <-- AM (FS)
         )
     }
