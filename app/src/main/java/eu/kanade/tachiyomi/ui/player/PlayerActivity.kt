@@ -885,6 +885,35 @@ class PlayerActivity :
                 verticalScrollRight(-1 / maxVolume.toFloat())
                 return true
             }
+            // AM (KC) -->
+            KeyEvent.KEYCODE_SPACE -> {
+                doubleTapPlayPause()
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                val interval = playerPreferences.skipLengthPreference().get()
+                if (interval != 0) {
+                    doubleTapSeek(interval, isDoubleTap = false)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                val interval = playerPreferences.skipLengthPreference().get()
+                if (interval != 0) {
+                    doubleTapSeek(-interval, isDoubleTap = false)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_LEFT_BRACKET -> {
+                switchEpisode(true)
+                return true
+            }
+            KeyEvent.KEYCODE_RIGHT_BRACKET -> {
+                switchEpisode(false)
+                return true
+            }
+            // <-- AM (KC)
+
             // Not entirely sure how to handle these KeyCodes yet, need to learn some more
             /**
              KeyEvent.KEYCODE_MEDIA_NEXT -> {
