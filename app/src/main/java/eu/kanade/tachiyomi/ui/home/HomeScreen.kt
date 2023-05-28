@@ -72,10 +72,6 @@ object HomeScreen : Screen {
     private val uiPreferences: UiPreferences by injectLazy()
     private val playerPreferences: PlayerPreferences by injectLazy()
 
-    // AM (BR) -->
-    private val sourcePreferences: SourcePreferences by injectLazy()
-    // <-- AM (BR)
-
     // AM (UH) -->
     val tabsYUYH = listOf(
         AnimeLibraryTab,
@@ -88,9 +84,7 @@ object HomeScreen : Screen {
             externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
         ),
         // AM (BR) -->
-        BrowseTab(
-            extHasUpdate = sourcePreferences.animeExtensionUpdatesCount().get() == 0,
-        ),
+        BrowseTab,
         // <-- AM (BR)
         MoreTab,
     )
@@ -102,9 +96,7 @@ object HomeScreen : Screen {
             externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
         ),
         // AM (BR) -->
-        BrowseTab(
-            extHasUpdate = sourcePreferences.animeExtensionUpdatesCount().get() == 0,
-        ),
+        BrowseTab,
         // <-- AM (BR)
         MoreTab,
     )
@@ -116,9 +108,7 @@ object HomeScreen : Screen {
             externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
         ),
         // AM (BR) -->
-        BrowseTab(
-            extHasUpdate = sourcePreferences.animeExtensionUpdatesCount().get() == 0,
-        ),
+        BrowseTab,
         // <-- AM (BR)
         MoreTab,
     )
@@ -126,9 +116,7 @@ object HomeScreen : Screen {
     val tabsNUNH = listOf(
         AnimeLibraryTab,
         // AM (BR) -->
-        BrowseTab(
-            extHasUpdate = sourcePreferences.animeExtensionUpdatesCount().get() == 0,
-        ),
+        BrowseTab,
         // <-- AM (BR)
         MoreTab,
     )
@@ -255,12 +243,7 @@ object HomeScreen : Screen {
                                 // AM (DC) -->
                                 DiscordRPCService.setDiscordPage(3)
                                 // <-- AM (DC)
-                                BrowseTab(
-                                    // AM (BR) -->
-                                    extHasUpdate = sourcePreferences.animeExtensionUpdatesCount().get() == 0,
-                                    // <-- AM (BR)
-                                    toExtensions = it.toExtensions,
-                                )
+                                BrowseTab
                             }
                             is Tab.More -> {
                                 // AM (DC) -->
@@ -402,7 +385,7 @@ object HomeScreen : Screen {
         data class Animelib(val animeIdToOpen: Long? = null) : Tab()
         object Updates : Tab()
         object History : Tab()
-        data class Browse(val toExtensions: Boolean = false) : Tab()
+        object Browse : Tab()
         data class More(val toDownloads: Boolean) : Tab()
     }
 }

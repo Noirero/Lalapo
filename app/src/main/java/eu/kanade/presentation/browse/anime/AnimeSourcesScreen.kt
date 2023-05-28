@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Settings
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.domain.source.anime.model.AnimeSource
 import eu.kanade.domain.source.anime.model.Pin
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
@@ -44,8 +47,8 @@ import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.components.ScrollbarLazyColumn
 import eu.kanade.presentation.theme.header
 import eu.kanade.presentation.util.bottomSuperLargePaddingValues
+import eu.kanade.presentation.util.collectAsState
 import eu.kanade.presentation.util.isScrollingDown
-import eu.kanade.presentation.util.isScrollingUp
 import eu.kanade.presentation.util.padding
 import eu.kanade.presentation.util.plus
 import eu.kanade.presentation.util.topSmallPaddingValues
@@ -70,7 +73,7 @@ fun AnimeSourcesScreen(
     onClickPin: (AnimeSource) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
     // AM (BR) -->
-    extHasUpdate: Boolean,
+    sourcePreferences: SourcePreferences,
     // <-- AM (BR)
 ) {
     // AM (BR) -->
@@ -119,18 +122,20 @@ fun AnimeSourcesScreen(
                             exit = fadeOut(),
                         ) {
                             // AM (BR) -->
-                            val buttonText = if (extHasUpdate) R.string.ext_update else R.string.ext_install
+                            val extensionUpdateCount by sourcePreferences.animeExtensionUpdatesCount().collectAsState()
+                            val buttonText = if (extensionUpdateCount != 0) R.string.ext_update else R.string.ext_install
+                            val buttonIcon = if (extensionUpdateCount != 0) Icons.Filled.Upload else Icons.Filled.Download
                             ExtendedFloatingActionButton(
                                 text = { Text(text = stringResource(buttonText)) },
                                 // <-- AM (BR)
                                 icon = {
                                     Icon(
-                                        imageVector = Icons.Filled.Download,
+                                        imageVector = buttonIcon,
                                         contentDescription = null,
                                     )
                                 },
                                 onClick = { navigator.push(AnimeExtensionsScreen()) },
-                                expanded = !(extensionsListState.isScrollingUp() && extensionsListState.isScrollingDown()),
+                                expanded = !(extensionsListState.isScrollingDown()) || extensionUpdateCount != 0,
                             )
                         }
                     },

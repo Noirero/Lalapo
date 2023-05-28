@@ -12,9 +12,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.anime.AnimeSourceOptionsDialog
 import eu.kanade.presentation.browse.anime.AnimeSourcesScreen
 import eu.kanade.presentation.util.Tab
@@ -23,19 +25,16 @@ import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
+import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 
-data class BrowseTab(
-    // AM (BR) -->
-    private val extHasUpdate: Boolean,
-    // <-- AM (BR)
-    private val toExtensions: Boolean = false,
-) : Tab {
+object BrowseTab : Tab {
 
     override val options: TabOptions
         @Composable
@@ -49,6 +48,10 @@ data class BrowseTab(
             )
         }
 
+    override suspend fun onReselect(navigator: Navigator) {
+        navigator.push(AnimeDownloadQueueScreen)
+    }
+
     @Composable
     override fun Content() {
         val context = LocalContext.current
@@ -57,6 +60,7 @@ data class BrowseTab(
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { AnimeSourcesScreenModel() }
         val state by screenModel.state.collectAsState()
+        val sourcePreferences: SourcePreferences by injectLazy()
 
         AnimeSourcesScreen(
             state = state,
@@ -67,7 +71,7 @@ data class BrowseTab(
             },
             onClickPin = screenModel::togglePin,
             onLongClickItem = screenModel::showSourceDialog,
-            extHasUpdate = extHasUpdate,
+            sourcePreferences = sourcePreferences,
         )
 
         state.dialog?.let { dialog ->
@@ -108,6 +112,7 @@ data class BrowseTab(
         // AM (BR) -->
         val internalErrString = stringResource(R.string.internal_error)
         LaunchedEffect(Unit) {
+            Injekt.get<AnimeExtensionManager>().findAvailableExtensions()
             Injekt.get<AnimeExtensionManager>().updatePendingUpdatesCount()
             screenModel.events.collectLatest { event ->
                 when (event) {

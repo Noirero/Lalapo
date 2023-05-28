@@ -459,7 +459,7 @@ class MainActivity : BaseActivity() {
             }
             SHORTCUT_UPDATES -> HomeScreen.openTab(HomeScreen.Tab.Updates)
             SHORTCUT_HISTORY -> HomeScreen.openTab(HomeScreen.Tab.History)
-            SHORTCUT_SOURCES -> HomeScreen.openTab(HomeScreen.Tab.Browse(false))
+            SHORTCUT_SOURCES -> HomeScreen.openTab(HomeScreen.Tab.Browse)
             SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 HomeScreen.openTab(HomeScreen.Tab.More(toDownloads = true))

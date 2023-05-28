@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.anime
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.util.Log
 import eu.kanade.domain.source.anime.model.AnimeSourceData
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.R
@@ -165,6 +166,7 @@ class AnimeExtensionManager(
      */
     private fun updatedInstalledAnimeExtensionsStatuses(availableAnimeExtensions: List<AnimeExtension.Available>) {
         if (availableAnimeExtensions.isEmpty()) {
+            Log.i("YESSIRACK", "ORE KITA")
             preferences.animeExtensionUpdatesCount().set(0)
             return
         }
