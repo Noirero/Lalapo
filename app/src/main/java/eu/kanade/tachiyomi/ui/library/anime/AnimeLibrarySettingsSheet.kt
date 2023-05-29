@@ -447,7 +447,7 @@ class AnimeLibrarySettingsSheet(
         }
 
         inner class OtherGroup : Group {
-            private val showContinueWatchingButton = Item.CheckboxGroup(R.string.action_display_show_continue_reading_button, this)
+            private val showContinueWatchingButton = Item.CheckboxGroup(R.string.action_display_show_continue_watching_button, this)
 
             override val header = Item.Header(R.string.other_header)
             override val items = listOf(showContinueWatchingButton)
