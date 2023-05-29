@@ -50,7 +50,6 @@ import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchNonCancellable
 import eu.kanade.tachiyomi.util.lang.takeBytes
-import eu.kanade.tachiyomi.util.lang.withIOContext
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.system.isOnline
@@ -226,43 +225,43 @@ class PlayerViewModel(
      */
     suspend fun init(animeId: Long, initialEpisodeId: Long): Pair<List<Video>?, Result<Boolean>> {
         if (!needsInit()) return Pair(currentVideoList, Result.success(true))
-        return withIOContext {
-            try {
-                val anime = getAnime.await(animeId)
-                if (anime != null) {
-                    mutableState.update { it.copy(anime = anime) }
-                    if (episodeId == -1L) episodeId = initialEpisodeId
 
-                    checkTrackers(anime)
-                    val source = sourceManager.getOrStub(anime.source)
-                    this@PlayerViewModel.source = source
+        return try {
+            val anime = getAnime.await(animeId)
+            if (anime != null) {
+                mutableState.update { it.copy(anime = anime) }
+                if (episodeId == -1L) episodeId = initialEpisodeId
 
-                    episodeList = initEpisodeList()
-                    currentEpisode = episodeList.first { initialEpisodeId == it.id }
+                checkTrackers(anime)
+                val source = sourceManager.getOrStub(anime.source)
+                this@PlayerViewModel.source = source
 
-                    val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
+                episodeList = initEpisodeList()
+                currentEpisode = episodeList.first { initialEpisodeId == it.id }
 
-                    currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
-                    // AM (DC) -->
-                    isSourceNSFW(source)
-                    // <-- AM (DC)
-                    episodeId = currentEpisode.id!!
+                val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
 
-                    Pair(currentVideoList, Result.success(true))
-                } else {
-                    // Unlikely but okay
-                    Pair(currentVideoList, Result.success(false))
-                }
-            } catch (e: Throwable) {
-                Pair(currentVideoList, Result.failure(e))
+                currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
+                // AM (DC) -->
+                isSourceNSFW(source)
+                // <-- AM (DC)
+                episodeId = currentEpisode.id!!
+
+                Pair(currentVideoList, Result.success(true))
+            } else {
+                // Unlikely but okay
+                Pair(currentVideoList, Result.success(false))
             }
+        } catch (e: Throwable) {
+            Pair(currentVideoList, Result.failure(e))
         }
     }
 
     // AM (DC) -->
-    private suspend fun isSourceNSFW(source: AnimeSource) {
+    private fun isSourceNSFW(source: AnimeSource) {
         if (!source.isLocalOrStub()) {
-            val sourceUsed = sourceManager.extensionManager.installedExtensionsFlow.first().first { it.name == source.name }
+            val sourceUsed = sourceManager.extensionManager.installedExtensionsFlow.value
+                .find { ext -> ext.sources.any { it.id == source.id } }!!
             isSourceNsfw = sourceUsed.isNsfw
         }
     }
@@ -282,20 +281,18 @@ class PlayerViewModel(
         if (index == episodeList.lastIndex) return null
         currentEpisode = episodeList[index + 1]
 
-        return withIOContext {
-            try {
-                val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
-                currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
-                // AM (DC) -->
-                isSourceNSFW(source)
-                // <-- AM (DC)
-                episodeId = currentEpisode.id!!
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links." }
-            }
-
-            Pair(currentVideoList, anime.title + " - " + episodeList[index + 1].name)
+        try {
+            val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
+            currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
+            // AM (DC) -->
+            isSourceNSFW(source)
+            // <-- AM (DC)
+            episodeId = currentEpisode.id!!
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links." }
         }
+
+        return Pair(currentVideoList, anime.title + " - " + episodeList[index + 1].name)
     }
 
     suspend fun previousEpisode(): Pair<List<Video>?, String?>? {
@@ -306,19 +303,18 @@ class PlayerViewModel(
         if (index == 0) return null
         currentEpisode = episodeList[index - 1]
 
-        return withIOContext {
-            try {
-                val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
-                currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
-                // AM (DC) -->
-                isSourceNSFW(source)
-                // <-- AM (DC)
-                episodeId = currentEpisode.id!!
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links." }
-            }
-            Pair(currentVideoList, anime.title + " - " + episodeList[index - 1].name)
+        try {
+            val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
+            currentVideoList = EpisodeLoader.getLinks(currentEpisode, anime, source).asFlow().first()
+            // AM (DC) -->
+            isSourceNSFW(source)
+            // <-- AM (DC)
+            episodeId = currentEpisode.id!!
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links." }
         }
+
+        return Pair(currentVideoList, anime.title + " - " + episodeList[index - 1].name)
     }
 
     /**
@@ -456,6 +452,7 @@ class PlayerViewModel(
         }
     }
 
+    // AM (FM) -->
     /**
      * Fillermarks the currently active episode.
      */
@@ -471,6 +468,7 @@ class PlayerViewModel(
             )
         }
     }
+    // <-- AM (FM)
 
     /**
      * Saves the screenshot on the pictures directory and notifies the UI of the result.
