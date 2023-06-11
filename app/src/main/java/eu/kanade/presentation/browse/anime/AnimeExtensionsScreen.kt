@@ -113,15 +113,16 @@ fun AnimeExtensionScreen(
             when {
                 state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
                 state.isEmpty -> {
-                    val msg = if (!searchQuery.isNullOrEmpty()) {
-                        R.string.no_results_found
+                    if (!searchQuery.isNullOrEmpty()) {
+                        EmptyScreen(
+                            textResource = R.string.no_results_found,
+                            modifier = Modifier.padding(contentPadding),
+                        )
                     } else {
-                        R.string.empty_screen
+                        LoadingScreen(
+                            modifier = Modifier.padding(contentPadding),
+                        )
                     }
-                    EmptyScreen(
-                        textResource = msg,
-                        modifier = Modifier.padding(contentPadding),
-                    )
                 }
                 else -> {
                     AnimeExtensionContent(

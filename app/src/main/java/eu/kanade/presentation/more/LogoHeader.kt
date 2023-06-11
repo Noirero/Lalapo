@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,7 +22,7 @@ fun LogoHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_ani),
+            painter = if (isSystemInDarkTheme()) painterResource(R.drawable.ic_ani) else painterResource(R.drawable.ic_ani_monochrome_launcher),
             contentDescription = null,
             tint = Color.Unspecified,
             modifier = Modifier
