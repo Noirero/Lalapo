@@ -135,13 +135,7 @@ class AnimeUpdatesScreenModel(
                 downloadStateProvider = { downloadState },
                 downloadProgressProvider = { activeDownload?.progress ?: 0 },
                 selected = it.episodeId in selectedEpisodeIds,
-                // AM (FS) -->
-                fileSize = if (downloadPreferences.showEpisodeFileSize().get()) {
-                    downloadProvider.getEpisodeFileSize(it.episodeName, it.scanlator, it.ogAnimeTitle, sourceManager.get(it.sourceId))
-                } else {
-                    null
-                },
-                // <-- AM (FS)
+                fileSize = null,
             )
         }
     }
@@ -455,6 +449,6 @@ data class AnimeUpdatesItem(
     val downloadProgressProvider: () -> Int,
     val selected: Boolean = false,
     // AM (FS) -->
-    val fileSize: Long?,
+    var fileSize: Long?,
     // <-- AM (FS)
 )
