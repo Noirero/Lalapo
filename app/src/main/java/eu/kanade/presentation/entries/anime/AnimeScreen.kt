@@ -30,6 +30,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -75,7 +75,12 @@ import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreenState
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeItem
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import uy.kohesive.injekt.injectLazy
+
+private val preferences: DownloadPreferences by injectLazy()
+private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()
 
 @Composable
 fun AnimeScreen(
@@ -732,7 +737,22 @@ private fun LazyListScope.sharedEpisodeItems(
         val haptic = LocalHapticFeedback.current
 
         // AM (FS) -->
-        val downloadPreferences: DownloadPreferences by injectLazy()
+        var fileSizeAsync: Long? by remember { mutableStateOf(episodeItem.fileSize) }
+        if (episodeItem.downloadState == AnimeDownload.State.DOWNLOADED &&
+            preferences.showEpisodeFileSize().get() && fileSizeAsync == null
+        ) {
+            LaunchedEffect(episodeItem, Unit) {
+                fileSizeAsync = withContext(Dispatchers.IO) {
+                    animeDownloadProvider.getEpisodeFileSize(
+                        episodeItem.episode.name,
+                        episodeItem.episode.scanlator,
+                        state.anime.ogTitle,
+                        state.source,
+                    )
+                }
+                episodeItem.fileSize = fileSizeAsync
+            }
+        }
         // <-- AM (FS)
 
         AnimeEpisodeListItem(
@@ -767,12 +787,7 @@ private fun LazyListScope.sharedEpisodeItems(
                 null
             },
             // AM (FS) -->
-            fileSize = if (downloadPreferences.showEpisodeFileSize().get()) {
-                AnimeDownloadProvider(LocalContext.current)
-                    .getEpisodeFileSize(episodeItem.episode.name, episodeItem.episode.scanlator, state.anime.ogTitle, state.source)
-            } else {
-                null
-            },
+            fileSize = fileSizeAsync,
             // <-- AM (FS)
         )
     }

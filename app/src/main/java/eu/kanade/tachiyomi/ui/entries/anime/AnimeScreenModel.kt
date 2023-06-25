@@ -1236,7 +1236,9 @@ data class EpisodeItem(
     val episode: Episode,
     val downloadState: AnimeDownload.State,
     val downloadProgress: Int,
-
+    // <-- AM (FS)
+    var fileSize: Long? = null,
+    // <-- AM (FS)
     val episodeTitleString: String,
     val dateUploadString: String?,
     val seenProgressString: String?,

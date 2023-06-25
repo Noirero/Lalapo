@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.domain.updates.anime.model.AnimeUpdatesWithRelations
 import eu.kanade.presentation.components.EpisodeDownloadAction
 import eu.kanade.presentation.components.EpisodeDownloadIndicator
@@ -42,10 +44,19 @@ import eu.kanade.presentation.util.ReadItemAlpha
 import eu.kanade.presentation.util.padding
 import eu.kanade.presentation.util.selectedBackground
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
+import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import uy.kohesive.injekt.injectLazy
 import java.util.Date
 import kotlin.time.Duration.Companion.minutes
+
+private val preferences: DownloadPreferences by injectLazy()
+private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()
+private val animeSourceManager: AnimeSourceManager by injectLazy()
 
 fun LazyListScope.animeUpdatesLastUpdatedItem(
     lastUpdated: Long,
@@ -129,7 +140,7 @@ fun LazyListScope.animeUpdatesUiItems(
                     downloadStateProvider = updatesItem.downloadStateProvider,
                     downloadProgressProvider = updatesItem.downloadProgressProvider,
                     // AM (FS) -->
-                    fileSize = updatesItem.fileSize,
+                    updatesItem = updatesItem,
                     // <-- AM (FS)
                 )
             }
@@ -150,7 +161,7 @@ fun AnimeUpdatesUiItem(
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
     // AM (FS) -->
-    fileSize: Long?,
+    updatesItem: AnimeUpdatesItem,
     // <-- AM (FS)
 ) {
     val haptic = LocalHapticFeedback.current
@@ -222,6 +233,27 @@ fun AnimeUpdatesUiItem(
                 )
             }
         }
+
+        // AM (FS) -->
+        var fileSizeAsync: Long? by remember { mutableStateOf(updatesItem.fileSize) }
+        if (downloadStateProvider() == AnimeDownload.State.DOWNLOADED &&
+            preferences.showEpisodeFileSize().get() &&
+            fileSizeAsync == null
+        ) {
+            LaunchedEffect(update, Unit) {
+                fileSizeAsync = withContext(Dispatchers.IO) {
+                    animeDownloadProvider.getEpisodeFileSize(
+                        update.episodeName,
+                        update.scanlator,
+                        update.ogAnimeTitle,
+                        animeSourceManager.getOrStub(update.sourceId),
+                    )
+                }
+                updatesItem.fileSize = fileSizeAsync
+            }
+        }
+        // <-- AM (FS)
+
         EpisodeDownloadIndicator(
             enabled = onDownloadEpisode != null,
             modifier = Modifier.padding(start = 4.dp),
@@ -229,7 +261,7 @@ fun AnimeUpdatesUiItem(
             downloadProgressProvider = downloadProgressProvider,
             onClick = { onDownloadEpisode?.invoke(it) },
             // AM (FS) -->
-            fileSize = fileSize,
+            fileSize = fileSizeAsync,
             // <-- AM (FS)
         )
     }
