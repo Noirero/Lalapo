@@ -135,7 +135,9 @@ class AnimeUpdatesScreenModel(
                 downloadStateProvider = { downloadState },
                 downloadProgressProvider = { activeDownload?.progress ?: 0 },
                 selected = it.episodeId in selectedEpisodeIds,
+                // AM (FS) -->
                 fileSize = null,
+                // <-- AM (FS)
             )
         }
     }
