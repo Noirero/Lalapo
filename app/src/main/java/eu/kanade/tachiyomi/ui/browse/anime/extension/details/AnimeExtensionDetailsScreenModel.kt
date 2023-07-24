@@ -12,7 +12,6 @@ import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import eu.kanade.tachiyomi.util.system.logcat
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -23,13 +22,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import tachiyomi.core.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 private const val URL_EXTENSION_COMMITS =
-    "https://github.com/jmir1/aniyomi-extensions/commits/master"
+    "https://github.com/aniyomiorg/aniyomi-extensions/commits/master"
 private const val URL_EXTENSION_BLOB =
-    "https://github.com/jmir1/aniyomi-extensions/blob/master"
+    "https://github.com/aniyomiorg/aniyomi-extensions/blob/master"
 
 class AnimeExtensionDetailsScreenModel(
     pkgName: String,
@@ -120,7 +120,7 @@ class AnimeExtensionDetailsScreenModel(
 
         val cleared = urls.sumOf {
             try {
-                network.cookieManager.remove(it.toHttpUrl())
+                network.cookieJar.remove(it.toHttpUrl())
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Failed to clear cookies for $it" }
                 0

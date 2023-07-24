@@ -21,9 +21,6 @@ import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
-import eu.kanade.domain.category.model.Category
-import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
@@ -33,6 +30,9 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.runBlocking
+import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.download.service.DownloadPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -76,6 +76,16 @@ object SettingsDownloadScreen : SearchableSettings {
                 title = stringResource(R.string.pref_show_downloaded_episode_file_size),
             ),
             // <-- AM (FS)
+            Preference.PreferenceItem.SwitchPreference(
+                pref = downloadPreferences.splitTallImages(),
+                title = stringResource(R.string.split_tall_images),
+                subtitle = stringResource(R.string.split_tall_images_summary),
+            ),
+            Preference.PreferenceItem.ListPreference(
+                pref = downloadPreferences.numberOfDownloads(),
+                title = stringResource(R.string.pref_download_slots),
+                entries = listOf(1, 2, 3).associateWith { it.toString() },
+            ),
             getDeleteEpisodesGroup(
                 downloadPreferences = downloadPreferences,
                 categories = allAnimeCategories,
@@ -304,7 +314,7 @@ object SettingsDownloadScreen : SearchableSettings {
             when (it.packageName) {
                 "idm.internet.download.manager" -> true
                 "idm.internet.download.manager.plus" -> true
-                "idm.internet.download.manager.lite" -> true
+                "idm.internet.download.manager.adm.lite" -> true
                 "com.dv.adm" -> true
                 else -> false
             }

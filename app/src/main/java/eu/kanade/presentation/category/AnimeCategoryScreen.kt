@@ -18,6 +18,12 @@ import eu.kanade.presentation.util.plus
 import eu.kanade.presentation.util.topSmallPaddingValues
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenState
+import tachiyomi.domain.category.model.Category
+import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.components.material.topSmallPaddingValues
+import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun AnimeCategoryScreen(

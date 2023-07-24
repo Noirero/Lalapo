@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.download.anime
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -11,8 +12,9 @@ import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.lang.chop
+import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notificationBuilder
-import eu.kanade.tachiyomi.util.system.notificationManager
+import eu.kanade.tachiyomi.util.system.notify
 import uy.kohesive.injekt.injectLazy
 import java.util.regex.Pattern
 
@@ -45,14 +47,14 @@ internal class AnimeDownloadNotifier(private val context: Context) {
     private var isDownloading = false
 
     /**
-     * Updated when error is thrown
-     */
-    private var errorThrown = false
-
-    /**
      * Updated when paused
      */
     var paused = false
+
+    /**
+     * Map to store notification IDs for each download
+     */
+    private val notificationIdMap: MutableMap<Long, Int> = mutableMapOf()
 
     /**
      * Shows a notification from this builder.
@@ -60,15 +62,17 @@ internal class AnimeDownloadNotifier(private val context: Context) {
      * @param id the id of the notification.
      */
     private fun NotificationCompat.Builder.show(id: Int) {
-        context.notificationManager.notify(id, build())
+        context.notify(id, build())
     }
 
     /**
      * Dismiss the downloader's notification. Downloader error notifications use a different id, so
      * those can only be dismissed by the user.
      */
-    fun dismissProgress() {
-        context.notificationManager.cancel(Notifications.ID_DOWNLOAD_EPISODE_PROGRESS)
+    fun dismissProgress(download: AnimeDownload) {
+        val notificationId = notificationIdMap[download.episode.id] ?: return
+        context.cancelNotification(notificationId)
+        notificationIdMap.remove(download.episode.id)
     }
 
     /**
@@ -76,7 +80,12 @@ internal class AnimeDownloadNotifier(private val context: Context) {
      *
      * @param download download object containing download information.
      */
+    @SuppressLint("RestrictedApi", "StringFormatInvalid")
     fun onProgressChange(download: AnimeDownload) {
+        val notificationId = notificationIdMap.getOrPut(download.episode.id) {
+            download.episode.id.hashCode()
+        }
+
         with(progressNotificationBuilder) {
             if (!isDownloading) {
                 setSmallIcon(android.R.drawable.stat_sys_download)
@@ -84,12 +93,6 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 // Open download manager when clicked
                 setContentIntent(NotificationHandler.openAnimeDownloadManagerPendingActivity(context))
                 isDownloading = true
-                // Pause action
-                addAction(
-                    R.drawable.ic_pause_24dp,
-                    context.getString(R.string.action_pause),
-                    NotificationReceiver.pauseAnimeDownloadsPendingBroadcast(context),
-                )
             }
 
             val downloadingProgressText = if (download.totalProgress == 0) {
@@ -115,14 +118,28 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             }
             setOngoing(true)
 
-            show(Notifications.ID_DOWNLOAD_EPISODE_PROGRESS)
+            show(notificationId)
+        }
+
+        // Add pause action if not already added
+        val pauseActionIntent = NotificationReceiver.pauseAnimeDownloadsPendingBroadcast(context)
+        val pauseActionAdded = progressNotificationBuilder.mActions.any { it.actionIntent == pauseActionIntent }
+        if (!paused && !pauseActionAdded) {
+            progressNotificationBuilder.addAction(
+                R.drawable.ic_pause_24dp,
+                context.getString(R.string.action_pause),
+                pauseActionIntent,
+            )
+            paused = true
         }
     }
 
     /**
      * Show notification when download is paused.
      */
-    fun onPaused() {
+    fun onPaused(download: AnimeDownload) {
+        val notificationId = notificationIdMap[download.episode.id] ?: return
+
         with(progressNotificationBuilder) {
             setContentTitle(context.getString(R.string.download_paused))
             setContentText(context.getString(R.string.download_notifier_download_paused_episodes))
@@ -145,22 +162,23 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 NotificationReceiver.clearAnimeDownloadsPendingBroadcast(context),
             )
 
-            show(Notifications.ID_DOWNLOAD_EPISODE_PROGRESS)
+            show(notificationId)
         }
 
         // Reset initial values
         isDownloading = false
+        paused = false
     }
 
     /**
      *  Resets the state once downloads are completed.
      */
-    fun onComplete() {
-        dismissProgress()
+    fun onComplete(download: AnimeDownload) {
+        dismissProgress(download)
 
         // Reset states to default
-        errorThrown = false
         isDownloading = false
+        paused = false
     }
 
     /**
@@ -194,7 +212,11 @@ internal class AnimeDownloadNotifier(private val context: Context) {
      * @param error string containing error information.
      * @param episode string containing episode title.
      */
-    fun onError(error: String? = null, episode: String? = null, animeTitle: String? = null) {
+    fun onError(download: AnimeDownload, error: String? = null, episode: String? = null, animeTitle: String? = null) {
+        val notificationId = notificationIdMap.getOrPut(download.episode.id) {
+            download.episode.id.hashCode()
+        }
+
         // Create notification
         with(errorNotificationBuilder) {
             setContentTitle(
@@ -206,11 +228,10 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             setContentIntent(NotificationHandler.openAnimeDownloadManagerPendingActivity(context))
             setProgress(0, 0, false)
 
-            show(Notifications.ID_DOWNLOAD_CHAPTER_ERROR)
+            show(notificationId)
         }
 
         // Reset download information
-        errorThrown = true
         isDownloading = false
     }
 }

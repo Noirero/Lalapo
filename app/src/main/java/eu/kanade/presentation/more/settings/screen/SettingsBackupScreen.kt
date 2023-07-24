@@ -23,12 +23,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,29 +36,32 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
-import eu.kanade.domain.backup.service.BackupPreferences
-import eu.kanade.presentation.components.Divider
-import eu.kanade.presentation.components.ScrollbarLazyColumn
+import eu.kanade.presentation.extensions.RequestStoragePermission
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.collectAsState
-import eu.kanade.presentation.util.isScrolledToEnd
-import eu.kanade.presentation.util.isScrolledToStart
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.BackupConst
-import eu.kanade.tachiyomi.data.backup.BackupCreatorJob
+import eu.kanade.tachiyomi.data.backup.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
-import eu.kanade.tachiyomi.data.backup.BackupRestoreService
+import eu.kanade.tachiyomi.data.backup.BackupRestoreJob
 import eu.kanade.tachiyomi.data.backup.models.Backup
-import eu.kanade.tachiyomi.data.preference.FLAG_CATEGORIES
-import eu.kanade.tachiyomi.data.preference.FLAG_CHAPTERS
-import eu.kanade.tachiyomi.data.preference.FLAG_HISTORY
-import eu.kanade.tachiyomi.data.preference.FLAG_SETTINGS
-import eu.kanade.tachiyomi.data.preference.FLAG_TRACK
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
+import tachiyomi.domain.backup.service.BackupPreferences
+import tachiyomi.domain.backup.service.FLAG_CATEGORIES
+import tachiyomi.domain.backup.service.FLAG_CHAPTERS
+import tachiyomi.domain.backup.service.FLAG_EXTENSIONS
+import tachiyomi.domain.backup.service.FLAG_EXT_SETTINGS
+import tachiyomi.domain.backup.service.FLAG_HISTORY
+import tachiyomi.domain.backup.service.FLAG_SETTINGS
+import tachiyomi.domain.backup.service.FLAG_TRACK
+import tachiyomi.presentation.core.components.ScrollbarLazyColumn
+import tachiyomi.presentation.core.components.material.Divider
+import tachiyomi.presentation.core.util.isScrolledToEnd
+import tachiyomi.presentation.core.util.isScrolledToStart
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -97,7 +100,7 @@ object SettingsBackupScreen : SearchableSettings {
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
                 )
-                BackupCreatorJob.startNow(context, it, flag)
+                BackupCreateJob.startNow(context, it, flag)
             }
             flag = 0
         }
@@ -123,7 +126,7 @@ object SettingsBackupScreen : SearchableSettings {
             subtitle = stringResource(R.string.pref_create_backup_summ),
             onClick = {
                 scope.launch {
-                    if (!BackupCreatorJob.isManualJobRunning(context)) {
+                    if (!BackupCreateJob.isManualJobRunning(context)) {
                         if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                             context.toast(R.string.restore_miui_warning, Toast.LENGTH_LONG)
                         }
@@ -151,9 +154,18 @@ object SettingsBackupScreen : SearchableSettings {
                 BackupConst.BACKUP_CUSTOM_INFO to R.string.custom_entry_info,
                 // <-- AM (CU)
                 BackupConst.BACKUP_PREFS to R.string.settings,
+                BackupConst.BACKUP_EXT_PREFS to R.string.extension_settings,
+                BackupConst.BACKUP_EXTENSIONS to R.string.label_extensions,
             )
         }
-        val flags = remember { choices.keys.toMutableStateList() }
+        val flags = remember {
+            mutableStateListOf(
+                BackupConst.BACKUP_CATEGORY,
+                BackupConst.BACKUP_CHAPTER,
+                BackupConst.BACKUP_TRACK,
+                BackupConst.BACKUP_HISTORY,
+            )
+        }
         AlertDialog(
             onDismissRequest = onDismissRequest,
             title = { Text(text = stringResource(R.string.backup_choice)) },
@@ -279,7 +291,7 @@ object SettingsBackupScreen : SearchableSettings {
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    BackupRestoreService.start(context, err.uri)
+                                    BackupRestoreJob.start(context, err.uri)
                                     onDismissRequest()
                                 },
                             ) {
@@ -309,7 +321,7 @@ object SettingsBackupScreen : SearchableSettings {
                 }
 
                 if (results.missingSources.isEmpty() && results.missingTrackers.isEmpty()) {
-                    BackupRestoreService.start(context, it)
+                    BackupRestoreJob.start(context, it)
                     return@rememberLauncherForActivityResult
                 }
 
@@ -321,7 +333,7 @@ object SettingsBackupScreen : SearchableSettings {
             title = stringResource(R.string.pref_restore_backup),
             subtitle = stringResource(R.string.pref_restore_backup_summ),
             onClick = {
-                if (!BackupRestoreService.isRunning(context)) {
+                if (!BackupRestoreJob.isRunning(context)) {
                     if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                         context.toast(R.string.restore_miui_warning, Toast.LENGTH_LONG)
                     }
@@ -372,7 +384,7 @@ object SettingsBackupScreen : SearchableSettings {
                         168 to stringResource(R.string.update_weekly),
                     ),
                     onValueChanged = {
-                        BackupCreatorJob.setupTask(context, it)
+                        BackupCreateJob.setupTask(context, it)
                         true
                     },
                 ),
@@ -402,16 +414,18 @@ object SettingsBackupScreen : SearchableSettings {
                     pref = backupPreferences.backupFlags(),
                     enabled = backupInterval != 0,
                     title = stringResource(R.string.pref_backup_flags),
-                    subtitle = stringResource(R.string.pref_backup_flags_summ),
+                    subtitle = stringResource(R.string.pref_backup_flags_summary),
                     entries = mapOf(
                         FLAG_CATEGORIES to stringResource(R.string.general_categories),
                         FLAG_CHAPTERS to stringResource(R.string.chapters_episodes),
                         FLAG_HISTORY to stringResource(R.string.history),
                         FLAG_TRACK to stringResource(R.string.track),
                         FLAG_SETTINGS to stringResource(R.string.settings),
+                        FLAG_EXT_SETTINGS to stringResource(R.string.extension_settings),
+                        FLAG_EXTENSIONS to stringResource(R.string.label_extensions),
                     ),
                     onValueChanged = {
-                        if (it.contains(FLAG_SETTINGS)) {
+                        if (FLAG_SETTINGS in it || FLAG_EXT_SETTINGS in it) {
                             context.toast(R.string.backup_settings_warning, Toast.LENGTH_LONG)
                         }
                         true

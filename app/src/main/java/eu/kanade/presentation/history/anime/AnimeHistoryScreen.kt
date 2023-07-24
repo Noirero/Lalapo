@@ -20,6 +20,10 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryState
+import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
+import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.LoadingScreen
 import java.util.Date
 
 @Composable

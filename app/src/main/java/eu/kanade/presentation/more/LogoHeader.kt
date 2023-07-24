@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.Divider
 import eu.kanade.tachiyomi.R
+import tachiyomi.presentation.core.components.material.Divider
 
 @Composable
 fun LogoHeader() {

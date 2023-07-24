@@ -3,19 +3,13 @@ package eu.kanade.tachiyomi.data.backup
 import android.Manifest
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.preference.PreferenceManager
 import com.hippo.unifile.UniFile
 import dataanime.Anime_sync
 import dataanime.Animes
-import eu.kanade.data.handlers.anime.AnimeDatabaseHandler
-import eu.kanade.data.updateStrategyAdapter
-import eu.kanade.domain.backup.service.BackupPreferences
-import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
-import eu.kanade.domain.category.model.Category
-import eu.kanade.domain.entries.anime.interactor.GetAnimeFavorites
-import eu.kanade.domain.history.anime.model.AnimeHistoryUpdate
-import eu.kanade.domain.library.service.LibraryPreferences
+import eu.kanade.domain.items.episode.model.copyFrom
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY_MASK
@@ -23,6 +17,10 @@ import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CHAPTER
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CHAPTER_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO_MASK
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXTENSIONS
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXTENSIONS_MASK
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXT_PREFS
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXT_PREFS_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_HISTORY_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_PREFS
@@ -45,26 +43,43 @@ import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.backupAnimeTrackMapper
 import eu.kanade.tachiyomi.data.backup.models.backupCategoryMapper
 import eu.kanade.tachiyomi.data.backup.models.backupEpisodeMapper
-import eu.kanade.tachiyomi.data.database.models.anime.Anime
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.database.models.anime.Episode
 import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.source.anime.model.copyFrom
+import eu.kanade.tachiyomi.data.backup.models.backupTrackMapper
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.source.anime.getPreferenceKey
+import eu.kanade.tachiyomi.source.anime.model.copyFrom
 import eu.kanade.tachiyomi.util.system.hasPermission
-import eu.kanade.tachiyomi.util.system.logcat
-import eu.kanade.tachiyomi.util.system.toLong
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import okio.buffer
 import okio.gzip
 import okio.sink
+import tachiyomi.core.util.lang.toLong
+import tachiyomi.core.util.system.logcat
+import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
+import tachiyomi.data.handlers.manga.MangaDatabaseHandler
+import tachiyomi.data.updateStrategyAdapter
+import tachiyomi.domain.backup.service.BackupPreferences
+import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.category.manga.interactor.GetMangaCategories
+import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
+import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.manga.interactor.GetMangaFavorites
+import tachiyomi.domain.entries.manga.model.Manga
+import tachiyomi.domain.history.anime.model.AnimeHistoryUpdate
+import tachiyomi.domain.history.manga.model.MangaHistoryUpdate
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.manga.service.MangaSourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
 import kotlin.math.max
-import eu.kanade.domain.entries.anime.model.Anime as DomainAnime
 
 class BackupManager(
     private val context: Context,
@@ -104,6 +119,8 @@ class BackupManager(
             emptyList(),
             backupAnimeExtensionInfo(databaseAnime),
             backupPreferences(prefs, flags),
+            backupExtensionPreferences(flags),
+            backupExtensions(flags),
         )
 
         var file: UniFile? = null
@@ -157,13 +174,13 @@ class BackupManager(
         }
     }
 
-    private fun backupAnimeExtensionInfo(animes: List<DomainAnime>): List<BackupAnimeSource> {
+    private fun backupAnimeExtensionInfo(animes: List<Anime>): List<BackupAnimeSource> {
         return animes
             .asSequence()
-            .map { it.source }
+            .map(Anime::source)
             .distinct()
-            .map { animeSourceManager.getOrStub(it) }
-            .map { BackupAnimeSource.copyFrom(it) }
+            .map(animeSourceManager::getOrStub)
+            .map(BackupAnimeSource::copyFrom)
             .toList()
     }
 
@@ -183,7 +200,7 @@ class BackupManager(
         }
     }
 
-    private suspend fun backupAnimes(animes: List<DomainAnime>, flags: Int): List<BackupAnime> {
+    private suspend fun backupAnimes(animes: List<Anime>, flags: Int): List<BackupAnime> {
         return animes.map {
             backupAnime(it, flags)
         }
@@ -196,7 +213,7 @@ class BackupManager(
      * @param options options for the backup
      * @return [BackupAnime] containing anime in a serializable form
      */
-    private suspend fun backupAnime(anime: DomainAnime, options: Int): BackupAnime {
+    private suspend fun backupAnime(anime: Anime, options: Int): BackupAnime {
         // Entry for this anime
         val animeObject = BackupAnime.copyFrom(
             anime,
@@ -248,8 +265,27 @@ class BackupManager(
         return animeObject
     }
 
-    private fun backupPreferences(prefs: SharedPreferences, options: Int): List<BackupPreference> {
-        if (options and BACKUP_PREFS_MASK != BACKUP_PREFS) return emptyList()
+    private fun backupExtensionPreferences(flags: Int): List<BackupExtensionPreferences> {
+        if (flags and BACKUP_EXT_PREFS_MASK != BACKUP_EXT_PREFS) return emptyList()
+        val prefs = mutableListOf<Pair<String, SharedPreferences>>()
+        Injekt.get<AnimeSourceManager>().getOnlineSources().forEach {
+            val name = it.getPreferenceKey()
+            prefs += Pair(name, context.getSharedPreferences(name, 0x0))
+        }
+        Injekt.get<MangaSourceManager>().getOnlineSources().forEach {
+            val name = it.getPreferenceKey()
+            prefs += Pair(name, context.getSharedPreferences(name, 0x0))
+        }
+        return prefs.map {
+            BackupExtensionPreferences(
+                it.first,
+                backupPreferences(it.second, BACKUP_PREFS),
+            )
+        }
+    }
+
+    private fun backupPreferences(prefs: SharedPreferences, flags: Int): List<BackupPreference> {
+        if (flags and BACKUP_PREFS_MASK != BACKUP_PREFS) return emptyList()
         val backupPreferences = mutableListOf<BackupPreference>()
         for (pref in prefs.all) {
             // AM (CN) -->
@@ -285,10 +321,31 @@ class BackupManager(
         return backupPreferences
     }
 
-    internal suspend fun restoreExistingAnime(anime: Anime, dbAnime: Animes) {
-        anime.id = dbAnime._id
-        anime.copyFrom(dbAnime)
+    @Suppress("DEPRECATION")
+    private fun backupExtensions(flags: Int): List<BackupExtension> {
+        if (flags and BACKUP_EXTENSIONS_MASK != BACKUP_EXTENSIONS) return emptyList()
+        val installedExtensions = mutableListOf<BackupExtension>()
+        Injekt.get<AnimeExtensionManager>().installedExtensionsFlow.value.forEach {
+            val packageName = it.pkgName
+            val apk = File(
+                context.packageManager
+                    .getApplicationInfo(
+                        packageName,
+                        PackageManager.GET_META_DATA,
+                    ).publicSourceDir,
+            ).readBytes()
+            installedExtensions.add(
+                BackupExtension(packageName, apk),
+            )
+        }
+        return installedExtensions
+    }
+
+    internal suspend fun restoreExistingAnime(anime: Anime, dbAnime: Animes): Anime {
+        var anime = anime.copy(id = dbAnime._id)
+        anime = anime.copyFrom(dbAnime)
         updateAnime(anime)
+        return anime
     }
 
     /**
@@ -298,10 +355,10 @@ class BackupManager(
      * @return Updated anime info.
      */
     internal suspend fun restoreNewAnime(anime: Anime): Anime {
-        return anime.also {
-            it.initialized = it.description != null
-            it.id = insertAnime(it)
-        }
+        return anime.copy(
+            initialized = anime.description != null,
+            id = insertAnime(anime),
+        )
     }
 
     /**
@@ -421,33 +478,33 @@ class BackupManager(
     }
 
     /**
-     * Restores the sync of a manga.
+     * Restores the sync of an anime.
      *
      * @param anime the anime whose sync have to be restored.
      * @param tracks the track list to restore.
      */
-    internal suspend fun restoreAnimeTracking(anime: Anime, tracks: List<AnimeTrack>) {
+    internal suspend fun restoreAnimeTracking(anime: Anime, tracks: List<tachiyomi.domain.track.anime.model.AnimeTrack>) {
         // Fix foreign keys with the current anime id
-        tracks.map { it.anime_id = anime.id!! }
+        val tracks = tracks.map { it.copy(animeId = anime.id!!) }
 
         // Get tracks from database
         val dbTracks = animeHandler.awaitList { anime_syncQueries.getTracksByAnimeId(anime.id!!) }
         val toUpdate = mutableListOf<Anime_sync>()
-        val toInsert = mutableListOf<AnimeTrack>()
+        val toInsert = mutableListOf<tachiyomi.domain.track.anime.model.AnimeTrack>()
 
         tracks.forEach { track ->
             var isInDatabase = false
             for (dbTrack in dbTracks) {
-                if (track.sync_id == dbTrack.sync_id.toInt()) {
+                if (track.syncId == dbTrack.sync_id) {
                     // The sync is already in the db, only update its fields
                     var temp = dbTrack
-                    if (track.media_id != dbTrack.remote_id) {
-                        temp = temp.copy(remote_id = track.media_id)
+                    if (track.remoteId != dbTrack.remote_id) {
+                        temp = temp.copy(remote_id = track.remoteId)
                     }
-                    if (track.library_id != dbTrack.library_id) {
-                        temp = temp.copy(library_id = track.library_id)
+                    if (track.libraryId != dbTrack.library_id) {
+                        temp = temp.copy(library_id = track.libraryId)
                     }
-                    temp = temp.copy(last_episode_seen = max(dbTrack.last_episode_seen, track.last_episode_seen.toDouble()))
+                    temp = temp.copy(last_episode_seen = max(dbTrack.last_episode_seen, track.lastEpisodeSeen))
                     isInDatabase = true
                     toUpdate.add(temp)
                     break
@@ -455,8 +512,7 @@ class BackupManager(
             }
             if (!isInDatabase) {
                 // Insert new sync. Let the db assign the id
-                track.id = null
-                toInsert.add(track)
+                toInsert.add(track.copy(id = 0))
             }
         }
         // Update database
@@ -485,40 +541,40 @@ class BackupManager(
             animeHandler.await(true) {
                 toInsert.forEach { track ->
                     anime_syncQueries.insert(
-                        track.anime_id,
-                        track.sync_id.toLong(),
-                        track.media_id,
-                        track.library_id,
+                        track.animeId,
+                        track.syncId,
+                        track.remoteId,
+                        track.libraryId,
                         track.title,
-                        track.last_episode_seen.toDouble(),
-                        track.total_episodes.toLong(),
+                        track.lastEpisodeSeen,
+                        track.totalEpisodes,
                         track.status.toLong(),
                         track.score,
-                        track.tracking_url,
-                        track.started_watching_date,
-                        track.finished_watching_date,
+                        track.remoteUrl,
+                        track.startDate,
+                        track.finishDate,
                     )
                 }
             }
         }
     }
 
-    internal suspend fun restoreEpisodes(anime: Anime, episodes: List<Episode>) {
+    internal suspend fun restoreEpisodes(anime: Anime, episodes: List<tachiyomi.domain.items.episode.model.Episode>) {
         val dbEpisodes = animeHandler.awaitList { episodesQueries.getEpisodesByAnimeId(anime.id!!) }
 
-        episodes.forEach { episode ->
+        val processed = episodes.map { episode ->
+            var episode = episode
             val dbEpisode = dbEpisodes.find { it.url == episode.url }
             if (dbEpisode != null) {
-                episode.id = dbEpisode._id
-                episode.copyFrom(dbEpisode)
+                episode = episode.copy(id = dbEpisode._id)
+                episode = episode.copyFrom(dbEpisode)
                 if (dbEpisode.seen && !episode.seen) {
-                    episode.seen = dbEpisode.seen
-                    episode.last_second_seen = dbEpisode.last_second_seen
-                } else if (episode.last_second_seen == 0L && dbEpisode.last_second_seen != 0L) {
-                    episode.last_second_seen = dbEpisode.last_second_seen
+                    episode = episode.copy(seen = dbEpisode.seen, lastSecondSeen = dbEpisode.last_second_seen)
+                } else if (episode.lastSecondSeen == 0L && dbEpisode.last_second_seen != 0L) {
+                    episode = episode.copy(lastSecondSeen = dbEpisode.last_second_seen)
                 }
                 if (!episode.bookmark && dbEpisode.bookmark) {
-                    episode.bookmark = dbEpisode.bookmark
+                    episode = episode.copy(bookmark = dbEpisode.bookmark)
                 }
                 // AM (FM) -->
                 if (!episode.fillermark && dbEpisode.fillermark) {
@@ -527,10 +583,10 @@ class BackupManager(
                 // <-- AM (FM)
             }
 
-            episode.anime_id = anime.id
+            episode.copy(animeId = anime.id ?: -1)
         }
 
-        val newEpisodes = episodes.groupBy { it.id != null }
+        val newEpisodes = processed.groupBy { it.id > 0 }
         newEpisodes[true]?.let { updateKnownEpisodes(it) }
         newEpisodes[false]?.let { insertEpisodes(it) }
     }
@@ -557,19 +613,19 @@ class BackupManager(
                 artist = anime.artist,
                 author = anime.author,
                 description = anime.description,
-                genre = anime.getGenres(),
+                genre = anime.genre,
                 title = anime.title,
                 status = anime.status.toLong(),
-                thumbnailUrl = anime.thumbnail_url,
+                thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite,
-                lastUpdate = anime.last_update,
+                lastUpdate = anime.lastUpdate,
                 nextUpdate = 0L,
                 initialized = anime.initialized,
-                viewerFlags = anime.viewer_flags.toLong(),
-                episodeFlags = anime.episode_flags.toLong(),
-                coverLastModified = anime.cover_last_modified,
-                dateAdded = anime.date_added,
-                updateStrategy = anime.update_strategy,
+                viewerFlags = anime.viewerFlags,
+                episodeFlags = anime.episodeFlags,
+                coverLastModified = anime.coverLastModified,
+                dateAdded = anime.dateAdded,
+                updateStrategy = anime.updateStrategy,
             )
             animesQueries.selectLastInsertedRowId()
         }
@@ -583,32 +639,32 @@ class BackupManager(
                 artist = anime.artist,
                 author = anime.author,
                 description = anime.description,
-                genre = anime.genre,
+                genre = anime.genre?.joinToString(separator = ", "),
                 title = anime.title,
-                status = anime.status.toLong(),
-                thumbnailUrl = anime.thumbnail_url,
+                status = anime.status,
+                thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite.toLong(),
-                lastUpdate = anime.last_update,
+                lastUpdate = anime.lastUpdate,
                 initialized = anime.initialized.toLong(),
-                viewer = anime.viewer_flags.toLong(),
-                episodeFlags = anime.episode_flags.toLong(),
-                coverLastModified = anime.cover_last_modified,
-                dateAdded = anime.date_added,
+                viewer = anime.viewerFlags,
+                episodeFlags = anime.episodeFlags,
+                coverLastModified = anime.coverLastModified,
+                dateAdded = anime.dateAdded,
                 animeId = anime.id!!,
-                updateStrategy = anime.update_strategy.let(updateStrategyAdapter::encode),
+                updateStrategy = anime.updateStrategy.let(updateStrategyAdapter::encode),
             )
         }
-        return anime.id!!
+        return anime.id
     }
 
     /**
      * Inserts list of episodes
      */
-    private suspend fun insertEpisodes(episodes: List<Episode>) {
+    private suspend fun insertEpisodes(episodes: List<tachiyomi.domain.items.episode.model.Episode>) {
         animeHandler.await(true) {
             episodes.forEach { episode ->
                 episodesQueries.insert(
-                    episode.anime_id!!,
+                    episode.animeId,
                     episode.url,
                     episode.name,
                     episode.scanlator,
@@ -617,12 +673,12 @@ class BackupManager(
                     // AM (FM) -->
                     episode.fillermark,
                     // <-- AM (FM)
-                    episode.last_second_seen,
-                    episode.total_seconds,
-                    episode.episode_number,
-                    episode.source_order.toLong(),
-                    episode.date_fetch,
-                    episode.date_upload,
+                    episode.lastSecondSeen,
+                    episode.totalSeconds,
+                    episode.episodeNumber,
+                    episode.sourceOrder,
+                    episode.dateFetch,
+                    episode.dateUpload,
                 )
             }
         }
@@ -631,11 +687,11 @@ class BackupManager(
     /**
      * Updates a list of episodes
      */
-    private suspend fun updateEpisodes(episodes: List<Episode>) {
+    private suspend fun updateEpisodes(episodes: List<tachiyomi.domain.items.episode.model.Episode>) {
         animeHandler.await(true) {
             episodes.forEach { episode ->
                 episodesQueries.update(
-                    episode.anime_id!!,
+                    episode.animeId,
                     episode.url,
                     episode.name,
                     episode.scanlator,
@@ -644,13 +700,13 @@ class BackupManager(
                     // AM (FM) -->
                     episode.fillermark.toLong(),
                     // <-- AM (FM)
-                    episode.last_second_seen,
-                    episode.total_seconds,
-                    episode.episode_number.toDouble(),
-                    episode.source_order.toLong(),
-                    episode.date_fetch,
-                    episode.date_upload,
-                    episode.id!!,
+                    episode.lastSecondSeen,
+                    episode.totalSeconds,
+                    episode.episodeNumber.toDouble(),
+                    episode.sourceOrder,
+                    episode.dateFetch,
+                    episode.dateUpload,
+                    episode.id,
                 )
             }
         }
@@ -659,7 +715,7 @@ class BackupManager(
     /**
      * Updates a list of episodes with known database ids
      */
-    private suspend fun updateKnownEpisodes(episodes: List<Episode>) {
+    private suspend fun updateKnownEpisodes(episodes: List<tachiyomi.domain.items.episode.model.Episode>) {
         animeHandler.await(true) {
             episodes.forEach { episode ->
                 episodesQueries.update(
@@ -672,13 +728,13 @@ class BackupManager(
                     // AM (FM) -->
                     fillermark = episode.fillermark.toLong(),
                     // <-- AM (FM)
-                    lastSecondSeen = episode.last_second_seen,
-                    totalSeconds = episode.total_seconds,
+                    lastSecondSeen = episode.lastSecondSeen,
+                    totalSeconds = episode.totalSeconds,
                     episodeNumber = null,
                     sourceOrder = null,
                     dateFetch = null,
                     dateUpload = null,
-                    episodeId = episode.id!!,
+                    episodeId = episode.id,
                 )
             }
         }

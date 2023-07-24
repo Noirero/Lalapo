@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.track.EnhancedMangaTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
@@ -51,10 +52,12 @@ import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
 import eu.kanade.tachiyomi.data.track.simkl.SimklApi
-import eu.kanade.tachiyomi.util.lang.launchIO
-import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import tachiyomi.core.util.lang.launchIO
+import tachiyomi.core.util.lang.withUIContext
+import tachiyomi.domain.source.manga.service.MangaSourceManager
+import tachiyomi.presentation.core.components.material.padding
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -68,7 +71,7 @@ object SettingsTrackingScreen : SearchableSettings {
     @Composable
     override fun RowScope.AppBarAction() {
         val uriHandler = LocalUriHandler.current
-        IconButton(onClick = { uriHandler.openUri("https://tachiyomi.org/help/guides/tracking/") }) {
+        IconButton(onClick = { uriHandler.openUri("https://aniyomi.org/help/guides/tracking/") }) {
             Icon(
                 imageVector = Icons.Outlined.HelpOutline,
                 contentDescription = stringResource(R.string.tracking_guide),
@@ -81,6 +84,7 @@ object SettingsTrackingScreen : SearchableSettings {
         val context = LocalContext.current
         val trackPreferences = remember { Injekt.get<TrackPreferences>() }
         val trackManager = remember { Injekt.get<TrackManager>() }
+        val sourceManager = remember { Injekt.get<MangaSourceManager>() }
 
         var dialog by remember { mutableStateOf<Any?>(null) }
         dialog?.run {
@@ -99,6 +103,23 @@ object SettingsTrackingScreen : SearchableSettings {
                     )
                 }
             }
+        }
+
+        val enhancedMangaTrackers = trackManager.services
+            .filter { it is EnhancedMangaTrackService }
+            .partition { service ->
+                val acceptedMangaSources = (service as EnhancedMangaTrackService).getAcceptedSources()
+                sourceManager.getCatalogueSources().any { it::class.qualifiedName in acceptedMangaSources }
+            }
+        var enhancedMangaTrackerInfo = stringResource(R.string.enhanced_tracking_info)
+        if (enhancedMangaTrackers.second.isNotEmpty()) {
+            val missingMangaSourcesInfo = stringResource(
+                R.string.enhanced_services_not_installed,
+                enhancedMangaTrackers.second
+                    .map { stringResource(it.nameRes()) }
+                    .joinToString(),
+            )
+            enhancedMangaTrackerInfo += "\n\n$missingMangaSourcesInfo"
         }
 
         return listOf(
@@ -194,7 +215,7 @@ object SettingsTrackingScreen : SearchableSettings {
                         label = { Text(text = stringResource(uNameStringRes)) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         singleLine = true,
-                        isError = inputError && username.text.isEmpty(),
+                        isError = inputError && !processing,
                     )
 
                     var hidePassword by remember { mutableStateOf(true) }
@@ -225,21 +246,16 @@ object SettingsTrackingScreen : SearchableSettings {
                             imeAction = ImeAction.Done,
                         ),
                         singleLine = true,
-                        isError = inputError && password.text.isEmpty(),
+                        isError = inputError && !processing,
                     )
                 }
             },
             confirmButton = {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !processing,
+                    enabled = !processing && username.text.isNotBlank() && password.text.isNotBlank(),
                     onClick = {
-                        if (username.text.isEmpty() || password.text.isEmpty()) {
-                            inputError = true
-                            return@Button
-                        }
                         scope.launchIO {
-                            inputError = false
                             processing = true
                             val result = checkLogin(
                                 context = context,
@@ -247,6 +263,7 @@ object SettingsTrackingScreen : SearchableSettings {
                                 username = username.text,
                                 password = password.text,
                             )
+                            inputError = !result
                             if (result) onDismissRequest()
                             processing = false
                         }
@@ -292,7 +309,7 @@ object SettingsTrackingScreen : SearchableSettings {
                 )
             },
             confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.tiny)) {
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = onDismissRequest,

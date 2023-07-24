@@ -20,13 +20,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.commandiron.wheel_picker_compose.WheelTextPicker
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.preference.asState
+import tachiyomi.presentation.core.components.WheelTextPicker
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -226,6 +226,7 @@ object SettingsPlayerScreen : SearchableSettings {
                         20 to stringResource(R.string.pref_skip_20),
                         10 to stringResource(R.string.pref_skip_10),
                         5 to stringResource(R.string.pref_skip_5),
+                        3 to stringResource(R.string.pref_skip_3),
                         0 to stringResource(R.string.pref_skip_disable),
                     ),
                 ),
@@ -356,15 +357,14 @@ object SettingsPlayerScreen : SearchableSettings {
                     content = {
                         WheelTextPicker(
                             modifier = Modifier.align(Alignment.Center),
-                            texts = remember { 1..255 }.map {
+                            items = remember { 1..255 }.map {
                                 stringResource(
                                     R.string.seconds_short,
                                     it,
                                 )
                             },
-                            onScrollFinished = {
+                            onSelectionChanged = {
                                 newLength = it
-                                null
                             },
                             startIndex = skipIntroLengthValue,
                         )

@@ -13,7 +13,7 @@ Animiru strips the manga capabilities of Aniyomi, to make it an anime only app f
 Features include:
 
 * Everything you know and love about Tachiyomi but for anime
-  * Watching anime from [a variety of sources](https://github.com/jmir1/aniyomi-extensions)
+  * Watching anime from [a variety of sources](https://github.com/aniyomiorg/aniyomi-extensions)
   * Local watching of downloaded content
   * A configurable player with inbuilt PiP, Playback options and other settings.
   * Tracker support: [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.io/), [Shikimori](https://shikimori.one), and [Bangumi](https://bgm.tv/)
@@ -57,7 +57,7 @@ DON'T: https://github.com/tachiyomiorg/tachiyomi/issues/75
 * Write a detailed issue, explaining what it should do or how. Avoid writing just "like X app does"
 * Include screenshot (if needed)
 
-Source requests should be created at https://github.com/jmir1/aniyomi-extensions, they do not belong in this repository.
+Source requests should be created at https://github.com/aniyomiorg/aniyomi-extensions, they do not belong in this repository.
 </details>
 
 <details><summary>Contributing</summary>

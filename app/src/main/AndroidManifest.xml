@@ -235,7 +235,7 @@
             android:exported="false" />
 
         <receiver
-            android:name=".glance.anime.AnimeUpdatesGridGlanceReceiver"
+            android:name="tachiyomi.presentation.widget.entries.anime.AnimeUpdatesGridGlanceReceiver"
             android:enabled="@bool/glance_appwidget_available"
             android:exported="false"
             android:label="@string/label_recent_updates">
@@ -249,10 +249,6 @@
         </receiver>
 
         <service
-            android:name=".data.library.anime.AnimeLibraryUpdateService"
-            android:exported="false" />
-
-        <service
             android:name=".data.download.anime.AnimeDownloadService"
             android:exported="false" />
 
@@ -260,12 +256,9 @@
             android:name=".data.updater.AppUpdateService"
             android:exported="false" />
 
-        <service
-            android:name=".data.backup.BackupRestoreService"
-            android:exported="false" />
-
         <service android:name=".extension.anime.util.AnimeExtensionInstallService"
             android:exported="false" />
+
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"
