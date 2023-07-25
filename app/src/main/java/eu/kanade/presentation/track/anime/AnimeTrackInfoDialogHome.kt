@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,8 +46,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.presentation.track.components.TrackLogoIcon
-import eu.kanade.presentation.track.manga.TrackDetailsItem
-import eu.kanade.presentation.track.manga.TrackInfoItemMenu
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem

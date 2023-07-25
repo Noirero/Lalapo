@@ -58,12 +58,8 @@ object BackupUtil {
                 BackupPreference(it.key, value)
             }
             Backup(
-                fullBackup.backupManga,
-                fullBackup.backupCategories,
                 fullBackup.backupAnime,
                 fullBackup.backupAnimeCategories,
-                fullBackup.backupBrokenSources,
-                fullBackup.backupSources,
                 fullBackup.backupBrokenAnimeSources,
                 fullBackup.backupAnimeSources,
                 backupPreferences,

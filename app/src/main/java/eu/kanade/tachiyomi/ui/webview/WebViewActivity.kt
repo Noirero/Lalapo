@@ -21,7 +21,6 @@ import logcat.LogPriority
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
-import tachiyomi.domain.source.manga.service.MangaSourceManager
 import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {

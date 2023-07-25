@@ -24,7 +24,6 @@ import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.saveTo
 import eu.kanade.tachiyomi.util.storage.toFFmpegString

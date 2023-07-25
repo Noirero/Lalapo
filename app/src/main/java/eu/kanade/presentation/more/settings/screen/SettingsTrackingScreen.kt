@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.track.EnhancedMangaTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
@@ -56,7 +55,6 @@ import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.withUIContext
-import tachiyomi.domain.source.manga.service.MangaSourceManager
 import tachiyomi.presentation.core.components.material.padding
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -84,7 +82,6 @@ object SettingsTrackingScreen : SearchableSettings {
         val context = LocalContext.current
         val trackPreferences = remember { Injekt.get<TrackPreferences>() }
         val trackManager = remember { Injekt.get<TrackManager>() }
-        val sourceManager = remember { Injekt.get<MangaSourceManager>() }
 
         var dialog by remember { mutableStateOf<Any?>(null) }
         dialog?.run {
@@ -103,23 +100,6 @@ object SettingsTrackingScreen : SearchableSettings {
                     )
                 }
             }
-        }
-
-        val enhancedMangaTrackers = trackManager.services
-            .filter { it is EnhancedMangaTrackService }
-            .partition { service ->
-                val acceptedMangaSources = (service as EnhancedMangaTrackService).getAcceptedSources()
-                sourceManager.getCatalogueSources().any { it::class.qualifiedName in acceptedMangaSources }
-            }
-        var enhancedMangaTrackerInfo = stringResource(R.string.enhanced_tracking_info)
-        if (enhancedMangaTrackers.second.isNotEmpty()) {
-            val missingMangaSourcesInfo = stringResource(
-                R.string.enhanced_services_not_installed,
-                enhancedMangaTrackers.second
-                    .map { stringResource(it.nameRes()) }
-                    .joinToString(),
-            )
-            enhancedMangaTrackerInfo += "\n\n$missingMangaSourcesInfo"
         }
 
         return listOf(

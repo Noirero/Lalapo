@@ -54,6 +54,7 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.AppStateBanners
@@ -75,7 +76,6 @@ import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.AppUpdateResult
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.extension.anime.api.AnimeExtensionGithubApi
-import eu.kanade.tachiyomi.extension.manga.api.MangaExtensionGithubApi
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
@@ -149,11 +149,11 @@ class MainActivity : BaseActivity() {
                 libraryPreferences = libraryPreferences,
                 playerPreferences = Injekt.get(),
                 backupPreferences = Injekt.get(),
+                trackManager = Injekt.get(),
                 // AM (CN) -->
                 connectionsPreferences = connectionsPreferences,
                 connectionsManager = Injekt.get(),
                 // <-- AM (CN)
-                trackManager = Injekt.get(),
             )
         } else {
             false
@@ -389,7 +389,6 @@ class MainActivity : BaseActivity() {
         // Extensions updates
         LaunchedEffect(Unit) {
             try {
-                MangaExtensionGithubApi().checkForUpdates(context)
                 AnimeExtensionGithubApi().checkForUpdates(context)
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e)
@@ -455,8 +454,8 @@ class MainActivity : BaseActivity() {
             }
             Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
             Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
-            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
-            Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse(true)
+            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse
+            Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse
             Constants.SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 HomeScreen.Tab.More(toDownloads = true)

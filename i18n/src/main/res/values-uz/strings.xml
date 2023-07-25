@@ -40,7 +40,7 @@
     <string name="track">Kuzatish</string>
     <string name="chapters">Boblar</string>
     <string name="manga">Kutubxona yozuvlari</string>
-    <string name="categories">Toifalar</string>
+    <string name="general_categories">Toifalar</string>
     <string name="information_empty_library">Sizning kutubxonangiz bo\'sh</string>
     <string name="information_no_recent_manga">Yaqin vaqtda hech narsa o\'qilmagan</string>
     <string name="information_no_recent">Yangilanishlar yo\'q</string>

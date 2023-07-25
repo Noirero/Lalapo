@@ -1,6 +1,8 @@
 package eu.kanade.domain
 
+import android.app.Application
 import eu.kanade.domain.download.anime.interactor.DeleteAnimeDownload
+import eu.kanade.domain.entries.anime.interactor.GetAllAnime
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionLanguages
@@ -18,6 +20,7 @@ import eu.kanade.domain.source.service.SetMigrateSorting
 import eu.kanade.domain.source.service.ToggleLanguage
 import tachiyomi.data.category.anime.AnimeCategoryRepositoryImpl
 import tachiyomi.data.entries.anime.AnimeRepositoryImpl
+import tachiyomi.data.entries.anime.CustomAnimeRepositoryImpl
 import tachiyomi.data.history.anime.AnimeHistoryRepositoryImpl
 import tachiyomi.data.items.episode.EpisodeRepositoryImpl
 import tachiyomi.data.source.anime.AnimeSourceDataRepositoryImpl
@@ -38,12 +41,15 @@ import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.entries.anime.interactor.GetAnimeWithEpisodes
+import tachiyomi.domain.entries.anime.interactor.GetCustomAnimeInfo
 import tachiyomi.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.entries.anime.interactor.NetworkToLocalAnime
 import tachiyomi.domain.entries.anime.interactor.ResetAnimeViewerFlags
 import tachiyomi.domain.entries.anime.interactor.SetAnimeEpisodeFlags
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 import tachiyomi.domain.entries.anime.repository.AnimeRepository
+import tachiyomi.domain.entries.anime.repository.CustomAnimeRepository
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.anime.interactor.GetNextEpisodes
 import tachiyomi.domain.history.anime.interactor.RemoveAnimeHistory
@@ -144,6 +150,9 @@ class DomainModule : InjektModule {
 
         // AM (CU) -->
         addFactory { GetAllAnime(get()) }
+        addSingletonFactory<CustomAnimeRepository> { CustomAnimeRepositoryImpl(get<Application>()) }
+        addFactory { GetCustomAnimeInfo(get()) }
+        addFactory { SetCustomAnimeInfo(get()) }
         // <-- AM (CU)
     }
 }

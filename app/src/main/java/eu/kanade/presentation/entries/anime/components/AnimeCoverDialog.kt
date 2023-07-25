@@ -46,7 +46,7 @@ import coil.size.Size
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entries.EditCoverAction
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
+import eu.kanade.tachiyomi.util.ReaderPageImageView
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.util.clickableNoIndication

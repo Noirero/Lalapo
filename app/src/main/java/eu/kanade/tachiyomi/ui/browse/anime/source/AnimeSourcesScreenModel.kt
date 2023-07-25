@@ -12,7 +12,6 @@ import eu.kanade.presentation.browse.anime.AnimeSourceUiModel
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.subscribeToInstallUpdate
-import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.system.LAST_USED_KEY
 import eu.kanade.tachiyomi.util.system.PINNED_KEY
 import kotlinx.coroutines.channels.Channel

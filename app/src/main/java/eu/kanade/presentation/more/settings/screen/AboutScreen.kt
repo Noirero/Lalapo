@@ -17,7 +17,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import compose.icons.SimpleIcons
 import compose.icons.simpleicons.Discord
 import compose.icons.simpleicons.Github
-import compose.icons.simpleicons.Reddit
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.LogoHeader

@@ -7,7 +7,6 @@ import eu.kanade.tachiyomi.data.track.kitsu.Kitsu
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
 import eu.kanade.tachiyomi.data.track.simkl.Simkl
-import eu.kanade.tachiyomi.data.track.suwayomi.Suwayomi
 
 class TrackManager(context: Context) {
 

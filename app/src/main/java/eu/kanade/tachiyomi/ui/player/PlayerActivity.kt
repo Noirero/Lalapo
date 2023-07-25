@@ -36,6 +36,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
@@ -86,6 +87,7 @@ import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import tachiyomi.core.util.lang.launchNonCancellable
 import tachiyomi.core.util.lang.launchUI
+import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.core.util.system.logcat
 import uy.kohesive.injekt.Injekt
@@ -892,11 +894,11 @@ class PlayerActivity : BaseActivity() {
                 return true
             }
             KeyEvent.KEYCODE_LEFT_BRACKET -> {
-                switchEpisode(true)
+                changeEpisode(viewModel.getAdjacentEpisodeId(previous = true))
                 return true
             }
             KeyEvent.KEYCODE_RIGHT_BRACKET -> {
-                switchEpisode(false)
+                changeEpisode(viewModel.getAdjacentEpisodeId(previous = false))
                 return true
             }
             // <-- AM (KC)
@@ -1246,16 +1248,16 @@ class PlayerActivity : BaseActivity() {
         }
     }
 
-    private fun updateDiscordRPC() {
+    private suspend fun updateDiscordRPC() {
         // AM (DC) -->
         if (!isFinishing) {
-            viewModel.viewModelScope.launchIO {
-                DiscordRPCService.videoInPip = isInPipMode
+            withIOContext {
+                DiscordRPCService.videoInPip = PipState.mode == PipState.ON
                 DiscordRPCService.setDiscordVideo(
                     isNsfwSource = viewModel.isSourceNsfw,
                     episodeNumber = viewModel.currentEpisode?.episode_number,
-                    thumbnailUrl = viewModel.anime?.thumbnailUrl,
-                    animeTitle = viewModel.anime?.title,
+                    thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
+                    animeTitle = viewModel.currentAnime?.title,
                 )
             }
         }

@@ -4,6 +4,7 @@ import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategoryUpdate
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
+import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.domain.library.model.plus
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -13,9 +14,9 @@ class SetSortModeForAnimeCategory(
 ) {
 
     suspend fun await(categoryId: Long, type: AnimeLibrarySort.Type, direction: AnimeLibrarySort.Direction) {
-         // AM (GU) -->
+        // AM (GU) -->
         if (preferences.groupLibraryBy().get() != LibraryGroup.BY_DEFAULT) {
-            preferences.librarySortingMode().set(LibrarySort(type, direction))
+            preferences.libraryAnimeSortingMode().set(AnimeLibrarySort(type, direction))
             return
         }
         // <-- AM (GU)

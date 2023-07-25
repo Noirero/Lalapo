@@ -280,61 +280,6 @@ class AnimeDownloadManager(
         }
     }
 
-    // AM (CU) -->
-    /**
-     * return the list of all anime folders
-     */
-    fun getAnimeFolders(source: AnimeSource): List<UniFile> {
-        return provider.findSourceDir(source)?.listFiles()?.toList().orEmpty()
-    }
-
-    /**
-     * Deletes the directories of episodes that were read or have no match
-     *
-     * @param allEpisodes the list of episodes to delete.
-     * @param anime the anime of the episodes.
-     * @param source the source of the episodes.
-     */
-    suspend fun cleanupEpisodes(allEpisodes: List<Episode>, anime: Anime, source: AnimeSource, removeSeen: Boolean, removeNonFavorite: Boolean): Int {
-        var cleaned = 0
-
-        if (removeNonFavorite && !anime.favorite) {
-            // AM (CU)>
-            val animeFolder = provider.getAnimeDir(anime.ogTitle, source)
-            cleaned += 1 + animeFolder.listFiles().orEmpty().size
-            animeFolder.delete()
-            cache.removeAnime(anime)
-            return cleaned
-        }
-
-        val filesWithNoEpisode = provider.findUnmatchedEpisodeDirs(allEpisodes, anime, source)
-        cleaned += filesWithNoEpisode.size
-        cache.removeFolders(filesWithNoEpisode.mapNotNull { it.name }, anime)
-        filesWithNoEpisode.forEach { it.delete() }
-
-        if (removeSeen) {
-            val seenEpisodes = allEpisodes.filter { it.seen }
-            val seenEpisodeDirs = provider.findEpisodeDirs(seenEpisodes, anime, source)
-            seenEpisodeDirs.second.forEach { it.delete() }
-            cleaned += seenEpisodeDirs.second.size
-            cache.removeEpisodes(seenEpisodes, anime)
-        }
-
-        if (cache.getDownloadCount(anime) == 0) {
-            // AM (CU)>
-            val animeFolder = provider.getAnimeDir(anime.ogTitle, source)
-            if (!animeFolder.listFiles().isNullOrEmpty()) {
-                animeFolder.delete()
-                cache.removeAnime(anime)
-            } else {
-                // AM (CU)>
-                Log.e("", "Cache and download folder doesn't match for " + anime.ogTitle)
-            }
-        }
-        return cleaned
-    }
-    // <-- AM (CU)
-
     /**
      * Adds a list of episodes to be deleted later.
      *
@@ -434,7 +379,7 @@ class AnimeDownloadManager(
         }
     }
     // <-- AM (FM)
-    
+
     fun statusFlow(): Flow<AnimeDownload> = queueState
         .flatMapLatest { downloads ->
             downloads

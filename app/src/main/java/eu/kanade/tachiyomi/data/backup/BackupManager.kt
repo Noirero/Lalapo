@@ -32,6 +32,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupExtension
+import eu.kanade.tachiyomi.data.backup.models.BackupExtensionPreferences
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSerializer
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
@@ -43,10 +45,6 @@ import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.backupAnimeTrackMapper
 import eu.kanade.tachiyomi.data.backup.models.backupCategoryMapper
 import eu.kanade.tachiyomi.data.backup.models.backupEpisodeMapper
-import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
-import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
-import eu.kanade.tachiyomi.source.anime.model.copyFrom
-import eu.kanade.tachiyomi.data.backup.models.backupTrackMapper
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.source.anime.getPreferenceKey
 import eu.kanade.tachiyomi.source.anime.model.copyFrom
@@ -59,21 +57,18 @@ import okio.sink
 import tachiyomi.core.util.lang.toLong
 import tachiyomi.core.util.system.logcat
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.data.handlers.manga.MangaDatabaseHandler
 import tachiyomi.data.updateStrategyAdapter
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.category.manga.interactor.GetMangaCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
+import tachiyomi.domain.entries.anime.interactor.GetCustomAnimeInfo
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.entries.manga.interactor.GetMangaFavorites
-import tachiyomi.domain.entries.manga.model.Manga
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.history.anime.model.AnimeHistoryUpdate
-import tachiyomi.domain.history.manga.model.MangaHistoryUpdate
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
-import tachiyomi.domain.source.manga.service.MangaSourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -92,7 +87,8 @@ class BackupManager(
     private val getAnimeFavorites: GetAnimeFavorites = Injekt.get()
 
     // AM (CU) -->
-    private val customAnimeManager: CustomAnimeManager = Injekt.get()
+    private val getCustomAnimeInfo: GetCustomAnimeInfo = Injekt.get()
+    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get()
     // <-- AM (CU)
 
     internal val parser = ProtoBuf
@@ -103,7 +99,6 @@ class BackupManager(
      * @param uri path of Uri
      * @param isAutoBackup backup called from scheduled backup job
      */
-    @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun createBackup(uri: Uri, flags: Int, isAutoBackup: Boolean): String {
         if (!context.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             throw IllegalStateException(context.getString(R.string.missing_storage_permission))
@@ -218,7 +213,7 @@ class BackupManager(
         val animeObject = BackupAnime.copyFrom(
             anime,
             // AM (CU) -->
-            if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) customAnimeManager else null,
+            if (options and BACKUP_CUSTOM_INFO_MASK == BACKUP_CUSTOM_INFO) getCustomAnimeInfo.get(anime.id) else null,
             // <-- AM (CU)
         )
 
@@ -269,10 +264,6 @@ class BackupManager(
         if (flags and BACKUP_EXT_PREFS_MASK != BACKUP_EXT_PREFS) return emptyList()
         val prefs = mutableListOf<Pair<String, SharedPreferences>>()
         Injekt.get<AnimeSourceManager>().getOnlineSources().forEach {
-            val name = it.getPreferenceKey()
-            prefs += Pair(name, context.getSharedPreferences(name, 0x0))
-        }
-        Injekt.get<MangaSourceManager>().getOnlineSources().forEach {
             val name = it.getPreferenceKey()
             prefs += Pair(name, context.getSharedPreferences(name, 0x0))
         }
@@ -342,10 +333,10 @@ class BackupManager(
     }
 
     internal suspend fun restoreExistingAnime(anime: Anime, dbAnime: Animes): Anime {
-        var anime = anime.copy(id = dbAnime._id)
-        anime = anime.copyFrom(dbAnime)
-        updateAnime(anime)
-        return anime
+        var updatedAnime = anime.copy(id = dbAnime._id)
+        updatedAnime = updatedAnime.copyFrom(dbAnime)
+        updateAnime(updatedAnime)
+        return updatedAnime
     }
 
     /**
@@ -418,7 +409,7 @@ class BackupManager(
                 dbCategories.firstOrNull { dbCategory ->
                     dbCategory.name == backupCategory.name
                 }?.let { dbCategory ->
-                    animeCategoriesToUpdate.add(Pair(anime.id!!, dbCategory.id))
+                    animeCategoriesToUpdate.add(Pair(anime.id, dbCategory.id))
                 }
             }
         }
@@ -426,7 +417,7 @@ class BackupManager(
         // Update database
         if (animeCategoriesToUpdate.isNotEmpty()) {
             animeHandler.await(true) {
-                animes_categoriesQueries.deleteAnimeCategoryByAnimeId(anime.id!!)
+                animes_categoriesQueries.deleteAnimeCategoryByAnimeId(anime.id)
                 animeCategoriesToUpdate.forEach { (animeId, categoryId) ->
                     animes_categoriesQueries.insert(animeId, categoryId)
                 }
@@ -484,11 +475,8 @@ class BackupManager(
      * @param tracks the track list to restore.
      */
     internal suspend fun restoreAnimeTracking(anime: Anime, tracks: List<tachiyomi.domain.track.anime.model.AnimeTrack>) {
-        // Fix foreign keys with the current anime id
-        val tracks = tracks.map { it.copy(animeId = anime.id!!) }
-
         // Get tracks from database
-        val dbTracks = animeHandler.awaitList { anime_syncQueries.getTracksByAnimeId(anime.id!!) }
+        val dbTracks = animeHandler.awaitList { anime_syncQueries.getTracksByAnimeId(anime.id) }
         val toUpdate = mutableListOf<Anime_sync>()
         val toInsert = mutableListOf<tachiyomi.domain.track.anime.model.AnimeTrack>()
 
@@ -548,7 +536,7 @@ class BackupManager(
                         track.title,
                         track.lastEpisodeSeen,
                         track.totalEpisodes,
-                        track.status.toLong(),
+                        track.status,
                         track.score,
                         track.remoteUrl,
                         track.startDate,
@@ -560,30 +548,30 @@ class BackupManager(
     }
 
     internal suspend fun restoreEpisodes(anime: Anime, episodes: List<tachiyomi.domain.items.episode.model.Episode>) {
-        val dbEpisodes = animeHandler.awaitList { episodesQueries.getEpisodesByAnimeId(anime.id!!) }
+        val dbEpisodes = animeHandler.awaitList { episodesQueries.getEpisodesByAnimeId(anime.id) }
 
         val processed = episodes.map { episode ->
-            var episode = episode
-            val dbEpisode = dbEpisodes.find { it.url == episode.url }
+            var updatedEpisode = episode
+            val dbEpisode = dbEpisodes.find { it.url == updatedEpisode.url }
             if (dbEpisode != null) {
-                episode = episode.copy(id = dbEpisode._id)
-                episode = episode.copyFrom(dbEpisode)
-                if (dbEpisode.seen && !episode.seen) {
-                    episode = episode.copy(seen = dbEpisode.seen, lastSecondSeen = dbEpisode.last_second_seen)
-                } else if (episode.lastSecondSeen == 0L && dbEpisode.last_second_seen != 0L) {
-                    episode = episode.copy(lastSecondSeen = dbEpisode.last_second_seen)
+                updatedEpisode = updatedEpisode.copy(id = dbEpisode._id)
+                updatedEpisode = updatedEpisode.copyFrom(dbEpisode)
+                if (dbEpisode.seen && !updatedEpisode.seen) {
+                    updatedEpisode = updatedEpisode.copy(seen = dbEpisode.seen, lastSecondSeen = dbEpisode.last_second_seen)
+                } else if (updatedEpisode.lastSecondSeen == 0L && dbEpisode.last_second_seen != 0L) {
+                    updatedEpisode = updatedEpisode.copy(lastSecondSeen = dbEpisode.last_second_seen)
                 }
-                if (!episode.bookmark && dbEpisode.bookmark) {
-                    episode = episode.copy(bookmark = dbEpisode.bookmark)
+                if (!updatedEpisode.bookmark && dbEpisode.bookmark) {
+                    updatedEpisode = updatedEpisode.copy(bookmark = dbEpisode.bookmark)
                 }
                 // AM (FM) -->
-                if (!episode.fillermark && dbEpisode.fillermark) {
-                    episode.fillermark = dbEpisode.fillermark
+                if (!updatedEpisode.fillermark && dbEpisode.fillermark) {
+                    updatedEpisode = updatedEpisode.copy(fillermark = dbEpisode.fillermark)
                 }
                 // <-- AM (FM)
             }
 
-            episode.copy(animeId = anime.id ?: -1)
+            updatedEpisode.copy(animeId = anime.id)
         }
 
         val newEpisodes = processed.groupBy { it.id > 0 }
@@ -615,7 +603,7 @@ class BackupManager(
                 description = anime.description,
                 genre = anime.genre,
                 title = anime.title,
-                status = anime.status.toLong(),
+                status = anime.status,
                 thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite,
                 lastUpdate = anime.lastUpdate,
@@ -650,7 +638,7 @@ class BackupManager(
                 episodeFlags = anime.episodeFlags,
                 coverLastModified = anime.coverLastModified,
                 dateAdded = anime.dateAdded,
-                animeId = anime.id!!,
+                animeId = anime.id,
                 updateStrategy = anime.updateStrategy.let(updateStrategyAdapter::encode),
             )
         }
@@ -685,34 +673,6 @@ class BackupManager(
     }
 
     /**
-     * Updates a list of episodes
-     */
-    private suspend fun updateEpisodes(episodes: List<tachiyomi.domain.items.episode.model.Episode>) {
-        animeHandler.await(true) {
-            episodes.forEach { episode ->
-                episodesQueries.update(
-                    episode.animeId,
-                    episode.url,
-                    episode.name,
-                    episode.scanlator,
-                    episode.seen.toLong(),
-                    episode.bookmark.toLong(),
-                    // AM (FM) -->
-                    episode.fillermark.toLong(),
-                    // <-- AM (FM)
-                    episode.lastSecondSeen,
-                    episode.totalSeconds,
-                    episode.episodeNumber.toDouble(),
-                    episode.sourceOrder,
-                    episode.dateFetch,
-                    episode.dateUpload,
-                    episode.id,
-                )
-            }
-        }
-    }
-
-    /**
      * Updates a list of episodes with known database ids
      */
     private suspend fun updateKnownEpisodes(episodes: List<tachiyomi.domain.items.episode.model.Episode>) {
@@ -741,9 +701,9 @@ class BackupManager(
     }
 
     // AM (CU) -->
-    internal fun restoreEditedInfo(animeJson: CustomAnimeManager.AnimeJson?) {
+    internal fun restoreEditedInfo(animeJson: CustomAnimeInfo?) {
         animeJson ?: return
-        customAnimeManager.saveAnimeInfo(animeJson)
+        setCustomAnimeInfo.set(animeJson)
     }
     // <-- AM (CU)
 }

@@ -19,13 +19,12 @@ class AnimeExtensionsScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { AnimeExtensionsScreenModel() }
         val state by screenModel.state.collectAsState()
-        val searchQuery by screenModel.query.collectAsState()
         val onChangeSearchQuery = screenModel::search
 
         AnimeExtensionScreen(
             state = state,
             navigator = navigator,
-            searchQuery = searchQuery,
+            searchQuery = state.searchQuery,
             onLongClickItem = { extension ->
                 when (extension) {
                     is AnimeExtension.Available -> screenModel.installExtension(extension)

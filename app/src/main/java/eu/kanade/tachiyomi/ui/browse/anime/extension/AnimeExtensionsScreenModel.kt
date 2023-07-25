@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.subscribeToInstallUpdate
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import rx.Observable
 import tachiyomi.core.util.lang.launchIO
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -86,7 +86,7 @@ class AnimeExtensionsScreenModel(
                     itemsGroups[AnimeExtensionUiModel.Header.Resource(R.string.ext_updates_pending)] = updates
                 }
                 // AM (BR) -->
-                // val installed = _installed.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
+                val installed = _installed.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
                 // <-- AM (BR)
                 val untrusted = _untrusted.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
                 if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
@@ -137,7 +137,6 @@ class AnimeExtensionsScreenModel(
                     .flatten()
                     .mapNotNull {
                         when {
-                            it !is AnimeExtensionUiModel.Item -> null
                             it.extension !is AnimeExtension.Installed -> null
                             !it.extension.hasUpdate -> null
                             else -> it.extension

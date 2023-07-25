@@ -10,12 +10,15 @@ import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupExtension
+import eu.kanade.tachiyomi.data.backup.models.BackupExtensionPreferences
+import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.FloatPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.IntPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
-import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
+import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.util.BackupUtil
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -23,6 +26,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import java.io.File
@@ -85,7 +89,6 @@ class BackupRestorer(
         return File("")
     }
 
-    @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun performRestore(uri: Uri): Boolean {
         val backup = BackupUtil.decodeBackup(context, uri)
 
@@ -160,10 +163,10 @@ class BackupRestorer(
             } else {
                 // Anime in database
                 // Copy information from anime already in database
-                val anime = backupManager.restoreExistingAnime(anime, dbAnime)
+                val updatedAnime = backupManager.restoreExistingAnime(anime, dbAnime)
                 // Fetch rest of anime information
                 // AM (CU)>
-                restoreNewAnime(anime, episodes, categories, history, tracks, backupCategories, customAnime)
+                restoreNewAnime(updatedAnime, episodes, categories, history, tracks, backupCategories, customAnime)
             }
         } catch (e: Exception) {
             val sourceName = sourceMapping[anime.source] ?: anime.source.toString()
@@ -189,7 +192,7 @@ class BackupRestorer(
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
         // AM (CU) -->
-        customAnime: CustomAnimeManager.AnimeJson?,
+        customAnime: CustomAnimeInfo?,
         // <-- AM (CU)
     ) {
         val fetchedAnime = backupManager.restoreNewAnime(anime)
@@ -206,7 +209,7 @@ class BackupRestorer(
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
         // AM (CU) -->
-        customAnime: CustomAnimeManager.AnimeJson?,
+        customAnime: CustomAnimeInfo?,
         // <-- AM (CU)
     ) {
         backupManager.restoreEpisodes(backupAnime, episodes)
@@ -221,15 +224,14 @@ class BackupRestorer(
         tracks: List<AnimeTrack>,
         backupCategories: List<BackupCategory>,
         // AM (CU) -->
-        customAnime: CustomAnimeManager.AnimeJson?,
+        customAnime: CustomAnimeInfo?,
         // <-- AM (CU)
     ) {
         backupManager.restoreAnimeCategories(anime, categories, backupCategories)
         backupManager.restoreAnimeHistory(history)
         backupManager.restoreAnimeTracking(anime, tracks)
         // AM (CU) -->
-        customAnime?.id = anime.id!!
-        backupManager.restoreEditedInfo(customAnime)
+        backupManager.restoreEditedInfo(customAnime?.copy(id = anime.id))
         // <-- AM (CU)
     }
 

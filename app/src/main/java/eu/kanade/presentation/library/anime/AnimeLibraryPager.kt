@@ -15,13 +15,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
-import eu.kanade.presentation.library.manga.LibraryPagerEmptyScreen
+import eu.kanade.presentation.library.GlobalSearchItem
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.presentation.core.components.HorizontalPager
 import tachiyomi.presentation.core.components.PagerState
+import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun AnimeLibraryPager(

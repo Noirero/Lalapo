@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.data.backup.models
 
-import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
-import eu.kanade.tachiyomi.source.model.UpdateStrategy
+import eu.kanade.tachiyomi.animesource.model.UpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.track.anime.model.AnimeTrack
 
@@ -52,12 +52,14 @@ data class BackupAnime(
     fun getAnimeImpl(): Anime {
         return Anime.create().copy(
             url = this@BackupAnime.url,
-            title = this@BackupAnime.title,
-            artist = this@BackupAnime.artist,
-            author = this@BackupAnime.author,
-            description = this@BackupAnime.description,
-            genre = this@BackupAnime.genre,
-            status = this@BackupAnime.status.toLong(),
+            // AM (CU) -->
+            ogTitle = this@BackupAnime.title,
+            ogArtist = this@BackupAnime.artist,
+            ogAuthor = this@BackupAnime.author,
+            ogDescription = this@BackupAnime.description,
+            ogGenre = this@BackupAnime.genre,
+            ogStatus = this@BackupAnime.status.toLong(),
+            // <-- AM (CU)
             thumbnailUrl = this@BackupAnime.thumbnailUrl,
             favorite = this@BackupAnime.favorite,
             source = this@BackupAnime.source,
@@ -75,7 +77,7 @@ data class BackupAnime(
     }
 
     // AM (CU) -->
-    fun getCustomAnimeInfo(): CustomAnimeManager.AnimeJson? {
+    fun getCustomAnimeInfo(): CustomAnimeInfo? {
         if (customTitle != null ||
             customArtist != null ||
             customAuthor != null ||
@@ -83,7 +85,7 @@ data class BackupAnime(
             customGenre != null ||
             customStatus != 0
         ) {
-            return CustomAnimeManager.AnimeJson(
+            return CustomAnimeInfo(
                 id = 0L,
                 title = customTitle,
                 author = customAuthor,
@@ -105,7 +107,7 @@ data class BackupAnime(
 
     companion object {
         // AM (CU)>
-        fun copyFrom(anime: Anime, customAnimeManager: CustomAnimeManager?): BackupAnime {
+        fun copyFrom(anime: Anime, customAnimeInfo: CustomAnimeInfo?): BackupAnime {
             return BackupAnime(
                 url = anime.url,
                 // AM (CU) -->
@@ -125,7 +127,7 @@ data class BackupAnime(
                 updateStrategy = anime.updateStrategy,
                 // AM (CU) -->
             ).also { backupAnime ->
-                customAnimeManager?.getAnime(anime.id)?.let {
+                customAnimeInfo?.let {
                     backupAnime.customTitle = it.title
                     backupAnime.customArtist = it.artist
                     backupAnime.customAuthor = it.author

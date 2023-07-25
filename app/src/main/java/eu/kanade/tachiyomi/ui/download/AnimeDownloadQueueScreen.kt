@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -50,17 +52,15 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.EmptyScreen
-import eu.kanade.presentation.components.ExtendedFloatingActionButton
 import eu.kanade.presentation.components.OverflowMenu
-import eu.kanade.presentation.components.Pill
-import eu.kanade.presentation.components.Scaffold
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadAdapter
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadQueueScreenModel
-import eu.kanade.tachiyomi.util.lang.launchUI
+import tachiyomi.core.util.lang.launchUI
+import tachiyomi.presentation.core.components.Pill
+import tachiyomi.presentation.core.screens.EmptyScreen
 import kotlin.math.roundToInt
 
 object AnimeDownloadQueueScreen : Screen {
@@ -185,7 +185,7 @@ object AnimeDownloadQueueScreen : Screen {
                                 androidx.compose.material3.DropdownMenuItem(
                                     text = { Text(text = stringResource(R.string.action_cancel_all)) },
                                     onClick = {
-                                        screenModel.clearQueue(context)
+                                        screenModel.clearQueue()
                                         closeMenu()
                                     },
                                 )

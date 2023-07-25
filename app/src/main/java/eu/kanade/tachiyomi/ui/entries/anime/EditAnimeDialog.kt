@@ -27,8 +27,6 @@ import coil.transform.RoundedCornersTransformation
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import eu.kanade.domain.entries.anime.model.Anime
-import eu.kanade.domain.entries.anime.model.isLocal
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.databinding.EditAnimeDialogBinding
@@ -39,6 +37,8 @@ import eu.kanade.tachiyomi.util.system.getResourceColor
 import eu.kanade.tachiyomi.util.trimOrNull
 import eu.kanade.tachiyomi.widget.materialdialogs.setTextInput
 import kotlinx.coroutines.CoroutineScope
+import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.source.local.entries.anime.isLocal
 
 @Composable
 fun EditAnimeDialog(

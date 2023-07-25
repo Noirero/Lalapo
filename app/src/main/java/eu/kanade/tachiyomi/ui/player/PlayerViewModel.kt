@@ -27,11 +27,12 @@ import eu.kanade.tachiyomi.data.saver.Location
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.network.NetworkPreferences
+import eu.kanade.tachiyomi.source.anime.isLocalOrStub
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.viewer.SetAsCover
-import eu.kanade.tachiyomi.ui.reader.SaveImageNotifier
 import eu.kanade.tachiyomi.util.AniSkipApi
 import eu.kanade.tachiyomi.util.Stamp
 import eu.kanade.tachiyomi.util.editCover
@@ -97,6 +98,7 @@ class PlayerViewModel(
     private val setAnimeViewerFlags: SetAnimeViewerFlags = Injekt.get(),
     internal val networkPreferences: NetworkPreferences = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
+    private val extensionManager: AnimeExtensionManager = Injekt.get(),
     basePreferences: BasePreferences = Injekt.get(),
     uiPreferences: UiPreferences = Injekt.get(),
 ) : ViewModel() {
@@ -274,7 +276,7 @@ class PlayerViewModel(
     // AM (DC) -->
     private fun isSourceNSFW(source: AnimeSource) {
         if (!source.isLocalOrStub()) {
-            val sourceUsed = sourceManager.extensionManager.installedExtensionsFlow.value
+            val sourceUsed = extensionManager.installedExtensionsFlow.value
                 .find { ext -> ext.sources.any { it.id == source.id } }!!
             isSourceNsfw = sourceUsed.isNsfw
         }
@@ -324,8 +326,6 @@ class PlayerViewModel(
 
             Pair(currentVideoList, anime.title + " - " + chosenEpisode.name)
         }
-
-        return Pair(currentVideoList, anime.title + " - " + episodeList[index - 1].name)
     }
 
     /**

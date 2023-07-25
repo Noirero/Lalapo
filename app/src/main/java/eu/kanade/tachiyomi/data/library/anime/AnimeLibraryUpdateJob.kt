@@ -22,15 +22,15 @@ import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithTrackServiceTwo
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.animesource.model.UpdateStrategy
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
-import eu.kanade.tachiyomi.source.UnmeteredSource
-import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.util.prepUpdateCover
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -252,10 +252,10 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                                             skippedUpdates.add(anime to context.getString(R.string.skipped_reason_completed))
 
                                         ENTRY_HAS_UNVIEWED in restrictions && libraryAnime.unseenCount != 0L ->
-                                            skippedUpdates.add(anime to context.getString(R.string.skipped_reason_not_caught_up))
+                                            skippedUpdates.add(anime to context.getString(R.string.skipped_reason_not_caught_up_anime))
 
                                         ENTRY_NON_VIEWED in restrictions && libraryAnime.totalEpisodes > 0L && !libraryAnime.hasStarted ->
-                                            skippedUpdates.add(anime to context.getString(R.string.skipped_reason_not_started))
+                                            skippedUpdates.add(anime to context.getString(R.string.skipped_reason_not_started_anime))
 
                                         anime.updateStrategy != UpdateStrategy.ALWAYS_UPDATE ->
                                             skippedUpdates.add(anime to context.getString(R.string.skipped_reason_not_always_update))

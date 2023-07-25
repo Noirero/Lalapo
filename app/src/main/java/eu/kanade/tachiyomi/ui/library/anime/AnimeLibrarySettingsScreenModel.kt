@@ -1,14 +1,15 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
+import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.coroutineScope
+import eu.kanade.core.preference.asState
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.util.preference.toggle
 import tachiyomi.core.preference.Preference
 import tachiyomi.core.preference.getAndSet
 import tachiyomi.core.util.lang.launchIO
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.SetDisplayModeForAnimeCategory
 import tachiyomi.domain.category.anime.interactor.SetSortModeForAnimeCategory
 import tachiyomi.domain.category.model.Category
@@ -22,11 +23,14 @@ import uy.kohesive.injekt.api.get
 class AnimeLibrarySettingsScreenModel(
     val preferences: BasePreferences = Injekt.get(),
     val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val getCategories: GetAnimeCategories = Injekt.get(),
     private val setDisplayModeForCategory: SetDisplayModeForAnimeCategory = Injekt.get(),
     private val setSortModeForCategory: SetSortModeForAnimeCategory = Injekt.get(),
     trackManager: TrackManager = Injekt.get(),
 ) : ScreenModel {
+
+    // AM (GU) -->
+    val grouping by libraryPreferences.groupLibraryBy().asState(coroutineScope)
+    // <-- AM (GU)
 
     val trackServices = trackManager.services.filter { service -> service.isLogged }
 
@@ -55,4 +59,8 @@ class AnimeLibrarySettingsScreenModel(
             setSortModeForCategory.await(category, mode, direction)
         }
     }
+
+    // AM (GU) -->
+    fun setGrouping(grouping: Int) { coroutineScope.launchIO { libraryPreferences.groupLibraryBy().set(grouping) } }
+    // <-- AM (GU)
 }

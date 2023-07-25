@@ -20,9 +20,12 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.core.Constants.REQUEST_EXTERNAL
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.source.anime.isLocalOrStub
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.system.isOnline
@@ -101,6 +104,16 @@ class ExternalIntents {
         }
     }
 
+    // AM (DC) -->
+    private fun isSourceNSFW(source: AnimeSource) {
+        if (!source.isLocalOrStub()) {
+            val sourceUsed = extensionManager.installedExtensionsFlow.value
+                .find { ext -> ext.sources.any { it.id == source.id } }!!
+            isSourceNsfw = sourceUsed.isNsfw
+        }
+    }
+    // <-- AM (DC)
+
     /**
      * Returns the [Uri] of the given video.
      *
@@ -143,15 +156,9 @@ class ExternalIntents {
     /**
      * Returns the second to start the external player at.
      */
-    private fun getLastSecondSeen(): Long {
+    private suspend fun getLastSecondSeen(): Long {
         val preserveWatchPos = playerPreferences.preserveWatchingPosition().get()
         val isEpisodeWatched = episode.lastSecondSeen == episode.totalSeconds
-
-        return if (episode.seen && (!preserveWatchPos || (preserveWatchPos && isEpisodeWatched))) {
-            1L
-        } else {
-            episode.lastSecondSeen
-        }
 
         // AM (DC) -->
         withIOContext {
@@ -165,10 +172,12 @@ class ExternalIntents {
             )
         }
         // <-- AM (DC)
-    }
 
-    private fun makeErrorToast(context: Context, e: Exception?) {
-        launchUI { context.toast(e?.message ?: "Cannot open episode") }
+        return if (episode.seen && (!preserveWatchPos || (preserveWatchPos && isEpisodeWatched))) {
+            1L
+        } else {
+            episode.lastSecondSeen
+        }
     }
 
     /**
@@ -189,7 +198,7 @@ class ExternalIntents {
      * @param uri the path data of the video.
      * @param video the video being sent to the external player.
      */
-    private fun standardIntentForPackage(pkgName: String, context: Context, uri: Uri, video: Video): Intent {
+    private suspend fun standardIntentForPackage(pkgName: String, context: Context, uri: Uri, video: Video): Intent {
         return Intent(Intent.ACTION_VIEW).apply {
             if (isPackageInstalled(pkgName, context.packageManager)) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && pkgName.contains("vlc")) {
@@ -233,7 +242,7 @@ class ExternalIntents {
      * @param isSupportedPlayer is it a supported external player.
      * @param intent the [Intent] that the extras and flags are added to.
      */
-    private fun addExtrasAndFlags(isSupportedPlayer: Boolean, intent: Intent): Intent {
+    private suspend fun addExtrasAndFlags(isSupportedPlayer: Boolean, intent: Intent): Intent {
         return intent.apply {
             putExtra("title", anime.title + " - " + episode.name)
             putExtra("position", getLastSecondSeen().toInt())
@@ -377,6 +386,7 @@ class ExternalIntents {
     private val playerPreferences: PlayerPreferences = Injekt.get()
     private val downloadPreferences: DownloadPreferences = Injekt.get()
     private val trackPreferences: TrackPreferences = Injekt.get()
+    private val extensionManager: AnimeExtensionManager = Injekt.get()
     private val basePreferences: BasePreferences by injectLazy()
 
     /**

@@ -24,11 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.EmptyScreen
-import eu.kanade.presentation.components.FastScrollLazyColumn
-import eu.kanade.presentation.components.LoadingScreen
-import eu.kanade.presentation.components.PullRefresh
-import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.entries.EntryBottomActionMenu
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.tachiyomi.R

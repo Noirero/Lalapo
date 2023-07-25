@@ -4,6 +4,7 @@ import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategoryUpdate
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.domain.library.model.plus
 import tachiyomi.domain.library.service.LibraryPreferences
 

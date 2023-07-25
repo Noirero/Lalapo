@@ -31,9 +31,6 @@ import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
 import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
 import eu.kanade.tachiyomi.data.coil.AnimeKeyer
-import eu.kanade.tachiyomi.data.coil.MangaCoverFetcher
-import eu.kanade.tachiyomi.data.coil.MangaCoverKeyer
-import eu.kanade.tachiyomi.data.coil.MangaKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -52,7 +49,6 @@ import logcat.LogcatLogger
 import org.conscrypt.Conscrypt
 import tachiyomi.core.util.system.logcat
 import tachiyomi.presentation.widget.entries.anime.TachiyomiAnimeWidgetManager
-import tachiyomi.presentation.widget.entries.manga.TachiyomiMangaWidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -86,7 +82,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(DomainModule())
 
-        setupAcra()
         setupNotificationChannels()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -190,10 +185,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
             }
         }
         return super.getPackageName()
-    }
-
-    protected open fun setupAcra() {
-        // removed acra
     }
 
     private fun setupNotificationChannels() {

@@ -8,10 +8,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.util.fastForEach
+import eu.kanade.presentation.components.BasicItem
+import eu.kanade.presentation.components.CheckboxItem
+import eu.kanade.presentation.components.HeadingItem
+import eu.kanade.presentation.components.IconItem
+import eu.kanade.presentation.components.RadioItem
+import eu.kanade.presentation.components.SortItem
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.components.TriStateItem
@@ -24,19 +33,18 @@ import tachiyomi.domain.entries.TriStateFilter
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.domain.library.model.display
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.presentation.core.components.BasicItem
-import tachiyomi.presentation.core.components.CheckboxItem
-import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.RadioItem
-import tachiyomi.presentation.core.components.SortItem
 
 @Composable
 fun AnimeLibrarySettingsDialog(
     onDismissRequest: () -> Unit,
     screenModel: AnimeLibrarySettingsScreenModel,
     category: Category,
+    // AM (GU) -->
+    hasCategories: Boolean,
+    // <-- AM (GU)
 ) {
     TabbedDialog(
         onDismissRequest = onDismissRequest,
@@ -44,6 +52,9 @@ fun AnimeLibrarySettingsDialog(
             stringResource(R.string.action_filter),
             stringResource(R.string.action_sort),
             stringResource(R.string.action_display),
+            // AM (GU) -->
+            stringResource(R.string.group),
+            // <-- AM (GU)
         ),
     ) { contentPadding, page ->
         Column(
@@ -64,6 +75,12 @@ fun AnimeLibrarySettingsDialog(
                     category = category,
                     screenModel = screenModel,
                 )
+                // AM (GU) -->
+                3 -> GroupPage(
+                    screenModel = screenModel,
+                    hasCategories = hasCategories,
+                )
+                // <-- AM (GU)
             }
         }
     }
@@ -102,6 +119,12 @@ private fun ColumnScope.FilterPage(
         label = stringResource(R.string.action_filter_bookmarked),
         state = filterBookmarked,
         onClick = { screenModel.toggleFilter(LibraryPreferences::filterBookmarkedAnime) },
+    )
+    val filterFillermarked by screenModel.libraryPreferences.filterFillermarkedAnime().collectAsState()
+    TriStateItem(
+        label = stringResource(R.string.action_filter_fillermarked),
+        state = filterFillermarked,
+        onClick = { screenModel.toggleFilter(LibraryPreferences::filterFillermarkedAnime) },
     )
     val filterCompleted by screenModel.libraryPreferences.filterCompletedAnime().collectAsState()
     TriStateItem(
@@ -142,8 +165,19 @@ private fun ColumnScope.SortPage(
     category: Category,
     screenModel: AnimeLibrarySettingsScreenModel,
 ) {
-    val sortingMode = category.sort.type
-    val sortDescending = !category.sort.isAscending
+    // AM (GU) -->
+    val globalSortMode by screenModel.libraryPreferences.libraryAnimeSortingMode().collectAsState()
+    val sortingMode = if (screenModel.grouping == LibraryGroup.BY_DEFAULT) {
+        category.sort.type
+    } else {
+        globalSortMode.type
+    }
+    val sortDescending = if (screenModel.grouping == LibraryGroup.BY_DEFAULT) {
+        category.sort.isAscending
+    } else {
+        globalSortMode.isAscending
+    }.not()
+    // <-- AM (GU)
 
     listOf(
         R.string.action_sort_alpha to AnimeLibrarySort.Type.Alphabetical,
@@ -266,3 +300,58 @@ private fun ColumnScope.DisplayPage(
         },
     )
 }
+
+// AM (GU) -->
+data class GroupMode(
+    val int: Int,
+    val nameRes: Int,
+    val drawableRes: Int,
+)
+
+private fun groupTypeDrawableRes(type: Int): Int {
+    return when (type) {
+        LibraryGroup.BY_STATUS -> R.drawable.ic_progress_clock_24dp
+        LibraryGroup.BY_TRACK_STATUS -> R.drawable.ic_sync_24dp
+        LibraryGroup.BY_SOURCE -> R.drawable.ic_browse_filled_24dp
+        LibraryGroup.UNGROUPED -> R.drawable.ic_ungroup_24dp
+        else -> R.drawable.ic_label_24dp
+    }
+}
+
+@Composable
+private fun ColumnScope.GroupPage(
+    screenModel: AnimeLibrarySettingsScreenModel,
+    hasCategories: Boolean,
+) {
+    val groups = remember(hasCategories, screenModel.trackServices) {
+        buildList {
+            add(LibraryGroup.BY_DEFAULT)
+            add(LibraryGroup.BY_SOURCE)
+            add(LibraryGroup.BY_STATUS)
+            if (screenModel.trackServices.isNotEmpty()) {
+                add(LibraryGroup.BY_TRACK_STATUS)
+            }
+            if (hasCategories) {
+                add(LibraryGroup.UNGROUPED)
+            }
+        }.map {
+            GroupMode(
+                it,
+                LibraryGroup.groupTypeStringRes(it, hasCategories),
+                groupTypeDrawableRes(it),
+            )
+        }
+    }
+
+    groups.fastForEach {
+        IconItem(
+            label = stringResource(it.nameRes),
+            icon = painterResource(it.drawableRes),
+            selected = it.int == screenModel.grouping,
+            onClick = {
+                screenModel.setGrouping(it.int)
+            },
+        )
+    }
+}
+// <-- AM (GU)

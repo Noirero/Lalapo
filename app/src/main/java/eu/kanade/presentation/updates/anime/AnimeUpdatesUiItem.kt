@@ -37,7 +37,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import eu.kanade.domain.download.service.DownloadPreferences
 import eu.kanade.presentation.entries.DotSeparatorText
 import eu.kanade.presentation.entries.ItemCover
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
@@ -45,19 +44,20 @@ import eu.kanade.presentation.entries.anime.components.EpisodeDownloadIndicator
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
-import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.updates.anime.model.AnimeUpdatesWithRelations
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.ReadItemAlpha
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.util.selectedBackground
+import uy.kohesive.injekt.injectLazy
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import uy.kohesive.injekt.injectLazy
 
 private val preferences: DownloadPreferences by injectLazy()
 private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()

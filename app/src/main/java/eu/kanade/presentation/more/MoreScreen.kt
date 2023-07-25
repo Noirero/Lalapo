@@ -32,7 +32,6 @@ import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.Constants
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Divider
 import tachiyomi.presentation.core.components.material.Scaffold

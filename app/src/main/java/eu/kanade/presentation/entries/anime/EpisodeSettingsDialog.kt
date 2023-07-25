@@ -24,14 +24,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.entries.anime.model.downloadedFilter
 import eu.kanade.domain.entries.anime.model.forceDownloaded
+import eu.kanade.presentation.components.RadioItem
+import eu.kanade.presentation.components.SortItem
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.components.TriStateItem
 import eu.kanade.tachiyomi.R
 import tachiyomi.domain.entries.TriStateFilter
 import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.presentation.core.components.RadioItem
-import tachiyomi.presentation.core.components.SortItem
 
 @Composable
 fun EpisodeSettingsDialog(
@@ -119,6 +119,8 @@ private fun FilterPage(
     onUnseenFilterChanged: (TriStateFilter) -> Unit,
     bookmarkedFilter: TriStateFilter,
     onBookmarkedFilterChanged: (TriStateFilter) -> Unit,
+    fillermarkedFilter: TriStateFilter,
+    onFillermarkedFilterChanged: (TriStateFilter) -> Unit,
 ) {
     TriStateItem(
         label = stringResource(R.string.label_downloaded),
@@ -135,6 +137,11 @@ private fun FilterPage(
         state = bookmarkedFilter,
         onClick = onBookmarkedFilterChanged,
     )
+    TriStateItem(
+        label = stringResource(R.string.action_filter_fillermarked),
+        state = fillermarkedFilter,
+        onClick = onFillermarkedFilterChanged,
+    )
 }
 
 @Composable
@@ -149,7 +156,7 @@ private fun SortPage(
         onClick = { onItemSelected(Anime.EPISODE_SORTING_SOURCE) },
     )
     SortItem(
-        label = stringResource(R.string.sort_by_number),
+        label = stringResource(R.string.sort_by_episode_number),
         sortDescending = sortDescending.takeIf { sortingMode == Anime.EPISODE_SORTING_NUMBER },
         onClick = { onItemSelected(Anime.EPISODE_SORTING_NUMBER) },
     )

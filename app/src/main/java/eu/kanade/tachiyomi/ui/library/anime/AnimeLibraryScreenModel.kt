@@ -28,6 +28,7 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
+import eu.kanade.tachiyomi.data.track.TrackStatus
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
 import eu.kanade.tachiyomi.util.removeCovers
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.runBlocking
 import tachiyomi.core.preference.CheckboxState
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.launchNonCancellable
@@ -59,9 +61,12 @@ import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
+import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.domain.track.anime.interactor.GetTracksPerAnime
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -107,19 +112,18 @@ class AnimeLibraryScreenModel(
                 combine(
                     getTrackingFilterFlow(),
                     downloadCache.changes,
-                ) { a, b -> a to b },
+                    ::Pair,
+                ),
                 combine(
                     state.map { it.groupType }.distinctUntilChanged(),
-                    libraryPreferences.libraryDisplayMode().changes(),
-                    libraryPreferences.librarySortingMode().changes(),
-                ) { a, b, c ->
-                    Triple(a, b, c)
-                },
-            ) { searchQuery, library, tracks, (loggedInTrackServices, _), (groupType, displayMode, sort) ->
+                    libraryPreferences.libraryAnimeSortingMode().changes(),
+                    ::Pair,
+                ),
+            ) { searchQuery, library, tracks, (loggedInTrackServices, _), (groupType, sort) ->
                 // <-- AM (GU)
                 library
                     // AM (GU) -->
-                    .applyGrouping(groupType, displayMode)
+                    .applyGrouping(groupType)
                     // <-- AM (GU)
                     .applyFilters(tracks, loggedInTrackServices)
                     // AM (GU)>
@@ -186,11 +190,13 @@ class AnimeLibraryScreenModel(
             .launchIn(coroutineScope)
 
         // AM (GU) -->
-        libraryPreferences.groupLibraryBy().asHotFlow {
-            mutableState.update { state ->
-                state.copy(groupType = it)
+        libraryPreferences.groupLibraryBy().changes()
+            .onEach {
+                mutableState.update { state ->
+                    state.copy(groupType = it)
+                }
             }
-        }.launchIn(coroutineScope)
+            .launchIn(coroutineScope)
         // <-- AM (GU)
     }
 
@@ -266,7 +272,7 @@ class AnimeLibraryScreenModel(
                 filterFnStarted(it) &&
                 filterFnBookmarked(it) &&
                 // AM (FM) -->
-                !filterFnFillermarked(it) &&
+                filterFnFillermarked(it) &&
                 // <-- AM (FM)
                 filterFnCompleted(it) &&
                 filterFnTracking(it)
@@ -279,7 +285,7 @@ class AnimeLibraryScreenModel(
      * Applies library sorting to the given map of anime.
      */
     // AM (GU)>
-    private fun AnimeLibraryMap.applySort(groupSort: LibrarySort? = null): AnimeLibraryMap {
+    private fun AnimeLibraryMap.applySort(groupSort: AnimeLibrarySort? = null): AnimeLibraryMap {
         val locale = Locale.getDefault()
         val collator = Collator.getInstance(locale).apply {
             strength = Collator.PRIMARY
@@ -368,7 +374,7 @@ class AnimeLibraryScreenModel(
                     filterStarted = it[6] as TriStateFilter,
                     filterBookmarked = it[7] as TriStateFilter,
                     // AM (FM) -->
-                    filterFillermarked = it[8] as Int,
+                    filterFillermarked = it[8] as TriStateFilter,
                     // <-- AM (FM)
                     filterCompleted = it[9] as TriStateFilter,
                 )
@@ -419,7 +425,7 @@ class AnimeLibraryScreenModel(
     }
 
     // AM (GU) -->
-    private fun AnimeLibraryMap.applyGrouping(groupType: Int, displayMode: LibraryDisplayMode): AnimeLibraryMap {
+    private fun AnimeLibraryMap.applyGrouping(groupType: Int): AnimeLibraryMap {
         val items = when (groupType) {
             LibraryGroup.BY_DEFAULT -> this
             LibraryGroup.UNGROUPED -> {
@@ -428,7 +434,7 @@ class AnimeLibraryScreenModel(
                         0,
                         preferences.context.getString(R.string.ungrouped),
                         0,
-                        displayMode.flag,
+                        0,
                     ) to
                         values.flatten().distinctBy { it.libraryAnime.anime.id },
                 )
@@ -437,7 +443,6 @@ class AnimeLibraryScreenModel(
                 getGroupedAnimeItems(
                     groupType = groupType,
                     libraryManga = this.values.flatten().distinctBy { it.libraryAnime.anime.id },
-                    displayMode = displayMode,
                 )
             }
         }
@@ -731,8 +736,8 @@ class AnimeLibraryScreenModel(
     }
 
     fun openDeleteAnimeDialog() {
-        val nimeList = state.value.selection.map { it.anime }
-        mutableState.update { it.copy(dialog = Dialog.DeleteAnime(nimeList)) }
+        val animeList = state.value.selection.map { it.anime }
+        mutableState.update { it.copy(dialog = Dialog.DeleteAnime(animeList)) }
     }
 
     fun closeDialog() {
@@ -749,7 +754,6 @@ class AnimeLibraryScreenModel(
     private fun getGroupedAnimeItems(
         groupType: Int,
         libraryManga: List<AnimeLibraryItem>,
-        displayMode: LibraryDisplayMode,
     ): AnimeLibraryMap {
         val context = preferences.context
         return when (groupType) {
@@ -769,7 +773,7 @@ class AnimeLibraryScreenModel(
                             .let { it ?: TrackStatus.OTHER }
                             .let { context.getString(it.res) },
                         order = TrackStatus.values().indexOfFirst { it.int == id }.takeUnless { it == -1 }?.toLong() ?: TrackStatus.OTHER.ordinal.toLong(),
-                        flags = displayMode.flag,
+                        flags = 0,
                     )
                 }
             }
@@ -782,7 +786,7 @@ class AnimeLibraryScreenModel(
                         .map {
                             sourceManager.getOrStub(it)
                         }
-                        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+                        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name.ifBlank { it.id.toString() } })
                         .map { it.id }
                 }.mapKeys {
                     Category(
@@ -793,7 +797,7 @@ class AnimeLibraryScreenModel(
                             sourceManager.getOrStub(it.key).name
                         },
                         order = sources.indexOf(it.key).takeUnless { it == -1 }?.toLong() ?: Long.MAX_VALUE,
-                        flags = displayMode.flag,
+                        flags = 0,
                     )
                 }
             }
@@ -821,7 +825,7 @@ class AnimeLibraryScreenModel(
                             SAnime.COMPLETED.toLong() -> 6
                             else -> 7
                         },
-                        flags = displayMode.flag,
+                        flags = 0,
                     )
                 }
             }

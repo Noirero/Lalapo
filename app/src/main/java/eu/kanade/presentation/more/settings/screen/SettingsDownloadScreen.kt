@@ -76,11 +76,6 @@ object SettingsDownloadScreen : SearchableSettings {
                 title = stringResource(R.string.pref_show_downloaded_episode_file_size),
             ),
             // <-- AM (FS)
-            Preference.PreferenceItem.SwitchPreference(
-                pref = downloadPreferences.splitTallImages(),
-                title = stringResource(R.string.split_tall_images),
-                subtitle = stringResource(R.string.split_tall_images_summary),
-            ),
             Preference.PreferenceItem.ListPreference(
                 pref = downloadPreferences.numberOfDownloads(),
                 title = stringResource(R.string.pref_download_slots),

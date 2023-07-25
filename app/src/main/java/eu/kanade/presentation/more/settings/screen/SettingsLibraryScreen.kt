@@ -29,7 +29,6 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.category.manga.interactor.GetMangaCategories
 import tachiyomi.domain.category.anime.interactor.ResetAnimeCategoryFlags
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences

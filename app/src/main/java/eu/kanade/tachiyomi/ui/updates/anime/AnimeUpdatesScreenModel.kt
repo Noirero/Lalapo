@@ -53,10 +53,6 @@ class AnimeUpdatesScreenModel(
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val downloadCache: AnimeDownloadCache = Injekt.get(),
-    // AM (FS) -->
-    private val downloadPreferences: DownloadPreferences = Injekt.get(),
-    private val downloadProvider: AnimeDownloadProvider = Injekt.get(),
-    // <-- AM (FS)
     private val updateEpisode: UpdateEpisode = Injekt.get(),
     private val setSeenStatus: SetSeenStatus = Injekt.get(),
     private val getUpdates: GetAnimeUpdates = Injekt.get(),

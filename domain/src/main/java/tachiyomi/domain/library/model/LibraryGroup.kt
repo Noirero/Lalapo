@@ -1,7 +1,7 @@
 // AM (GU) -->
-package eu.kanade.domain.library.model
+package tachiyomi.domain.library.model
 
-import eu.kanade.tachiyomi.R
+import tachiyomi.domain.R
 
 object LibraryGroup {
 
@@ -18,16 +18,6 @@ object LibraryGroup {
             BY_TRACK_STATUS -> R.string.tracking_status
             UNGROUPED -> R.string.ungrouped
             else -> if (hasCategories) R.string.general_categories else R.string.ungrouped
-        }
-    }
-
-    fun groupTypeDrawableRes(type: Int): Int {
-        return when (type) {
-            BY_STATUS -> R.drawable.ic_progress_clock_24dp
-            BY_TRACK_STATUS -> R.drawable.ic_sync_24dp
-            BY_SOURCE -> R.drawable.ic_browse_filled_24dp
-            UNGROUPED -> R.drawable.ic_ungroup_24dp
-            else -> R.drawable.ic_label_24dp
         }
     }
 }

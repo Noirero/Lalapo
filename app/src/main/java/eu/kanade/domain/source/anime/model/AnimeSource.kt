@@ -15,6 +15,7 @@ val AnimeSource.icon: ImageBitmap?
             ?.toBitmap()
             ?.asImageBitmap()
     }
+
 // AM (BR) -->
 val AnimeSource.installedExtension: AnimeExtension.Installed
     get() {
@@ -23,4 +24,4 @@ val AnimeSource.installedExtension: AnimeExtension.Installed
             .value
             .find { ext -> ext.sources.any { it.id == id } }!!
     }
-// <-- AM (BR)    
+// <-- AM (BR)

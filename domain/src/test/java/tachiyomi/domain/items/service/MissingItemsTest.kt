@@ -32,24 +32,24 @@ class MissingItemsTest {
 
     @Test
     fun `calculateChapterGap returns difference`() {
-        calculateChapterGap(chapter(10f), chapter(9f)) shouldBe 0f
-        calculateChapterGap(chapter(10f), chapter(8f)) shouldBe 1f
-        calculateChapterGap(chapter(10f), chapter(8.5f)) shouldBe 1f
-        calculateChapterGap(chapter(10f), chapter(1.1f)) shouldBe 8f
+        calculateEpisodeGap(chapter(10f), chapter(9f)) shouldBe 0f
+        calculateEpisodeGap(chapter(10f), chapter(8f)) shouldBe 1f
+        calculateEpisodeGap(chapter(10f), chapter(8.5f)) shouldBe 1f
+        calculateEpisodeGap(chapter(10f), chapter(1.1f)) shouldBe 8f
 
-        calculateChapterGap(10f, 9f) shouldBe 0f
-        calculateChapterGap(10f, 8f) shouldBe 1f
-        calculateChapterGap(10f, 8.5f) shouldBe 1f
-        calculateChapterGap(10f, 1.1f) shouldBe 8f
+        calculateEpisodeGap(10f, 9f) shouldBe 0f
+        calculateEpisodeGap(10f, 8f) shouldBe 1f
+        calculateEpisodeGap(10f, 8.5f) shouldBe 1f
+        calculateEpisodeGap(10f, 1.1f) shouldBe 8f
     }
 
     @Test
     fun `calculateChapterGap returns 0 if either are not valid chapter numbers`() {
-        calculateChapterGap(chapter(-1f), chapter(10f)) shouldBe 0
-        calculateChapterGap(chapter(99f), chapter(-1f)) shouldBe 0
+        calculateEpisodeGap(chapter(-1f), chapter(10f)) shouldBe 0
+        calculateEpisodeGap(chapter(99f), chapter(-1f)) shouldBe 0
 
-        calculateChapterGap(-1f, 10f) shouldBe 0
-        calculateChapterGap(99f, -1f) shouldBe 0
+        calculateEpisodeGap(-1f, 10f) shouldBe 0
+        calculateEpisodeGap(99f, -1f) shouldBe 0
     }
 
     private fun chapter(number: Float) = Chapter.create().copy(

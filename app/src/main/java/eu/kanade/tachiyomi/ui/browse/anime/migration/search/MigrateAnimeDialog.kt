@@ -39,7 +39,6 @@ import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.ui.browse.anime.migration.AnimeMigrationFlags
-import eu.kanade.tachiyomi.ui.browse.manga.migration.MangaMigrationFlags
 import kotlinx.coroutines.flow.update
 import tachiyomi.core.preference.Preference
 import tachiyomi.core.preference.PreferenceStore
@@ -145,7 +144,7 @@ internal fun MigrateAnimeDialog(
                                 val selectedIndices = mutableListOf<Int>()
                                 selected.fastForEachIndexed { i, b -> if (b) selectedIndices.add(i) }
                                 val newValue =
-                                    MangaMigrationFlags.getFlagsFromPositions(selectedIndices.toTypedArray())
+                                    AnimeMigrationFlags.getFlagsFromPositions(selectedIndices.toTypedArray())
                                 screenModel.migrateFlags.set(newValue)
                                 screenModel.migrateAnime(oldAnime, newAnime, true)
                                 withUIContext { onPopScreen() }
@@ -290,7 +289,6 @@ internal class MigrateAnimeDialogScreenModel(
 
         // Update custom cover (recheck if custom cover exists)
         if (migrateCustomCover && oldAnime.hasCustomCover()) {
-            @Suppress("BlockingMethodInNonBlockingContext")
             coverCache.setCustomCoverToCache(newAnime, coverCache.getCustomCoverFile(oldAnime.id).inputStream())
         }
 

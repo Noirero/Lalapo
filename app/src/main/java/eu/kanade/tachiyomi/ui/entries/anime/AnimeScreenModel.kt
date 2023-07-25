@@ -26,7 +26,6 @@ import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
-import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
@@ -35,8 +34,10 @@ import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.AniChartApi
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
+import eu.kanade.tachiyomi.util.nullIfEmpty
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
+import eu.kanade.tachiyomi.util.trimOrNull
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.catch
@@ -64,7 +65,10 @@ import tachiyomi.domain.entries.TriStateFilter
 import tachiyomi.domain.entries.anime.interactor.GetAnimeWithEpisodes
 import tachiyomi.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import tachiyomi.domain.entries.anime.interactor.SetAnimeEpisodeFlags
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.AnimeUpdate
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.entries.applyFilter
 import tachiyomi.domain.items.episode.interactor.SetAnimeDefaultEpisodeFlags
 import tachiyomi.domain.items.episode.interactor.UpdateEpisode
@@ -75,6 +79,7 @@ import tachiyomi.domain.items.episode.service.getEpisodeSort
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -106,6 +111,10 @@ class AnimeInfoScreenModel(
     private val getTracks: GetAnimeTracks = Injekt.get(),
     private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
     internal val setAnimeViewerFlags: SetAnimeViewerFlags = Injekt.get(),
+    // AM (CU) -->
+    private val sourceManager: AnimeSourceManager = Injekt.get(),
+    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get(),
+    // <-- AM (CU)
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<AnimeScreenState>(AnimeScreenState.Loading) {
 
@@ -136,10 +145,6 @@ class AnimeInfoScreenModel(
 
     internal val autoOpenTrack: Boolean
         get() = successState?.trackingAvailable == true && trackPreferences.trackOnAddingToLibrary().get()
-
-    // AM (CU) -->
-    private val customAnimeManager: CustomAnimeManager by injectLazy()
-    // <-- AM (CU)
 
     /**
      * Helper function to update the UI state only if it's currently in success state
@@ -182,7 +187,7 @@ class AnimeInfoScreenModel(
             mutableState.update {
                 AnimeScreenState.Success(
                     anime = anime,
-                    source = Injekt.get<AnimeSourceManager>().getOrStub(anime.source),
+                    source = sourceManager.getOrStub(anime.source),
                     isFromSource = isFromSource,
                     episodes = episodes,
                     isRefreshingData = needRefreshInfo || needRefreshEpisode,
@@ -287,8 +292,8 @@ class AnimeInfoScreenModel(
             } else {
                 null
             }
-            customAnimeManager.saveAnimeInfo(
-                CustomAnimeManager.AnimeJson(
+            setCustomAnimeInfo.set(
+                CustomAnimeInfo(
                     state.anime.id,
                     title?.trimOrNull(),
                     author?.trimOrNull(),

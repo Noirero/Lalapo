@@ -41,7 +41,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import tachiyomi.core.util.lang.launchIO
-import tachiyomi.domain.library.service.LibraryPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -136,7 +135,7 @@ private class MoreScreenModel(
         coroutineScope.launchIO {
             combine(
                 AnimeDownloadService.isRunning,
-                animeDownloadManager.queue.updates,
+                animeDownloadManager.queueState,
             ) { isRunningAnime, animeDownloadQueue -> Pair(isRunningAnime, animeDownloadQueue.size) }
                 .collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
                     val isDownloading = isDownloadingAnime

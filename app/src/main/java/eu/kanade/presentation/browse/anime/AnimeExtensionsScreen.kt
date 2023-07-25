@@ -37,10 +37,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
-import eu.kanade.presentation.browse.manga.ExtensionHeader
-import eu.kanade.presentation.browse.manga.ExtensionTrustDialog
+import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.entries.DotSeparatorNoSpaceText
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.extension.InstallStep
@@ -51,10 +52,12 @@ import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsState
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
+import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
@@ -82,7 +85,7 @@ fun AnimeExtensionScreen(
     Scaffold(
         topBar = { scrollBehavior ->
             SearchToolbar(
-                titleContent = { AppBarTitle(stringResource(R.string.label_animeextensions)) },
+                titleContent = { AppBarTitle(stringResource(R.string.label_anime_extensions)) },
                 searchQuery = searchQuery,
                 onChangeSearchQuery = onChangeSearchQuery,
                 actions = {

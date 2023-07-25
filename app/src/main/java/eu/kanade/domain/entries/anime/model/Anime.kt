@@ -17,10 +17,14 @@ val Anime.downloadedFilter: TriStateFilter
             else -> TriStateFilter.DISABLED
         }
     }
+
 fun Anime.episodesFiltered(): Boolean {
     return unseenFilter != TriStateFilter.DISABLED ||
         downloadedFilter != TriStateFilter.DISABLED ||
-        bookmarkedFilter != TriStateFilter.DISABLED
+        bookmarkedFilter != TriStateFilter.DISABLED ||
+        // AM (FM) -->
+        fillermarkedFilter != TriStateFilter.DISABLED
+    // <-- AM (FM)
 }
 fun Anime.forceDownloaded(): Boolean {
     return favorite && Injekt.get<BasePreferences>().downloadedOnly().get()
@@ -39,7 +43,7 @@ fun Anime.toSAnime(): SAnime = SAnime.create().also {
 }
 
 fun Anime.copyFrom(other: SAnime): Anime {
-     // AM (CU) -->
+    // AM (CU) -->
     val author = other.author ?: ogAuthor
     val artist = other.artist ?: ogArtist
     val description = other.description ?: ogDescription

@@ -34,7 +34,7 @@ data class BackupEpisode(
             seen = this@BackupEpisode.seen,
             bookmark = this@BackupEpisode.bookmark,
             // AM (FM) -->
-            fillermark = this@BackupEpisode.fillermark
+            fillermark = this@BackupEpisode.fillermark,
             // <-- AM (FM)
             lastSecondSeen = this@BackupEpisode.lastSecondSeen,
             totalSeconds = this@BackupEpisode.totalSeconds,

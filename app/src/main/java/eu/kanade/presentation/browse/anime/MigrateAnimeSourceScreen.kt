@@ -28,18 +28,6 @@ import eu.kanade.domain.source.service.SetMigrateSorting
 import eu.kanade.presentation.browse.anime.components.AnimeSourceIcon
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.Badge
-import eu.kanade.presentation.components.BadgeGroup
-import eu.kanade.presentation.components.EmptyScreen
-import eu.kanade.presentation.components.LoadingScreen
-import eu.kanade.presentation.components.Scaffold
-import eu.kanade.presentation.components.ScrollbarLazyColumn
-import eu.kanade.presentation.components.Scroller.STICKY_HEADER_KEY_PREFIX
-import eu.kanade.presentation.theme.header
-import eu.kanade.presentation.util.padding
-import eu.kanade.presentation.util.plus
-import eu.kanade.presentation.util.secondaryItemAlpha
-import eu.kanade.presentation.util.topSmallPaddingValues
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceState
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -48,6 +36,7 @@ import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.Scroller.STICKY_HEADER_KEY_PREFIX
+import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen

@@ -1,4 +1,4 @@
-package eu.kanade.presentation.animelib.components
+package eu.kanade.presentation.library
 
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton

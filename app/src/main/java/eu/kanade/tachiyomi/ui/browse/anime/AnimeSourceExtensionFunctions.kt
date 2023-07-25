@@ -9,7 +9,7 @@ import rx.Observable
 
 class AnimeSourceExtensionFunctions {
     companion object {
-        internal var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
+        private var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
         private fun removeDownloadState(extension: AnimeExtension) {
             currentDownloads.update { _map ->

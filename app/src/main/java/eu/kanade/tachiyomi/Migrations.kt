@@ -5,13 +5,12 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.connections.service.ConnectionsPreferences
-import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupCreateJob
+import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
-import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_CLOUDFLARE
@@ -19,7 +18,6 @@ import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.preference.minusAssign
 import eu.kanade.tachiyomi.util.preference.plusAssign
 import eu.kanade.tachiyomi.util.system.DeviceUtil
-import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.workManager
 import tachiyomi.core.preference.PreferenceStore
@@ -50,6 +48,7 @@ object Migrations {
         libraryPreferences: LibraryPreferences,
         playerPreferences: PlayerPreferences,
         backupPreferences: BackupPreferences,
+        trackManager: TrackManager,
         // AM (CN) -->
         connectionsPreferences: ConnectionsPreferences,
         connectionsManager: ConnectionsManager,
@@ -98,14 +97,6 @@ object Migrations {
             }
             if (oldVersion < 44) {
                 // Reset sorting preference if using removed sort by source
-                val oldMangaSortingMode = prefs.getInt(libraryPreferences.libraryMangaSortingMode().key(), 0)
-
-                if (oldMangaSortingMode == 5) { // SOURCE = 5
-                    prefs.edit {
-                        putInt(libraryPreferences.libraryMangaSortingMode().key(), 0) // ALPHABETICAL = 0
-                    }
-                }
-
                 val oldAnimeSortingMode = prefs.getInt(libraryPreferences.libraryAnimeSortingMode().key(), 0)
 
                 if (oldAnimeSortingMode == 5) { // SOURCE = 5
@@ -163,27 +154,11 @@ object Migrations {
             }
             if (oldVersion < 64) {
                 // Set up background tasks
-                if (BuildConfig.INCLUDE_UPDATER) {
-                    AppUpdateJob.setupTask(context)
-                }
                 AnimeLibraryUpdateJob.setupTask(context)
             }
             if (oldVersion < 64) {
-                val oldMangaSortingMode = prefs.getInt(libraryPreferences.libraryMangaSortingMode().key(), 0)
                 val oldAnimeSortingMode = prefs.getInt(libraryPreferences.libraryAnimeSortingMode().key(), 0)
                 val oldSortingDirection = prefs.getBoolean("library_sorting_ascending", true)
-
-                val newMangaSortingMode = when (oldMangaSortingMode) {
-                    0 -> "ALPHABETICAL"
-                    1 -> "LAST_READ"
-                    2 -> "LAST_CHECKED"
-                    3 -> "UNREAD"
-                    4 -> "TOTAL_CHAPTERS"
-                    6 -> "LATEST_CHAPTER"
-                    8 -> "DATE_FETCHED"
-                    7 -> "DATE_ADDED"
-                    else -> "ALPHABETICAL"
-                }
 
                 val newAnimeSortingMode = when (oldAnimeSortingMode) {
                     0 -> "ALPHABETICAL"
@@ -203,13 +178,11 @@ object Migrations {
                 }
 
                 prefs.edit(commit = true) {
-                    remove(libraryPreferences.libraryMangaSortingMode().key())
                     remove(libraryPreferences.libraryAnimeSortingMode().key())
                     remove("library_sorting_ascending")
                 }
 
                 prefs.edit {
-                    putString(libraryPreferences.libraryMangaSortingMode().key(), newMangaSortingMode)
                     putString(libraryPreferences.libraryAnimeSortingMode().key(), newAnimeSortingMode)
                     putString("library_sorting_ascending", newSortingDirection)
                 }
@@ -248,28 +221,19 @@ object Migrations {
             if (oldVersion < 81) {
                 // Handle renamed enum values
                 prefs.edit {
-                    val newMangaSortingMode = when (val oldSortingMode = prefs.getString(libraryPreferences.libraryMangaSortingMode().key(), "ALPHABETICAL")) {
-                        "LAST_CHECKED" -> "LAST_MANGA_UPDATE"
-                        "UNREAD" -> "UNREAD_COUNT"
-                        "DATE_FETCHED" -> "CHAPTER_FETCH_DATE"
-                        else -> oldSortingMode
-                    }
                     val newAnimeSortingMode = when (val oldSortingMode = prefs.getString(libraryPreferences.libraryAnimeSortingMode().key(), "ALPHABETICAL")) {
                         "LAST_CHECKED" -> "LAST_MANGA_UPDATE"
                         "UNREAD" -> "UNREAD_COUNT"
                         "DATE_FETCHED" -> "CHAPTER_FETCH_DATE"
                         else -> oldSortingMode
                     }
-                    putString(libraryPreferences.libraryMangaSortingMode().key(), newMangaSortingMode)
                     putString(libraryPreferences.libraryAnimeSortingMode().key(), newAnimeSortingMode)
                 }
             }
             if (oldVersion < 82) {
                 prefs.edit {
-                    val mangasort = prefs.getString(libraryPreferences.libraryMangaSortingMode().key(), null) ?: return@edit
                     val animesort = prefs.getString(libraryPreferences.libraryAnimeSortingMode().key(), null) ?: return@edit
                     val direction = prefs.getString("library_sorting_ascending", "ASCENDING")!!
-                    putString(libraryPreferences.libraryMangaSortingMode().key(), "$mangasort,$direction")
                     putString(libraryPreferences.libraryAnimeSortingMode().key(), "$animesort,$direction")
                     remove("library_sorting_ascending")
                 }
@@ -376,9 +340,7 @@ object Migrations {
                         }
                     }
                     if (oldVersion < 96) {
-                        MangaLibraryUpdateJob.cancelAllWorks(context)
                         AnimeLibraryUpdateJob.cancelAllWorks(context)
-                        MangaLibraryUpdateJob.setupTask(context)
                         AnimeLibraryUpdateJob.setupTask(context)
                     }
                     if (oldVersion < 97) {
@@ -416,13 +378,6 @@ object Migrations {
                     }
                     if (oldVersion < 100) {
                         BackupCreateJob.setupTask(context)
-                    }
-                    if (oldVersion < 102) {
-                        // This was accidentally visible from the reader settings sheet, but should always
-                        // be disabled in release builds.
-                        if (isReleaseBuildType) {
-                            readerPreferences.longStripSplitWebtoon().set(false)
-                        }
                     }
                     return true
                 }

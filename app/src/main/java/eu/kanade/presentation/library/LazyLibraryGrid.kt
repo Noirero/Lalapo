@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.animelib.components.GlobalSearchItem
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.util.plus
 

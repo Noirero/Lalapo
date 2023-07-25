@@ -18,6 +18,9 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import eu.kanade.presentation.components.NavigatorAdaptiveSheet
+import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
+import eu.kanade.presentation.entries.anime.onDismissEpisodeOptionsDialogScreen
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.anime.AnimeUpdateScreen
 import eu.kanade.presentation.util.Tab
@@ -31,8 +34,8 @@ import eu.kanade.tachiyomi.ui.player.ExternalIntents
 import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesScreenModel
-import eu.kanade.tachiyomi.util.lang.launchIO
 import kotlinx.coroutines.flow.collectLatest
+import tachiyomi.core.util.lang.launchIO
 
 data class UpdatesTab(
     private val fromMore: Boolean,
@@ -117,6 +120,18 @@ data class UpdatesTab(
                     onDismissRequest = onDismissDialog,
                     onConfirm = { screenModel.deleteEpisodes(dialog.toDelete) },
                     isManga = false,
+                )
+            }
+            is AnimeUpdatesScreenModel.Dialog.Options -> {
+                onDismissEpisodeOptionsDialogScreen = onDismissDialog
+                NavigatorAdaptiveSheet(
+                    screen = EpisodeOptionsDialogScreen(
+                        episodeId = dialog.episodeId,
+                        animeId = dialog.animeId,
+                        sourceId = dialog.sourceId,
+                        useExternalDownloader = screenModel.downloadPreferences.useExternalDownloader().get(),
+                    ),
+                    onDismissRequest = onDismissDialog,
                 )
             }
             null -> {}

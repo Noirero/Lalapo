@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
+import androidx.compose.ui.util.fastAny
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -59,7 +60,6 @@ import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.model.display
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
@@ -226,11 +226,21 @@ object AnimeLibraryTab : Tab {
 
         val onDismissRequest = screenModel::closeDialog
         when (val dialog = state.dialog) {
-            is AnimeLibraryScreenModel.Dialog.SettingsSheet -> AnimeLibrarySettingsDialog(
-                onDismissRequest = onDismissRequest,
-                screenModel = settingsScreenModel,
-                category = state.categories[screenModel.activeCategoryIndex],
-            )
+            is AnimeLibraryScreenModel.Dialog.SettingsSheet -> run {
+                val category = state.categories.getOrNull(screenModel.activeCategoryIndex)
+                if (category == null) {
+                    onDismissRequest()
+                    return@run
+                }
+                AnimeLibrarySettingsDialog(
+                    onDismissRequest = onDismissRequest,
+                    screenModel = settingsScreenModel,
+                    category = category,
+                    // AM (GU) -->
+                    hasCategories = state.categories.fastAny { !it.isSystemCategory },
+                    // <-- AM (GU)
+                )
+            }
             is AnimeLibraryScreenModel.Dialog.ChangeCategory -> {
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,

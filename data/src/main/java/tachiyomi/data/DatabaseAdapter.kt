@@ -1,7 +1,7 @@
 package tachiyomi.data
 
 import com.squareup.sqldelight.ColumnAdapter
-import eu.kanade.tachiyomi.source.model.UpdateStrategy
+import eu.kanade.tachiyomi.animesource.model.UpdateStrategy
 import java.util.Date
 
 val dateAdapter = object : ColumnAdapter<Date, Long> {

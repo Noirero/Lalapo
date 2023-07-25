@@ -64,6 +64,3 @@ object ImageUtil {
         WEBP("image/webp", "webp"),
     }
 }
-
-val getDisplayMaxHeightInPx: Int
-    get() = Resources.getSystem().displayMetrics.let { max(it.heightPixels, it.widthPixels) }

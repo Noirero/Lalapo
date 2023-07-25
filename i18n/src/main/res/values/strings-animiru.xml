@@ -9,6 +9,8 @@
     <string name="pref_hide_history_button">Show History in the nav</string>
     <string name="pref_show_downloaded_episode_file_size">Show downloaded episode file size</string>
     <string name="action_display_show_continue_watching_button">Show continue watching button</string>
+    <string name="skipped_reason_not_caught_up_anime">Skipped because there are unseen episodes</string>
+    <string name="skipped_reason_not_started_anime">Skipped because no episodes are seen</string>
 
     <!-- Entry Info Edit -->
     <string name="reset_tags">Reset Tags</string>

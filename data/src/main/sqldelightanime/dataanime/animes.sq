@@ -1,4 +1,4 @@
-import eu.kanade.tachiyomi.source.model.UpdateStrategy;
+import eu.kanade.tachiyomi.animesource.model.UpdateStrategy;
 import java.lang.String;
 import kotlin.collections.List;
 

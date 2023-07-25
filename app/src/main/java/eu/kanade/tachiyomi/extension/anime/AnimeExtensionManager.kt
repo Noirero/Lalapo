@@ -165,7 +165,6 @@ class AnimeExtensionManager(
      */
     private fun updatedInstalledAnimeExtensionsStatuses(availableAnimeExtensions: List<AnimeExtension.Available>) {
         if (availableAnimeExtensions.isEmpty()) {
-            Log.i("YESSIRACK", "ORE KITA")
             preferences.animeExtensionUpdatesCount().set(0)
             return
         }

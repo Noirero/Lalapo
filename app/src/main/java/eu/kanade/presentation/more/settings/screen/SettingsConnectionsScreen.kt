@@ -45,10 +45,10 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.data.connections.ConnectionsService
-import eu.kanade.tachiyomi.util.lang.launchIO
-import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.system.openDiscordLoginActivity
 import eu.kanade.tachiyomi.util.system.toast
+import tachiyomi.core.util.lang.launchIO
+import tachiyomi.core.util.lang.withUIContext
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

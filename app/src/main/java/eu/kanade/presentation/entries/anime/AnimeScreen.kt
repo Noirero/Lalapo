@@ -62,6 +62,7 @@ import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.entries.anime.components.ExpandableAnimeDescription
 import eu.kanade.presentation.entries.anime.components.NextEpisodeAiringListItem
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
@@ -69,12 +70,12 @@ import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreenState
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeItem
 import eu.kanade.tachiyomi.ui.entries.anime.episodeDecimalFormat
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import uy.kohesive.injekt.injectLazy
 import eu.kanade.tachiyomi.util.lang.toRelativeString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.service.missingItemsCount
@@ -87,8 +88,7 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.util.isScrolledToEnd
 import tachiyomi.presentation.core.util.isScrollingUp
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import java.text.DateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit

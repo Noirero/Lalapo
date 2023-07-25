@@ -6,44 +6,26 @@ import android.content.Intent
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
-import eu.kanade.data.items.episode.NoEpisodesException
-import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
-import eu.kanade.domain.category.model.Category
-import eu.kanade.domain.download.service.DownloadPreferences
-import eu.kanade.domain.entries.anime.interactor.GetAnime
-import eu.kanade.domain.entries.anime.interactor.GetLibraryAnime
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
-import eu.kanade.domain.entries.anime.model.Anime
-import eu.kanade.domain.entries.anime.model.toAnimeUpdate
-import eu.kanade.domain.items.episode.interactor.GetEpisodeByAnimeId
+import eu.kanade.domain.entries.anime.model.copyFrom
+import eu.kanade.domain.entries.anime.model.toSAnime
 import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithSource
 import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithTrackServiceTwoWay
-import eu.kanade.domain.items.episode.model.Episode
-import eu.kanade.domain.library.anime.LibraryAnime
-import eu.kanade.domain.library.service.LibraryPreferences
-import eu.kanade.domain.track.anime.interactor.GetAnimeTracks
-import eu.kanade.domain.track.anime.interactor.InsertAnimeTrack
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
-import eu.kanade.tachiyomi.core.preference.getAndSet
+import eu.kanade.tachiyomi.animesource.model.UpdateStrategy
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateService.Companion.start
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.data.preference.ANIME_HAS_UNSEEN
-import eu.kanade.tachiyomi.data.preference.ANIME_NON_COMPLETED
-import eu.kanade.tachiyomi.data.preference.ANIME_NON_SEEN
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
-import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
-import eu.kanade.tachiyomi.source.model.UpdateStrategy
-import eu.kanade.tachiyomi.util.lang.withIOContext
 import eu.kanade.tachiyomi.util.prepUpdateCover
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -51,7 +33,6 @@ import eu.kanade.tachiyomi.util.system.acquireWakeLock
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import eu.kanade.tachiyomi.util.system.getSerializableExtraCompat
 import eu.kanade.tachiyomi.util.system.isServiceRunning
-import eu.kanade.tachiyomi.util.system.logcat
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +47,28 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
+import tachiyomi.core.preference.getAndSet
+import tachiyomi.core.util.lang.withIOContext
+import tachiyomi.core.util.system.logcat
+import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.entries.anime.interactor.GetAnime
+import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
+import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.toAnimeUpdate
+import tachiyomi.domain.items.episode.interactor.GetEpisodeByAnimeId
+import tachiyomi.domain.items.episode.model.Episode
+import tachiyomi.domain.items.episode.model.NoEpisodesException
+import tachiyomi.domain.library.anime.LibraryAnime
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_HAS_UNVIEWED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_COMPLETED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_VIEWED
+import tachiyomi.domain.source.anime.model.AnimeSourceNotInstalledException
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
+import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -339,14 +342,14 @@ class AnimeLibraryUpdateService(
                                     anime,
                                 ) {
                                     when {
-                                        ANIME_NON_COMPLETED in restrictions && anime.status.toInt() == SAnime.COMPLETED ->
+                                        ENTRY_NON_COMPLETED in restrictions && anime.status.toInt() == SAnime.COMPLETED ->
                                             skippedUpdates.add(anime to getString(R.string.skipped_reason_completed))
 
-                                        ANIME_HAS_UNSEEN in restrictions && animelibAnime.unseenCount != 0L ->
-                                            skippedUpdates.add(anime to getString(R.string.skipped_reason_not_caught_up))
+                                        ENTRY_HAS_UNVIEWED in restrictions && animelibAnime.unseenCount != 0L ->
+                                            skippedUpdates.add(anime to getString(R.string.skipped_reason_not_caught_up_anime))
 
-                                        ANIME_NON_SEEN in restrictions && animelibAnime.totalEpisodes > 0L && !animelibAnime.hasStarted ->
-                                            skippedUpdates.add(anime to getString(R.string.skipped_reason_not_started))
+                                        ENTRY_NON_VIEWED in restrictions && animelibAnime.totalEpisodes > 0L && !animelibAnime.hasStarted ->
+                                            skippedUpdates.add(anime to getString(R.string.skipped_reason_not_started_anime))
 
                                         anime.updateStrategy != UpdateStrategy.ALWAYS_UPDATE ->
                                             skippedUpdates.add(anime to getString(R.string.skipped_reason_not_always_update))
@@ -372,7 +375,7 @@ class AnimeLibraryUpdateService(
                                                 val errorMessage = when (e) {
                                                     is NoEpisodesException -> getString(R.string.no_episodes_error)
                                                     // failedUpdates will already have the source, don't need to copy it into the message
-                                                    is AnimeSourceManager.AnimeSourceNotInstalledException -> getString(R.string.loader_not_implemented_error)
+                                                    is AnimeSourceNotInstalledException -> getString(R.string.loader_not_implemented_error)
                                                     else -> e.message
                                                 }
                                                 failedUpdates.add(anime to errorMessage)

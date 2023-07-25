@@ -6,16 +6,8 @@ import android.content.Intent
 import android.provider.Settings
 import android.webkit.WebStorage
 import android.webkit.WebView
-import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,14 +18,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -60,21 +47,17 @@ import eu.kanade.tachiyomi.network.PREF_DOH_NJALLA
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD101
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.network.PREF_DOH_SHECAN
-import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.util.CrashLogUtil
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.Headers
 import tachiyomi.core.util.lang.launchNonCancellable
 import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.core.util.system.logcat
-import tachiyomi.domain.entries.manga.repository.MangaRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -129,9 +112,6 @@ object SettingsAdvancedScreen : SearchableSettings {
             getNetworkGroup(networkPreferences = networkPreferences),
             getLibraryGroup(),
             getExtensionsGroup(basePreferences = basePreferences),
-            // AM (CU) -->
-            getDownloaderGroup(),
-            // <-- AM (CU)
         )
     }
 
@@ -332,23 +312,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                     subtitle = stringResource(R.string.pref_refresh_library_tracking_summary),
                     enabled = trackManager.hasLoggedServices(),
                     onClick = { AnimeLibraryUpdateService.start(context, target = AnimeLibraryUpdateService.Target.TRACKING) },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.pref_reset_viewer_flags),
-                    subtitle = stringResource(R.string.pref_reset_viewer_flags_summary),
-                    onClick = {
-                        scope.launchNonCancellable {
-                            val success = Injekt.get<MangaRepository>().resetMangaViewerFlags()
-                            withUIContext {
-                                val message = if (success) {
-                                    R.string.pref_reset_viewer_flags_success
-                                } else {
-                                    R.string.pref_reset_viewer_flags_error
-                                }
-                                context.toast(message)
-                            }
-                        }
-                    },
                 ),
             ),
         )

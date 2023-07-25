@@ -15,7 +15,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.util.lang.withIOContext
+import tachiyomi.core.util.lang.withIOContext
 import uy.kohesive.injekt.injectLazy
 import kotlin.math.ceil
 import kotlin.math.floor

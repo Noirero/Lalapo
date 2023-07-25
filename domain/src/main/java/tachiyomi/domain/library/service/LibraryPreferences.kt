@@ -6,6 +6,7 @@ import tachiyomi.domain.entries.TriStateFilter
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroup
 
 class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
@@ -14,8 +15,6 @@ class LibraryPreferences(
     // Common options
 
     fun libraryDisplayMode() = preferenceStore.getObject("pref_display_mode_library", LibraryDisplayMode.default, LibraryDisplayMode.Serializer::serialize, LibraryDisplayMode.Serializer::deserialize)
-
-    fun libraryMangaSortingMode() = preferenceStore.getObject("library_sorting_mode", MangaLibrarySort.default, MangaLibrarySort.Serializer::serialize, MangaLibrarySort.Serializer::deserialize)
 
     fun libraryAnimeSortingMode() = preferenceStore.getObject("animelib_sorting_mode", AnimeLibrarySort.default, AnimeLibrarySort.Serializer::serialize, AnimeLibrarySort.Serializer::deserialize)
 

@@ -2,8 +2,8 @@ package tachiyomi.source.local.entries.anime
 
 import android.content.Context
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
-import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.AnimeSource
+import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.SAnime

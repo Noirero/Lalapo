@@ -21,21 +21,20 @@ fun LibraryTabs(
     onTabItemClick: (Int) -> Unit,
 ) {
     // AM (GU) -->
-    @Suppress("NAME_SHADOWING")
-    val currentPageIndex = currentPageIndex.coerceAtMost(categories.lastIndex)
+    val currentPageIndex = pagerState.currentPage.coerceAtMost(categories.lastIndex)
     // <-- AM (GU)
     Column {
         ScrollableTabRow(
-            selectedTabIndex = pagerState.currentPage,
+            selectedTabIndex = currentPageIndex,
             edgePadding = 0.dp,
-            indicator = { TabIndicator(it[pagerState.currentPage], pagerState.currentPageOffsetFraction) },
+            indicator = { TabIndicator(it[currentPageIndex], pagerState.currentPageOffsetFraction) },
             // TODO: use default when width is fixed upstream
             // https://issuetracker.google.com/issues/242879624
             divider = {},
         ) {
             categories.forEachIndexed { index, category ->
                 Tab(
-                    selected = pagerState.currentPage == index,
+                    selected = currentPageIndex == index,
                     onClick = { onTabItemClick(index) },
                     text = {
                         TabText(

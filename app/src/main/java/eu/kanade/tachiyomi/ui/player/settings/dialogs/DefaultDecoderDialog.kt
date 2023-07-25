@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.components.RadioItem
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.player.viewer.HwDecState
-import tachiyomi.presentation.core.components.RadioItem
 
 @Composable
 fun DefaultDecoderDialog(
