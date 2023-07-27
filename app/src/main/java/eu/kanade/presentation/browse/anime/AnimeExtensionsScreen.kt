@@ -85,7 +85,7 @@ fun AnimeExtensionScreen(
     Scaffold(
         topBar = { scrollBehavior ->
             SearchToolbar(
-                titleContent = { AppBarTitle(stringResource(R.string.label_anime_extensions)) },
+                titleContent = { AppBarTitle(stringResource(R.string.label_extensions)) },
                 searchQuery = searchQuery,
                 onChangeSearchQuery = onChangeSearchQuery,
                 actions = {

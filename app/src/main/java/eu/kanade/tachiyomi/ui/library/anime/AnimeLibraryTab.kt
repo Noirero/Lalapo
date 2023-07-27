@@ -59,6 +59,7 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.model.display
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -101,11 +102,28 @@ object AnimeLibraryTab : Tab {
         val snackbarHostState = remember { SnackbarHostState() }
 
         val onClickRefresh: (Category?) -> Boolean = { category ->
-            val started = AnimeLibraryUpdateJob.startNow(context, category)
+            // AM (GU) -->
+            val started = AnimeLibraryUpdateJob.startNow(
+                context = context,
+                category = if (state.groupType == AnimeLibraryGroup.BY_DEFAULT) category else null,
+                group = state.groupType,
+                groupExtra = when (state.groupType) {
+                    AnimeLibraryGroup.BY_DEFAULT -> null
+                    AnimeLibraryGroup.BY_SOURCE, AnimeLibraryGroup.BY_TRACK_STATUS -> category?.id?.toString()
+                    AnimeLibraryGroup.BY_STATUS -> category?.id?.minus(1)?.toString()
+                    else -> null
+                },
+            )
+
             scope.launch {
-                val msgRes = if (started) R.string.updating_category else R.string.update_already_running
+                val msgRes = when {
+                    !started -> R.string.update_already_running
+                    category != null -> R.string.updating_category
+                    else -> R.string.updating_library
+                }
                 snackbarHostState.showSnackbar(context.getString(msgRes))
             }
+            // <-- AM (GU)
             started
         }
 

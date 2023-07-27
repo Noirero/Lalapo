@@ -3,7 +3,7 @@ package tachiyomi.domain.library.model
 
 import tachiyomi.domain.R
 
-object LibraryGroup {
+object AnimeLibraryGroup {
 
     const val BY_DEFAULT = 0
     const val BY_SOURCE = 1

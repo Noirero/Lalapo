@@ -61,7 +61,7 @@ import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
-import tachiyomi.domain.library.model.LibraryGroup
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
@@ -127,7 +127,7 @@ class AnimeLibraryScreenModel(
                     // <-- AM (GU)
                     .applyFilters(tracks, loggedInTrackServices)
                     // AM (GU)>
-                    .applySort(sort.takeIf { groupType != LibraryGroup.BY_DEFAULT })
+                    .applySort(sort.takeIf { groupType != AnimeLibraryGroup.BY_DEFAULT })
                     .mapValues { (_, value) ->
                         if (searchQuery != null) {
                             // Filter query
@@ -427,8 +427,8 @@ class AnimeLibraryScreenModel(
     // AM (GU) -->
     private fun AnimeLibraryMap.applyGrouping(groupType: Int): AnimeLibraryMap {
         val items = when (groupType) {
-            LibraryGroup.BY_DEFAULT -> this
-            LibraryGroup.UNGROUPED -> {
+            AnimeLibraryGroup.BY_DEFAULT -> this
+            AnimeLibraryGroup.UNGROUPED -> {
                 mapOf(
                     Category(
                         0,
@@ -442,7 +442,7 @@ class AnimeLibraryScreenModel(
             else -> {
                 getGroupedAnimeItems(
                     groupType = groupType,
-                    libraryManga = this.values.flatten().distinctBy { it.libraryAnime.anime.id },
+                    libraryAnime = this.values.flatten().distinctBy { it.libraryAnime.anime.id },
                 )
             }
         }
@@ -753,13 +753,13 @@ class AnimeLibraryScreenModel(
     // AM (GM) -->
     private fun getGroupedAnimeItems(
         groupType: Int,
-        libraryManga: List<AnimeLibraryItem>,
+        libraryAnime: List<AnimeLibraryItem>,
     ): AnimeLibraryMap {
         val context = preferences.context
         return when (groupType) {
-            LibraryGroup.BY_TRACK_STATUS -> {
+            AnimeLibraryGroup.BY_TRACK_STATUS -> {
                 val tracks = runBlocking { getAnimeTracks.await() }.groupBy { it.animeId }
-                libraryManga.groupBy { item ->
+                libraryAnime.groupBy { item ->
                     val status = tracks[item.libraryAnime.anime.id]?.firstNotNullOfOrNull { track ->
                         TrackStatus.parseTrackerStatus(track.syncId, track.status)
                     } ?: TrackStatus.OTHER
@@ -777,9 +777,9 @@ class AnimeLibraryScreenModel(
                     )
                 }
             }
-            LibraryGroup.BY_SOURCE -> {
+            AnimeLibraryGroup.BY_SOURCE -> {
                 val sources: List<Long>
-                libraryManga.groupBy { item ->
+                libraryAnime.groupBy { item ->
                     item.libraryAnime.anime.source
                 }.also {
                     sources = it.keys
@@ -802,7 +802,7 @@ class AnimeLibraryScreenModel(
                 }
             }
             else -> {
-                libraryManga.groupBy { item ->
+                libraryAnime.groupBy { item ->
                     item.libraryAnime.anime.status
                 }.mapKeys {
                     Category(
@@ -862,7 +862,7 @@ class AnimeLibraryScreenModel(
         val showAnimeContinueButton: Boolean = false,
         val dialog: Dialog? = null,
         // AM (GU) -->
-        val groupType: Int = LibraryGroup.BY_DEFAULT,
+        val groupType: Int = AnimeLibraryGroup.BY_DEFAULT,
         // <-- AM (GU)
     ) {
         private val libraryCount by lazy {

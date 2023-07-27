@@ -31,6 +31,8 @@ import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
+import eu.kanade.tachiyomi.data.track.TrackStatus
+import eu.kanade.tachiyomi.util.nullIfBlank
 import eu.kanade.tachiyomi.util.prepUpdateCover
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -62,6 +64,8 @@ import tachiyomi.domain.items.episode.interactor.GetEpisodeByAnimeId
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.model.NoEpisodesException
 import tachiyomi.domain.library.anime.LibraryAnime
+import tachiyomi.domain.library.model.AnimeLibraryGroup
+import tachiyomi.domain.library.model.GroupAnimeLibraryMode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_BATTERY_NOT_LOW
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
@@ -134,7 +138,11 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         }
 
         val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
-        addAnimeToQueue(categoryId)
+        // AM (GU) -->
+        val group = inputData.getInt(KEY_GROUP, AnimeLibraryGroup.BY_DEFAULT)
+        val groupExtra = inputData.getString(KEY_GROUP_EXTRA)
+        addAnimeToQueue(categoryId, group, groupExtra)
+        // <-- AM (GU)
 
         return withIOContext {
             try {
@@ -171,12 +179,21 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
      *
      * @param categoryId the ID of the category to update, or -1 if no category specified.
      */
-    private fun addAnimeToQueue(categoryId: Long) {
+    // AM (GU)>
+    private fun addAnimeToQueue(categoryId: Long, group: Int, groupExtra: String?) {
         val libraryAnime = runBlocking { getLibraryAnime.await() }
+
+        // AM (GU) -->
+        val groupLibraryUpdateType = libraryPreferences.groupLibraryUpdateType().get()
+
 
         val listToUpdate = if (categoryId != -1L) {
             libraryAnime.filter { it.category == categoryId }
-        } else {
+        } else if (
+            group == AnimeLibraryGroup.BY_DEFAULT ||
+            groupLibraryUpdateType == GroupAnimeLibraryMode.GLOBAL ||
+            (groupLibraryUpdateType == GroupAnimeLibraryMode.ALL_BUT_UNGROUPED && group == AnimeLibraryGroup.UNGROUPED)
+        ) {
             val categoriesToUpdate = libraryPreferences.animeLibraryUpdateCategories().get().map { it.toLong() }
             val includedAnime = if (categoriesToUpdate.isNotEmpty()) {
                 libraryAnime.filter { it.category in categoriesToUpdate }
@@ -194,7 +211,39 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
             includedAnime
                 .filterNot { it.anime.id in excludedAnimeIds }
                 .distinctBy { it.anime.id }
+        } else {
+            when (group) {
+                AnimeLibraryGroup.BY_TRACK_STATUS -> {
+                    val trackingExtra = groupExtra?.toIntOrNull() ?: -1
+                    val tracks = runBlocking { getTracks.await() }.groupBy { it.animeId }
+
+                    libraryAnime.filter { (anime) ->
+                        val status = tracks[anime.id]?.firstNotNullOfOrNull { track ->
+                            TrackStatus.parseTrackerStatus(track.syncId, track.status)
+                        } ?: TrackStatus.OTHER
+                        status.int == trackingExtra
+                    }
+                }
+                AnimeLibraryGroup.BY_SOURCE -> {
+                    val sourceExtra = groupExtra?.nullIfBlank()?.toIntOrNull()
+                    val source = libraryAnime.map { it.anime.source }
+                        .distinct()
+                        .sorted()
+                        .getOrNull(sourceExtra ?: -1)
+
+                    if (source != null) libraryAnime.filter { it.anime.source == source } else emptyList()
+                }
+                AnimeLibraryGroup.BY_STATUS -> {
+                    val statusExtra = groupExtra?.toLongOrNull() ?: -1
+                    libraryAnime.filter {
+                        it.anime.status == statusExtra
+                    }
+                }
+                AnimeLibraryGroup.UNGROUPED -> libraryAnime
+                else -> libraryAnime
+            }
         }
+        // <-- AM (GU)
 
         animeToUpdate = listToUpdate
             .sortedBy { it.anime.title }
@@ -534,6 +583,14 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
          */
         private const val KEY_TARGET = "target"
 
+        // AM (GU) -->
+        /**
+         * Key for group to update.
+         */
+        const val KEY_GROUP = "group"
+        const val KEY_GROUP_EXTRA = "group_extra"
+        // <-- AM (GU)
+
         fun cancelAllWorks(context: Context) {
             context.workManager.cancelAllWorkByTag(TAG)
         }
@@ -573,6 +630,10 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
             context: Context,
             category: Category? = null,
             target: Target = Target.EPISODES,
+            // AM (GU) -->
+            group: Int = AnimeLibraryGroup.BY_DEFAULT,
+            groupExtra: String? = null,
+            // <-- AM (GU)
         ): Boolean {
             val wm = context.workManager
             if (wm.isRunning(TAG)) {
@@ -583,6 +644,10 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
             val inputData = workDataOf(
                 KEY_CATEGORY to category?.id,
                 KEY_TARGET to target.name,
+                // AM (GU) -->
+                KEY_GROUP to group,
+                KEY_GROUP_EXTRA to groupExtra,
+                // <-- AM (GU)
             )
             val request = OneTimeWorkRequestBuilder<AnimeLibraryUpdateJob>()
                 .addTag(TAG)

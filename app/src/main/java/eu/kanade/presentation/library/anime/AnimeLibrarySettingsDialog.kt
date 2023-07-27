@@ -32,8 +32,8 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.TriStateFilter
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.domain.library.model.display
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -133,12 +133,13 @@ private fun ColumnScope.FilterPage(
         onClick = { screenModel.toggleFilter(LibraryPreferences::filterCompletedAnime) },
     )
 
-    when (screenModel.trackServices.size) {
+    val trackServices = remember { screenModel.trackServices }
+    when (trackServices.size) {
         0 -> {
             // No trackers
         }
         1 -> {
-            val service = screenModel.trackServices[0]
+            val service = trackServices[0]
             val filterTracker by screenModel.libraryPreferences.filterTrackedAnime(service.id.toInt()).collectAsState()
             TriStateItem(
                 label = stringResource(R.string.action_filter_tracked),
@@ -148,7 +149,7 @@ private fun ColumnScope.FilterPage(
         }
         else -> {
             HeadingItem(R.string.action_filter_tracked)
-            screenModel.trackServices.map { service ->
+            trackServices.map { service ->
                 val filterTracker by screenModel.libraryPreferences.filterTrackedAnime(service.id.toInt()).collectAsState()
                 TriStateItem(
                     label = stringResource(service.nameRes()),
@@ -167,12 +168,12 @@ private fun ColumnScope.SortPage(
 ) {
     // AM (GU) -->
     val globalSortMode by screenModel.libraryPreferences.libraryAnimeSortingMode().collectAsState()
-    val sortingMode = if (screenModel.grouping == LibraryGroup.BY_DEFAULT) {
+    val sortingMode = if (screenModel.grouping == AnimeLibraryGroup.BY_DEFAULT) {
         category.sort.type
     } else {
         globalSortMode.type
     }
-    val sortDescending = if (screenModel.grouping == LibraryGroup.BY_DEFAULT) {
+    val sortDescending = if (screenModel.grouping == AnimeLibraryGroup.BY_DEFAULT) {
         category.sort.isAscending
     } else {
         globalSortMode.isAscending
@@ -310,10 +311,10 @@ data class GroupMode(
 
 private fun groupTypeDrawableRes(type: Int): Int {
     return when (type) {
-        LibraryGroup.BY_STATUS -> R.drawable.ic_progress_clock_24dp
-        LibraryGroup.BY_TRACK_STATUS -> R.drawable.ic_sync_24dp
-        LibraryGroup.BY_SOURCE -> R.drawable.ic_browse_filled_24dp
-        LibraryGroup.UNGROUPED -> R.drawable.ic_ungroup_24dp
+        AnimeLibraryGroup.BY_STATUS -> R.drawable.ic_progress_clock_24dp
+        AnimeLibraryGroup.BY_TRACK_STATUS -> R.drawable.ic_sync_24dp
+        AnimeLibraryGroup.BY_SOURCE -> R.drawable.ic_browse_filled_24dp
+        AnimeLibraryGroup.UNGROUPED -> R.drawable.ic_ungroup_24dp
         else -> R.drawable.ic_label_24dp
     }
 }
@@ -325,19 +326,19 @@ private fun ColumnScope.GroupPage(
 ) {
     val groups = remember(hasCategories, screenModel.trackServices) {
         buildList {
-            add(LibraryGroup.BY_DEFAULT)
-            add(LibraryGroup.BY_SOURCE)
-            add(LibraryGroup.BY_STATUS)
+            add(AnimeLibraryGroup.BY_DEFAULT)
+            add(AnimeLibraryGroup.BY_SOURCE)
+            add(AnimeLibraryGroup.BY_STATUS)
             if (screenModel.trackServices.isNotEmpty()) {
-                add(LibraryGroup.BY_TRACK_STATUS)
+                add(AnimeLibraryGroup.BY_TRACK_STATUS)
             }
             if (hasCategories) {
-                add(LibraryGroup.UNGROUPED)
+                add(AnimeLibraryGroup.UNGROUPED)
             }
         }.map {
             GroupMode(
                 it,
-                LibraryGroup.groupTypeStringRes(it, hasCategories),
+                AnimeLibraryGroup.groupTypeStringRes(it, hasCategories),
                 groupTypeDrawableRes(it),
             )
         }

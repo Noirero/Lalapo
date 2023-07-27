@@ -13,8 +13,8 @@ import eu.kanade.domain.items.episode.model.copyFrom
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY_MASK
-import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CHAPTER
-import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CHAPTER_MASK
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXTENSIONS
@@ -218,7 +218,7 @@ class BackupManager(
         )
 
         // Check if user wants chapter information in backup
-        if (options and BACKUP_CHAPTER_MASK == BACKUP_CHAPTER) {
+        if (options and BACKUP_EPISODE_MASK == BACKUP_EPISODE) {
             // Backup all the chapters
             val episodes = animeHandler.awaitList { episodesQueries.getEpisodesByAnimeId(anime.id, backupEpisodeMapper) }
             if (episodes.isNotEmpty()) {

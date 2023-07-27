@@ -31,6 +31,7 @@ import kotlinx.coroutines.runBlocking
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.ResetAnimeCategoryFlags
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.library.model.GroupAnimeLibraryMode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_BATTERY_NOT_LOW
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
@@ -204,6 +205,17 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                     onClick = { showAnimeDialog = true },
                 ),
+                // AM (GU) -->
+                Preference.PreferenceItem.ListPreference(
+                    pref = libraryPreferences.groupLibraryUpdateType(),
+                    title = stringResource(R.string.library_group_updates),
+                    entries = mapOf(
+                        GroupAnimeLibraryMode.GLOBAL to stringResource(R.string.library_group_updates_global),
+                        GroupAnimeLibraryMode.ALL_BUT_UNGROUPED to stringResource(R.string.library_group_updates_all_but_ungrouped),
+                        GroupAnimeLibraryMode.ALL to stringResource(R.string.library_group_updates_all),
+                    ),
+                ),
+                // <-- AM (GU)
                 Preference.PreferenceItem.SwitchPreference(
                     pref = libraryPreferences.autoUpdateMetadata(),
                     title = stringResource(R.string.pref_library_update_refresh_metadata),

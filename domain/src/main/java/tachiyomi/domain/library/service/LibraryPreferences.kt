@@ -5,8 +5,9 @@ import tachiyomi.core.preference.getEnum
 import tachiyomi.domain.entries.TriStateFilter
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
+import tachiyomi.domain.library.model.AnimeLibraryGroup
+import tachiyomi.domain.library.model.GroupAnimeLibraryMode
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryGroup
 
 class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
@@ -135,7 +136,9 @@ class LibraryPreferences(
     }
 
     // AM (GU) -->
-    fun groupLibraryBy() = preferenceStore.getInt("group_library_by", LibraryGroup.BY_DEFAULT)
+    fun groupLibraryUpdateType() = preferenceStore.getEnum("group_library_update_type", GroupAnimeLibraryMode.GLOBAL)
+
+    fun groupLibraryBy() = preferenceStore.getInt("group_library_by", AnimeLibraryGroup.BY_DEFAULT)
     // <-- AM (GU)
 
     companion object {

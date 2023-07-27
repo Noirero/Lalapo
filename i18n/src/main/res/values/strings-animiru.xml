@@ -78,5 +78,10 @@
     <string name="ungrouped">Ungrouped</string>
     <string name="not_tracked">Not tracked</string>
     <string name="group">Group</string>
+    <string name="library_group_updates">Library dynamic category updates</string>
+    <string name="library_group_updates_global">Always launch global updates</string>
+    <string name="library_group_updates_all_but_ungrouped">Launch global updates only for ungrouped, category updates for others</string>
+    <string name="library_group_updates_all">Launch category updates all the time</string>
+
 
 </resources>

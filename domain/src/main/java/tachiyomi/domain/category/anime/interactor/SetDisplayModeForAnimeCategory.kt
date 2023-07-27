@@ -3,8 +3,8 @@ package tachiyomi.domain.category.anime.interactor
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategoryUpdate
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.domain.library.model.plus
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -15,7 +15,7 @@ class SetDisplayModeForAnimeCategory(
 
     suspend fun await(categoryId: Long, display: LibraryDisplayMode) {
         // AM (GU) -->
-        if (preferences.groupLibraryBy().get() != LibraryGroup.BY_DEFAULT) {
+        if (preferences.groupLibraryBy().get() != AnimeLibraryGroup.BY_DEFAULT) {
             preferences.libraryDisplayMode().set(display)
             return
         }
