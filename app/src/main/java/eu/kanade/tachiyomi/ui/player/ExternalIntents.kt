@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.player
 
-import android.app.Activity
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
@@ -19,7 +18,6 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
-import eu.kanade.tachiyomi.core.Constants.REQUEST_EXTERNAL
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
@@ -30,10 +28,12 @@ import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.system.isOnline
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import logcat.LogPriority
+import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.core.util.system.logcat
@@ -246,6 +246,7 @@ class ExternalIntents {
         return intent.apply {
             putExtra("title", anime.title + " - " + episode.name)
             putExtra("position", getLastSecondSeen().toInt())
+            putExtra("return_result", true)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             if (isSupportedPlayer) putExtra("secure_uri", true)
         }
@@ -296,9 +297,12 @@ class ExternalIntents {
     private fun getComponent(packageName: String): ComponentName? {
         return when (packageName) {
             MPV_PLAYER -> ComponentName(packageName, "$packageName.MPVActivity")
-            MX_PLAYER_FREE, MX_PLAYER_PRO -> ComponentName(packageName, "$packageName.ActivityScreen")
+            MX_PLAYER, MX_PLAYER_FREE, MX_PLAYER_PRO -> ComponentName(packageName, "$packageName.ActivityScreen")
             VLC_PLAYER -> ComponentName(packageName, "$packageName.gui.video.VideoPlayerActivity")
             MPV_REMOTE -> ComponentName(packageName, "$packageName.MainActivity")
+            JUST_PLAYER -> ComponentName(packageName, "$packageName.PlayerActivity")
+            NEXT_PLAYER -> ComponentName(packageName, "$packageName.feature.player.PlayerActivity")
+            X_PLAYER -> ComponentName(packageName, "com.inshot.xplayer.activities.PlayerActivity")
             else -> null
         }
     }
@@ -321,55 +325,53 @@ class ExternalIntents {
     /**
      * Saves the episode's data based on whats returned by the external player.
      *
-     * @param requestCode the code sent to ensure that the returned [data] is from an external player.
-     * @param resultCode the code sent to ensure that the returned [data] is valid.
-     * @param data the [Intent] that contains the episode's position and duration.
+     * @param intent the [Intent] that contains the episode's position and duration.
      */
+    @OptIn(DelicateCoroutinesApi::class)
     @Suppress("DEPRECATION")
-    suspend fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    fun onActivityResult(intent: Intent?) {
         // AM (DC) -->
         DiscordRPCService.setDiscordPage(DiscordRPCService.lastUsedPage)
         // <-- AM (DC)
-        if (requestCode == REQUEST_EXTERNAL && resultCode == Activity.RESULT_OK) {
-            val anime = anime
-            val currentExtEpisode = episode
-            val currentPosition: Long
-            val duration: Long
-            val cause = data!!.getStringExtra("end_by") ?: ""
+        val data = intent ?: return
+        val anime = anime
+        val currentExtEpisode = episode
+        val currentPosition: Long
+        val duration: Long
+        val cause = data.getStringExtra("end_by") ?: ""
 
-            // Check for position and duration as Long values
-            if (cause.isNotEmpty()) {
-                val positionExtra = data.extras?.get("position")
-                currentPosition = if (positionExtra is Int) {
-                    positionExtra.toLong()
-                } else {
-                    positionExtra as? Long ?: 0L
-                }
-                val durationExtra = data.extras?.get("duration")
-                duration = if (durationExtra is Int) {
-                    durationExtra.toLong()
-                } else {
-                    durationExtra as? Long ?: 0L
-                }
+        // Check for position and duration as Long values
+        if (cause.isNotEmpty()) {
+            val positionExtra = data.extras?.get("position")
+            currentPosition = if (positionExtra is Int) {
+                positionExtra.toLong()
             } else {
-                if (data.extras?.get("extra_position") != null) {
-                    currentPosition = data.getLongExtra("extra_position", 0L)
-                    duration = data.getLongExtra("extra_duration", 0L)
-                } else {
-                    currentPosition = data.getIntExtra("position", 0).toLong()
-                    duration = data.getIntExtra("duration", 0).toLong()
-                }
+                positionExtra as? Long ?: 0L
             }
+            val durationExtra = data.extras?.get("duration")
+            duration = if (durationExtra is Int) {
+                durationExtra.toLong()
+            } else {
+                durationExtra as? Long ?: 0L
+            }
+        } else {
+            if (data.extras?.get("extra_position") != null) {
+                currentPosition = data.getLongExtra("extra_position", 0L)
+                duration = data.getLongExtra("extra_duration", 0L)
+            } else {
+                currentPosition = data.getIntExtra("position", 0).toLong()
+                duration = data.getIntExtra("duration", 0).toLong()
+            }
+        }
 
-            // Update the episode's progress and history
-            withIOContext {
-                if (cause == "playback_completion" || (currentPosition == duration && duration == 0L)) {
-                    saveEpisodeProgress(currentExtEpisode, anime, currentExtEpisode.totalSeconds, currentExtEpisode.totalSeconds)
-                } else {
-                    saveEpisodeProgress(currentExtEpisode, anime, currentPosition, duration)
-                }
-                saveEpisodeHistory(currentExtEpisode)
+        // Update the episode's progress and history
+        launchIO {
+            if (cause == "playback_completion" || (currentPosition == duration && duration == 0L)) {
+                saveEpisodeProgress(currentExtEpisode, anime, currentExtEpisode.totalSeconds, currentExtEpisode.totalSeconds)
+            } else {
+                saveEpisodeProgress(currentExtEpisode, anime, currentPosition, duration)
             }
+            saveEpisodeHistory(currentExtEpisode)
         }
     }
 
@@ -524,7 +526,7 @@ class ExternalIntents {
 
     companion object {
 
-        private val externalIntents: ExternalIntents by injectLazy()
+        val externalIntents: ExternalIntents by injectLazy()
 
         /**
          * Used to direct the [Intent] of a chosen episode to an external player.
@@ -540,8 +542,12 @@ class ExternalIntents {
 }
 
 // List of supported external players and their packages
-private const val MPV_PLAYER = "is.xyz.mpv"
-private const val MX_PLAYER_FREE = "com.mxtech.videoplayer.ad"
-private const val MX_PLAYER_PRO = "com.mxtech.videoplayer.pro"
-private const val VLC_PLAYER = "org.videolan.vlc"
-private const val MPV_REMOTE = "com.husudosu.mpvremote"
+const val MPV_PLAYER = "is.xyz.mpv"
+const val MX_PLAYER = "com.mxtech.videoplayer"
+const val MX_PLAYER_FREE = "com.mxtech.videoplayer.ad"
+const val MX_PLAYER_PRO = "com.mxtech.videoplayer.pro"
+const val VLC_PLAYER = "org.videolan.vlc"
+const val MPV_REMOTE = "com.husudosu.mpvremote"
+const val JUST_PLAYER = "com.brouken.player"
+const val NEXT_PLAYER = "dev.anilbeesetti.nextplayer"
+const val X_PLAYER = "video.player.videoplayer"

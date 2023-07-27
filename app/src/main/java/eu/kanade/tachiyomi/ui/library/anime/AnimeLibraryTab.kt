@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -47,8 +46,6 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.ExternalIntents
-import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -127,21 +124,10 @@ object AnimeLibraryTab : Tab {
             started
         }
 
-        fun openEpisodeInternal(context: Context, animeId: Long, episodeId: Long) {
-            context.startActivity(PlayerActivity.newIntent(context, animeId, episodeId))
-        }
-
-        suspend fun openEpisodeExternal(context: Context, animeId: Long, episodeId: Long) {
-            context.startActivity(ExternalIntents.newIntent(context, animeId, episodeId))
-        }
-
         suspend fun openEpisode(episode: Episode) {
             val playerPreferences: PlayerPreferences by injectLazy()
-            if (playerPreferences.alwaysUseExternalPlayer().get()) {
-                openEpisodeExternal(context, episode.animeId, episode.id)
-            } else {
-                openEpisodeInternal(context, episode.animeId, episode.id)
-            }
+            val extPlayer = playerPreferences.alwaysUseExternalPlayer().get()
+            MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
         }
 
         Scaffold(

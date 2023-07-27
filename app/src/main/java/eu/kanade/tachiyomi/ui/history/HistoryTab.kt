@@ -26,8 +26,6 @@ import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.ExternalIntents
-import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -135,12 +133,7 @@ data class HistoryTab(
 
     private suspend fun openEpisode(context: Context, episode: Episode?) {
         if (episode != null) {
-            val intent = if (externalPlayer) {
-                ExternalIntents.newIntent(context, episode.animeId, episode.id)
-            } else {
-                PlayerActivity.newIntent(context, episode.animeId, episode.id)
-            }
-            context.startActivity(intent)
+            MainActivity.startPlayerActivity(context, episode.animeId, episode.id, externalPlayer)
         } else {
             snackbarHostState.showSnackbar(context.getString(R.string.no_next_episode))
         }

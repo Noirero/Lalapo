@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.updates
 
-import android.content.Context
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -30,8 +29,6 @@ import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.ExternalIntents
-import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesScreenModel
 import kotlinx.coroutines.flow.collectLatest
@@ -66,21 +63,11 @@ data class UpdatesTab(
         val state by screenModel.state.collectAsState()
         val scope = rememberCoroutineScope()
 
-        fun openEpisodeInternal(context: Context, animeId: Long, episodeId: Long) {
-            context.startActivity(PlayerActivity.newIntent(context, animeId, episodeId))
-        }
-
-        suspend fun openEpisodeExternal(context: Context, animeId: Long, episodeId: Long) {
-            context.startActivity(ExternalIntents.newIntent(context, animeId, episodeId))
-        }
-
         suspend fun openEpisode(updateItem: AnimeUpdatesItem, altPlayer: Boolean = false) {
             val update = updateItem.update
-            if (externalPlayer != altPlayer) {
-                openEpisodeExternal(context, update.animeId, update.episodeId)
-            } else {
-                openEpisodeInternal(context, update.animeId, update.episodeId)
-            }
+            val extPlayer = externalPlayer != altPlayer
+            MainActivity.startPlayerActivity(context, update.animeId, update.episodeId, extPlayer)
+
         }
 
         // AM (UH) -->

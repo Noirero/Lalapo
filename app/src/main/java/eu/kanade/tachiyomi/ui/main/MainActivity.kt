@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.main
 
 import android.animation.ValueAnimator
+import android.app.Activity
 import android.app.SearchManager
 import android.app.assist.AssistContent
 import android.content.Context
@@ -12,6 +13,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -83,12 +87,12 @@ import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.player.ExternalIntents
+import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.setComposeContent
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
@@ -99,7 +103,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -119,8 +122,6 @@ class MainActivity : BaseActivity() {
     private val episodeCache: EpisodeCache by injectLazy()
 
     private val animeDownloadCache: AnimeDownloadCache by injectLazy()
-
-    private val externalIntents: ExternalIntents by injectLazy()
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false
@@ -322,6 +323,12 @@ class MainActivity : BaseActivity() {
             startService(Intent(this@MainActivity, DiscordRPCService::class.java))
         }
         // <-- AM (DC)
+
+        externalPlayerResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                ExternalIntents.externalIntents.onActivityResult(result.data)
+            }
+        }
     }
 
     override fun onProvideAssistContent(outContent: AssistContent) {
@@ -524,13 +531,6 @@ class MainActivity : BaseActivity() {
         registerSecureActivity(this)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        launchIO { externalIntents.onActivityResult(requestCode, resultCode, data) }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
     companion object {
         // Splash screen
         private const val SPLASH_MIN_DURATION = 500 // ms
@@ -541,5 +541,15 @@ class MainActivity : BaseActivity() {
         const val INTENT_ANIMESEARCH = "eu.kanade.tachiyomi.ANIMESEARCH"
         const val INTENT_SEARCH_QUERY = "query"
         const val INTENT_SEARCH_FILTER = "filter"
+
+        var externalPlayerResult: ActivityResultLauncher<Intent>? = null
+
+        suspend fun startPlayerActivity(context: Context, animeId: Long, episodeId: Long, extPlayer: Boolean) {
+            if (extPlayer) {
+                externalPlayerResult?.launch(ExternalIntents.newIntent(context, animeId, episodeId)) ?: return
+            } else {
+                context.startActivity(PlayerActivity.newIntent(context, animeId, episodeId))
+            }
+        }
     }
 }
