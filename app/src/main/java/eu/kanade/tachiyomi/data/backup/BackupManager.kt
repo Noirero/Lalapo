@@ -13,10 +13,10 @@ import eu.kanade.domain.items.episode.model.copyFrom
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CATEGORY_MASK
-import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE
-import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_CUSTOM_INFO_MASK
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE
+import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EPISODE_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXTENSIONS
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXTENSIONS_MASK
 import eu.kanade.tachiyomi.data.backup.BackupConst.BACKUP_EXT_PREFS

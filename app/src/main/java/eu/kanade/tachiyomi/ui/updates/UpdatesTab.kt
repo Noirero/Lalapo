@@ -67,7 +67,6 @@ data class UpdatesTab(
             val update = updateItem.update
             val extPlayer = externalPlayer != altPlayer
             MainActivity.startPlayerActivity(context, update.animeId, update.episodeId, extPlayer)
-
         }
 
         // AM (UH) -->

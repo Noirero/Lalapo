@@ -186,7 +186,6 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         // AM (GU) -->
         val groupLibraryUpdateType = libraryPreferences.groupLibraryUpdateType().get()
 
-
         val listToUpdate = if (categoryId != -1L) {
             libraryAnime.filter { it.category == categoryId }
         } else if (
