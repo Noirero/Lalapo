@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.stats
 
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,12 +11,11 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.LoadingScreen
-import eu.kanade.presentation.components.Scaffold
 import eu.kanade.presentation.more.stats.AnimeStatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.stats.anime.AnimeStatsScreenModel
+import tachiyomi.presentation.core.screens.LoadingScreen
 
 class StatsScreen : Screen {
 
@@ -34,11 +34,10 @@ class StatsScreen : Screen {
         }
 
         Scaffold(
-            topBar = { scrollBehavior ->
+            topBar = {
                 AppBar(
                     title = stringResource(R.string.label_stats),
                     navigateUp = navigator::pop,
-                    scrollBehavior = scrollBehavior,
                 )
             },
         ) { paddingValues ->

@@ -1,16 +1,15 @@
 // AM (CN) -->
 package eu.kanade.tachiyomi.data.connections
 
-import android.content.Context
 import eu.kanade.tachiyomi.data.connections.discord.Discord
 
-class ConnectionsManager(context: Context) {
+class ConnectionsManager {
 
     companion object {
         const val DISCORD = 201L
     }
 
-    val discord = Discord(context, DISCORD)
+    val discord = Discord(DISCORD)
 
     val services = listOf(discord)
 

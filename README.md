@@ -1,6 +1,6 @@
 | Stable | Discord Server | Translate Aniyomi |    
 |--------|----------------|-------------------|
-[![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv) | [![Translation status](https://hosted.weblate.org/widgets/aniyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/aniyomi/?utm_source=widget) |
+| [![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv) | [![Translation status](https://hosted.weblate.org/widgets/aniyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/aniyomi/?utm_source=widget) |
 
 # ![app icon](.github/readme-images/app-icon.png)Animiru
 Animiru is an unofficial fork of [Aniyomi](https://github.com/jmir1/aniyomi), which is yet another unofficial fork of the free and open source manga reader [Tachiyomi](https://github.com/tachiyomiorg/tachiyomi)
@@ -13,7 +13,7 @@ Animiru strips the manga capabilities of Aniyomi, to make it an anime only app f
 Features include:
 
 * Everything you know and love about Tachiyomi but for anime
-  * Watching anime from [a variety of sources](https://github.com/jmir1/aniyomi-extensions)
+  * Watching anime from [a variety of sources](https://github.com/aniyomiorg/aniyomi-extensions)
   * Local watching of downloaded content
   * A configurable player with inbuilt PiP, Playback options and other settings.
   * Tracker support: [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.io/), [Shikimori](https://shikimori.one), and [Bangumi](https://bgm.tv/)
@@ -57,7 +57,7 @@ DON'T: https://github.com/tachiyomiorg/tachiyomi/issues/75
 * Write a detailed issue, explaining what it should do or how. Avoid writing just "like X app does"
 * Include screenshot (if needed)
 
-Source requests should be created at https://github.com/jmir1/aniyomi-extensions, they do not belong in this repository.
+Source requests should be created at https://github.com/aniyomiorg/aniyomi-extensions, they do not belong in this repository.
 </details>
 
 <details><summary>Contributing</summary>

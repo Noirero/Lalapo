@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.updates
 
-import android.content.Context
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -18,6 +17,9 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import eu.kanade.presentation.components.NavigatorAdaptiveSheet
+import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
+import eu.kanade.presentation.entries.anime.onDismissEpisodeOptionsDialogScreen
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.anime.AnimeUpdateScreen
 import eu.kanade.presentation.util.Tab
@@ -27,12 +29,10 @@ import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.ExternalIntents
-import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesScreenModel
-import eu.kanade.tachiyomi.util.lang.launchIO
 import kotlinx.coroutines.flow.collectLatest
+import tachiyomi.core.util.lang.launchIO
 
 data class UpdatesTab(
     private val fromMore: Boolean,
@@ -63,21 +63,10 @@ data class UpdatesTab(
         val state by screenModel.state.collectAsState()
         val scope = rememberCoroutineScope()
 
-        fun openEpisodeInternal(context: Context, animeId: Long, episodeId: Long) {
-            context.startActivity(PlayerActivity.newIntent(context, animeId, episodeId))
-        }
-
-        suspend fun openEpisodeExternal(context: Context, animeId: Long, episodeId: Long) {
-            context.startActivity(ExternalIntents.newIntent(context, animeId, episodeId))
-        }
-
         suspend fun openEpisode(updateItem: AnimeUpdatesItem, altPlayer: Boolean = false) {
             val update = updateItem.update
-            if (externalPlayer != altPlayer) {
-                openEpisodeExternal(context, update.animeId, update.episodeId)
-            } else {
-                openEpisodeInternal(context, update.animeId, update.episodeId)
-            }
+            val extPlayer = externalPlayer != altPlayer
+            MainActivity.startPlayerActivity(context, update.animeId, update.episodeId, extPlayer)
         }
 
         // AM (UH) -->
@@ -117,6 +106,18 @@ data class UpdatesTab(
                     onDismissRequest = onDismissDialog,
                     onConfirm = { screenModel.deleteEpisodes(dialog.toDelete) },
                     isManga = false,
+                )
+            }
+            is AnimeUpdatesScreenModel.Dialog.Options -> {
+                onDismissEpisodeOptionsDialogScreen = onDismissDialog
+                NavigatorAdaptiveSheet(
+                    screen = EpisodeOptionsDialogScreen(
+                        episodeId = dialog.episodeId,
+                        animeId = dialog.animeId,
+                        sourceId = dialog.sourceId,
+                        useExternalDownloader = screenModel.downloadPreferences.useExternalDownloader().get(),
+                    ),
+                    onDismissRequest = onDismissDialog,
                 )
             }
             null -> {}

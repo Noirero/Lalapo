@@ -11,9 +11,7 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Looper
 import android.webkit.WebView
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -24,7 +22,6 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.disk.DiskCache
 import coil.util.DebugLogger
-import eu.kanade.data.handlers.anime.AnimeDatabaseHandler
 import eu.kanade.domain.DomainModule
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.UiPreferences
@@ -34,26 +31,24 @@ import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
 import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
 import eu.kanade.tachiyomi.data.coil.AnimeKeyer
-import eu.kanade.tachiyomi.data.coil.DomainAnimeKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.glance.anime.AnimeUpdatesGridGlanceWidget
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
-import eu.kanade.tachiyomi.util.system.logcat
-import eu.kanade.tachiyomi.util.system.notification
+import eu.kanade.tachiyomi.util.system.cancelNotification
+import eu.kanade.tachiyomi.util.system.notify
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.LogcatLogger
 import org.conscrypt.Conscrypt
+import tachiyomi.core.util.system.logcat
+import tachiyomi.presentation.widget.entries.anime.TachiyomiAnimeWidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -87,7 +82,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(DomainModule())
 
-        setupAcra()
         setupNotificationChannels()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -95,10 +89,12 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         // Show notification to disable Incognito Mode when it's enabled
         basePreferences.incognitoMode().changes()
             .onEach { enabled ->
-                val notificationManager = NotificationManagerCompat.from(this)
                 if (enabled) {
                     disableIncognitoReceiver.register()
-                    val notification = notification(Notifications.CHANNEL_INCOGNITO_MODE) {
+                    notify(
+                        Notifications.ID_INCOGNITO_MODE,
+                        Notifications.CHANNEL_INCOGNITO_MODE,
+                    ) {
                         setContentTitle(getString(R.string.pref_incognito_mode))
                         setContentText(getString(R.string.notification_incognito_text))
                         setSmallIcon(R.drawable.ic_glasses_24dp)
@@ -112,10 +108,9 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
                         )
                         setContentIntent(pendingIntent)
                     }
-                    notificationManager.notify(Notifications.ID_INCOGNITO_MODE, notification)
                 } else {
                     disableIncognitoReceiver.unregister()
-                    notificationManager.cancel(Notifications.ID_INCOGNITO_MODE)
+                    cancelNotification(Notifications.ID_INCOGNITO_MODE)
                 }
             }
             .launchIn(ProcessLifecycleOwner.get().lifecycleScope)
@@ -124,17 +119,9 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
         // Updates widget update
 
-        Injekt.get<AnimeDatabaseHandler>()
-            .subscribeToList { animeupdatesViewQueries.animeupdates(after = AnimeUpdatesGridGlanceWidget.DateLimit.timeInMillis) }
-            .drop(1)
-            .distinctUntilChanged()
-            .onEach {
-                val manager = GlanceAppWidgetManager(this)
-                if (manager.getGlanceIds(AnimeUpdatesGridGlanceWidget::class.java).isNotEmpty()) {
-                    AnimeUpdatesGridGlanceWidget().loadData(it)
-                }
-            }
-            .launchIn(ProcessLifecycleOwner.get().lifecycleScope)
+        with(TachiyomiAnimeWidgetManager(Injekt.get())) {
+            init(ProcessLifecycleOwner.get().lifecycleScope)
+        }
 
         if (!LogcatLogger.isInstalled && networkPreferences.verboseLogging().get()) {
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.VERBOSE))
@@ -152,11 +139,9 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
                     add(GifDecoder.Factory())
                 }
                 add(TachiyomiImageDecoder.Factory())
-                add(AnimeCoverFetcher.Factory(lazy(callFactoryInit), lazy(diskCacheInit)))
-                add(AnimeCoverFetcher.DomainAnimeFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
+                add(AnimeCoverFetcher.AnimeFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeCoverFetcher.AnimeCoverFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeKeyer())
-                add(DomainAnimeKeyer())
                 add(AnimeCoverKeyer())
             }
             callFactory(callFactoryInit)
@@ -200,10 +185,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
             }
         }
         return super.getPackageName()
-    }
-
-    protected open fun setupAcra() {
-        // removed acra
     }
 
     private fun setupNotificationChannels() {

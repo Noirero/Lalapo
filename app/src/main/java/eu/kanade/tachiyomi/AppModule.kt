@@ -8,24 +8,13 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import dataanime.Animehistory
 import dataanime.Animes
-import eu.kanade.data.dateAdapter
-import eu.kanade.data.handlers.anime.AndroidAnimeDatabaseHandler
-import eu.kanade.data.handlers.anime.AnimeDatabaseHandler
-import eu.kanade.data.listOfStringsAdapter
-import eu.kanade.data.updateStrategyAdapter
-import eu.kanade.domain.backup.service.BackupPreferences
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.connections.service.ConnectionsPreferences
-import eu.kanade.domain.download.service.DownloadPreferences
-import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.anime.store.DelayedAnimeTrackingStore
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.preference.AndroidPreferenceStore
-import eu.kanade.tachiyomi.core.preference.PreferenceStore
-import eu.kanade.tachiyomi.core.provider.AndroidBackupFolderProvider
-import eu.kanade.tachiyomi.core.provider.AndroidDownloadFolderProvider
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
@@ -33,15 +22,13 @@ import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
-import eu.kanade.tachiyomi.data.library.anime.CustomAnimeManager
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
-import eu.kanade.tachiyomi.mi.AnimeDatabase
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
-import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
+import eu.kanade.tachiyomi.source.anime.AndroidAnimeSourceManager
 import eu.kanade.tachiyomi.ui.player.ExternalIntents
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.system.isDevFlavor
@@ -51,6 +38,22 @@ import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.UnknownChildHandler
 import nl.adaptivity.xmlutil.serialization.XML
+import tachiyomi.core.preference.PreferenceStore
+import tachiyomi.core.provider.AndroidBackupFolderProvider
+import tachiyomi.core.provider.AndroidDownloadFolderProvider
+import tachiyomi.data.dateAdapter
+import tachiyomi.data.handlers.anime.AndroidAnimeDatabaseHandler
+import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
+import tachiyomi.data.listOfStringsAdapter
+import tachiyomi.data.updateStrategyAdapter
+import tachiyomi.domain.backup.service.BackupPreferences
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.entries.anime.interactor.GetCustomAnimeInfo
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.mi.data.AnimeDatabase
+import tachiyomi.source.local.image.anime.LocalAnimeCoverManager
+import tachiyomi.source.local.io.anime.LocalAnimeSourceFileSystem
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingleton
@@ -122,10 +125,10 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { AnimeCoverCache(app) }
 
-        addSingletonFactory { NetworkHelper(app) }
+        addSingletonFactory { NetworkHelper(app, get()) }
         addSingletonFactory { JavaScriptEngine(app) }
 
-        addSingletonFactory { AnimeSourceManager(app, get(), get()) }
+        addSingletonFactory<AnimeSourceManager> { AndroidAnimeSourceManager(app, get(), get()) }
 
         addSingletonFactory { AnimeExtensionManager(app) }
 
@@ -138,15 +141,14 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { ImageSaver(app) }
 
+        addSingletonFactory { LocalAnimeSourceFileSystem(app) }
+        addSingletonFactory { LocalAnimeCoverManager(app, get()) }
+
         addSingletonFactory { ExternalIntents() }
 
         // AM (CN) -->
-        addSingletonFactory { ConnectionsManager(app) }
+        addSingletonFactory { ConnectionsManager() }
         // AM (CN) <--
-
-        // AM (CU) -->
-        addSingletonFactory { CustomAnimeManager(app) }
-        // <-- AM (CU)
 
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(app).execute {
@@ -159,7 +161,7 @@ class AppModule(val app: Application) : InjektModule {
             get<AnimeDownloadManager>()
 
             // AM (CU) -->
-            get<CustomAnimeManager>()
+            get<GetCustomAnimeInfo>()
             // <-- AM (CU)
         }
     }
@@ -216,9 +218,7 @@ class PreferenceModule(val application: Application) : InjektModule {
             BasePreferences(application, get())
         }
         // AM (CN) -->
-        addSingletonFactory {
-            ConnectionsPreferences(get())
-        }
+        addSingletonFactory { ConnectionsPreferences(get()) }
         // AM (CN) <--
     }
 }

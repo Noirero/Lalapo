@@ -6,16 +6,8 @@ import android.content.Intent
 import android.provider.Settings
 import android.webkit.WebStorage
 import android.webkit.WebView
-import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,29 +18,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.entries.anime.interactor.GetAllAnime
-import eu.kanade.domain.items.episode.interactor.GetEpisodeByAnimeId
-import eu.kanade.domain.library.service.LibraryPreferences
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateService
-import eu.kanade.tachiyomi.data.preference.PreferenceValues
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
@@ -64,22 +47,18 @@ import eu.kanade.tachiyomi.network.PREF_DOH_NJALLA
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD101
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.network.PREF_DOH_SHECAN
-import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
 import eu.kanade.tachiyomi.util.CrashLogUtil
-import eu.kanade.tachiyomi.util.lang.launchNonCancellable
-import eu.kanade.tachiyomi.util.lang.withUIContext
-import eu.kanade.tachiyomi.util.storage.DiskUtil
-import eu.kanade.tachiyomi.util.system.DeviceUtil
-import eu.kanade.tachiyomi.util.system.isPackageInstalled
-import eu.kanade.tachiyomi.util.system.logcat
+import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.Headers
-import rikka.sui.Sui
+import tachiyomi.core.util.lang.launchNonCancellable
+import tachiyomi.core.util.lang.withUIContext
+import tachiyomi.core.util.system.logcat
+import tachiyomi.domain.library.service.LibraryPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -94,6 +73,8 @@ object SettingsAdvancedScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
+        val navigator = LocalNavigator.currentOrThrow
+
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val networkPreferences = remember { Injekt.get<NetworkPreferences>() }
 
@@ -122,14 +103,15 @@ object SettingsAdvancedScreen : SearchableSettings {
                     true
                 },
             ),
+            Preference.PreferenceItem.TextPreference(
+                title = stringResource(R.string.pref_debug_info),
+                onClick = { navigator.push(DebugInfoScreen) },
+            ),
             getBackgroundActivityGroup(),
             getDataGroup(),
             getNetworkGroup(networkPreferences = networkPreferences),
             getLibraryGroup(),
             getExtensionsGroup(basePreferences = basePreferences),
-            // AM (CU) -->
-            getDownloaderGroup(),
-            // <-- AM (CU)
         )
     }
 
@@ -137,7 +119,6 @@ object SettingsAdvancedScreen : SearchableSettings {
     private fun getBackgroundActivityGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
         val uriHandler = LocalUriHandler.current
-        val navigator = LocalNavigator.currentOrThrow
 
         return Preference.PreferenceGroup(
             title = stringResource(R.string.label_background_activity),
@@ -168,10 +149,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = "Don't kill my app!",
                     subtitle = stringResource(R.string.about_dont_kill_my_app),
                     onClick = { uriHandler.openUri("https://dontkillmyapp.com/") },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.pref_worker_info),
-                    onClick = { navigator.push(WorkerInfoScreen) },
                 ),
             ),
         )
@@ -245,7 +222,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(R.string.pref_clear_cookies),
                     onClick = {
-                        networkHelper.cookieManager.removeAll()
+                        networkHelper.cookieJar.removeAll()
                         context.toast(R.string.cookies_cleared)
                     },
                 ),
@@ -296,10 +273,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                     pref = userAgentPref,
                     title = stringResource(R.string.pref_user_agent_string),
                     onValueChanged = {
-                        if (it.isBlank()) {
-                            context.toast(R.string.error_user_agent_string_blank)
-                            return@EditTextPreference false
-                        }
                         try {
                             // OkHttp checks for valid values internally
                             Headers.Builder().add("User-Agent", it)
@@ -307,7 +280,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                             context.toast(R.string.error_user_agent_string_invalid)
                             return@EditTextPreference false
                         }
-                        context.toast(R.string.requires_app_restart)
                         true
                     },
                 ),
@@ -351,6 +323,7 @@ object SettingsAdvancedScreen : SearchableSettings {
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
         val uriHandler = LocalUriHandler.current
+        val extensionInstallerPref = basePreferences.extensionInstaller()
         var shizukuMissing by rememberSaveable { mutableStateOf(false) }
 
         if (shizukuMissing) {
@@ -380,19 +353,13 @@ object SettingsAdvancedScreen : SearchableSettings {
             title = stringResource(R.string.label_extensions),
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
-                    pref = basePreferences.extensionInstaller(),
+                    pref = extensionInstallerPref,
                     title = stringResource(R.string.ext_installer_pref),
-                    entries = PreferenceValues.ExtensionInstaller.values()
-                        .run {
-                            if (DeviceUtil.isMiui) {
-                                filter { it != PreferenceValues.ExtensionInstaller.PACKAGEINSTALLER }
-                            } else {
-                                toList()
-                            }
-                        }.associateWith { stringResource(it.titleResId) },
+                    entries = extensionInstallerPref.entries
+                        .associateWith { stringResource(it.titleResId) },
                     onValueChanged = {
-                        if (it == PreferenceValues.ExtensionInstaller.SHIZUKU &&
-                            !(context.isPackageInstalled("moe.shizuku.privileged.api") || Sui.isSui())
+                        if (it == BasePreferences.ExtensionInstaller.SHIZUKU &&
+                            !context.isShizukuInstalled
                         ) {
                             shizukuMissing = true
                             false
@@ -404,149 +371,4 @@ object SettingsAdvancedScreen : SearchableSettings {
             ),
         )
     }
-
-    // AM (CU) -->
-    @Composable
-    fun CleanupDownloadsDialog(
-        onDismissRequest: () -> Unit,
-        onCleanupDownloads: (removeRead: Boolean, removeNonFavorite: Boolean) -> Unit,
-    ) {
-        val context = LocalContext.current
-        val options = remember { context.resources.getStringArray(R.array.clean_up_downloads).toList() }
-        val selection = remember {
-            options.toMutableStateList()
-        }
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = { Text(text = stringResource(R.string.clean_up_downloaded_episodes)) },
-            text = {
-                LazyColumn {
-                    options.forEachIndexed { index, option ->
-                        item {
-                            val isSelected = index == 0 || selection.contains(option)
-                            val onSelectionChanged = {
-                                when (!isSelected) {
-                                    true -> selection.add(option)
-                                    false -> selection.remove(option)
-                                }
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onSelectionChanged() },
-                            ) {
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = { onSelectionChanged() },
-                                )
-                                Text(
-                                    text = option,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(start = 12.dp),
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            properties = DialogProperties(
-                usePlatformDefaultWidth = true,
-            ),
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val removeRead = options[1] in selection
-                        val removeNonFavorite = options[2] in selection
-                        onCleanupDownloads(removeRead, removeNonFavorite)
-                    },
-                ) {
-                    Text(text = stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(android.R.string.cancel))
-                }
-            },
-        )
-    }
-
-    @Composable
-    private fun getDownloaderGroup(): Preference.PreferenceGroup {
-        val scope = rememberCoroutineScope()
-        val context = LocalContext.current
-        var dialogOpen by remember { mutableStateOf(false) }
-        if (dialogOpen) {
-            CleanupDownloadsDialog(
-                onDismissRequest = { dialogOpen = false },
-                onCleanupDownloads = { removeSeen, removeNonFavorite ->
-                    dialogOpen = false
-                    if (job?.isActive == true) return@CleanupDownloadsDialog
-                    context.toast(R.string.starting_cleanup)
-                    job = scope.launchNonCancellable {
-                        val animeList = Injekt.get<GetAllAnime>().await()
-                        val downloadManager: AnimeDownloadManager = Injekt.get()
-                        var foldersCleared = 0
-                        Injekt.get<AnimeSourceManager>().getOnlineSources().forEach { source ->
-                            val animeFolders = downloadManager.getAnimeFolders(source)
-                            val sourceAnime = animeList
-                                .asSequence()
-                                .filter { it.source == source.id }
-                                // AM (CU)>
-                                .map { it to DiskUtil.buildValidFilename(it.ogTitle) }
-                                .toList()
-
-                            animeFolders.forEach animeFolder@{ animeFolder ->
-                                val anime =
-                                    sourceAnime.find { (_, folderName) -> folderName == animeFolder.name }?.first
-                                if (anime == null) {
-                                    // download is orphaned delete it
-                                    foldersCleared += 1 + (
-                                        animeFolder.listFiles()
-                                            .orEmpty().size
-                                        )
-                                    animeFolder.delete()
-                                } else {
-                                    val episodeList = Injekt.get<GetEpisodeByAnimeId>().await(anime.id)
-                                    foldersCleared += downloadManager.cleanupEpisodes(
-                                        episodeList,
-                                        anime,
-                                        source,
-                                        removeSeen,
-                                        removeNonFavorite,
-                                    )
-                                }
-                            }
-                        }
-                        withUIContext {
-                            val cleanupString =
-                                if (foldersCleared == 0) {
-                                    context.getString(R.string.no_folders_to_cleanup)
-                                } else {
-                                    context.resources!!.getQuantityString(
-                                        R.plurals.cleanup_done,
-                                        foldersCleared,
-                                        foldersCleared,
-                                    )
-                                }
-                            context.toast(cleanupString, Toast.LENGTH_LONG)
-                        }
-                    }
-                },
-            )
-        }
-        return Preference.PreferenceGroup(
-            title = stringResource(R.string.download_notifier_downloader_title),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.clean_up_downloaded_episodes),
-                    subtitle = stringResource(R.string.delete_unused_episodes),
-                    onClick = { dialogOpen = true },
-                ),
-            ),
-        )
-    }
-    private var job: Job? = null
-    // <-- AM (CU)
 }

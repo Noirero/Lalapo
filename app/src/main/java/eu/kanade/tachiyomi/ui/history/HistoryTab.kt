@@ -17,7 +17,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.presentation.history.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.HistoryDeleteDialog
 import eu.kanade.presentation.history.anime.AnimeHistoryScreen
@@ -27,11 +26,10 @@ import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.ExternalIntents
-import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+import tachiyomi.domain.items.episode.model.Episode
 
 private val snackbarHostState = SnackbarHostState()
 
@@ -135,12 +133,7 @@ data class HistoryTab(
 
     private suspend fun openEpisode(context: Context, episode: Episode?) {
         if (episode != null) {
-            val intent = if (externalPlayer) {
-                ExternalIntents.newIntent(context, episode.animeId, episode.id)
-            } else {
-                PlayerActivity.newIntent(context, episode.animeId, episode.id)
-            }
-            context.startActivity(intent)
+            MainActivity.startPlayerActivity(context, episode.animeId, episode.id, externalPlayer)
         } else {
             snackbarHostState.showSnackbar(context.getString(R.string.no_next_episode))
         }

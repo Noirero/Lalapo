@@ -14,13 +14,13 @@ import eu.kanade.presentation.category.AnimeCategoryScreen
 import eu.kanade.presentation.category.components.CategoryCreateDialog
 import eu.kanade.presentation.category.components.CategoryDeleteDialog
 import eu.kanade.presentation.category.components.CategoryRenameDialog
-import eu.kanade.presentation.components.LoadingScreen
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryDialog
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryEvent
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenModel
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenState
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
+import tachiyomi.presentation.core.screens.LoadingScreen
 
 class CategoryScreen : Screen {
 
@@ -57,12 +57,14 @@ class CategoryScreen : Screen {
                 CategoryCreateDialog(
                     onDismissRequest = screenModel::dismissDialog,
                     onCreate = { screenModel.createCategory(it) },
+                    categories = successState.categories,
                 )
             }
             is AnimeCategoryDialog.Rename -> {
                 CategoryRenameDialog(
                     onDismissRequest = screenModel::dismissDialog,
                     onRename = { screenModel.renameCategory(dialog.category, it) },
+                    categories = successState.categories,
                     category = dialog.category,
                 )
             }

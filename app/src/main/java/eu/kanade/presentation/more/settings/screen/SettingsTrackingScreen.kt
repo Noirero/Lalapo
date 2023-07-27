@@ -51,10 +51,11 @@ import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
 import eu.kanade.tachiyomi.data.track.simkl.SimklApi
-import eu.kanade.tachiyomi.util.lang.launchIO
-import eu.kanade.tachiyomi.util.lang.withUIContext
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import tachiyomi.core.util.lang.launchIO
+import tachiyomi.core.util.lang.withUIContext
+import tachiyomi.presentation.core.components.material.padding
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -68,7 +69,7 @@ object SettingsTrackingScreen : SearchableSettings {
     @Composable
     override fun RowScope.AppBarAction() {
         val uriHandler = LocalUriHandler.current
-        IconButton(onClick = { uriHandler.openUri("https://tachiyomi.org/help/guides/tracking/") }) {
+        IconButton(onClick = { uriHandler.openUri("https://aniyomi.org/help/guides/tracking/") }) {
             Icon(
                 imageVector = Icons.Outlined.HelpOutline,
                 contentDescription = stringResource(R.string.tracking_guide),
@@ -194,7 +195,7 @@ object SettingsTrackingScreen : SearchableSettings {
                         label = { Text(text = stringResource(uNameStringRes)) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         singleLine = true,
-                        isError = inputError && username.text.isEmpty(),
+                        isError = inputError && !processing,
                     )
 
                     var hidePassword by remember { mutableStateOf(true) }
@@ -225,21 +226,16 @@ object SettingsTrackingScreen : SearchableSettings {
                             imeAction = ImeAction.Done,
                         ),
                         singleLine = true,
-                        isError = inputError && password.text.isEmpty(),
+                        isError = inputError && !processing,
                     )
                 }
             },
             confirmButton = {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !processing,
+                    enabled = !processing && username.text.isNotBlank() && password.text.isNotBlank(),
                     onClick = {
-                        if (username.text.isEmpty() || password.text.isEmpty()) {
-                            inputError = true
-                            return@Button
-                        }
                         scope.launchIO {
-                            inputError = false
                             processing = true
                             val result = checkLogin(
                                 context = context,
@@ -247,6 +243,7 @@ object SettingsTrackingScreen : SearchableSettings {
                                 username = username.text,
                                 password = password.text,
                             )
+                            inputError = !result
                             if (result) onDismissRequest()
                             processing = false
                         }
@@ -292,7 +289,7 @@ object SettingsTrackingScreen : SearchableSettings {
                 )
             },
             confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.tiny)) {
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = onDismissRequest,

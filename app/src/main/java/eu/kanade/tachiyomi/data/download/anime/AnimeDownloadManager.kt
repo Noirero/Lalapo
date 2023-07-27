@@ -1,23 +1,28 @@
 package eu.kanade.tachiyomi.data.download.anime
 
 import android.content.Context
-import android.util.Log
-import com.hippo.unifile.UniFile
-import eu.kanade.domain.category.anime.interactor.GetAnimeCategories
-import eu.kanade.domain.download.service.DownloadPreferences
-import eu.kanade.domain.entries.anime.model.Anime
-import eu.kanade.domain.items.episode.model.Episode
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
-import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownloadQueue
-import eu.kanade.tachiyomi.source.anime.AnimeSourceManager
-import eu.kanade.tachiyomi.util.lang.launchIO
-import eu.kanade.tachiyomi.util.system.logcat
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import rx.Observable
+import tachiyomi.core.util.lang.launchIO
+import tachiyomi.core.util.system.logcat
+import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.items.episode.model.Episode
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -45,28 +50,21 @@ class AnimeDownloadManager(
      */
     private val pendingDeleter = AnimeDownloadPendingDeleter(context)
 
-    /**
-     * Downloads queue, where the pending episodes are stored.
-     */
-    val queue: AnimeDownloadQueue
-        get() = downloader.queue
+    val queueState
+        get() = downloader.queueState
+
+    // For use by DownloadService only
+    fun downloaderStart() = downloader.start()
+    fun downloaderStop(reason: String? = null) = downloader.stop(reason)
+
+    val isDownloaderRunning
+        get() = AnimeDownloadService.isRunning
 
     /**
      * Tells the downloader to begin downloads.
-     *
-     * @return true if it's started, false otherwise (empty queue).
      */
-    fun startDownloads(): Boolean {
-        return downloader.start()
-    }
-
-    /**
-     * Tells the downloader to stop downloads.
-     *
-     * @param reason an optional reason for being stopped, used to notify the user.
-     */
-    fun stopDownloads(reason: String? = null) {
-        downloader.stop(reason)
+    fun startDownloads() {
+        AnimeDownloadService.start(context)
     }
 
     /**
@@ -74,15 +72,15 @@ class AnimeDownloadManager(
      */
     fun pauseDownloads() {
         downloader.pause()
+        downloader.stop()
     }
 
     /**
      * Empties the download queue.
-     *
-     * @param isNotification value that determines if status is set (needed for view updates)
      */
-    fun clearQueue(isNotification: Boolean = false) {
-        downloader.clearQueue(isNotification)
+    fun clearQueue() {
+        downloader.clearQueue()
+        downloader.stop()
     }
 
     /**
@@ -92,7 +90,7 @@ class AnimeDownloadManager(
      * @param episodeId the episode to check.
      */
     fun getQueuedDownloadOrNull(episodeId: Long): AnimeDownload? {
-        return queue.find { it.episode.id == episodeId }
+        return queueState.value.find { it.episode.id == episodeId }
     }
 
     fun startDownloadNow(episodeId: Long?) {
@@ -100,11 +98,11 @@ class AnimeDownloadManager(
         val download = getQueuedDownloadOrNull(episodeId)
         // If not in queue try to start a new download
         val toAdd = download ?: runBlocking { AnimeDownload.fromEpisodeId(episodeId) } ?: return
-        val queue = queue.toMutableList()
+        val queue = queueState.value.toMutableList()
         download?.let { queue.remove(it) }
         queue.add(0, toAdd)
         reorderQueue(queue)
-        if (downloader.isPaused()) {
+        if (!downloader.isRunning) {
             if (AnimeDownloadService.isRunning(context)) {
                 downloader.start()
             } else {
@@ -119,22 +117,7 @@ class AnimeDownloadManager(
      * @param downloads value to set the download queue to
      */
     fun reorderQueue(downloads: List<AnimeDownload>) {
-        if (downloader.queue.queue == downloads) return
-        val wasRunning = downloader.isRunning
-
-        if (downloads.isEmpty()) {
-            AnimeDownloadService.stop(context)
-            queue.clear()
-            return
-        }
-
-        downloader.pause()
-        queue.clear()
-        queue.addAll(downloads)
-
-        if (wasRunning) {
-            downloader.start()
-        }
+        downloader.updateQueue(downloads)
     }
 
     /**
@@ -142,28 +125,14 @@ class AnimeDownloadManager(
      *
      * @param anime the anime of the episodes.
      * @param episodes the list of episodes to enqueue.
-     * @param autoStart whether to start the downloader after enqueing the episodes.
+     * @param autoStart whether to start the downloader after enqueuing the episodes.
+     * @param alt whether to use the alternative downloader
      */
-    fun downloadEpisodes(anime: Anime, episodes: List<Episode>, autoStart: Boolean = true, alt: Boolean = false) {
+    fun downloadEpisodes(anime: Anime, episodes: List<Episode>, autoStart: Boolean = true, alt: Boolean = false, video: Video? = null) {
         // AM (FM) -->
         val filteredEpisodes = getEpisodesToDownload(episodes)
         // <-- AM (FM)
-        downloader.queueEpisodes(anime, filteredEpisodes, autoStart, alt)
-    }
-
-    /**
-     * Tells the downloader to enqueue the given list of episodes
-     * using the alternative method of downloading.
-     *
-     * @param anime the anime of the episodes.
-     * @param episodes the list of episodes to enqueue.
-     * @param autoStart whether to start the downloader after enqueing the episodes.
-     */
-    fun downloadEpisodesAlt(anime: Anime, episodes: List<Episode>, autoStart: Boolean = true) {
-        // AM (FM) -->
-        val filteredEpisodes = getEpisodesToDownload(episodes)
-        // <-- AM (FM)
-        downloader.queueEpisodes(anime, filteredEpisodes, autoStart, true)
+        downloader.queueEpisodes(anime, filteredEpisodes, autoStart, alt, video)
     }
 
     /**
@@ -173,7 +142,7 @@ class AnimeDownloadManager(
      */
     fun addDownloadsToStartOfQueue(downloads: List<AnimeDownload>) {
         if (downloads.isEmpty()) return
-        queue.toMutableList().apply {
+        queueState.value.toMutableList().apply {
             addAll(0, downloads)
             reorderQueue(this)
         }
@@ -279,7 +248,7 @@ class AnimeDownloadManager(
     fun deleteAnime(anime: Anime, source: AnimeSource, removeQueued: Boolean = true) {
         launchIO {
             if (removeQueued) {
-                queue.remove(anime)
+                downloader.removeFromQueue(anime)
             }
             // AM (CU) -->
             provider.findAnimeDir(anime.ogTitle, source)?.delete()
@@ -300,72 +269,16 @@ class AnimeDownloadManager(
             downloader.pause()
         }
 
-        queue.remove(episodes)
+        downloader.removeFromQueue(episodes)
 
         if (wasRunning) {
-            if (queue.isEmpty()) {
-                AnimeDownloadService.stop(context)
+            if (queueState.value.isEmpty()) {
                 downloader.stop()
-            } else if (queue.isNotEmpty()) {
+            } else if (queueState.value.isNotEmpty()) {
                 downloader.start()
             }
         }
     }
-
-    // AM (CU) -->
-    /**
-     * return the list of all anime folders
-     */
-    fun getAnimeFolders(source: AnimeSource): List<UniFile> {
-        return provider.findSourceDir(source)?.listFiles()?.toList().orEmpty()
-    }
-
-    /**
-     * Deletes the directories of episodes that were read or have no match
-     *
-     * @param allEpisodes the list of episodes to delete.
-     * @param anime the anime of the episodes.
-     * @param source the source of the episodes.
-     */
-    suspend fun cleanupEpisodes(allEpisodes: List<Episode>, anime: Anime, source: AnimeSource, removeSeen: Boolean, removeNonFavorite: Boolean): Int {
-        var cleaned = 0
-
-        if (removeNonFavorite && !anime.favorite) {
-            // AM (CU)>
-            val animeFolder = provider.getAnimeDir(anime.ogTitle, source)
-            cleaned += 1 + animeFolder.listFiles().orEmpty().size
-            animeFolder.delete()
-            cache.removeAnime(anime)
-            return cleaned
-        }
-
-        val filesWithNoEpisode = provider.findUnmatchedEpisodeDirs(allEpisodes, anime, source)
-        cleaned += filesWithNoEpisode.size
-        cache.removeFolders(filesWithNoEpisode.mapNotNull { it.name }, anime)
-        filesWithNoEpisode.forEach { it.delete() }
-
-        if (removeSeen) {
-            val seenEpisodes = allEpisodes.filter { it.seen }
-            val seenEpisodeDirs = provider.findEpisodeDirs(seenEpisodes, anime, source)
-            seenEpisodeDirs.second.forEach { it.delete() }
-            cleaned += seenEpisodeDirs.second.size
-            cache.removeEpisodes(seenEpisodes, anime)
-        }
-
-        if (cache.getDownloadCount(anime) == 0) {
-            // AM (CU)>
-            val animeFolder = provider.getAnimeDir(anime.ogTitle, source)
-            if (!animeFolder.listFiles().isNullOrEmpty()) {
-                animeFolder.delete()
-                cache.removeAnime(anime)
-            } else {
-                // AM (CU)>
-                Log.e("", "Cache and download folder doesn't match for " + anime.ogTitle)
-            }
-        }
-        return cleaned
-    }
-    // <-- AM (CU)
 
     /**
      * Adds a list of episodes to be deleted later.
@@ -466,4 +379,33 @@ class AnimeDownloadManager(
         }
     }
     // <-- AM (FM)
+
+    fun statusFlow(): Flow<AnimeDownload> = queueState
+        .flatMapLatest { downloads ->
+            downloads
+                .map { download ->
+                    download.statusFlow.drop(1).map { download }
+                }
+                .merge()
+        }
+        .onStart {
+            emitAll(
+                queueState.value.filter { download -> download.status == AnimeDownload.State.DOWNLOADING }.asFlow(),
+            )
+        }
+
+    fun progressFlow(): Flow<AnimeDownload> = queueState
+        .flatMapLatest { downloads ->
+            downloads
+                .map { download ->
+                    download.progressFlow.drop(1).map { download }
+                }
+                .merge()
+        }
+        .onStart {
+            emitAll(
+                queueState.value.filter { download -> download.status == AnimeDownload.State.DOWNLOADING }
+                    .asFlow(),
+            )
+        }
 }

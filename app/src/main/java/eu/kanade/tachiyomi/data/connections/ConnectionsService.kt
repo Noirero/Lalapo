@@ -13,7 +13,7 @@ import uy.kohesive.injekt.injectLazy
 abstract class ConnectionsService(val id: Long) {
 
     val connectionsPreferences: ConnectionsPreferences by injectLazy()
-    val networkService: NetworkHelper by injectLazy()
+    private val networkService: NetworkHelper by injectLazy()
 
     open val client: OkHttpClient
         get() = networkService.client

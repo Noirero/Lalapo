@@ -1,13 +1,12 @@
 // AM (DC) -->
 package eu.kanade.tachiyomi.data.connections.discord
 
-import android.content.Context
 import android.graphics.Color
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsService
 
-class Discord(private val context: Context, id: Long) : ConnectionsService(id) {
+class Discord(id: Long) : ConnectionsService(id) {
 
     @StringRes
     override fun nameRes() = R.string.connections_discord

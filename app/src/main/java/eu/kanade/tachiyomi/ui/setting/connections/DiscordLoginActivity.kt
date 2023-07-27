@@ -26,7 +26,6 @@ class DiscordLoginActivity : BaseActivity() {
     private val connectionsManager: ConnectionsManager by injectLazy()
     private val connectionsPreferences: ConnectionsPreferences by injectLazy()
 
-    @Suppress("DEPRECATION")
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +51,6 @@ class DiscordLoginActivity : BaseActivity() {
         login()
     }
 
-    @Suppress("DEPRECATION")
     @SuppressLint("SetJavaScriptEnabled")
     private fun initialiseWebView() {
         webView.settings.javaScriptEnabled = true

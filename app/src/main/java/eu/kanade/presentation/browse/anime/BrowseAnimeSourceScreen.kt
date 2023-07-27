@@ -1,6 +1,7 @@
 package eu.kanade.presentation.browse.anime
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.HelpOutline
@@ -11,26 +12,31 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import eu.kanade.data.items.episode.NoEpisodesException
-import eu.kanade.domain.entries.anime.model.Anime
-import eu.kanade.domain.library.model.LibraryDisplayMode
 import eu.kanade.presentation.browse.anime.components.BrowseAnimeSourceComfortableGrid
 import eu.kanade.presentation.browse.anime.components.BrowseAnimeSourceCompactGrid
 import eu.kanade.presentation.browse.anime.components.BrowseAnimeSourceList
-import eu.kanade.presentation.components.EmptyScreen
-import eu.kanade.presentation.components.EmptyScreenAction
-import eu.kanade.presentation.components.LoadingScreen
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
-import eu.kanade.tachiyomi.source.anime.LocalAnimeSource
+import eu.kanade.tachiyomi.animesource.AnimeSource
 import kotlinx.coroutines.flow.StateFlow
+import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.items.episode.model.NoEpisodesException
+import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.source.anime.model.StubAnimeSource
+import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.EmptyScreenAction
+import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 @Composable
 fun BrowseAnimeSourceContent(
-    source: AnimeCatalogueSource?,
+    source: AnimeSource?,
     animeList: LazyPagingItems<StateFlow<Anime>>,
     columns: GridCells,
     displayMode: LibraryDisplayMode,
@@ -72,6 +78,7 @@ fun BrowseAnimeSourceContent(
 
     if (animeList.itemCount <= 0 && errorState != null && errorState is LoadState.Error) {
         EmptyScreen(
+            modifier = Modifier.padding(contentPadding),
             message = getErrorMessage(errorState),
             actions = if (source is LocalAnimeSource) {
                 listOf(
@@ -106,7 +113,9 @@ fun BrowseAnimeSourceContent(
     }
 
     if (animeList.itemCount == 0 && animeList.loadState.refresh is LoadState.Loading) {
-        LoadingScreen()
+        LoadingScreen(
+            modifier = Modifier.padding(contentPadding),
+        )
         return
     }
 
@@ -137,5 +146,26 @@ fun BrowseAnimeSourceContent(
                 onAnimeLongClick = onAnimeLongClick,
             )
         }
+    }
+}
+
+@Composable
+fun MissingSourceScreen(
+    source: StubAnimeSource,
+    navigateUp: () -> Unit,
+) {
+    Scaffold(
+        topBar = { scrollBehavior ->
+            AppBar(
+                title = source.name,
+                navigateUp = navigateUp,
+                scrollBehavior = scrollBehavior,
+            )
+        },
+    ) { paddingValues ->
+        EmptyScreen(
+            message = stringResource(R.string.source_not_installed, source.toString()),
+            modifier = Modifier.padding(paddingValues),
+        )
     }
 }
