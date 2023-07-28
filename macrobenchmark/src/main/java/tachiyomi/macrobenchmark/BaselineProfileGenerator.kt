@@ -14,7 +14,7 @@ class BaselineProfileGenerator {
 
     @Test
     fun generate() = baselineProfileRule.collectBaselineProfile(
-        packageName = "xyz.jmir.tachiyomi.mi.benchmark",
+        packageName = "xyz.Quickdev.Animiru.mi.benchmark",
         profileBlock = {
             pressHome()
             startActivityAndWait()
