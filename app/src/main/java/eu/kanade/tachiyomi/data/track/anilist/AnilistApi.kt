@@ -339,12 +339,7 @@ class AnilistApi(val client: OkHttpClient, interceptor: AnilistInterceptor) {
         private const val clientId = "7719"
         private const val apiUrl = "https://graphql.anilist.co/"
         private const val baseUrl = "https://anilist.co/api/v2/"
-        private const val baseMangaUrl = "https://anilist.co/manga/"
         private const val baseAnimeUrl = "https://anilist.co/anime/"
-
-        fun mangaUrl(mediaId: Long): String {
-            return baseMangaUrl + mediaId
-        }
 
         fun animeUrl(mediaId: Long): String {
             return baseAnimeUrl + mediaId

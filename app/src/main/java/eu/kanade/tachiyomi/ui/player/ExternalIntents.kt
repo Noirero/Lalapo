@@ -425,7 +425,7 @@ class ExternalIntents {
                     seen = seen,
                     bookmark = currEp.bookmark,
                     // AM (FM) -->
-                    fillermark = episode.fillermark,
+                    fillermark = currEp.fillermark,
                     // <-- AM (FM)
                     lastSecondSeen = lastSecondSeen,
                     totalSeconds = totalSeconds,

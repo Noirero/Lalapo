@@ -245,6 +245,7 @@ internal class MigrateAnimeDialogScreenModel(
                         updatedEpisode = updatedEpisode.copy(
                             dateFetch = prevEpisode.dateFetch,
                             bookmark = prevEpisode.bookmark,
+                            fillermark = prevEpisode.fillermark,
                         )
                     }
 

@@ -339,49 +339,50 @@ object Migrations {
                             }
                         }
                     }
-                    if (oldVersion < 96) {
-                        AnimeLibraryUpdateJob.cancelAllWorks(context)
-                        AnimeLibraryUpdateJob.setupTask(context)
-                    }
-                    if (oldVersion < 97) {
-                        // Removed background jobs
-                        context.workManager.cancelAllWorkByTag("UpdateChecker")
-                        context.workManager.cancelAllWorkByTag("ExtensionUpdate")
-                        prefs.edit {
-                            remove("automatic_ext_updates")
-                        }
-                    }
-                    if (oldVersion < 99) {
-                        val prefKeys = listOf(
-                            "pref_filter_library_downloaded",
-                            "pref_filter_library_unread",
-                            "pref_filter_library_unseen",
-                            "pref_filter_library_started",
-                            "pref_filter_library_bookmarked",
-                            "pref_filter_library_completed",
-                        ) + trackManager.services.map { "pref_filter_library_tracked_${it.id}" }
-
-                        prefKeys.forEach { key ->
-                            val pref = preferenceStore.getInt(key, 0)
-                            prefs.edit {
-                                remove(key)
-
-                                val newValue = when (pref.get()) {
-                                    1 -> TriStateFilter.ENABLED_IS
-                                    2 -> TriStateFilter.ENABLED_NOT
-                                    else -> TriStateFilter.DISABLED
-                                }
-
-                                preferenceStore.getEnum("${key}_v2", TriStateFilter.DISABLED).set(newValue)
-                            }
-                        }
-                    }
-                    if (oldVersion < 100) {
-                        BackupCreateJob.setupTask(context)
-                    }
-                    return true
                 }
             }
+            if (oldVersion < 96) {
+                AnimeLibraryUpdateJob.cancelAllWorks(context)
+                AnimeLibraryUpdateJob.setupTask(context)
+            }
+            if (oldVersion < 97) {
+                // Removed background jobs
+                context.workManager.cancelAllWorkByTag("UpdateChecker")
+                context.workManager.cancelAllWorkByTag("ExtensionUpdate")
+                prefs.edit {
+                    remove("automatic_ext_updates")
+                }
+            }
+            if (oldVersion < 99) {
+                val prefKeys = listOf(
+                    "pref_filter_library_downloaded",
+                    "pref_filter_library_unread",
+                    "pref_filter_library_unseen",
+                    "pref_filter_library_started",
+                    "pref_filter_library_bookmarked",
+                    "pref_filter_library_fillermarked",
+                    "pref_filter_library_completed",
+                ) + trackManager.services.map { "pref_filter_library_tracked_${it.id}" }
+
+                prefKeys.forEach { key ->
+                    val pref = preferenceStore.getInt(key, 0)
+                    prefs.edit {
+                        remove(key)
+
+                        val newValue = when (pref.get()) {
+                            1 -> TriStateFilter.ENABLED_IS
+                            2 -> TriStateFilter.ENABLED_NOT
+                            else -> TriStateFilter.DISABLED
+                        }
+
+                        preferenceStore.getEnum("${key}_v2", TriStateFilter.DISABLED).set(newValue)
+                    }
+                }
+            }
+            if (oldVersion < 100) {
+                BackupCreateJob.setupTask(context)
+            }
+            return true
         }
         return false
     }

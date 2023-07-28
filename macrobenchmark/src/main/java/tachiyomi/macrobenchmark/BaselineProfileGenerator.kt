@@ -19,7 +19,7 @@ class BaselineProfileGenerator {
             pressHome()
             startActivityAndWait()
 
-            device.findObject(By.text("Manga")).click()
+            device.findObject(By.text("Anime")).click()
             device.findObject(By.text("Updates")).click()
 
             device.findObject(By.text("History")).click()

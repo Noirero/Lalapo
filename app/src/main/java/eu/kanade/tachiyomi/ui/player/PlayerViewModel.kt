@@ -170,7 +170,7 @@ class PlayerViewModel(
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.ogTitle, anime.source) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
-                // AM (FM)
+                // AM (FM)>
                 anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
                 anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
         }.toMutableList()
@@ -464,13 +464,11 @@ class PlayerViewModel(
     /**
      * Fillermarks the currently active episode.
      */
-    fun fillermarkCurrentEpisode(fillermarked: Boolean) {
-        val episode = currentEpisode ?: return
-        episode.fillermark = fillermarked // Otherwise the fillermark icon doesn't update
+    fun fillermarkCurrentEpisode(episodeId: Long?, fillermarked: Boolean) {
         viewModelScope.launchNonCancellable {
             updateEpisode.await(
                 EpisodeUpdate(
-                    id = episode.id!!.toLong(),
+                    id = episodeId!!,
                     fillermark = fillermarked,
                 ),
             )

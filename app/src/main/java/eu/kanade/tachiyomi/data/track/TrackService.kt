@@ -19,7 +19,7 @@ abstract class TrackService(val id: Long) {
     open val client: OkHttpClient
         get() = networkService.client
 
-    // Name of the manga sync service to display
+    // Name of the sync service to display
     @StringRes
     abstract fun nameRes(): Int
 
