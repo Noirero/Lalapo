@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import tachiyomi.domain.items.episode.service.EpisodeRecognition
 
 @Execution(ExecutionMode.CONCURRENT)
 class EpisodeRecognitionTest {
