@@ -1,6 +1,9 @@
 plugins {
     id("com.android.library")
     kotlin("android")
+    // AM (CU) -->
+    kotlin("plugin.serialization")
+    // <-- AM (CU)
     id("com.squareup.sqldelight")
 }
 
@@ -12,11 +15,6 @@ android {
     }
 
     sqldelight {
-        database("Database") {
-            packageName = "tachiyomi.data"
-            dialect = "sqlite:3.24"
-            sourceFolders = listOf("sqldelight")
-        }
         database("AnimeDatabase") {
             packageName = "tachiyomi.mi.data"
             dialect = "sqlite:3.24"
@@ -34,3 +32,13 @@ dependencies {
     api(libs.sqldelight.coroutines)
     api(libs.sqldelight.android.paging)
 }
+// AM (CU) -->
+tasks {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.freeCompilerArgs += listOf(
+            "-Xcontext-receivers",
+            "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
+        )
+    }
+}
+// <-- AM (CU)
