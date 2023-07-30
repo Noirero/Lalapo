@@ -25,6 +25,7 @@ import eu.kanade.presentation.updates.anime.AnimeUpdateScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -124,6 +125,9 @@ data class UpdatesTab(
         }
 
         LaunchedEffect(Unit) {
+            // AM (DISCORD) -->
+            DiscordRPCService.setScreen(context, DiscordScreen.UPDATES)
+            // <-- AM (DISCORD)
             screenModel.events.collectLatest { event ->
                 when (event) {
                     AnimeUpdatesScreenModel.Event.InternalError -> screenModel.snackbarHostState.showSnackbar(context.getString(R.string.internal_error))
@@ -146,9 +150,6 @@ data class UpdatesTab(
         LaunchedEffect(state.isLoading) {
             if (!state.isLoading) {
                 (context as? MainActivity)?.ready = true
-                // AM (DC) -->
-                DiscordRPCService.setDiscordPage(1)
-                // <-- AM (DC)
             }
         }
         DisposableEffect(Unit) {

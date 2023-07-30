@@ -1,4 +1,4 @@
-// AM (CN) -->
+// AM (CONNECTIONS) -->
 package eu.kanade.presentation.more.settings.screen
 
 import android.content.Context
@@ -274,4 +274,4 @@ private data class LoginConnectionsDialog(
 internal data class LogoutConnectionsDialog(
     val service: ConnectionsService,
 )
-// <-- AM (CN)
+// <-- AM (CONNECTIONS)

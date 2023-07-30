@@ -1,4 +1,4 @@
-// AM (DC) -->
+// AM (DISCORD) -->
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.annotation.StringRes
@@ -9,17 +9,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.util.fastMap
 import eu.kanade.domain.connections.service.ConnectionsPreferences
+import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.presentation.util.collectAsState
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
+import kotlinx.coroutines.runBlocking
+import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -47,7 +54,6 @@ object SettingsDiscordScreen : SearchableSettings {
         val connectionsManager = remember { Injekt.get<ConnectionsManager>() }
         val enableDRPCPref = connectionsPreferences.enableDiscordRPC()
         val discordRPCStatus = connectionsPreferences.discordRPCStatus()
-        val discordRPCIncognito = connectionsPreferences.discordRPCIncognito()
 
         val enableDRPC by enableDRPCPref.collectAsState()
 
@@ -84,19 +90,72 @@ object SettingsDiscordScreen : SearchableSettings {
                         ),
                         enabled = enableDRPC,
                     ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        pref = discordRPCIncognito,
-                        title = stringResource(R.string.pref_discord_incognito),
-                        subtitle = stringResource(R.string.pref_discord_incognito_summary),
-                        enabled = enableDRPC,
-                    ),
-                    Preference.PreferenceItem.TextPreference(
-                        title = stringResource(R.string.logout),
-                        onClick = { dialog = LogoutConnectionsDialog(connectionsManager.discord) },
-                    ),
                 ),
+            ),
+            getRPCIncognitoGroup(
+                connectionsPreferences = connectionsPreferences,
+                enabled = enableDRPC,
+            ),
+            Preference.PreferenceItem.TextPreference(
+                title = stringResource(R.string.logout),
+                onClick = { dialog = LogoutConnectionsDialog(connectionsManager.discord) },
             ),
         )
     }
+
+    @Composable
+    private fun getRPCIncognitoGroup(
+        connectionsPreferences: ConnectionsPreferences,
+        enabled: Boolean,
+    ): Preference.PreferenceGroup {
+        val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
+        val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(initial = runBlocking { getAnimeCategories.await() })
+
+        val discordRPCIncognitoPref = connectionsPreferences.discordRPCIncognito()
+        val discordRPCIncognitoCategoriesPref = connectionsPreferences.discordRPCIncognitoCategories()
+
+        val includedAnime by discordRPCIncognitoCategoriesPref.collectAsState()
+        var showAnimeDialog by rememberSaveable { mutableStateOf(false) }
+        if (showAnimeDialog) {
+            TriStateListDialog(
+                title = stringResource(R.string.general_categories),
+                message = stringResource(R.string.pref_discord_incognito_categories_details),
+                items = allAnimeCategories,
+                initialChecked = includedAnime.mapNotNull { id -> allAnimeCategories.find { it.id.toString() == id } },
+                initialInversed = includedAnime.mapNotNull { allAnimeCategories.find { false } },
+                itemLabel = { it.visualName },
+                onDismissRequest = { showAnimeDialog = false },
+                onValueChanged = { newIncluded, _ ->
+                    discordRPCIncognitoCategoriesPref.set(
+                        newIncluded.fastMap { it.id.toString() }
+                            .toSet(),
+                    )
+                    showAnimeDialog = false
+                },
+                onlyChecked = true,
+            )
+        }
+
+        return Preference.PreferenceGroup(
+            title = stringResource(R.string.general_categories),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    pref = discordRPCIncognitoPref,
+                    title = stringResource(R.string.pref_discord_incognito),
+                    subtitle = stringResource(R.string.pref_discord_incognito_summary),
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(R.string.general_categories),
+                    subtitle = getCategoriesLabel(
+                        allCategories = allAnimeCategories,
+                        included = includedAnime,
+                    ),
+                    onClick = { showAnimeDialog = true },
+                ),
+                Preference.PreferenceItem.InfoPreference(stringResource(R.string.pref_discord_incognito_categories_details)),
+            ),
+            enabled = enabled,
+        )
+    }
 }
-// <-- AM (DC)
+// <-- AM (DISCORD)

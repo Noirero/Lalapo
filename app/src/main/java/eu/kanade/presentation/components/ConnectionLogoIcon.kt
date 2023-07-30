@@ -1,4 +1,4 @@
-// AM (CN) -->
+// AM (CONNECTIONS) -->
 package eu.kanade.presentation.components
 
 import androidx.compose.foundation.Image
@@ -41,4 +41,4 @@ fun ConnectionsLogoIcon(
         )
     }
 }
-// <-- AM (CN)
+// <-- AM (CONNECTIONS)

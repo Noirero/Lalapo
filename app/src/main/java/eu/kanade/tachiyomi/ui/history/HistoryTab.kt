@@ -23,6 +23,7 @@ import eu.kanade.presentation.history.anime.AnimeHistoryScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -106,13 +107,13 @@ data class HistoryTab(
         LaunchedEffect(state.list) {
             if (state.list != null) {
                 (context as? MainActivity)?.ready = true
-                // AM (DC) -->
-                DiscordRPCService.setDiscordPage(2)
-                // <-- AM (DC)
             }
         }
 
         LaunchedEffect(Unit) {
+            // AM (DISCORD) -->
+            DiscordRPCService.setScreen(context, DiscordScreen.HISTORY)
+            // <-- AM (DISCORD)
             screenModel.events.collectLatest { e ->
                 when (e) {
                     AnimeHistoryScreenModel.Event.InternalError ->

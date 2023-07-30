@@ -24,6 +24,7 @@ import eu.kanade.presentation.more.MoreScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -80,9 +81,6 @@ object MoreTab : Tab {
             isFDroid = context.isInstalledFromFDroid(),
             // AM (UH) -->
             onClickUpdates = {
-                // AM (DC) -->
-                DiscordRPCService.setDiscordPage(1)
-                // <-- AM (DC)
                 navigator.push(
                     UpdatesTab(
                         fromMore = true,
@@ -91,9 +89,6 @@ object MoreTab : Tab {
                 )
             },
             onClickHistory = {
-                // AM (DC) -->
-                DiscordRPCService.setDiscordPage(2)
-                // <-- AM (DC)
                 navigator.push(
                     HistoryTab(
                         fromMore = false,
@@ -112,9 +107,9 @@ object MoreTab : Tab {
 
         LaunchedEffect(Unit) {
             (context as? MainActivity)?.ready = true
-            // AM (DC) -->
-            DiscordRPCService.setDiscordPage(4)
-            // <-- AM (DC)
+            // AM (DISCORD) -->
+            DiscordRPCService.setScreen(context, DiscordScreen.MORE)
+            // <-- AM (DISCORD)
         }
     }
 }

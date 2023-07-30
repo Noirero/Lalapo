@@ -223,14 +223,14 @@ object SettingsMainScreen : Screen() {
             icon = Icons.Outlined.Sync,
             screen = SettingsTrackingScreen,
         ),
-        // AM (CN) -->
+        // AM (CONNECTIONS) -->
         Item(
             titleRes = R.string.pref_category_connections,
             subtitleRes = R.string.pref_connections_summary,
             icon = Icons.Outlined.Link,
             screen = SettingsConnectionsScreen,
         ),
-        // <-- AM (CN)
+        // <-- AM (CONNECTIONS)
         Item(
             titleRes = R.string.browse,
             subtitleRes = R.string.pref_browse_summary,

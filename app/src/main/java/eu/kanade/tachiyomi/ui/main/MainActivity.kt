@@ -128,14 +128,13 @@ class MainActivity : BaseActivity() {
 
     private var navigator: Navigator? = null
 
-    // AM (CN) -->
+    // AM (CONNECTIONS) -->
     private val connectionsPreferences: ConnectionsPreferences by injectLazy()
-    // <-- AM (CN)
+    // <-- AM (CONNECTIONS)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Prevent splash screen showing up on configuration changes
         val splashScreen = if (savedInstanceState == null) installSplashScreen() else null
-
         super.onCreate(savedInstanceState)
 
         val didMigration = if (savedInstanceState == null) {
@@ -151,10 +150,10 @@ class MainActivity : BaseActivity() {
                 playerPreferences = Injekt.get(),
                 backupPreferences = Injekt.get(),
                 trackManager = Injekt.get(),
-                // AM (CN) -->
+                // AM (CONNECTIONS) -->
                 connectionsPreferences = connectionsPreferences,
                 connectionsManager = Injekt.get(),
-                // <-- AM (CN)
+                // <-- AM (CONNECTIONS)
             )
         } else {
             false
@@ -165,10 +164,6 @@ class MainActivity : BaseActivity() {
             finish()
             return
         }
-
-        // AM (DC) -->
-        DiscordRPCService.resources = resources
-        // <-- AM (DC)
 
         // Draw edge-to-edge
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -267,24 +262,25 @@ class MainActivity : BaseActivity() {
                         }
                         .launchIn(this)
 
-                    // AM (DC) -->
+                    // AM (DISCORD) -->
                     connectionsPreferences.enableDiscordRPC().changes()
                         .drop(1)
                         .onEach {
                             if (it) {
-                                startService(Intent(this@MainActivity, DiscordRPCService::class.java))
+                                DiscordRPCService.start(this@MainActivity.applicationContext)
                             } else {
-                                stopService(Intent(this@MainActivity, DiscordRPCService::class.java))
+                                DiscordRPCService.stop(this@MainActivity.applicationContext, 0L)
                             }
                         }.launchIn(this)
 
                     connectionsPreferences.discordRPCStatus().changes()
                         .drop(1)
                         .onEach {
-                            stopService(Intent(this@MainActivity, DiscordRPCService::class.java))
-                            startService(Intent(this@MainActivity, DiscordRPCService::class.java))
+                            DiscordRPCService.stop(this@MainActivity.applicationContext, 0L)
+                            DiscordRPCService.start(this@MainActivity.applicationContext)
+                            DiscordRPCService.setScreen(this@MainActivity, DiscordRPCService.lastUsedScreen)
                         }.launchIn(this)
-                    // <-- AM (DC)
+                    // <-- AM (DISCORD)
                 }
 
                 HandleOnNewIntent(context = context, navigator = navigator)
@@ -318,15 +314,9 @@ class MainActivity : BaseActivity() {
         }
         setSplashScreenExitAnimation(splashScreen)
 
-        // AM (DC) -->
-        if (DiscordRPCService.rpc == null && connectionsPreferences.enableDiscordRPC().get()) {
-            startService(Intent(this@MainActivity, DiscordRPCService::class.java))
-        }
-        // <-- AM (DC)
-
         externalPlayerResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-                ExternalIntents.externalIntents.onActivityResult(result.data)
+                ExternalIntents.externalIntents.onActivityResult(this@MainActivity, result.data)
             }
         }
     }
@@ -508,15 +498,6 @@ class MainActivity : BaseActivity() {
         return true
     }
 
-    override fun onDestroy() {
-        // AM (DC) -->
-        if (connectionsPreferences.enableDiscordRPC().get()) {
-            stopService(Intent(this@MainActivity, DiscordRPCService::class.java))
-        }
-        // <-- AM (DC)
-        super.onDestroy()
-    }
-
     override fun onBackPressed() {
         if (navigator?.size == 1 &&
             !onBackPressedDispatcher.hasEnabledCallbacks() &&
@@ -530,6 +511,26 @@ class MainActivity : BaseActivity() {
     init {
         registerSecureActivity(this)
     }
+
+    /*
+    // AM (DISCORD) -->
+
+    override fun onStart() {
+        DiscordRPCService.start(this@MainActivity.applicationContext)
+        super.onStart()
+    }
+
+    override fun onDestroy() {
+        DiscordRPCService.stop(this@MainActivity.applicationContext)
+        super.onDestroy()
+    }
+
+    override fun onStop() {
+        DiscordRPCService.stop(this@MainActivity.applicationContext)
+        super.onStop()
+    }
+    // <-- AM (DISCORD)
+     */
 
     companion object {
         // Splash screen

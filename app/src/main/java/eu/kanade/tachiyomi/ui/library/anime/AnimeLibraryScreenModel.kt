@@ -495,9 +495,9 @@ class AnimeLibraryScreenModel(
      */
     private suspend fun getMixCategories(animes: List<Anime>): Collection<Category> {
         if (animes.isEmpty()) return emptyList()
-        val nimeCategories = animes.map { getCategories.await(it.id).toSet() }
-        val common = nimeCategories.reduce { set1, set2 -> set1.intersect(set2) }
-        return nimeCategories.flatten().distinct().subtract(common)
+        val animeCategories = animes.map { getCategories.await(it.id).toSet() }
+        val common = animeCategories.reduce { set1, set2 -> set1.intersect(set2) }
+        return animeCategories.flatten().distinct().subtract(common)
     }
 
     fun runDownloadActionSelection(action: DownloadAction) {

@@ -27,9 +27,7 @@ import eu.kanade.tachiyomi.data.saver.Location
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
-import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.network.NetworkPreferences
-import eu.kanade.tachiyomi.source.anime.isLocalOrStub
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.viewer.SetAsCover
@@ -98,7 +96,6 @@ class PlayerViewModel(
     private val setAnimeViewerFlags: SetAnimeViewerFlags = Injekt.get(),
     internal val networkPreferences: NetworkPreferences = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
-    private val extensionManager: AnimeExtensionManager = Injekt.get(),
     basePreferences: BasePreferences = Injekt.get(),
     uiPreferences: UiPreferences = Injekt.get(),
 ) : ViewModel() {
@@ -109,7 +106,7 @@ class PlayerViewModel(
     private val eventChannel = Channel<Event>()
     val eventFlow = eventChannel.receiveAsFlow()
 
-    private val incognitoMode = basePreferences.incognitoMode().get()
+    internal val incognitoMode = basePreferences.incognitoMode().get()
 
     internal val relativeTime = uiPreferences.relativeTime().get()
     internal val dateFormat = UiPreferences.dateFormat(uiPreferences.dateFormat().get())
@@ -152,10 +149,6 @@ class PlayerViewModel(
     private var currentVideoList: List<Video>? = null
 
     private var requestedSecond: Long = 0L
-
-    // AM (DC) -->
-    internal var isSourceNsfw = false
-    // <-- AM (DC)
 
     private fun filterEpisodeList(episodes: List<Episode>): List<Episode> {
         val anime = currentAnime ?: return episodes
@@ -253,9 +246,6 @@ class PlayerViewModel(
                 val episode = this.currentPlaylist.first { it.id == episodeId }
 
                 val source = sourceManager.getOrStub(anime.source)
-                // AM (DC) -->
-                isSourceNSFW(source)
-                // <-- AM (DC)
                 mutableState.update { it.copy(episode = episode, anime = anime, source = source) }
 
                 val currentEp = currentEpisode ?: throw Exception("No episode loaded.")
@@ -272,16 +262,6 @@ class PlayerViewModel(
             Pair(currentVideoList, Result.failure(e))
         }
     }
-
-    // AM (DC) -->
-    private fun isSourceNSFW(source: AnimeSource) {
-        if (!source.isLocalOrStub()) {
-            val sourceUsed = extensionManager.installedExtensionsFlow.value
-                .find { ext -> ext.sources.any { it.id == source.id } }!!
-            isSourceNsfw = sourceUsed.isNsfw
-        }
-    }
-    // <-- AM (DC)
 
     private fun initEpisodeList(anime: Anime): List<Episode> {
         val episodes = runBlocking { getEpisodeByAnimeId.await(anime.id) }
@@ -316,9 +296,6 @@ class PlayerViewModel(
             try {
                 val currentEpisode = currentEpisode ?: throw Exception("No episode loaded.")
                 currentVideoList = EpisodeLoader.getLinks(currentEpisode.toDomainEpisode()!!, anime, source).asFlow().first()
-                // AM (DC) -->
-                isSourceNSFW(source)
-                // <-- AM (DC)
                 savedEpisodeId = currentEpisode.id!!
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links" }

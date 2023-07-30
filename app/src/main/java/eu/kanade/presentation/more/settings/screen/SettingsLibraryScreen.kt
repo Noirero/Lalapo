@@ -86,7 +86,7 @@ object SettingsLibraryScreen : SearchableSettings {
             title = stringResource(R.string.general_categories),
             preferenceItems = listOf(
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.action_edit_anime_categories),
+                    title = stringResource(R.string.action_edit_categories),
                     subtitle = pluralStringResource(
                         id = R.plurals.num_categories,
                         count = userAnimeCategoriesCount,
@@ -96,7 +96,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.ListPreference(
                     pref = libraryPreferences.defaultAnimeCategory(),
-                    title = stringResource(R.string.default_anime_category),
+                    title = stringResource(R.string.default_category),
                     subtitle = selectedAnimeCategory?.visualName ?: stringResource(R.string.default_category_summary),
                     entries = animeIds.zip(animeLabels).toMap(),
                 ),
@@ -136,7 +136,7 @@ object SettingsLibraryScreen : SearchableSettings {
         var showAnimeDialog by rememberSaveable { mutableStateOf(false) }
         if (showAnimeDialog) {
             TriStateListDialog(
-                title = stringResource(R.string.anime_categories),
+                title = stringResource(R.string.general_categories),
                 message = stringResource(R.string.pref_anime_library_update_categories_details),
                 items = allAnimeCategories,
                 initialChecked = includedAnime.mapNotNull { id -> allAnimeCategories.find { it.id.toString() == id } },

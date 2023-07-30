@@ -1,4 +1,4 @@
-// AM (CN) -->
+// AM (CONNECTIONS) -->
 package eu.kanade.domain.connections.service
 
 import eu.kanade.tachiyomi.data.connections.ConnectionsService
@@ -30,6 +30,8 @@ class ConnectionsPreferences(
 
     fun discordRPCIncognito() = preferenceStore.getBoolean("pref_discord_rpc_incognito", false)
 
+    fun discordRPCIncognitoCategories() = preferenceStore.getStringSet("discord_rpc_incognito_categories", emptySet())
+
     companion object {
 
         fun connectionsUsername(syncId: Long) = "pref_anime_connections_username_$syncId"
@@ -39,4 +41,4 @@ class ConnectionsPreferences(
         private fun connectionsToken(syncId: Long) = "connection_token_$syncId"
     }
 }
-// <-- AM (CN)
+// <-- AM (CONNECTIONS)

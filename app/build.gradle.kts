@@ -277,9 +277,10 @@ dependencies {
     // seeker seek bar
     implementation(libs.seeker)
 
-    // discord-rpc
-    implementation(libs.google.gson)
-    implementation(libs.java.websocket)
+    // AM (DISCORD) -->
+    implementation (libs.bundles.network.ktor)
+    implementation (libs.ktor.websockets)
+    // <-- AM (DISCORD)
 }
 
 androidComponents {

@@ -19,11 +19,11 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.PlayerData
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
-import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
-import eu.kanade.tachiyomi.source.anime.isLocalOrStub
+import eu.kanade.tachiyomi.source.anime.isNsfw
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.system.isOnline
@@ -65,10 +65,6 @@ class ExternalIntents {
     lateinit var anime: Anime
     lateinit var source: AnimeSource
 
-    // AM (DC) -->
-    private var isSourceNsfw = false
-    // <-- AM (DC)
-
     lateinit var episode: Episode
 
     /**
@@ -83,15 +79,27 @@ class ExternalIntents {
         source = sourceManager.get(anime.source) ?: return null
         episode = getEpisodeByAnimeId.await(anime.id).find { it.id == episodeId } ?: return null
 
-        // AM (DC) -->
-        isSourceNSFW(source)
-        // <-- AM (DC)
-
         val video = EpisodeLoader.getLinks(episode, anime, source).asFlow().first()[0]
 
         val videoUrl = getVideoUrl(context, video) ?: return null
 
         val pkgName = playerPreferences.externalPlayerPreference().get()
+
+        // AM (DISCORD) -->
+        withIOContext {
+            DiscordRPCService.setPlayerActivity(
+                context = context,
+                playerData = PlayerData(
+                    incognitoMode = source.isNsfw() || basePreferences.incognitoMode().get(),
+                    animeId = anime.id,
+                    // AM (CU)>
+                    animeTitle = anime.ogTitle,
+                    episodeNumber = episode.episodeNumber.toString(),
+                    thumbnailUrl = anime.thumbnailUrl,
+                ),
+            )
+        }
+        // <-- AM (DISCORD)
 
         return if (pkgName.isEmpty()) {
             Intent(Intent.ACTION_VIEW).apply {
@@ -103,16 +111,6 @@ class ExternalIntents {
             standardIntentForPackage(pkgName, context, videoUrl, video)
         }
     }
-
-    // AM (DC) -->
-    private fun isSourceNSFW(source: AnimeSource) {
-        if (!source.isLocalOrStub()) {
-            val sourceUsed = extensionManager.installedExtensionsFlow.value
-                .find { ext -> ext.sources.any { it.id == source.id } }!!
-            isSourceNsfw = sourceUsed.isNsfw
-        }
-    }
-    // <-- AM (DC)
 
     /**
      * Returns the [Uri] of the given video.
@@ -156,22 +154,9 @@ class ExternalIntents {
     /**
      * Returns the second to start the external player at.
      */
-    private suspend fun getLastSecondSeen(): Long {
+    private fun getLastSecondSeen(): Long {
         val preserveWatchPos = playerPreferences.preserveWatchingPosition().get()
         val isEpisodeWatched = episode.lastSecondSeen == episode.totalSeconds
-
-        // AM (DC) -->
-        withIOContext {
-            DiscordRPCService.videoInPip = false
-            DiscordRPCService.setDiscordVideo(
-                isNsfwSource = isSourceNsfw,
-                episodeNumber = episode.episodeNumber,
-                thumbnailUrl = anime.thumbnailUrl,
-                // AM (CU)>
-                animeTitle = anime.ogTitle,
-            )
-        }
-        // <-- AM (DC)
 
         return if (episode.seen && (!preserveWatchPos || (preserveWatchPos && isEpisodeWatched))) {
             1L
@@ -329,10 +314,7 @@ class ExternalIntents {
      */
     @OptIn(DelicateCoroutinesApi::class)
     @Suppress("DEPRECATION")
-    fun onActivityResult(intent: Intent?) {
-        // AM (DC) -->
-        DiscordRPCService.setDiscordPage(DiscordRPCService.lastUsedPage)
-        // <-- AM (DC)
+    fun onActivityResult(context: Context, intent: Intent?) {
         val data = intent ?: return
         val anime = anime
         val currentExtEpisode = episode
@@ -366,6 +348,9 @@ class ExternalIntents {
 
         // Update the episode's progress and history
         launchIO {
+            // AM (DISCORD) -->
+            DiscordRPCService.setScreen(context, DiscordRPCService.lastUsedScreen)
+            // <-- AM (DISCORD)
             if (cause == "playback_completion" || (currentPosition == duration && duration == 0L)) {
                 saveEpisodeProgress(currentExtEpisode, anime, currentExtEpisode.totalSeconds, currentExtEpisode.totalSeconds)
             } else {
@@ -388,7 +373,6 @@ class ExternalIntents {
     private val playerPreferences: PlayerPreferences = Injekt.get()
     private val downloadPreferences: DownloadPreferences = Injekt.get()
     private val trackPreferences: TrackPreferences = Injekt.get()
-    private val extensionManager: AnimeExtensionManager = Injekt.get()
     private val basePreferences: BasePreferences by injectLazy()
 
     /**

@@ -49,10 +49,10 @@ object Migrations {
         playerPreferences: PlayerPreferences,
         backupPreferences: BackupPreferences,
         trackManager: TrackManager,
-        // AM (CN) -->
+        // AM (CONNECTIONS) -->
         connectionsPreferences: ConnectionsPreferences,
         connectionsManager: ConnectionsManager,
-        // <-- AM (CN)
+        // <-- AM (CONNECTIONS)
     ): Boolean {
         val lastVersionCode = preferenceStore.getInt("last_version_code", 0)
         val oldVersion = lastVersionCode.get()
@@ -277,7 +277,7 @@ object Migrations {
                         putString(uiPreferences.themeMode().key(), themeMode.uppercase())
                     }
                 }
-                // AM (DC) -->
+                // AM (DISCORD) -->
                 if (connectionsPreferences.discordRPCStatus().isSet()) {
                     prefs.edit {
                         val oldString = try {
@@ -297,7 +297,7 @@ object Migrations {
                 if (connectionsPreferences.connectionsToken(connectionsManager.discord).get().isNotBlank()) {
                     connectionsPreferences.setConnectionsCredentials(connectionsManager.discord, "Discord", "Logged In")
                 }
-                // <-- AM (DC)
+                // <-- AM (DISCORD)
             }
             if (oldVersion < 92) {
                 if (playerPreferences.progressPreference().isSet()) {

@@ -39,7 +39,6 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
 import eu.kanade.tachiyomi.ui.history.HistoryTab
@@ -205,9 +204,6 @@ object HomeScreen : Screen() {
             LaunchedEffect(Unit) {
                 launch {
                     librarySearchEvent.receiveAsFlow().collectLatest {
-                        // AM (DC) -->
-                        DiscordRPCService.setDiscordPage(0)
-                        // <-- AM (DC)
                         goToAnimelibTab()
                         AnimeLibraryTab.search(it)
                     }
@@ -216,39 +212,24 @@ object HomeScreen : Screen() {
                     openTabEvent.receiveAsFlow().collectLatest {
                         tabNavigator.current = when (it) {
                             is Tab.Animelib -> {
-                                // AM (DC) -->
-                                DiscordRPCService.setDiscordPage(0)
-                                // <-- AM (DC)
                                 AnimeLibraryTab
                             }
                             is Tab.Updates -> {
-                                // AM (DC) -->
-                                DiscordRPCService.setDiscordPage(1)
-                                // <-- AM (DC)
                                 UpdatesTab(
                                     fromMore = !uiPreferences.showNavUpdates().get(),
                                     externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
                                 )
                             }
                             is Tab.History -> {
-                                // AM (DC) -->
-                                DiscordRPCService.setDiscordPage(2)
-                                // <-- AM (DC)
                                 HistoryTab(
                                     fromMore = !uiPreferences.showNavHistory().get(),
                                     externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
                                 )
                             }
                             is Tab.Browse -> {
-                                // AM (DC) -->
-                                DiscordRPCService.setDiscordPage(3)
-                                // <-- AM (DC)
                                 BrowseTab
                             }
                             is Tab.More -> {
-                                // AM (DC) -->
-                                DiscordRPCService.setDiscordPage(4)
-                                // <-- AM (DC)
                                 MoreTab
                             }
                         }

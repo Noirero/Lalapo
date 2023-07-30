@@ -42,9 +42,11 @@ import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.PlayerData
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
+import eu.kanade.tachiyomi.source.anime.isNsfw
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.settings.PlayerTracksBuilder
@@ -85,9 +87,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
+import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.launchNonCancellable
 import tachiyomi.core.util.lang.launchUI
-import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.core.util.system.logcat
 import uy.kohesive.injekt.Injekt
@@ -113,9 +115,9 @@ class PlayerActivity : BaseActivity() {
         }
     }
 
-    // AM (CN) -->
+    // AM (CONNECTIONS) -->
     private val connectionsPreferences: ConnectionsPreferences = Injekt.get()
-    // <-- AM (CN)
+    // <-- AM (CONNECTIONS)
 
     override fun onNewIntent(intent: Intent) {
         val animeId = intent.extras!!.getLong("animeId", -1)
@@ -375,12 +377,6 @@ class PlayerActivity : BaseActivity() {
         }
 
         playerIsDestroyed = false
-
-        // AM (DC) -->
-        if (DiscordRPCService.rpc == null && connectionsPreferences.enableDiscordRPC().get()) {
-            startService(Intent(this, DiscordRPCService::class.java))
-        }
-        // <-- AM (DC)
     }
 
     private fun setupPlayerControls() {
@@ -519,14 +515,9 @@ class PlayerActivity : BaseActivity() {
             player.destroy()
         }
         abandonAudioFocus()
-        // AM (DC) -->
-        if (connectionsPreferences.enableDiscordRPC().get()) {
-            DiscordRPCService.videoInPip = false
-            val lastUsedPage = DiscordRPCService.lastUsedPage
-            DiscordRPCService.setDiscordPage(lastUsedPage)
-            if (lastUsedPage == -1) stopService(Intent(this, DiscordRPCService::class.java))
-        }
-        // <-- AM (DC)
+        // AM (DISCORD) -->
+        updateDiscordRPC()
+        // <-- AM (DISCORD)
         super.onDestroy()
     }
 
@@ -1215,7 +1206,9 @@ class PlayerActivity : BaseActivity() {
             playerControls.updatePlaylistButtons()
             playerControls.updateDecoderButton()
             playerControls.updateSpeedButton()
+            // AM (DISCORD) -->
             updateDiscordRPC()
+            // <-- AM (DISCORD)
         }
     }
 
@@ -1246,22 +1239,6 @@ class PlayerActivity : BaseActivity() {
         } else {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-    }
-
-    private suspend fun updateDiscordRPC() {
-        // AM (DC) -->
-        if (!isFinishing) {
-            withIOContext {
-                DiscordRPCService.videoInPip = PipState.mode == PipState.ON
-                DiscordRPCService.setDiscordVideo(
-                    isNsfwSource = viewModel.isSourceNsfw,
-                    episodeNumber = viewModel.currentEpisode?.episode_number,
-                    thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
-                    animeTitle = viewModel.currentAnime?.title,
-                )
-            }
-        }
-        // <-- AM (DC)
     }
 
     @Suppress("DEPRECATION")
@@ -1661,4 +1638,29 @@ class PlayerActivity : BaseActivity() {
             animationHandler.postDelayed(nextEpisodeRunnable, 1000L)
         }
     }
+
+    // AM (DISCORD) -->
+    private fun updateDiscordRPC() {
+        if (connectionsPreferences.enableDiscordRPC().get()) {
+            viewModel.viewModelScope.launchIO {
+                if (!isFinishing) {
+                    DiscordRPCService.setPlayerActivity(
+                        context = this@PlayerActivity,
+                        PlayerData(
+                            incognitoMode = viewModel.currentSource.isNsfw() || viewModel.incognitoMode,
+                            animeId = viewModel.currentAnime?.id,
+                            // AM (CU)>
+                            animeTitle = viewModel.currentAnime?.ogTitle,
+                            episodeNumber = viewModel.currentEpisode?.episode_number?.toString(),
+                            thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
+                        ),
+                    )
+                } else {
+                    val lastUsedScreen = DiscordRPCService.lastUsedScreen
+                    DiscordRPCService.setScreen(this@PlayerActivity, lastUsedScreen)
+                }
+            }
+        }
+    }
+    // <-- AM (DISCORD)
 }

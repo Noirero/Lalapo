@@ -279,9 +279,9 @@ class BackupManager(
         if (flags and BACKUP_PREFS_MASK != BACKUP_PREFS) return emptyList()
         val backupPreferences = mutableListOf<BackupPreference>()
         for (pref in prefs.all) {
-            // AM (CN) -->
+            // AM (CONNECTIONS) -->
             if (pref.key.contains("connection")) continue
-            // <-- AM (CN)
+            // <-- AM (CONNECTIONS)
             val toAdd = when (pref.value) {
                 is Int -> {
                     BackupPreference(pref.key, IntPreferenceValue(pref.value as Int))

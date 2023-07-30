@@ -24,6 +24,7 @@ import eu.kanade.presentation.extensions.RequestStoragePermission
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
@@ -106,14 +107,14 @@ object BrowseTab : Tab {
 
         LaunchedEffect(Unit) {
             (context as? MainActivity)?.ready = true
-            // AM (DC) -->
-            DiscordRPCService.setDiscordPage(3)
-            // <-- AM (DC)
         }
 
         // AM (BR) -->
         val internalErrString = stringResource(R.string.internal_error)
         LaunchedEffect(Unit) {
+            // AM (DISCORD) -->
+            DiscordRPCService.setScreen(context, DiscordScreen.BROWSE)
+            // <-- AM (DISCORD)
             Injekt.get<AnimeExtensionManager>().findAvailableExtensions()
             Injekt.get<AnimeExtensionManager>().updatePendingUpdatesCount()
             screenModel.events.collectLatest { event ->

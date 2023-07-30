@@ -146,9 +146,9 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { ExternalIntents() }
 
-        // AM (CN) -->
+        // AM (CONNECTIONS) -->
         addSingletonFactory { ConnectionsManager() }
-        // AM (CN) <--
+        // <-- AM (CONNECTIONS)
 
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(app).execute {
@@ -217,8 +217,8 @@ class PreferenceModule(val application: Application) : InjektModule {
         addSingletonFactory {
             BasePreferences(application, get())
         }
-        // AM (CN) -->
+        // AM (CONNECTIONS) -->
         addSingletonFactory { ConnectionsPreferences(get()) }
-        // AM (CN) <--
+        // <-- AM (CONNECTIONS)
     }
 }

@@ -1,4 +1,4 @@
-// AM (DC) -->
+// AM (DISCORD) -->
 package eu.kanade.tachiyomi.data.connections.discord
 
 import android.graphics.Color
@@ -24,4 +24,4 @@ class Discord(id: Long) : ConnectionsService(id) {
         TODO("Not yet implemented")
     }
 }
-// AM (DC) <--
+// <-- AM (DISCORD)
