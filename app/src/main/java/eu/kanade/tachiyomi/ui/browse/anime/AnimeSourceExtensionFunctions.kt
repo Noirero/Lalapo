@@ -1,4 +1,4 @@
-// AM (BR) -->
+// AM (BROWSE) -->
 package eu.kanade.tachiyomi.ui.browse.anime
 
 import eu.kanade.tachiyomi.extension.InstallStep
@@ -9,7 +9,7 @@ import rx.Observable
 
 class AnimeSourceExtensionFunctions {
     companion object {
-        private var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
+        var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
         private fun removeDownloadState(extension: AnimeExtension) {
             currentDownloads.update { _map ->
@@ -37,4 +37,4 @@ class AnimeSourceExtensionFunctions {
         }
     }
 }
-// <-- AM (BR)
+// <-- AM (BROWSE)

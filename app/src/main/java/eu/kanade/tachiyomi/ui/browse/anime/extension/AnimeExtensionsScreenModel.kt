@@ -12,10 +12,10 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.currentDownloads
 import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.subscribeToInstallUpdate
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -34,8 +34,6 @@ class AnimeExtensionsScreenModel(
     private val extensionManager: AnimeExtensionManager = Injekt.get(),
     private val getExtensions: GetAnimeExtensionsByType = Injekt.get(),
 ) : StateScreenModel<AnimeExtensionsState>(AnimeExtensionsState()) {
-
-    private var _currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
     init {
         val context = Injekt.get<Application>()
@@ -74,7 +72,7 @@ class AnimeExtensionsScreenModel(
         coroutineScope.launchIO {
             combine(
                 state.map { it.searchQuery }.distinctUntilChanged().debounce(SEARCH_DEBOUNCE_MILLIS),
-                _currentDownloads,
+                currentDownloads,
                 getExtensions.subscribe(),
             ) { query, downloads, (_updates, _installed, _available, _untrusted) ->
                 val searchQuery = query ?: ""
@@ -85,9 +83,9 @@ class AnimeExtensionsScreenModel(
                 if (updates.isNotEmpty()) {
                     itemsGroups[AnimeExtensionUiModel.Header.Resource(R.string.ext_updates_pending)] = updates
                 }
-                // AM (BR) -->
+                // AM (BROWSE) -->
                 val installed = _installed.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
-                // <-- AM (BR)
+                // <-- AM (BROWSE)
                 val untrusted = _untrusted.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
                 if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
                     itemsGroups[AnimeExtensionUiModel.Header.Resource(R.string.ext_installed)] = installed + untrusted

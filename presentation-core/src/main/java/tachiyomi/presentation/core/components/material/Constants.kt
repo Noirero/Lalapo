@@ -6,18 +6,18 @@ import androidx.compose.ui.unit.dp
 
 val topSmallPaddingValues = PaddingValues(top = MaterialTheme.padding.small)
 
-// AM (BR) -->
+// AM (BROWSE) -->
 val bottomSuperLargePaddingValues = PaddingValues(bottom = MaterialTheme.padding.superLarge)
-// <--AM (BR)
+// <--AM (BROWSE)
 
 const val ReadItemAlpha = .38f
 const val SecondaryItemAlpha = .78f
 
 class Padding {
 
-    // AM (BR) -->
+    // AM (BROWSE) -->
     val superLarge = 72.dp
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
 
     val extraLarge = 32.dp
 
@@ -29,9 +29,9 @@ class Padding {
 
     val tiny = 4.dp
 
-    // AM (BR) -->
+    // AM (BROWSE) -->
     val none = 0.dp
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
 }
 
 val MaterialTheme.padding: Padding

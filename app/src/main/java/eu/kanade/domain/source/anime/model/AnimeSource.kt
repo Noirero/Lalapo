@@ -16,7 +16,7 @@ val AnimeSource.icon: ImageBitmap?
             ?.asImageBitmap()
     }
 
-// AM (BR) -->
+// AM (BROWSE) -->
 val AnimeSource.installedExtension: AnimeExtension.Installed
     get() {
         return Injekt.get<AnimeExtensionManager>()
@@ -24,4 +24,4 @@ val AnimeSource.installedExtension: AnimeExtension.Installed
             .value
             .find { ext -> ext.sources.any { it.id == id } }!!
     }
-// <-- AM (BR)
+// <-- AM (BROWSE)

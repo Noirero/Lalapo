@@ -1,4 +1,4 @@
-// AM (BR) -->
+// AM (BROWSE) -->
 package eu.kanade.tachiyomi.ui.browse.anime.migration.sources
 
 import androidx.compose.runtime.Composable
@@ -28,4 +28,4 @@ class MigrateAnimeSourceScreen : Screen {
         )
     }
 }
-// <-- AM (BR)
+// <-- AM (BROWSE)

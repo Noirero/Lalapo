@@ -1,4 +1,4 @@
-// AM (BR) -->
+// AM (BROWSE) -->
 package eu.kanade.tachiyomi.ui.browse.anime.extension
 
 import androidx.compose.runtime.Composable
@@ -43,4 +43,4 @@ class AnimeExtensionsScreen : Screen {
         )
     }
 }
-// <-- AM (BR)
+// <-- AM (BROWSE)

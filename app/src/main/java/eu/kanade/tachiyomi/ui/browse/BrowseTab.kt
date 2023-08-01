@@ -58,7 +58,7 @@ object BrowseTab : Tab {
     @Composable
     override fun Content() {
         val context = LocalContext.current
-        // AM (BR) -->
+        // AM (BROWSE) -->
         val snackbarHostState = SnackbarHostState()
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { AnimeSourcesScreenModel() }
@@ -100,7 +100,7 @@ object BrowseTab : Tab {
                 onDismiss = screenModel::closeDialog,
             )
         }
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
 
         // For local source
         DiskUtil.RequestStoragePermission()
@@ -109,14 +109,13 @@ object BrowseTab : Tab {
             (context as? MainActivity)?.ready = true
         }
 
-        // AM (BR) -->
+        // AM (BROWSE) -->
         val internalErrString = stringResource(R.string.internal_error)
         LaunchedEffect(Unit) {
             // AM (DISCORD) -->
             DiscordRPCService.setScreen(context, DiscordScreen.BROWSE)
             // <-- AM (DISCORD)
             Injekt.get<AnimeExtensionManager>().findAvailableExtensions()
-            Injekt.get<AnimeExtensionManager>().updatePendingUpdatesCount()
             screenModel.events.collectLatest { event ->
                 when (event) {
                     AnimeSourcesScreenModel.Event.FailedFetchingSources -> {
@@ -125,6 +124,6 @@ object BrowseTab : Tab {
                 }
             }
         }
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
     }
 }

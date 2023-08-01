@@ -360,7 +360,7 @@ class AnimeExtensionManager(
         return (availableExt.versionCode > versionCode || availableExt.libVersion > libVersion)
     }
 
-    internal fun updatePendingUpdatesCount() {
+    private fun updatePendingUpdatesCount() {
         preferences.animeExtensionUpdatesCount().set(_installedAnimeExtensionsFlow.value.count { it.hasUpdate })
     }
 }

@@ -34,9 +34,9 @@ class AnimeSourcesScreenModel(
     private val getEnabledAnimeSources: GetEnabledAnimeSources = Injekt.get(),
     private val toggleSource: ToggleAnimeSource = Injekt.get(),
     private val toggleSourcePin: ToggleAnimeSourcePin = Injekt.get(),
-    // AM (BR) -->
+    // AM (BROWSE) -->
     private val extensionManager: AnimeExtensionManager = Injekt.get(),
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
 ) : StateScreenModel<AnimeSourcesState>(AnimeSourcesState()) {
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
@@ -111,7 +111,7 @@ class AnimeSourcesScreenModel(
         mutableState.update { it.copy(dialog = null) }
     }
 
-    // AM (BR) -->
+    // AM (BROWSE) -->
     fun updateExtension(extension: AnimeExtension.Installed) {
         extensionManager.updateExtension(extension).subscribeToInstallUpdate(extension)
     }
@@ -119,7 +119,7 @@ class AnimeSourcesScreenModel(
     fun uninstallExtension(packageName: String) {
         extensionManager.uninstallExtension(packageName)
     }
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
 
     sealed class Event {
         object FailedFetchingSources : Event()

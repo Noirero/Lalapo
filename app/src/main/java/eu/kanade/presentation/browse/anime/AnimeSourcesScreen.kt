@@ -68,17 +68,17 @@ import tachiyomi.source.local.entries.anime.LocalAnimeSource
 @Composable
 fun AnimeSourcesScreen(
     state: AnimeSourcesState,
-    // AM (BR) -->
+    // AM (BROWSE) -->
     navigator: Navigator,
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
     onClickItem: (AnimeSource, Listing) -> Unit,
     onClickPin: (AnimeSource) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
-    // AM (BR) -->
+    // AM (BROWSE) -->
     sourcePreferences: SourcePreferences,
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
 ) {
-    // AM (BR) -->
+    // AM (BROWSE) -->
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
@@ -107,7 +107,7 @@ fun AnimeSourcesScreen(
             )
         },
     ) { contentPadding ->
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
         when {
             state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
             state.isEmpty -> EmptyScreen(
@@ -123,13 +123,13 @@ fun AnimeSourcesScreen(
                             enter = fadeIn(),
                             exit = fadeOut(),
                         ) {
-                            // AM (BR) -->
+                            // AM (BROWSE) -->
                             val extensionUpdateCount by sourcePreferences.animeExtensionUpdatesCount().collectAsState()
                             val buttonText = if (extensionUpdateCount != 0) R.string.ext_update else R.string.ext_install
                             val buttonIcon = if (extensionUpdateCount != 0) Icons.Filled.Upload else Icons.Filled.Download
                             ExtendedFloatingActionButton(
                                 text = { Text(text = stringResource(buttonText)) },
-                                // <-- AM (BR)
+                                // <-- AM (BROWSE)
                                 icon = {
                                     Icon(
                                         imageVector = buttonIcon,
@@ -202,9 +202,9 @@ private fun AnimeSourceHeader(
 @Composable
 private fun AnimeSourceItem(
     modifier: Modifier = Modifier,
-    // AM (BR) -->
+    // AM (BROWSE) -->
     navigator: Navigator,
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
     source: AnimeSource,
     onClickItem: (AnimeSource, Listing) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
@@ -217,7 +217,7 @@ private fun AnimeSourceItem(
         onLongClickItem = { onLongClickItem(source) },
         action = {
             if (source.supportsLatest) {
-                // AM (BR) -->
+                // AM (BROWSE) -->
                 TextButton(
                     onClick = { onClickItem(source, Listing.Latest) },
                     modifier = if (source.id == LocalAnimeSource.ID) {
@@ -226,7 +226,7 @@ private fun AnimeSourceItem(
                         Modifier
                     },
                 ) {
-                    // <-- AM (BR)
+                    // <-- AM (BROWSE)
                     Text(
                         text = stringResource(id = R.string.latest),
                         style = LocalTextStyle.current.copy(
@@ -235,7 +235,7 @@ private fun AnimeSourceItem(
                     )
                 }
             }
-            // AM (BR) -->
+            // AM (BROWSE) -->
             if (source.id != LocalAnimeSource.ID) {
                 AnimeSourceSettingsButton(
                     navigator = navigator,
@@ -244,7 +244,7 @@ private fun AnimeSourceItem(
             }
         },
         pin = {
-            // <-- AM (BR)
+            // <-- AM (BROWSE)
             AnimeSourcePinButton(
                 isPinned = Pin.Pinned in source.pin,
                 onClick = { onClickPin(source) },
@@ -265,17 +265,17 @@ private fun AnimeSourcePinButton(
         Icon(
             imageVector = icon,
             tint = tint,
-            // AM (BR) -->
+            // AM (BROWSE) -->
             modifier = Modifier
                 .size(16.dp)
                 .rotate(-30f),
-            // <-- AM (BR)
+            // <-- AM (BROWSE)
             contentDescription = stringResource(description),
         )
     }
 }
 
-// AM (BR) -->
+// AM (BROWSE) -->
 @Composable
 private fun AnimeSourceSettingsButton(
     navigator: Navigator,
@@ -289,17 +289,17 @@ private fun AnimeSourceSettingsButton(
         )
     }
 }
-// <-- AM (BR)
+// <-- AM (BROWSE)
 
 @Composable
 fun AnimeSourceOptionsDialog(
     source: AnimeSource,
     onClickPin: () -> Unit,
     onClickDisable: () -> Unit,
-    // AM (BR) -->
+    // AM (BROWSE) -->
     onClickUpdate: () -> Unit,
     onClickUninstall: () -> Unit,
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -324,7 +324,7 @@ fun AnimeSourceOptionsDialog(
                             .fillMaxWidth()
                             .padding(vertical = 16.dp),
                     )
-                    // AM (BR) -->
+                    // AM (BROWSE) -->
                     if (source.installedExtension.hasUpdate) {
                         Text(
                             text = stringResource(id = R.string.ext_update),
@@ -341,7 +341,7 @@ fun AnimeSourceOptionsDialog(
                             .fillMaxWidth()
                             .padding(vertical = 16.dp),
                     )
-                    // <-- AM (BR)
+                    // <-- AM (BROWSE)
                 }
             }
         },

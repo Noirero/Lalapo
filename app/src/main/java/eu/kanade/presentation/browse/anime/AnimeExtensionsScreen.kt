@@ -64,13 +64,13 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 @Composable
 fun AnimeExtensionScreen(
     state: AnimeExtensionsState,
-    // AM (BR) -->
+    // AM (BROWSE) -->
     navigator: Navigator,
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
     searchQuery: String? = null,
-    // AM (BR) -->
+    // AM (BROWSE) -->
     onChangeSearchQuery: (String?) -> Unit,
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
     onLongClickItem: (AnimeExtension) -> Unit,
     onClickItemCancel: (AnimeExtension) -> Unit,
     onInstallExtension: (AnimeExtension.Available) -> Unit,
@@ -81,7 +81,7 @@ fun AnimeExtensionScreen(
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
 ) {
-    // AM (BR) -->
+    // AM (BROWSE) -->
     Scaffold(
         topBar = { scrollBehavior ->
             SearchToolbar(
@@ -101,7 +101,7 @@ fun AnimeExtensionScreen(
             )
         },
     ) { contentPadding ->
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
         PullRefresh(
             refreshing = state.isRefreshing,
             onRefresh = onRefresh,

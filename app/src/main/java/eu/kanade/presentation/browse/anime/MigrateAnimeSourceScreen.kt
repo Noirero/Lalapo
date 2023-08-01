@@ -48,15 +48,15 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 @Composable
 fun MigrateAnimeSourceScreen(
     state: MigrateAnimeSourceState,
-    // AM (BR) -->
+    // AM (BROWSE) -->
     navigateUp: () -> Unit,
-    // <-- AM (BR)
+    // <-- AM (BROWSE)
     onClickItem: (AnimeSource) -> Unit,
     onToggleSortingDirection: () -> Unit,
     onToggleSortingMode: () -> Unit,
 ) {
     val context = LocalContext.current
-    // AM (BR) -->
+    // AM (BROWSE) -->
     val uriHandler = LocalUriHandler.current
     Scaffold(
         topBar = { scrollBehavior ->
@@ -75,7 +75,7 @@ fun MigrateAnimeSourceScreen(
             )
         },
     ) { contentPadding ->
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
         when {
             state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
             state.isEmpty -> EmptyScreen(

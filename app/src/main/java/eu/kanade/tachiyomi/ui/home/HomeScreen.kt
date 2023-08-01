@@ -82,9 +82,9 @@ object HomeScreen : Screen() {
             fromMore = false,
             externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
         ),
-        // AM (BR) -->
+        // AM (BROWSE) -->
         BrowseTab,
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
         MoreTab,
     )
 
@@ -94,9 +94,9 @@ object HomeScreen : Screen() {
             fromMore = false,
             externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
         ),
-        // AM (BR) -->
+        // AM (BROWSE) -->
         BrowseTab,
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
         MoreTab,
     )
 
@@ -106,17 +106,17 @@ object HomeScreen : Screen() {
             fromMore = false,
             externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
         ),
-        // AM (BR) -->
+        // AM (BROWSE) -->
         BrowseTab,
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
         MoreTab,
     )
 
     val tabsNUNH = listOf(
         AnimeLibraryTab,
-        // AM (BR) -->
+        // AM (BROWSE) -->
         BrowseTab,
-        // <-- AM (BR)
+        // <-- AM (BROWSE)
         MoreTab,
     )
     // <-- AM (UH)
