@@ -276,7 +276,7 @@ private fun ColumnScope.DisplayPage(
     )
     val showContinueViewingButton by screenModel.libraryPreferences.showContinueViewingButton().collectAsState()
     CheckboxItem(
-        label = stringResource(R.string.action_display_show_continue_reading_button),
+        label = stringResource(R.string.action_display_show_continue_watching_button),
         checked = showContinueViewingButton,
         onClick = {
             screenModel.togglePreference(LibraryPreferences::showContinueViewingButton)
