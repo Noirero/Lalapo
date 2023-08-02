@@ -198,7 +198,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(R.string.anime_categories),
+                    title = stringResource(R.string.general_categories),
                     subtitle = getCategoriesLabel(
                         allCategories = allAnimeCategories,
                         included = includedAnime,
@@ -240,8 +240,8 @@ object SettingsLibraryScreen : SearchableSettings {
             title = stringResource(R.string.pref_episode_swipe),
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
-                    pref = libraryPreferences.swipeEpisodeEndAction(),
-                    title = stringResource(R.string.pref_episode_swipe_end),
+                    pref = libraryPreferences.swipeEpisodeStartAction(),
+                    title = stringResource(R.string.pref_episode_swipe_start),
                     entries = mapOf(
                         LibraryPreferences.EpisodeSwipeAction.Disabled to stringResource(R.string.action_disable),
                         LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to stringResource(R.string.action_bookmark_episode),
@@ -254,7 +254,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.ListPreference(
                     pref = libraryPreferences.swipeEpisodeEndAction(),
-                    title = stringResource(R.string.pref_episode_swipe_start),
+                    title = stringResource(R.string.pref_episode_swipe_end),
                     entries = mapOf(
                         LibraryPreferences.EpisodeSwipeAction.Disabled to stringResource(R.string.action_disable),
                         LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to stringResource(R.string.action_bookmark_episode),
