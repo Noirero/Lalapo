@@ -152,7 +152,7 @@ class LibraryPreferences(
     enum class EpisodeSwipeAction {
         ToggleSeen,
         ToggleBookmark,
-        
+
         // AM (FILLER) -->
         ToggleFillermark,
 
