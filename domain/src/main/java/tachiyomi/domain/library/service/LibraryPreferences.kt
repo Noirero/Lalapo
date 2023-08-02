@@ -82,9 +82,9 @@ class LibraryPreferences(
 
     fun filterBookmarkedAnime() = preferenceStore.getEnum("pref_filter_animelib_bookmarked_v2", TriStateFilter.DISABLED)
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     fun filterFillermarkedAnime() = preferenceStore.getEnum("pref_filter_animelib_fillermarked_v2", TriStateFilter.DISABLED)
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     fun filterCompletedAnime() = preferenceStore.getEnum("pref_filter_animelib_completed_v2", TriStateFilter.DISABLED)
 
@@ -112,9 +112,9 @@ class LibraryPreferences(
 
     fun filterEpisodeByBookmarked() = preferenceStore.getLong("default_episode_filter_by_bookmarked", Anime.SHOW_ALL)
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     fun filterEpisodeByFillermarked() = preferenceStore.getLong("default_episode_filter_by_fillermarked", Anime.SHOW_ALL)
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     // and upload date
     fun sortEpisodeBySourceOrNumber() = preferenceStore.getLong("default_episode_sort_by_source_or_number", Anime.EPISODE_SORTING_SOURCE)
@@ -127,9 +127,9 @@ class LibraryPreferences(
         filterEpisodeBySeen().set(anime.unseenFilterRaw)
         filterEpisodeByDownloaded().set(anime.downloadedFilterRaw)
         filterEpisodeByBookmarked().set(anime.bookmarkedFilterRaw)
-        // AM (FM) -->
+        // AM (FILLER) -->
         filterEpisodeByFillermarked().set(anime.fillermarkedFilterRaw)
-        // <-- AM (FM)
+        // <-- AM (FILLER)
         sortEpisodeBySourceOrNumber().set(anime.sorting)
         displayEpisodeByNameOrNumber().set(anime.displayMode)
         sortEpisodeByAscendingOrDescending().set(if (anime.sortDescending()) Anime.EPISODE_SORT_DESC else Anime.EPISODE_SORT_ASC)
@@ -140,6 +140,24 @@ class LibraryPreferences(
 
     fun groupLibraryBy() = preferenceStore.getInt("group_library_by", AnimeLibraryGroup.BY_DEFAULT)
     // <-- AM (GU)
+
+    // region Swipe Actions
+
+    fun swipeEpisodeEndAction() = preferenceStore.getEnum("pref_episode_swipe_end_action", EpisodeSwipeAction.ToggleBookmark)
+
+    fun swipeEpisodeStartAction() = preferenceStore.getEnum("pref_episode_swipe_start_action", EpisodeSwipeAction.ToggleSeen)
+
+    // endregion
+
+    enum class EpisodeSwipeAction {
+        ToggleSeen,
+        ToggleBookmark,
+        // AM (FILLER) -->
+        ToggleFillermark,
+        // <-- AM (FILLER)
+        Download,
+        Disabled,
+    }
 
     companion object {
         const val DEVICE_ONLY_ON_WIFI = "wifi"

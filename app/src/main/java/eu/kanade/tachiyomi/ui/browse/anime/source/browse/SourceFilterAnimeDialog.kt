@@ -17,18 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AdaptiveSheet
-import eu.kanade.presentation.components.CheckboxItem
-import eu.kanade.presentation.components.HeadingItem
 import eu.kanade.presentation.components.SelectItem
-import eu.kanade.presentation.components.SortItem
-import eu.kanade.presentation.components.TextItem
 import eu.kanade.presentation.components.TriStateItem
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import tachiyomi.domain.entries.TriStateFilter
+import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.CollapsibleBox
+import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.LazyColumn
+import tachiyomi.presentation.core.components.SortItem
+import tachiyomi.presentation.core.components.TextItem
 
 @Composable
 fun SourceFilterAnimeDialog(

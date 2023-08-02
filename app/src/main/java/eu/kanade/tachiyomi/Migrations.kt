@@ -252,9 +252,9 @@ object Migrations {
                     libraryPreferences.filterEpisodeBySeen(),
                     libraryPreferences.filterEpisodeByDownloaded(),
                     libraryPreferences.filterEpisodeByBookmarked(),
-                    // AM (FM) -->
+                    // AM (FILLER) -->
                     libraryPreferences.filterEpisodeByFillermarked(),
-                    // <-- AM (FM)
+                    // <-- AM (FILLER)
                     libraryPreferences.sortEpisodeBySourceOrNumber(),
                     libraryPreferences.displayEpisodeByNameOrNumber(),
                     libraryPreferences.sortEpisodeByAscendingOrDescending(),

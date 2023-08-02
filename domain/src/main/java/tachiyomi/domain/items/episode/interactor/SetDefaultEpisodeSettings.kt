@@ -20,9 +20,9 @@ class SetAnimeDefaultEpisodeFlags(
                     unseenFilter = filterEpisodeBySeen().get(),
                     downloadedFilter = filterEpisodeByDownloaded().get(),
                     bookmarkedFilter = filterEpisodeByBookmarked().get(),
-                    // AM (FM) -->
+                    // AM (FILLER) -->
                     fillermarkedFilter = filterEpisodeByFillermarked().get(),
-                    // <-- AM (FM)
+                    // <-- AM (FILLER)
                     sortingMode = sortEpisodeBySourceOrNumber().get(),
                     sortingDirection = sortEpisodeByAscendingOrDescending().get(),
                     displayMode = displayEpisodeByNameOrNumber().get(),

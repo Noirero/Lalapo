@@ -123,7 +123,7 @@ internal fun MigrateAnimeDialog(
                             onDismissRequest()
                         },
                     ) {
-                        Text(text = stringResource(R.string.action_show_manga))
+                        Text(text = stringResource(R.string.action_show_anime))
                     }
 
                     Spacer(modifier = Modifier.weight(1f))

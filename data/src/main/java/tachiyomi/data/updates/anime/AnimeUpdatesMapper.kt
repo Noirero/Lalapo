@@ -3,7 +3,7 @@ package tachiyomi.data.updates.anime
 import tachiyomi.domain.entries.anime.model.AnimeCover
 import tachiyomi.domain.updates.anime.model.AnimeUpdatesWithRelations
 
-// AM (FM)>
+// AM (FILLER)>
 val animeUpdateWithRelationMapper: (Long, String, Long, String, String?, Boolean, Boolean, Boolean, Long, Long, Long, Boolean, String?, Long, Long, Long) -> AnimeUpdatesWithRelations = {
         animeId, animeTitle, episodeId, episodeName, scanlator, seen, bookmark, fillermark, lastSecondSeen, totalSeconds, sourceId, favorite, thumbnailUrl, coverLastModified, _, dateFetch ->
     AnimeUpdatesWithRelations(
@@ -16,9 +16,9 @@ val animeUpdateWithRelationMapper: (Long, String, Long, String, String?, Boolean
         scanlator = scanlator,
         seen = seen,
         bookmark = bookmark,
-        // AM (FM) -->
+        // AM (FILLER) -->
         fillermark = fillermark,
-        // <-- AM (FM)
+        // <-- AM (FILLER)
         lastSecondSeen = lastSecondSeen,
         totalSeconds = totalSeconds,
         sourceId = sourceId,

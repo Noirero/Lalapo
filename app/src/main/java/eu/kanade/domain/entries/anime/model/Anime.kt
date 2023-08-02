@@ -22,9 +22,9 @@ fun Anime.episodesFiltered(): Boolean {
     return unseenFilter != TriStateFilter.DISABLED ||
         downloadedFilter != TriStateFilter.DISABLED ||
         bookmarkedFilter != TriStateFilter.DISABLED ||
-        // AM (FM) -->
+        // AM (FILLER) -->
         fillermarkedFilter != TriStateFilter.DISABLED
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 }
 fun Anime.forceDownloaded(): Boolean {
     return favorite && Injekt.get<BasePreferences>().downloadedOnly().get()

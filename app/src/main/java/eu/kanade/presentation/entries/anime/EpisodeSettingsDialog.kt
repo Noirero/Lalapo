@@ -24,14 +24,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.entries.anime.model.downloadedFilter
 import eu.kanade.domain.entries.anime.model.forceDownloaded
-import eu.kanade.presentation.components.RadioItem
-import eu.kanade.presentation.components.SortItem
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.components.TriStateItem
 import eu.kanade.tachiyomi.R
 import tachiyomi.domain.entries.TriStateFilter
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.presentation.core.components.RadioItem
+import tachiyomi.presentation.core.components.SortItem
 
 @Composable
 fun EpisodeSettingsDialog(
@@ -40,9 +40,9 @@ fun EpisodeSettingsDialog(
     onDownloadFilterChanged: (TriStateFilter) -> Unit,
     onUnseenFilterChanged: (TriStateFilter) -> Unit,
     onBookmarkedFilterChanged: (TriStateFilter) -> Unit,
-    // AM (FM) -->
+    // AM (FILLER) -->
     onFillermarkedFilterChanged: (TriStateFilter) -> Unit,
-    // <-- AM (FM)
+    // <-- AM (FILLER)
     onSortModeChanged: (Long) -> Unit,
     onDisplayModeChanged: (Long) -> Unit,
     onSetAsDefault: (applyToExistingAnime: Boolean) -> Unit,
@@ -87,10 +87,10 @@ fun EpisodeSettingsDialog(
                         onUnseenFilterChanged = onUnseenFilterChanged,
                         bookmarkedFilter = anime?.bookmarkedFilter ?: TriStateFilter.DISABLED,
                         onBookmarkedFilterChanged = onBookmarkedFilterChanged,
-                        // AM (FM) -->
+                        // AM (FILLER) -->
                         fillermarkedFilter = anime?.fillermarkedFilter ?: TriStateFilter.DISABLED,
                         onFillermarkedFilterChanged = onFillermarkedFilterChanged,
-                        // <-- AM (FM)
+                        // <-- AM (FILLER)
                     )
                 }
                 1 -> {

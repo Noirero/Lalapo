@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -318,7 +317,7 @@ class BrowseAnimeSourceScreenModel(
         return getCategories.subscribe()
             .firstOrNull()
             ?.filterNot { it.isSystemCategory }
-            ?: emptyList()
+            .orEmpty()
     }
 
     suspend fun getDuplicateAnimelibAnime(anime: Anime): Anime? {

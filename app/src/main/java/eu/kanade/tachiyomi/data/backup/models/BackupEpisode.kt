@@ -13,9 +13,9 @@ data class BackupEpisode(
     @ProtoNumber(3) var scanlator: String? = null,
     @ProtoNumber(4) var seen: Boolean = false,
     @ProtoNumber(5) var bookmark: Boolean = false,
-    // AM (FM) -->
+    // AM (FILLER) -->
     @ProtoNumber(15) var fillermark: Boolean = false,
-    // <-- AM (FM)
+    // <-- AM (FILLER)
     // lastPageRead is called progress in 1.x
     @ProtoNumber(6) var lastSecondSeen: Long = 0,
     @ProtoNumber(16) var totalSeconds: Long = 0,
@@ -33,9 +33,9 @@ data class BackupEpisode(
             scanlator = this@BackupEpisode.scanlator,
             seen = this@BackupEpisode.seen,
             bookmark = this@BackupEpisode.bookmark,
-            // AM (FM) -->
+            // AM (FILLER) -->
             fillermark = this@BackupEpisode.fillermark,
-            // <-- AM (FM)
+            // <-- AM (FILLER)
             lastSecondSeen = this@BackupEpisode.lastSecondSeen,
             totalSeconds = this@BackupEpisode.totalSeconds,
             dateFetch = this@BackupEpisode.dateFetch,
@@ -53,9 +53,9 @@ val backupEpisodeMapper = { _: Long, _: Long, url: String, name: String, scanlat
         scanlator = scanlator,
         seen = seen,
         bookmark = bookmark,
-        // AM (FM) -->
+        // AM (FILLER) -->
         fillermark = fillermark,
-        // <-- AM (FM)
+        // <-- AM (FILLER)
         lastSecondSeen = lastSecondSeen,
         totalSeconds = totalSeconds,
         dateFetch = dateFetch,

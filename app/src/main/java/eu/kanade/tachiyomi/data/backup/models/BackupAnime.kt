@@ -115,7 +115,7 @@ data class BackupAnime(
                 artist = anime.ogArtist,
                 author = anime.ogAuthor,
                 description = anime.ogDescription,
-                genre = anime.ogGenre ?: emptyList(),
+                genre = anime.ogGenre.orEmpty(),
                 status = anime.ogStatus.toInt(),
                 // <-- AM (CU)
                 thumbnailUrl = anime.thumbnailUrl,

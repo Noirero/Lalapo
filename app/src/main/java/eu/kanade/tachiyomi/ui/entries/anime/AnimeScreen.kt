@@ -106,6 +106,8 @@ class AnimeScreen(
             dateRelativeTime = screenModel.relativeTime,
             dateFormat = screenModel.dateFormat,
             isTabletUi = isTabletUi(),
+            episodeSwipeEndAction = screenModel.episodeSwipeEndAction,
+            episodeSwipeStartAction = screenModel.episodeSwipeStartAction,
             onBackClicked = navigator::pop,
             onEpisodeClicked = { episode, alt ->
                 scope.launchIO {
@@ -141,12 +143,13 @@ class AnimeScreen(
             onEditInfoClicked = screenModel::showEditAnimeInfoDialog,
             // <-- AM (CU)
             onMultiBookmarkClicked = screenModel::bookmarkEpisodes,
-            // AM (FM) -->
+            // AM (FILLER) -->
             onMultiFillermarkClicked = screenModel::fillermarkEpisodes,
-            // <-- AM (FM)
+            // <-- AM (FILLER)
             onMultiMarkAsSeenClicked = screenModel::markEpisodesSeen,
             onMarkPreviousAsSeenClicked = screenModel::markPreviousEpisodeSeen,
             onMultiDeleteClicked = screenModel::showDeleteEpisodeDialog,
+            onEpisodeSwipe = screenModel::episodeSwipe,
             onEpisodeSelected = screenModel::toggleSelection,
             onAllEpisodeSelected = screenModel::toggleAllSelection,
             onInvertSelection = screenModel::invertSelection,
@@ -192,9 +195,9 @@ class AnimeScreen(
                 onDownloadFilterChanged = screenModel::setDownloadedFilter,
                 onUnseenFilterChanged = screenModel::setUnseenFilter,
                 onBookmarkedFilterChanged = screenModel::setBookmarkedFilter,
-                // AM (FM) -->
+                // AM (FILLER) -->
                 onFillermarkedFilterChanged = screenModel::setFillermarkedFilter,
-                // <-- AM (FM)
+                // <-- AM (FILLER)
                 onSortModeChanged = screenModel::setSorting,
                 onDisplayModeChanged = screenModel::setDisplayMode,
                 onSetAsDefault = screenModel::setCurrentSettingsAsDefault,

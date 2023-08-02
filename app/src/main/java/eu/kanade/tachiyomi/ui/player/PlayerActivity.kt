@@ -1477,7 +1477,7 @@ class PlayerActivity : BaseActivity() {
         // aniSkip stuff
         waitingAniSkip = playerPreferences.waitingTimeAniSkip().get()
         runBlocking {
-            if (!aniSkipEnable) {
+            if (aniSkipEnable) {
                 aniSkipInterval = viewModel.aniSkipResponse(player.duration)
                 aniSkipInterval?.let {
                     aniskipStamps = it

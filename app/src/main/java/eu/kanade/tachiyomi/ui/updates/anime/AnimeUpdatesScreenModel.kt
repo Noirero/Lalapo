@@ -237,7 +237,7 @@ class AnimeUpdatesScreenModel(
         toggleAllSelection(false)
     }
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     /**
      * Fillermarks the given list of episodes.
      * @param updates the list of episodes to fillermark.
@@ -251,7 +251,7 @@ class AnimeUpdatesScreenModel(
         }
         toggleAllSelection(false)
     }
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     /**
      * Downloads the given list of episodes with the manager.

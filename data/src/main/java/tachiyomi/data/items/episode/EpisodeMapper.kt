@@ -2,7 +2,7 @@ package tachiyomi.data.items.episode
 
 import tachiyomi.domain.items.episode.model.Episode
 
-// AM (FM)>
+// AM (FILLER)>
 val episodeMapper: (Long, Long, String, String, String?, Boolean, Boolean, Boolean, Long, Long, Float, Long, Long, Long) -> Episode =
     { id, animeId, url, name, scanlator, seen, bookmark, fillermark, lastSecondSeen, totalSeconds, episodeNumber, sourceOrder, dateFetch, dateUpload ->
         Episode(
@@ -10,9 +10,9 @@ val episodeMapper: (Long, Long, String, String, String?, Boolean, Boolean, Boole
             animeId = animeId,
             seen = seen,
             bookmark = bookmark,
-            // AM (FM) -->
+            // AM (FILLER) -->
             fillermark = fillermark,
-            // <-- AM (FM)
+            // <-- AM (FILLER)
             lastSecondSeen = lastSecondSeen,
             totalSeconds = totalSeconds,
             dateFetch = dateFetch,

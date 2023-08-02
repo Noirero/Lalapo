@@ -204,14 +204,14 @@ private fun AnimeUpdatesBottomBar(
         onRemoveBookmarkClicked = {
             onMultiBookmarkClicked.invoke(selected, false)
         }.takeIf { selected.fastAll { it.update.bookmark } },
-        // AM (FM) -->
+        // AM (FILLER) -->
         onFillermarkClicked = {
             onMultiFillermarkClicked.invoke(selected, true)
         }.takeIf { selected.fastAny { !it.update.fillermark } },
         onRemoveFillermarkClicked = {
             onMultiFillermarkClicked.invoke(selected, false)
         }.takeIf { selected.fastAll { it.update.fillermark } },
-        // <-- AM (FM)
+        // <-- AM (FILLER)
         onMarkAsViewedClicked = {
             onMultiMarkAsSeenClicked(selected, true)
         }.takeIf { selected.fastAny { !it.update.seen } },

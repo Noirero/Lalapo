@@ -79,6 +79,7 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.service.missingItemsCount
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.presentation.core.components.LazyColumn
 import tachiyomi.presentation.core.components.TwoPanelBox
@@ -103,6 +104,8 @@ fun AnimeScreen(
     dateRelativeTime: Int,
     dateFormat: DateFormat,
     isTabletUi: Boolean,
+    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
     onBackClicked: () -> Unit,
     onEpisodeClicked: (episode: Episode, alt: Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -135,12 +138,15 @@ fun AnimeScreen(
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
-    // AM (FM) -->
+    // AM (FILLER) -->
     onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
-    // <-- AM (FM)
+    // <-- AM (FILLER)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
+
+    // For episode swipe
+    onEpisodeSwipe: (EpisodeItem, LibraryPreferences.EpisodeSwipeAction) -> Unit,
 
     // Episode selection
     onEpisodeSelected: (EpisodeItem, Boolean, Boolean, Boolean) -> Unit,
@@ -160,6 +166,8 @@ fun AnimeScreen(
             snackbarHostState = snackbarHostState,
             dateRelativeTime = dateRelativeTime,
             dateFormat = dateFormat,
+            episodeSwipeEndAction = episodeSwipeEndAction,
+            episodeSwipeStartAction = episodeSwipeStartAction,
             onBackClicked = onBackClicked,
             onEpisodeClicked = onEpisodeClicked,
             onDownloadEpisode = onDownloadEpisode,
@@ -183,12 +191,13 @@ fun AnimeScreen(
             onEditInfoClicked = onEditInfoClicked,
             // <-- AM (CU)
             onMultiBookmarkClicked = onMultiBookmarkClicked,
-            // AM (FM) -->
+            // AM (FILLER) -->
             onMultiFillermarkClicked = onMultiFillermarkClicked,
-            // <-- AM (FM)
+            // <-- AM (FILLER)
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
             onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
+            onEpisodeSwipe = onEpisodeSwipe,
             onEpisodeSelected = onEpisodeSelected,
             onAllEpisodeSelected = onAllEpisodeSelected,
             onInvertSelection = onInvertSelection,
@@ -198,6 +207,8 @@ fun AnimeScreen(
             state = state,
             snackbarHostState = snackbarHostState,
             dateRelativeTime = dateRelativeTime,
+            episodeSwipeEndAction = episodeSwipeEndAction,
+            episodeSwipeStartAction = episodeSwipeStartAction,
             dateFormat = dateFormat,
             onBackClicked = onBackClicked,
             onEpisodeClicked = onEpisodeClicked,
@@ -222,12 +233,13 @@ fun AnimeScreen(
             onEditInfoClicked = onEditInfoClicked,
             // <-- AM (CU)
             onMultiBookmarkClicked = onMultiBookmarkClicked,
-            // AM (FM) -->
+            // AM (FILLER) -->
             onMultiFillermarkClicked = onMultiFillermarkClicked,
-            // <-- AM (FM)
+            // <-- AM (FILLER)
             onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
             onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
+            onEpisodeSwipe = onEpisodeSwipe,
             onEpisodeSelected = onEpisodeSelected,
             onAllEpisodeSelected = onAllEpisodeSelected,
             onInvertSelection = onInvertSelection,
@@ -242,6 +254,8 @@ private fun AnimeScreenSmallImpl(
     snackbarHostState: SnackbarHostState,
     dateRelativeTime: Int,
     dateFormat: DateFormat,
+    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
     onBackClicked: () -> Unit,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -275,12 +289,15 @@ private fun AnimeScreenSmallImpl(
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
-    // AM (FM) -->
+    // AM (FILLER) -->
     onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
-    // <-- AM (FM)
+    // <-- AM (FILLER)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
+
+    // For episode swipe
+    onEpisodeSwipe: (EpisodeItem, LibraryPreferences.EpisodeSwipeAction) -> Unit,
 
     // Episode selection
     onEpisodeSelected: (EpisodeItem, Boolean, Boolean, Boolean) -> Unit,
@@ -340,9 +357,9 @@ private fun AnimeScreenSmallImpl(
                 selected = episodes.filter { it.selected },
                 onEpisodeClicked = onEpisodeClicked,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
-                // AM (FM) -->
+                // AM (FILLER) -->
                 onMultiFillermarkClicked = onMultiFillermarkClicked,
-                // <-- AM (FM)
+                // <-- AM (FILLER)
                 onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                 onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
                 onDownloadEpisode = onDownloadEpisode,
@@ -494,9 +511,12 @@ private fun AnimeScreenSmallImpl(
                         episodes = episodes,
                         dateRelativeTime = dateRelativeTime,
                         dateFormat = dateFormat,
+                        episodeSwipeEndAction = episodeSwipeEndAction,
+                        episodeSwipeStartAction = episodeSwipeStartAction,
                         onEpisodeClicked = onEpisodeClicked,
                         onDownloadEpisode = onDownloadEpisode,
                         onEpisodeSelected = onEpisodeSelected,
+                        onEpisodeSwipe = onEpisodeSwipe,
                     )
                 }
             }
@@ -511,6 +531,8 @@ fun AnimeScreenLargeImpl(
     snackbarHostState: SnackbarHostState,
     dateRelativeTime: Int,
     dateFormat: DateFormat,
+    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
     onBackClicked: () -> Unit,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -544,12 +566,15 @@ fun AnimeScreenLargeImpl(
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
-    // AM (FM) -->
+    // AM (FILLER) -->
     onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
-    // <-- AM (FM)
+    // <-- AM (FILLER)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
+
+    // For swipe actions
+    onEpisodeSwipe: (EpisodeItem, LibraryPreferences.EpisodeSwipeAction) -> Unit,
 
     // Episode selection
     onEpisodeSelected: (EpisodeItem, Boolean, Boolean, Boolean) -> Unit,
@@ -619,9 +644,9 @@ fun AnimeScreenLargeImpl(
                         selected = episodes.filter { it.selected },
                         onEpisodeClicked = onEpisodeClicked,
                         onMultiBookmarkClicked = onMultiBookmarkClicked,
-                        // AM (FM) -->
+                        // AM (FILLER) -->
                         onMultiFillermarkClicked = onMultiFillermarkClicked,
-                        // <-- AM (FM)
+                        // <-- AM (FILLER)
                         onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                         onMarkPreviousAsSeenClicked = onMarkPreviousAsSeenClicked,
                         onDownloadEpisode = onDownloadEpisode,
@@ -754,9 +779,12 @@ fun AnimeScreenLargeImpl(
                                 episodes = episodes,
                                 dateRelativeTime = dateRelativeTime,
                                 dateFormat = dateFormat,
+                                episodeSwipeEndAction = episodeSwipeEndAction,
+                                episodeSwipeStartAction = episodeSwipeStartAction,
                                 onEpisodeClicked = onEpisodeClicked,
                                 onDownloadEpisode = onDownloadEpisode,
                                 onEpisodeSelected = onEpisodeSelected,
+                                onEpisodeSwipe = onEpisodeSwipe,
                             )
                         }
                     }
@@ -772,9 +800,9 @@ private fun SharedAnimeBottomActionMenu(
     modifier: Modifier = Modifier,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
-    // AM (FM) -->
+    // AM (FILLER) -->
     onMultiFillermarkClicked: (List<Episode>, fillermarked: Boolean) -> Unit,
-    // <-- AM (FM)
+    // <-- AM (FILLER)
     onMultiMarkAsSeenClicked: (List<Episode>, markAsSeen: Boolean) -> Unit,
     onMarkPreviousAsSeenClicked: (Episode) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -791,14 +819,14 @@ private fun SharedAnimeBottomActionMenu(
         onRemoveBookmarkClicked = {
             onMultiBookmarkClicked.invoke(selected.fastMap { it.episode }, false)
         }.takeIf { selected.fastAll { it.episode.bookmark } },
-        // AM (FM) -->
+        // AM (FILLER) -->
         onFillermarkClicked = {
             onMultiFillermarkClicked.invoke(selected.fastMap { it.episode }, true)
         }.takeIf { selected.fastAny { !it.episode.fillermark } },
         onRemoveFillermarkClicked = {
             onMultiFillermarkClicked.invoke(selected.fastMap { it.episode }, false)
         }.takeIf { selected.fastAll { it.episode.fillermark } },
-        // <-- AM (FM)
+        // <-- AM (FILLER)
         onMarkAsViewedClicked = {
             onMultiMarkAsSeenClicked(selected.fastMap { it.episode }, true)
         }.takeIf { selected.fastAny { !it.episode.seen } },
@@ -836,9 +864,12 @@ private fun LazyListScope.sharedEpisodeItems(
     episodes: List<EpisodeItem>,
     dateRelativeTime: Int,
     dateFormat: DateFormat,
+    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
     onEpisodeSelected: (EpisodeItem, Boolean, Boolean, Boolean) -> Unit,
+    onEpisodeSwipe: (EpisodeItem, LibraryPreferences.EpisodeSwipeAction) -> Unit,
 ) {
     items(
         items = episodes,
@@ -897,13 +928,15 @@ private fun LazyListScope.sharedEpisodeItems(
             scanlator = episodeItem.episode.scanlator.takeIf { !it.isNullOrBlank() },
             seen = episodeItem.episode.seen,
             bookmark = episodeItem.episode.bookmark,
-            // AM (FM) -->
+            // AM (FILLER) -->
             fillermark = episodeItem.episode.fillermark,
-            // <-- AM (FM)
+            // <-- AM (FILLER)
             selected = episodeItem.selected,
             downloadIndicatorEnabled = episodes.fastAll { !it.selected },
             downloadStateProvider = { episodeItem.downloadState },
             downloadProgressProvider = { episodeItem.downloadProgress },
+            episodeSwipeEndAction = episodeSwipeEndAction,
+            episodeSwipeStartAction = episodeSwipeStartAction,
             onLongClick = {
                 onEpisodeSelected(episodeItem, !episodeItem.selected, true, true)
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -920,6 +953,9 @@ private fun LazyListScope.sharedEpisodeItems(
                 { onDownloadEpisode(listOf(episodeItem), it) }
             } else {
                 null
+            },
+            onEpisodeSwipe = {
+                onEpisodeSwipe(episodeItem, it)
             },
             // AM (FS) -->
             fileSize = fileSizeAsync,

@@ -59,6 +59,7 @@ object SettingsLibraryScreen : SearchableSettings {
         return mutableListOf(
             getCategoriesGroup(LocalNavigator.currentOrThrow, allAnimeCategories, libraryPreferences),
             getGlobalUpdateGroup(allAnimeCategories, libraryPreferences),
+            getEpisodeSwipeActionsGroup(libraryPreferences),
         )
     }
 
@@ -226,6 +227,43 @@ object SettingsLibraryScreen : SearchableSettings {
                     enabled = Injekt.get<TrackManager>().hasLoggedServices(),
                     title = stringResource(R.string.pref_library_update_refresh_trackers),
                     subtitle = stringResource(R.string.pref_library_update_refresh_trackers_summary),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getEpisodeSwipeActionsGroup(
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(R.string.pref_episode_swipe),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.ListPreference(
+                    pref = libraryPreferences.swipeEpisodeEndAction(),
+                    title = stringResource(R.string.pref_episode_swipe_end),
+                    entries = mapOf(
+                        LibraryPreferences.EpisodeSwipeAction.Disabled to stringResource(R.string.action_disable),
+                        LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to stringResource(R.string.action_bookmark_episode),
+                        // AM (FILLER) -->
+                        LibraryPreferences.EpisodeSwipeAction.ToggleFillermark to stringResource(R.string.action_fillermark_episode),
+                        // <-- AM (FILLER)
+                        LibraryPreferences.EpisodeSwipeAction.ToggleSeen to stringResource(R.string.action_mark_as_seen),
+                        LibraryPreferences.EpisodeSwipeAction.Download to stringResource(R.string.action_download),
+                    ),
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    pref = libraryPreferences.swipeEpisodeEndAction(),
+                    title = stringResource(R.string.pref_episode_swipe_start),
+                    entries = mapOf(
+                        LibraryPreferences.EpisodeSwipeAction.Disabled to stringResource(R.string.action_disable),
+                        LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to stringResource(R.string.action_bookmark_episode),
+                        // AM (FILLER) -->
+                        LibraryPreferences.EpisodeSwipeAction.ToggleFillermark to stringResource(R.string.action_fillermark_episode),
+                        // <-- AM (FILLER)
+                        LibraryPreferences.EpisodeSwipeAction.ToggleSeen to stringResource(R.string.action_mark_as_seen),
+                        LibraryPreferences.EpisodeSwipeAction.Download to stringResource(R.string.action_download),
+                    ),
                 ),
             ),
         )

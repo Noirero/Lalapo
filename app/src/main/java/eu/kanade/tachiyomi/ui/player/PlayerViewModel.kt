@@ -163,7 +163,7 @@ class PlayerViewModel(
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(it.name, it.scanlator, anime.ogTitle, anime.source) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
-                // AM (FM)>
+                // AM (FILLER)>
                 anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
                 anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
         }.toMutableList()
@@ -437,7 +437,7 @@ class PlayerViewModel(
         }
     }
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     /**
      * Fillermarks the currently active episode.
      */
@@ -451,7 +451,7 @@ class PlayerViewModel(
             )
         }
     }
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     /**
      * Saves the screenshot on the pictures directory and notifies the UI of the result.

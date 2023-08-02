@@ -8,9 +8,9 @@ data class LibraryAnime(
     val totalEpisodes: Long,
     val seenCount: Long,
     val bookmarkCount: Long,
-    // AM (FM) -->
+    // AM (FILLER) -->
     val fillermarkCount: Long,
-    // <-- AM (FM)
+    // <-- AM (FILLER)
     val latestUpload: Long,
     val episodeFetchedAt: Long,
     val lastSeen: Long,
@@ -23,10 +23,10 @@ data class LibraryAnime(
     val hasBookmarks
         get() = bookmarkCount > 0
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     val hasFillermarks
         get() = fillermarkCount > 0
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     val hasStarted = seenCount > 0
 }

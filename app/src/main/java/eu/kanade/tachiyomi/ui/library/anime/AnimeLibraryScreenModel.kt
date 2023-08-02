@@ -174,9 +174,9 @@ class AnimeLibraryScreenModel(
                     prefs.filterUnseen,
                     prefs.filterStarted,
                     prefs.filterBookmarked,
-                    // AM (FM) -->
+                    // AM (FILLER) -->
                     prefs.filterFillermarked,
-                    // <-- AM (FM)
+                    // <-- AM (FILLER)
                     prefs.filterCompleted,
                 ) + trackFilter.values
                 ).any { it != TriStateFilter.DISABLED }
@@ -214,9 +214,9 @@ class AnimeLibraryScreenModel(
         val filterUnseen = prefs.filterUnseen
         val filterStarted = prefs.filterStarted
         val filterBookmarked = prefs.filterBookmarked
-        // AM (FM) -->
+        // AM (FILLER) -->
         val filterFillermarked = prefs.filterFillermarked
-        // <-- AM (FM)
+        // <-- AM (FILLER)
         val filterCompleted = prefs.filterCompleted
 
         val isNotLoggedInAnyTrack = loggedInTrackServices.isEmpty()
@@ -245,11 +245,11 @@ class AnimeLibraryScreenModel(
             applyFilter(filterBookmarked) { it.libraryAnime.hasBookmarks }
         }
 
-        // AM (FM) -->
+        // AM (FILLER) -->
         val filterFnFillermarked: (AnimeLibraryItem) -> Boolean = {
             applyFilter(filterFillermarked) { it.libraryAnime.hasFillermarks }
         }
-        // <-- AM (FM)
+        // <-- AM (FILLER)
 
         val filterFnCompleted: (AnimeLibraryItem) -> Boolean = {
             applyFilter(filterCompleted) { it.libraryAnime.anime.status.toInt() == SAnime.COMPLETED }
@@ -271,9 +271,9 @@ class AnimeLibraryScreenModel(
                 filterFnUnseen(it) &&
                 filterFnStarted(it) &&
                 filterFnBookmarked(it) &&
-                // AM (FM) -->
+                // AM (FILLER) -->
                 filterFnFillermarked(it) &&
-                // <-- AM (FM)
+                // <-- AM (FILLER)
                 filterFnCompleted(it) &&
                 filterFnTracking(it)
         }
@@ -359,9 +359,9 @@ class AnimeLibraryScreenModel(
             libraryPreferences.filterUnseen().changes(),
             libraryPreferences.filterStartedAnime().changes(),
             libraryPreferences.filterBookmarkedAnime().changes(),
-            // AM (FM) -->
+            // AM (FILLER) -->
             libraryPreferences.filterFillermarkedAnime().changes(),
-            // <-- AM (FM)
+            // <-- AM (FILLER)
             libraryPreferences.filterCompletedAnime().changes(),
             transform = {
                 ItemPreferences(
@@ -373,9 +373,9 @@ class AnimeLibraryScreenModel(
                     filterUnseen = it[5] as TriStateFilter,
                     filterStarted = it[6] as TriStateFilter,
                     filterBookmarked = it[7] as TriStateFilter,
-                    // AM (FM) -->
+                    // AM (FILLER) -->
                     filterFillermarked = it[8] as TriStateFilter,
-                    // <-- AM (FM)
+                    // <-- AM (FILLER)
                     filterCompleted = it[9] as TriStateFilter,
                 )
             },
@@ -420,7 +420,7 @@ class AnimeLibraryScreenModel(
                 categories
             }
 
-            displayCategories.associateWith { animelibAnime[it.id] ?: emptyList() }
+            displayCategories.associateWith { animelibAnime[it.id].orEmpty() }
         }
     }
 
@@ -844,9 +844,9 @@ class AnimeLibraryScreenModel(
         val filterUnseen: TriStateFilter,
         val filterStarted: TriStateFilter,
         val filterBookmarked: TriStateFilter,
-        // AM (FM) -->
+        // AM (FILLER) -->
         val filterFillermarked: TriStateFilter,
-        // <-- AM (FM)
+        // <-- AM (FILLER)
         val filterCompleted: TriStateFilter,
     )
 
@@ -883,7 +883,7 @@ class AnimeLibraryScreenModel(
         }
 
         fun getAnimelibItemsByPage(page: Int): List<AnimeLibraryItem> {
-            return library.values.toTypedArray().getOrNull(page) ?: emptyList()
+            return library.values.toTypedArray().getOrNull(page).orEmpty()
         }
 
         fun getAnimeCountForCategory(category: Category): Int? {

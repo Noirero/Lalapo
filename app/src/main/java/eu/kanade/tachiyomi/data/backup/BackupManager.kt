@@ -564,11 +564,11 @@ class BackupManager(
                 if (!updatedEpisode.bookmark && dbEpisode.bookmark) {
                     updatedEpisode = updatedEpisode.copy(bookmark = dbEpisode.bookmark)
                 }
-                // AM (FM) -->
+                // AM (FILLER) -->
                 if (!updatedEpisode.fillermark && dbEpisode.fillermark) {
                     updatedEpisode = updatedEpisode.copy(fillermark = dbEpisode.fillermark)
                 }
-                // <-- AM (FM)
+                // <-- AM (FILLER)
             }
 
             updatedEpisode.copy(animeId = anime.id)
@@ -608,6 +608,7 @@ class BackupManager(
                 favorite = anime.favorite,
                 lastUpdate = anime.lastUpdate,
                 nextUpdate = 0L,
+                calculateInterval = 0L,
                 initialized = anime.initialized,
                 viewerFlags = anime.viewerFlags,
                 episodeFlags = anime.episodeFlags,
@@ -633,6 +634,8 @@ class BackupManager(
                 thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite.toLong(),
                 lastUpdate = anime.lastUpdate,
+                nextUpdate = null,
+                calculateInterval = null,
                 initialized = anime.initialized.toLong(),
                 viewer = anime.viewerFlags,
                 episodeFlags = anime.episodeFlags,
@@ -658,9 +661,9 @@ class BackupManager(
                     episode.scanlator,
                     episode.seen,
                     episode.bookmark,
-                    // AM (FM) -->
+                    // AM (FILLER) -->
                     episode.fillermark,
-                    // <-- AM (FM)
+                    // <-- AM (FILLER)
                     episode.lastSecondSeen,
                     episode.totalSeconds,
                     episode.episodeNumber,
@@ -685,9 +688,9 @@ class BackupManager(
                     scanlator = null,
                     seen = episode.seen.toLong(),
                     bookmark = episode.bookmark.toLong(),
-                    // AM (FM) -->
+                    // AM (FILLER) -->
                     fillermark = episode.fillermark.toLong(),
-                    // <-- AM (FM)
+                    // <-- AM (FILLER)
                     lastSecondSeen = episode.lastSecondSeen,
                     totalSeconds = episode.totalSeconds,
                     episodeNumber = null,

@@ -12,6 +12,8 @@ data class Anime(
     val source: Long,
     val favorite: Boolean,
     val lastUpdate: Long,
+    val nextUpdate: Long,
+    val calculateInterval: Int,
     val dateAdded: Long,
     val viewerFlags: Long,
     val episodeFlags: Long,
@@ -71,10 +73,10 @@ data class Anime(
     val bookmarkedFilterRaw: Long
         get() = episodeFlags and EPISODE_BOOKMARKED_MASK
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     val fillermarkedFilterRaw: Long
         get() = episodeFlags and EPISODE_FILLERMARKED_MASK
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     val skipIntroLength: Int
         get() = (viewerFlags and ANIME_INTRO_MASK).toInt()
@@ -99,14 +101,14 @@ data class Anime(
             else -> TriStateFilter.DISABLED
         }
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     val fillermarkedFilter: TriStateFilter
         get() = when (fillermarkedFilterRaw) {
             EPISODE_SHOW_FILLERMARKED -> TriStateFilter.ENABLED_IS
             EPISODE_SHOW_NOT_FILLERMARKED -> TriStateFilter.ENABLED_NOT
             else -> TriStateFilter.DISABLED
         }
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     fun sortDescending(): Boolean {
         return episodeFlags and EPISODE_SORT_DIR_MASK == EPISODE_SORT_DESC
@@ -137,7 +139,7 @@ data class Anime(
         const val EPISODE_SHOW_NOT_BOOKMARKED = 0x00000040L
         const val EPISODE_BOOKMARKED_MASK = 0x00000060L
 
-        // AM (FM) -->
+        // AM (FILLER) -->
         const val EPISODE_SHOW_FILLERMARKED = 0x00000080L
         const val EPISODE_SHOW_NOT_FILLERMARKED = 0x00000100L
         const val EPISODE_FILLERMARKED_MASK = 0x00000180L
@@ -146,7 +148,7 @@ data class Anime(
         const val EPISODE_SORTING_NUMBER = 0x00000200L
         const val EPISODE_SORTING_UPLOAD_DATE = 0x00000400L
         const val EPISODE_SORTING_MASK = 0x00000600L
-        // <-- AM (FM)
+        // <-- AM (FILLER)
 
         const val EPISODE_DISPLAY_NAME = 0x00000000L
         const val EPISODE_DISPLAY_NUMBER = 0x00100000L
@@ -165,6 +167,8 @@ data class Anime(
             source = -1L,
             favorite = false,
             lastUpdate = 0L,
+            nextUpdate = 0L,
+            calculateInterval = 0,
             dateAdded = 0L,
             viewerFlags = 0L,
             episodeFlags = 0L,

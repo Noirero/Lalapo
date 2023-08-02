@@ -11,7 +11,7 @@ plugins {
 
 // if (gradle.startParameter.taskRequests.toString().contains("Standard")) {
 //    apply<com.google.gms.googleservices.GoogleServicesPlugin>()
-//    apply(plugin = "com.google.firebase.crashlytics")
+//    apply<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsPlugin>()
 // }
 
 shortcutHelper.setFilePath("./shortcuts.xml")
@@ -23,9 +23,8 @@ android {
 
     defaultConfig {
         applicationId = "xyz.Quickdev.Animiru.mi"
-        minSdk = AndroidConfig.minSdk
-        targetSdk = AndroidConfig.targetSdk
-        versionCode = 102
+
+        versionCode = 103
         versionName = "0.15.0.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")

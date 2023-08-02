@@ -24,9 +24,9 @@ class EpisodeRepositoryImpl(
                         episode.scanlator,
                         episode.seen,
                         episode.bookmark,
-                        // AM (FM) -->
+                        // AM (FILLER) -->
                         episode.fillermark,
-                        // <-- AM (FM)
+                        // <-- AM (FILLER)
                         episode.lastSecondSeen,
                         episode.totalSeconds,
                         episode.episodeNumber,
@@ -62,9 +62,9 @@ class EpisodeRepositoryImpl(
                     scanlator = episodeUpdate.scanlator,
                     seen = episodeUpdate.seen?.toLong(),
                     bookmark = episodeUpdate.bookmark?.toLong(),
-                    // AM (FM) -->
+                    // AM (FILLER) -->
                     fillermark = episodeUpdate.fillermark?.toLong(),
-                    // <-- AM (FM)
+                    // <-- AM (FILLER)
                     lastSecondSeen = episodeUpdate.lastSecondSeen,
                     totalSeconds = episodeUpdate.totalSeconds,
                     episodeNumber = episodeUpdate.episodeNumber?.toDouble(),
@@ -93,11 +93,11 @@ class EpisodeRepositoryImpl(
         return handler.awaitList { episodesQueries.getBookmarkedEpisodesByAnimeId(animeId, episodeMapper) }
     }
 
-    // AM (FM) -->
+    // AM (FILLER) -->
     override suspend fun getFillermarkedEpisodesByAnimeId(animeId: Long): List<Episode> {
         return handler.awaitList { episodesQueries.getFillermarkedEpisodesByAnimeId(animeId, episodeMapper) }
     }
-    // <-- AM (FM)
+    // <-- AM (FILLER)
 
     override suspend fun getEpisodeById(id: Long): Episode? {
         return handler.awaitOneOrNull { episodesQueries.getEpisodeById(id, episodeMapper) }
