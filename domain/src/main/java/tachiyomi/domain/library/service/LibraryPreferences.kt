@@ -152,8 +152,10 @@ class LibraryPreferences(
     enum class EpisodeSwipeAction {
         ToggleSeen,
         ToggleBookmark,
+        
         // AM (FILLER) -->
         ToggleFillermark,
+
         // <-- AM (FILLER)
         Download,
         Disabled,
