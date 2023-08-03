@@ -132,9 +132,7 @@ private class MoreScreenModel(
                 AnimeDownloadService.isRunning,
                 animeDownloadManager.queueState,
             ) { isRunningAnime, animeDownloadQueue -> Pair(isRunningAnime, animeDownloadQueue.size) }
-                .collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
-                    val isDownloading = isDownloadingAnime
-                    val downloadQueueSize = animeDownloadQueueSize
+                .collectLatest { (isDownloading, downloadQueueSize) ->
                     val pendingDownloadExists = downloadQueueSize != 0
                     _state.value = when {
                         !pendingDownloadExists -> DownloadQueueState.Stopped

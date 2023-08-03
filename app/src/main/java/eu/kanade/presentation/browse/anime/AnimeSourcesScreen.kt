@@ -1,11 +1,9 @@
 package eu.kanade.presentation.browse.anime
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
@@ -118,28 +116,25 @@ fun AnimeSourcesScreen(
                 val extensionsListState = rememberLazyListState()
                 Scaffold(
                     floatingActionButton = {
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = fadeIn(),
-                            exit = fadeOut(),
-                        ) {
-                            // AM (BROWSE) -->
-                            val extensionUpdateCount by sourcePreferences.animeExtensionUpdatesCount().collectAsState()
-                            val buttonText = if (extensionUpdateCount != 0) R.string.ext_update else R.string.ext_install
-                            val buttonIcon = if (extensionUpdateCount != 0) Icons.Filled.Upload else Icons.Filled.Download
-                            ExtendedFloatingActionButton(
-                                text = { Text(text = stringResource(buttonText)) },
-                                // <-- AM (BROWSE)
-                                icon = {
-                                    Icon(
-                                        imageVector = buttonIcon,
-                                        contentDescription = null,
-                                    )
-                                },
-                                onClick = { navigator.push(AnimeExtensionsScreen()) },
-                                expanded = !(extensionsListState.isScrollingDown()) || extensionUpdateCount != 0,
-                            )
-                        }
+                        // AM (BROWSE) -->
+                        val extensionUpdateCount by sourcePreferences.animeExtensionUpdatesCount().collectAsState()
+                        val buttonText = if (extensionUpdateCount != 0) R.string.ext_update else R.string.ext_install
+                        val buttonIcon = if (extensionUpdateCount != 0) Icons.Filled.Upload else Icons.Filled.Download
+                        ExtendedFloatingActionButton(
+                            text = { Text(text = stringResource(buttonText)) },
+                            // <-- AM (BROWSE)
+                            icon = {
+                                Icon(
+                                    imageVector = buttonIcon,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = { navigator.push(AnimeExtensionsScreen()) },
+                            expanded = !(extensionsListState.isScrollingDown()) || extensionUpdateCount != 0,
+                            // AM (NAVPILL) -->
+                            modifier = Modifier.offset(y = -MaterialTheme.padding.superLarge),
+                            // <-- AM (NAVPILL)
+                        )
                     },
                 ) {
                     ScrollbarLazyColumn(

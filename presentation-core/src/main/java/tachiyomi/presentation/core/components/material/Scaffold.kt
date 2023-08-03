@@ -102,6 +102,9 @@ fun Scaffold(
     topBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
+    // AM (NAVPILL) -->
+    overlayBottomBar: Boolean = false,
+    // <-- AM (NAVPILL)
     startBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
@@ -130,6 +133,9 @@ fun Scaffold(
             snackbar = snackbarHost,
             contentWindowInsets = remainingWindowInsets,
             fab = floatingActionButton,
+            // AM (NAVPILL) -->
+            overlayBottomBar = overlayBottomBar,
+            // <-- AM (NAVPILL)
         )
     }
 }
@@ -157,6 +163,9 @@ private fun ScaffoldLayout(
     fab: @Composable () -> Unit,
     contentWindowInsets: WindowInsets,
     bottomBar: @Composable () -> Unit,
+    // AM (NAVPILL) -->
+    overlayBottomBar: Boolean,
+    // <-- AM (NAVPILL)
 ) {
     SubcomposeLayout { constraints ->
         val layoutWidth = constraints.maxWidth
@@ -266,7 +275,8 @@ private fun ScaffoldLayout(
                         topBarHeight.toDp()
                     },
                     bottom = // Tachiyomi: Also take account of fab height when providing inner padding
-                    if (bottomBarPlaceables.isEmpty() || bottomBarHeightPx == 0) {
+                    // AM (NAVPILL)>
+                    if (bottomBarPlaceables.isEmpty() || bottomBarHeightPx == 0 || overlayBottomBar) {
                         max(insets.calculateBottomPadding(), fabOffsetDp)
                     } else {
                         max(bottomBarHeightPx.toDp(), fabOffsetDp)
