@@ -516,7 +516,7 @@ class PlayerActivity : BaseActivity() {
         }
         abandonAudioFocus()
         // AM (DISCORD) -->
-        updateDiscordRPC()
+        updateDiscordRPC(exitingPlayer = true)
         // <-- AM (DISCORD)
         super.onDestroy()
     }
@@ -1207,7 +1207,7 @@ class PlayerActivity : BaseActivity() {
             playerControls.updateDecoderButton()
             playerControls.updateSpeedButton()
             // AM (DISCORD) -->
-            updateDiscordRPC()
+            updateDiscordRPC(exitingPlayer = false)
             // <-- AM (DISCORD)
         }
     }
@@ -1640,10 +1640,10 @@ class PlayerActivity : BaseActivity() {
     }
 
     // AM (DISCORD) -->
-    private fun updateDiscordRPC() {
+    private fun updateDiscordRPC(exitingPlayer: Boolean) {
         if (connectionsPreferences.enableDiscordRPC().get()) {
             viewModel.viewModelScope.launchIO {
-                if (!isFinishing) {
+                if (!exitingPlayer) {
                     DiscordRPCService.setPlayerActivity(
                         context = this@PlayerActivity,
                         PlayerData(

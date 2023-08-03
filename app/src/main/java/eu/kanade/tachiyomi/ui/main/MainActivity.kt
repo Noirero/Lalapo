@@ -74,6 +74,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.Constants
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
@@ -278,7 +279,7 @@ class MainActivity : BaseActivity() {
                         .onEach {
                             DiscordRPCService.stop(this@MainActivity.applicationContext, 0L)
                             DiscordRPCService.start(this@MainActivity.applicationContext)
-                            DiscordRPCService.setScreen(this@MainActivity, DiscordRPCService.lastUsedScreen)
+                            DiscordRPCService.setScreen(this@MainActivity, DiscordScreen.MORE)
                         }.launchIn(this)
                     // <-- AM (DISCORD)
                 }

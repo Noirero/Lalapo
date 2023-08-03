@@ -1,6 +1,8 @@
 // AM (DISCORD) -->
 
-// Thank you to the 最高 man for the code
+// Original library from https://github.com/dead8309/KizzyRPC (Thank you)
+// Thank you to the 最高 man for the refactored and simplified code
+// https://github.com/saikou-app/saikou
 package eu.kanade.tachiyomi.ui.setting.connections
 
 import android.annotation.SuppressLint

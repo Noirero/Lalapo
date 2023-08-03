@@ -91,7 +91,7 @@ class DiscordRPCService : Service() {
             }
         }
 
-        fun stop(context: Context, delay: Long = 60000L) {
+        fun stop(context: Context, delay: Long = 30000L) {
             handler.postDelayed(
                 { context.stopService(Intent(context, DiscordRPCService::class.java)) },
                 delay,
@@ -102,7 +102,7 @@ class DiscordRPCService : Service() {
 
         internal var lastUsedScreen = DiscordScreen.APP
             set(value) {
-                field = if (value != DiscordScreen.VIDEO || value != DiscordScreen.WEBVIEW) value else field
+                field = if (value == DiscordScreen.VIDEO || value == DiscordScreen.WEBVIEW) field else value
             }
 
         internal suspend fun setScreen(
@@ -110,35 +110,33 @@ class DiscordRPCService : Service() {
             discordScreen: DiscordScreen,
             playerData: PlayerData = PlayerData(),
         ) {
-            if (rpc == null) return
-
             if (PipState.mode == PipState.ON && discordScreen != DiscordScreen.VIDEO) return
             lastUsedScreen = discordScreen
 
+            if (rpc == null) return
+
+            val name = playerData.animeTitle ?: context.resources.getString(R.string.app_name)
+
             val details = playerData.animeTitle ?: context.resources.getString(discordScreen.details)
 
-            val state = playerData.episodeNumber ?: context.resources.getString(
-                if (discordScreen == DiscordScreen.BROWSE) R.string.label_sources else discordScreen.text,
-            )
-
-            val text = playerData.animeTitle ?: context.resources.getString(discordScreen.text)
+            val state = playerData.episodeNumber ?: context.resources.getString(discordScreen.text)
 
             val imageUrl = playerData.thumbnailUrl ?: discordScreen.imageUrl
 
             rpc!!.updateRPC(
                 activity = Activity(
-                    name = context.resources.getString(R.string.app_name),
-                    state = state,
+                    name = name,
                     details = details,
-                    type = 0,
-                    timestamps = Timestamps(start = since),
-                    assets = Assets(
+                    state = state,
+                    type = 3,
+                    timestamps = Activity.Timestamps(start = since),
+                    assets = Activity.Assets(
                         largeImage = "mp:$imageUrl",
                         smallImage = "mp:${DiscordScreen.APP.imageUrl}",
-                        largeText = text,
                         smallText = context.resources.getString(DiscordScreen.APP.text),
                     ),
                 ),
+                since = since,
             )
         }
 

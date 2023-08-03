@@ -1,38 +1,15 @@
 // AM (DISCORD) -->
 
-/*
- *   Copyright (c) 2023 Kizzy. All rights reserved.
- *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
- */
-
-// Library from https://github.com/dead8309/KizzyRPC (Thank you)
+// Original library from https://github.com/dead8309/KizzyRPC (Thank you)
+// Thank you to the 最高 man for the refactored and simplified code
+// https://github.com/saikou-app/saikou
 package eu.kanade.tachiyomi.data.connections.discord
 
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
-
-// Constant for Rich Presence operation code
-const val RICH_PRESENCE_OP_CODE = 3
 
 // Constant for logging tag
 const val RICH_PRESENCE_TAG = "discord_rpc"
@@ -44,7 +21,7 @@ private const val RICH_PRESENCE_APPLICATION_ID = "952899285983326208"
 private val RICH_PRESENCE_BUTTONS = listOf("Get the app!", "Join the Discord!")
 
 // Constant for metadata list
-private val RICH_PRESENCE_METADATA = Metadata(
+private val RICH_PRESENCE_METADATA = Activity.Metadata(
     listOf(
         "https://github.com/Quickdesh/Animiru",
         "https://discord.gg/yDuHDMwxhv",
@@ -53,141 +30,91 @@ private val RICH_PRESENCE_METADATA = Metadata(
 
 @Serializable
 data class Activity(
-    @SerialName("name")
-    val name: String?,
-    @SerialName("state")
-    val state: String? = null,
-    @SerialName("details")
-    val details: String? = null,
-    @SerialName("type")
-    val type: Int? = 0,
-    @SerialName("timestamps")
-    val timestamps: Timestamps? = null,
-    @SerialName("assets")
-    val assets: Assets? = null,
-    @SerialName("buttons")
-    val buttons: List<String?>? = RICH_PRESENCE_BUTTONS,
-    @SerialName("metadata")
-    val metadata: Metadata? = RICH_PRESENCE_METADATA,
     @SerialName("application_id")
     val applicationId: String? = RICH_PRESENCE_APPLICATION_ID,
-    @SerialName("url")
-    val url: String? = null,
-)
-
-@Serializable
-data class Assets(
-    @SerialName("large_image")
-    val largeImage: String?,
-    @SerialName("small_image")
-    val smallImage: String?,
-    @SerialName("large_text")
-    val largeText: String? = null,
-    @SerialName("small_text")
-    val smallText: String? = null,
-)
-
-@Serializable
-data class Presence(
-    @SerialName("activities")
-    val activities: List<Activity?>?,
-    @SerialName("afk")
-    val afk: Boolean? = true,
-    @SerialName("since")
-    val since: Long? = null,
-    @SerialName("status")
-    val status: String? = null,
-)
-
-@Serializable
-data class Heartbeat(
-    @SerialName("heartbeat_interval")
-    val heartbeatInterval: Long,
-)
-
-@Serializable
-data class Identify(
-    @SerialName("capabilities")
-    val capabilities: Int,
-    @SerialName("compress")
-    val compress: Boolean,
-    @SerialName("largeThreshold")
-    val largeThreshold: Int,
-    @SerialName("properties")
-    val properties: Properties,
-    @SerialName("token")
-    val token: String,
+    val name: String? = null,
+    val details: String? = null,
+    val state: String? = null,
+    val type: Int? = null,
+    val timestamps: Timestamps? = null,
+    val assets: Assets? = null,
+    val buttons: List<String>? = RICH_PRESENCE_BUTTONS,
+    val metadata: Metadata? = RICH_PRESENCE_METADATA,
 ) {
-    companion object {
-        fun String.toIdentifyPayload() = Identify(
-            capabilities = 65,
-            compress = false,
-            largeThreshold = 100,
-            properties = Properties(
-                browser = "Discord Client",
-                device = "ktor",
-                os = "Windows",
-            ),
-            token = this,
-        )
-    }
+    @Serializable
+    data class Assets(
+        @SerialName("large_image")
+        val largeImage: String? = null,
+        @SerialName("large_text")
+        val largeText: String? = null,
+        @SerialName("small_image")
+        val smallImage: String? = null,
+        @SerialName("small_text")
+        val smallText: String? = null,
+    )
+
+    @Serializable
+    data class Metadata(
+        @SerialName("button_urls")
+        val buttonUrls: List<String>,
+    )
+
+    @Serializable
+    data class Timestamps(
+        val start: Long? = null,
+        val stop: Long? = null,
+    )
 }
 
 @Serializable
-data class Properties(
-    @SerialName("browser")
-    val browser: String,
-    @SerialName("device")
-    val device: String,
-    @SerialName("os")
-    val os: String,
-)
+data class Presence(
+    val activities: List<Activity> = listOf(),
+    val afk: Boolean = true,
+    val since: Long? = null,
+    val status: String? = null,
+) {
+    @Serializable
+    data class Response(
+        val op: Long,
+        val d: Presence,
+    )
+}
 
 @Serializable
-data class Metadata(
-    @SerialName("button_urls")
-    val buttonUrls: List<String?>?,
-)
-
-@Serializable
-data class Ready(
-    @SerialName("resume_gateway_url")
-    val resumeGatewayUrl: String? = null,
-    @SerialName("session_id")
-    val sessionId: String? = null,
-)
-
-@Serializable
-data class Resume(
-    @SerialName("seq")
-    val seq: Int,
-    @SerialName("session_id")
-    val sessionId: String?,
-    @SerialName("token")
+data class Identity(
     val token: String,
-)
+    val properties: Properties,
+    val compress: Boolean,
+    val intents: Long,
+) {
+
+    @Serializable
+    data class Response(
+        val op: Long,
+        val d: Identity,
+    )
+
+    @Serializable
+    data class Properties(
+        @SerialName("\$os")
+        val os: String,
+
+        @SerialName("\$browser")
+        val browser: String,
+
+        @SerialName("\$device")
+        val device: String,
+    )
+}
 
 @Serializable
-data class Payload(
-    @SerialName("t")
-    val t: String? = null,
-    @SerialName("s")
-    val s: Int? = null,
-    @SerialName("op")
-    val op: OpCode? = null,
-    @SerialName("d")
-    val d: JsonElement? = null,
+data class Res(
+    val t: String?,
+    val s: Int?,
+    val op: Int,
+    val d: JsonElement,
 )
 
-@Serializable
-data class Timestamps(
-    @SerialName("end")
-    val end: Long? = null,
-    @SerialName("start")
-    val start: Long? = null,
-)
-
-@Serializable(OpCodeSerializer::class)
 enum class OpCode(val value: Int) {
     /** An event was dispatched. */
     DISPATCH(0),
@@ -227,36 +154,6 @@ enum class OpCode(val value: Int) {
     ;
 }
 
-class OpCodeSerializer : KSerializer<OpCode> {
-    override val descriptor: SerialDescriptor
-        get() = PrimitiveSerialDescriptor("OpCode", PrimitiveKind.INT)
-
-    override fun deserialize(decoder: Decoder): OpCode {
-        val opCode = decoder.decodeInt()
-        return OpCode.values().firstOrNull { it.value == opCode } ?: throw IllegalArgumentException("Unknown OpCode $opCode")
-    }
-
-    override fun serialize(encoder: Encoder, value: OpCode) {
-        encoder.encodeInt(value.value)
-    }
-}
-
-interface Logger {
-    fun clear()
-    fun i(tag: String, event: String)
-    fun e(tag: String, event: String)
-    fun d(tag: String, event: String)
-    fun w(tag: String, event: String)
-}
-
-object NoOpLogger : Logger {
-    override fun clear() {}
-    override fun i(tag: String, event: String) {}
-    override fun e(tag: String, event: String) {}
-    override fun d(tag: String, event: String) {}
-    override fun w(tag: String, event: String) {}
-}
-
 data class PlayerData(
     val incognitoMode: Boolean = false,
     val animeId: Long? = null,
@@ -271,7 +168,7 @@ enum class DiscordScreen(@StringRes val text: Int, @StringRes val details: Int, 
     LIBRARY(R.string.label_library, R.string.browsing, libraryImageUrl),
     UPDATES(R.string.label_recent_updates, R.string.scrolling, updatesImageUrl),
     HISTORY(R.string.label_recent_manga, R.string.scrolling, historyImageUrl),
-    BROWSE(R.string.browse, R.string.browsing, browseImageUrl),
+    BROWSE(R.string.label_sources, R.string.browsing, browseImageUrl),
     MORE(R.string.label_settings, R.string.messing, moreImageUrl),
     WEBVIEW(R.string.action_web_view, R.string.browsing, webviewImageUrl),
     VIDEO(R.string.video, R.string.watching, videoImageUrl),
