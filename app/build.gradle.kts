@@ -276,10 +276,6 @@ dependencies {
     // seeker seek bar
     implementation(libs.seeker)
 
-    // AM (DISCORD) -->
-    implementation (libs.bundles.network.ktor)
-    implementation (libs.ktor.websockets)
-    // <-- AM (DISCORD)
 }
 
 androidComponents {

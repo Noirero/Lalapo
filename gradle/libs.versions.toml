@@ -8,9 +8,6 @@ sqldelight = "1.5.5"
 leakcanary = "2.10"
 voyager = "1.0.0-rc07"
 richtext = "0.16.0"
-# AM (DISCORD) -->
-ktor = "2.3.0"
-# <-- AM (DISCORD)
 
 [libraries]
 desugar = "com.android.tools:desugar_jdk_libs:2.0.3"
@@ -104,16 +101,6 @@ arthenica-smartexceptions = "com.arthenica:smart-exception-java:0.1.1"
 
 seeker = "io.github.2307vivek:seeker:1.1.1"
 
-# AM (DISCORD) -->
-ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
-ktor-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
-ktor-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-kotlinx-serialization = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor"}
-# <-- AM (DISCORD)
-
-
 [bundles]
 reactivex = ["rxandroid", "rxjava", "rxrelay"]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-dnsoverhttps"]
@@ -124,6 +111,3 @@ shizuku = ["shizuku-api", "shizuku-provider"]
 voyager = ["voyager-navigator", "voyager-tab-navigator", "voyager-transitions"]
 richtext = ["richtext-commonmark", "richtext-m3"]
 test = ["junit", "kotest-assertions"]
-# AM (DISCORD) -->
-network-ktor = ["ktor-core", "ktor-client-cio", "ktor-kotlinx-serialization"]
-# <-- AM (DISCORD)
