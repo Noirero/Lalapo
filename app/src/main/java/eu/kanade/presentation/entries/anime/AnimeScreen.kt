@@ -69,12 +69,10 @@ import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreenState
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeItem
 import eu.kanade.tachiyomi.ui.entries.anime.episodeDecimalFormat
-import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.lang.toRelativeString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.delay
 import tachiyomi.core.util.lang.withIOContext
-import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.service.missingItemsCount
@@ -93,7 +91,6 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-private val preferences: DownloadPreferences by injectLazy()
 private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()
 
 @Composable
@@ -105,6 +102,11 @@ fun AnimeScreen(
     isTabletUi: Boolean,
     episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
+    showNextEpisodeAirTime: Boolean,
+    alwaysUseExternalPlayer: Boolean,
+    // AM (FILE-SIZE) -->
+    showFileSize: Boolean,
+    // <-- AM (FILE-SIZE)
     onBackClicked: () -> Unit,
     onEpisodeClicked: (episode: Episode, alt: Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -167,6 +169,11 @@ fun AnimeScreen(
             dateFormat = dateFormat,
             episodeSwipeEndAction = episodeSwipeEndAction,
             episodeSwipeStartAction = episodeSwipeStartAction,
+            showNextEpisodeAirTime = showNextEpisodeAirTime,
+            alwaysUseExternalPlayer = alwaysUseExternalPlayer,
+            // AM (FILE-SIZE) -->
+            showFileSize = showFileSize,
+            // <-- AM (FILE-SIZE)
             onBackClicked = onBackClicked,
             onEpisodeClicked = onEpisodeClicked,
             onDownloadEpisode = onDownloadEpisode,
@@ -208,6 +215,11 @@ fun AnimeScreen(
             dateRelativeTime = dateRelativeTime,
             episodeSwipeEndAction = episodeSwipeEndAction,
             episodeSwipeStartAction = episodeSwipeStartAction,
+            showNextEpisodeAirTime = showNextEpisodeAirTime,
+            alwaysUseExternalPlayer = alwaysUseExternalPlayer,
+            // AM (FILE-SIZE) -->
+            showFileSize = showFileSize,
+            // <-- AM (FILE-SIZE)
             dateFormat = dateFormat,
             onBackClicked = onBackClicked,
             onEpisodeClicked = onEpisodeClicked,
@@ -255,6 +267,11 @@ private fun AnimeScreenSmallImpl(
     dateFormat: DateFormat,
     episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
+    showNextEpisodeAirTime: Boolean,
+    alwaysUseExternalPlayer: Boolean,
+    // AM (FILE-SIZE) -->
+    showFileSize: Boolean,
+    // <-- AM (FILE-SIZE)
     onBackClicked: () -> Unit,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -364,6 +381,7 @@ private fun AnimeScreenSmallImpl(
                 onDownloadEpisode = onDownloadEpisode,
                 onMultiDeleteClicked = onMultiDeleteClicked,
                 fillFraction = 1f,
+                alwaysUseExternalPlayer = alwaysUseExternalPlayer,
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -490,7 +508,7 @@ private fun AnimeScreenSmallImpl(
                                     timer -= 1000L
                                 }
                             }
-                            if (timer > 0L) {
+                            if (timer > 0L && showNextEpisodeAirTime) {
                                 NextEpisodeAiringListItem(
                                     title = stringResource(
                                         R.string.display_mode_episode,
@@ -506,6 +524,7 @@ private fun AnimeScreenSmallImpl(
                         anime = state.anime,
                         // AM (FILE-SIZE) -->
                         source = state.source,
+                        showFileSize = showFileSize,
                         // <-- AM (FILE-SIZE)
                         episodes = episodes,
                         dateRelativeTime = dateRelativeTime,
@@ -532,6 +551,11 @@ fun AnimeScreenLargeImpl(
     dateFormat: DateFormat,
     episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
+    showNextEpisodeAirTime: Boolean,
+    alwaysUseExternalPlayer: Boolean,
+    // AM (FILE-SIZE) -->
+    showFileSize: Boolean,
+    // <-- AM (FILE-SIZE)
     onBackClicked: () -> Unit,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
@@ -651,6 +675,7 @@ fun AnimeScreenLargeImpl(
                         onDownloadEpisode = onDownloadEpisode,
                         onMultiDeleteClicked = onMultiDeleteClicked,
                         fillFraction = 0.5f,
+                        alwaysUseExternalPlayer = alwaysUseExternalPlayer,
                     )
                 }
             },
@@ -758,7 +783,7 @@ fun AnimeScreenLargeImpl(
                                             timer -= 1000L
                                         }
                                     }
-                                    if (timer > 0L) {
+                                    if (timer > 0L && showNextEpisodeAirTime) {
                                         NextEpisodeAiringListItem(
                                             title = stringResource(
                                                 R.string.display_mode_episode,
@@ -774,6 +799,7 @@ fun AnimeScreenLargeImpl(
                                 anime = state.anime,
                                 // AM (FILE-SIZE) -->
                                 source = state.source,
+                                showFileSize = showFileSize,
                                 // <-- AM (FILE-SIZE)
                                 episodes = episodes,
                                 dateRelativeTime = dateRelativeTime,
@@ -807,8 +833,8 @@ private fun SharedAnimeBottomActionMenu(
     onDownloadEpisode: ((List<EpisodeItem>, EpisodeDownloadAction) -> Unit)?,
     onMultiDeleteClicked: (List<Episode>) -> Unit,
     fillFraction: Float,
+    alwaysUseExternalPlayer: Boolean,
 ) {
-    val preferences: PlayerPreferences by injectLazy()
     EntryBottomActionMenu(
         visible = selected.isNotEmpty(),
         modifier = modifier.fillMaxWidth(fillFraction),
@@ -847,10 +873,10 @@ private fun SharedAnimeBottomActionMenu(
         },
         onExternalClicked = {
             onEpisodeClicked(selected.fastMap { it.episode }.first(), true)
-        }.takeIf { !preferences.alwaysUseExternalPlayer().get() && selected.size == 1 },
+        }.takeIf { !alwaysUseExternalPlayer && selected.size == 1 },
         onInternalClicked = {
             onEpisodeClicked(selected.fastMap { it.episode }.first(), true)
-        }.takeIf { preferences.alwaysUseExternalPlayer().get() && selected.size == 1 },
+        }.takeIf { alwaysUseExternalPlayer && selected.size == 1 },
         isManga = false,
     )
 }
@@ -859,6 +885,7 @@ private fun LazyListScope.sharedEpisodeItems(
     anime: Anime,
     // AM (FILE-SIZE) -->
     source: AnimeSource,
+    showFileSize: Boolean,
     // <-- AM (FILE-SIZE)
     episodes: List<EpisodeItem>,
     dateRelativeTime: Int,
@@ -880,9 +907,8 @@ private fun LazyListScope.sharedEpisodeItems(
 
         // AM (FILE-SIZE) -->
         var fileSizeAsync: Long? by remember { mutableStateOf(episodeItem.fileSize) }
-        if (episodeItem.downloadState == AnimeDownload.State.DOWNLOADED &&
-            preferences.showEpisodeFileSize().get() && fileSizeAsync == null
-        ) {
+        val isEpisodeDownloaded = episodeItem.downloadState == AnimeDownload.State.DOWNLOADED
+        if (isEpisodeDownloaded && showFileSize && fileSizeAsync == null) {
             LaunchedEffect(episodeItem, Unit) {
                 fileSizeAsync = withIOContext {
                     animeDownloadProvider.getEpisodeFileSize(
