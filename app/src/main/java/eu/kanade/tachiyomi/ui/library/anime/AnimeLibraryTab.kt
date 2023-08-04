@@ -181,7 +181,7 @@ object AnimeLibraryTab : Tab {
                 SnackbarHost(
                     hostState = snackbarHostState,
                     // AM (NAVPILL)>
-                    modifier = Modifier.padding(bottomSuperLargePaddingValues)
+                    modifier = Modifier.padding(bottomSuperLargePaddingValues),
                 )
             },
         ) { contentPadding ->
