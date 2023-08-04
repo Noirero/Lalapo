@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.core.util.lang.launchIO
 
 data class UpdatesTab(
-    private val fromMore: Boolean,
     private val externalPlayer: Boolean,
 ) : Tab {
 
@@ -70,10 +69,6 @@ data class UpdatesTab(
             MainActivity.startPlayerActivity(context, update.animeId, update.episodeId, extPlayer)
         }
 
-        // AM (UH) -->
-        val navigateUp: (() -> Unit)? = if (fromMore) navigator::pop else null
-        // <-- AM (UH)
-
         AnimeUpdateScreen(
             state = state,
             snackbarHostState = screenModel.snackbarHostState,
@@ -95,9 +90,6 @@ data class UpdatesTab(
                 }
                 Unit
             },
-            // AM (UH) -->
-            navigateUp = navigateUp,
-            // <-- AM (UH)
         )
 
         val onDismissDialog = { screenModel.setDialog(null) }

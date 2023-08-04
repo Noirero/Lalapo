@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
@@ -45,72 +44,17 @@ object HomeScreen : Screen() {
 
     private const val TabFadeDuration = 500
 
-    private val uiPreferences: UiPreferences by injectLazy()
     private val playerPreferences: PlayerPreferences by injectLazy()
 
-    // AM (UH) -->
-    val tabsYUYH = listOf(
+    val tabs = listOf(
         AnimeLibraryTab,
-        UpdatesTab(
-            fromMore = false,
-            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-        ),
-        HistoryTab(
-            fromMore = false,
-            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-        ),
+        UpdatesTab(externalPlayer = playerPreferences.alwaysUseExternalPlayer().get()),
+        HistoryTab(externalPlayer = playerPreferences.alwaysUseExternalPlayer().get()),
         // AM (BROWSE) -->
         BrowseTab,
         // <-- AM (BROWSE)
         MoreTab,
     )
-
-    val tabsYUNH = listOf(
-        AnimeLibraryTab,
-        UpdatesTab(
-            fromMore = false,
-            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-        ),
-        // AM (BROWSE) -->
-        BrowseTab,
-        // <-- AM (BROWSE)
-        MoreTab,
-    )
-
-    val tabsNUYH = listOf(
-        AnimeLibraryTab,
-        HistoryTab(
-            fromMore = false,
-            externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-        ),
-        // AM (BROWSE) -->
-        BrowseTab,
-        // <-- AM (BROWSE)
-        MoreTab,
-    )
-
-    val tabsNUNH = listOf(
-        AnimeLibraryTab,
-        // AM (BROWSE) -->
-        BrowseTab,
-        // <-- AM (BROWSE)
-        MoreTab,
-    )
-    // <-- AM (UH)
-
-    var tabs = if (uiPreferences.showNavUpdates().get()) {
-        if (uiPreferences.showNavHistory().get()) {
-            tabsYUYH
-        } else {
-            tabsYUNH
-        }
-    } else {
-        if (uiPreferences.showNavHistory().get()) {
-            tabsNUYH
-        } else {
-            tabsNUNH
-        }
-    }
 
     @Composable
     override fun Content() {
@@ -180,16 +124,10 @@ object HomeScreen : Screen() {
                                 AnimeLibraryTab
                             }
                             is Tab.Updates -> {
-                                UpdatesTab(
-                                    fromMore = !uiPreferences.showNavUpdates().get(),
-                                    externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-                                )
+                                UpdatesTab(externalPlayer = playerPreferences.alwaysUseExternalPlayer().get())
                             }
                             is Tab.History -> {
-                                HistoryTab(
-                                    fromMore = !uiPreferences.showNavHistory().get(),
-                                    externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-                                )
+                                HistoryTab(externalPlayer = playerPreferences.alwaysUseExternalPlayer().get())
                             }
                             is Tab.Browse -> {
                                 BrowseTab

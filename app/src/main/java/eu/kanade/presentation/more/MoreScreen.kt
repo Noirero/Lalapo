@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.QueryStats
@@ -25,7 +24,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
@@ -35,7 +33,7 @@ import eu.kanade.tachiyomi.ui.more.DownloadQueueState
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Divider
 import tachiyomi.presentation.core.components.material.Scaffold
-import uy.kohesive.injekt.injectLazy
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 
 @Composable
 fun MoreScreen(
@@ -45,10 +43,6 @@ fun MoreScreen(
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
     isFDroid: Boolean,
-    // AM (UH) -->
-    onClickUpdates: () -> Unit,
-    onClickHistory: () -> Unit,
-    // <-- AM (UH)
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
@@ -102,30 +96,6 @@ fun MoreScreen(
             }
 
             item { Divider() }
-
-            // AM (UH) -->
-            val uiPreferences: UiPreferences by injectLazy()
-
-            if (!uiPreferences.showNavUpdates().get()) {
-                item {
-                    TextPreferenceWidget(
-                        title = stringResource(R.string.label_recent_updates),
-                        icon = ImageVector.vectorResource(id = R.drawable.ic_updates_outline_24dp),
-                        onPreferenceClick = onClickUpdates,
-                    )
-                }
-            }
-
-            if (!uiPreferences.showNavHistory().get()) {
-                item {
-                    TextPreferenceWidget(
-                        title = stringResource(R.string.label_recent_manga),
-                        icon = Icons.Outlined.History,
-                        onPreferenceClick = onClickHistory,
-                    )
-                }
-            }
-            // <-- AM (UH)
 
             item {
                 val downloadQueueState = downloadQueueStateProvider()

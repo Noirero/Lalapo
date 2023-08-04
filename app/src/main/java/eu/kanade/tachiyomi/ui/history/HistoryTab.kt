@@ -37,7 +37,6 @@ private val snackbarHostState = SnackbarHostState()
 private val resumeLastEpisodeSeenEvent = Channel<Unit>()
 
 data class HistoryTab(
-    private val fromMore: Boolean,
     private val externalPlayer: Boolean,
 ) : Tab {
 
@@ -64,10 +63,6 @@ data class HistoryTab(
         val screenModel = rememberScreenModel { AnimeHistoryScreenModel() }
         val state by screenModel.state.collectAsState()
 
-        // AM (UH) -->
-        val navigateUp: (() -> Unit)? = if (fromMore) navigator::pop else null
-        // <-- AM (UH)
-
         AnimeHistoryScreen(
             state = state,
             snackbarHostState = snackbarHostState,
@@ -75,9 +70,6 @@ data class HistoryTab(
             onClickCover = { navigator.push(AnimeScreen(it)) },
             onClickResume = screenModel::getNextEpisodeForAnime,
             onDialogChange = screenModel::setDialog,
-            // AM (UH) -->
-            navigateUp = navigateUp,
-            // <-- AM (UH)
         )
 
         val onDismissRequest = { screenModel.setDialog(null) }

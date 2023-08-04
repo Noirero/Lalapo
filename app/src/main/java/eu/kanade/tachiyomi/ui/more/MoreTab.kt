@@ -29,12 +29,10 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
-import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import eu.kanade.tachiyomi.util.system.isInstalledFromFDroid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -79,24 +77,6 @@ object MoreTab : Tab {
             incognitoMode = screenModel.incognitoMode,
             onIncognitoModeChange = { screenModel.incognitoMode = it },
             isFDroid = context.isInstalledFromFDroid(),
-            // AM (UH) -->
-            onClickUpdates = {
-                navigator.push(
-                    UpdatesTab(
-                        fromMore = true,
-                        externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-                    ),
-                )
-            },
-            onClickHistory = {
-                navigator.push(
-                    HistoryTab(
-                        fromMore = false,
-                        externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
-                    ),
-                )
-            },
-            // <-- AM (UH)
             onClickDownloadQueue = { navigator.push(AnimeDownloadQueueScreen) },
             onClickCategories = { navigator.push(CategoryScreen()) },
             onClickStats = { navigator.push(StatsScreen()) },
