@@ -49,7 +49,13 @@ fun AnimeHistoryScreen(
                 scrollBehavior = scrollBehavior,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                // AM (NAVPILL)>
+                modifier = Modifier.padding(bottomSuperLargePaddingValues)
+            )
+        },
     ) { contentPadding ->
         state.list.let {
             if (it == null) {

@@ -60,6 +60,7 @@ import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.model.display
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -176,7 +177,13 @@ object AnimeLibraryTab : Tab {
                     isManga = false,
                 )
             },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    // AM (NAVPILL)>
+                    modifier = Modifier.padding(bottomSuperLargePaddingValues)
+                )
+            },
         ) { contentPadding ->
             when {
                 state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))

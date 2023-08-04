@@ -88,7 +88,13 @@ fun AnimeUpdateScreen(
                 onOpenEpisode = onOpenEpisode,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                // AM (NAVPILL)>
+                modifier = Modifier.padding(bottomSuperLargePaddingValues)
+            )
+        },
     ) { contentPadding ->
         when {
             state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
