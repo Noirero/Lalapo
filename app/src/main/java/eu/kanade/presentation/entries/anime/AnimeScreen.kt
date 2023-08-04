@@ -72,9 +72,8 @@ import eu.kanade.tachiyomi.ui.entries.anime.episodeDecimalFormat
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.lang.toRelativeString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
@@ -505,9 +504,9 @@ private fun AnimeScreenSmallImpl(
 
                     sharedEpisodeItems(
                         anime = state.anime,
-                        // AM (FS) -->
+                        // AM (FILE-SIZE) -->
                         source = state.source,
-                        // <-- AM (FS)
+                        // <-- AM (FILE-SIZE)
                         episodes = episodes,
                         dateRelativeTime = dateRelativeTime,
                         dateFormat = dateFormat,
@@ -773,9 +772,9 @@ fun AnimeScreenLargeImpl(
 
                             sharedEpisodeItems(
                                 anime = state.anime,
-                                // AM (FS) -->
+                                // AM (FILE-SIZE) -->
                                 source = state.source,
-                                // <-- AM (FS)
+                                // <-- AM (FILE-SIZE)
                                 episodes = episodes,
                                 dateRelativeTime = dateRelativeTime,
                                 dateFormat = dateFormat,
@@ -858,9 +857,9 @@ private fun SharedAnimeBottomActionMenu(
 
 private fun LazyListScope.sharedEpisodeItems(
     anime: Anime,
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     source: AnimeSource,
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
     episodes: List<EpisodeItem>,
     dateRelativeTime: Int,
     dateFormat: DateFormat,
@@ -879,13 +878,13 @@ private fun LazyListScope.sharedEpisodeItems(
         val haptic = LocalHapticFeedback.current
         val context = LocalContext.current
 
-        // AM (FS) -->
+        // AM (FILE-SIZE) -->
         var fileSizeAsync: Long? by remember { mutableStateOf(episodeItem.fileSize) }
         if (episodeItem.downloadState == AnimeDownload.State.DOWNLOADED &&
             preferences.showEpisodeFileSize().get() && fileSizeAsync == null
         ) {
             LaunchedEffect(episodeItem, Unit) {
-                fileSizeAsync = withContext(Dispatchers.IO) {
+                fileSizeAsync = withIOContext {
                     animeDownloadProvider.getEpisodeFileSize(
                         episodeItem.episode.name,
                         episodeItem.episode.scanlator,
@@ -896,7 +895,7 @@ private fun LazyListScope.sharedEpisodeItems(
                 episodeItem.fileSize = fileSizeAsync
             }
         }
-        // <-- AM (FS)
+        // <-- AM (FILE-SIZE)
 
         AnimeEpisodeListItem(
             title = if (anime.displayMode == Anime.EPISODE_DISPLAY_NUMBER) {
@@ -957,9 +956,9 @@ private fun LazyListScope.sharedEpisodeItems(
             onEpisodeSwipe = {
                 onEpisodeSwipe(episodeItem, it)
             },
-            // AM (FS) -->
+            // AM (FILE-SIZE) -->
             fileSize = fileSizeAsync,
-            // <-- AM (FS)
+            // <-- AM (FILE-SIZE)
         )
     }
 }

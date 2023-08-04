@@ -52,9 +52,9 @@ fun EpisodeDownloadIndicator(
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
     onClick: (EpisodeDownloadAction) -> Unit,
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     fileSize: Long?,
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
 ) {
     when (val downloadState = downloadStateProvider()) {
         AnimeDownload.State.NOT_DOWNLOADED -> NotDownloadedIndicator(
@@ -73,9 +73,9 @@ fun EpisodeDownloadIndicator(
             enabled = enabled,
             modifier = modifier,
             onClick = onClick,
-            // AM (FS) -->
+            // AM (FILE-SIZE) -->
             fileSize = fileSize,
-            // <-- AM (FS)
+            // <-- AM (FILE-SIZE)
         )
         AnimeDownload.State.ERROR -> ErrorIndicator(
             enabled = enabled,
@@ -189,12 +189,12 @@ private fun DownloadedIndicator(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     onClick: (EpisodeDownloadAction) -> Unit,
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     fileSize: Long?,
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     if (fileSize != null) {
         Text(
             text = "${fileSize / 1024 / 1024}MB",
@@ -204,30 +204,32 @@ private fun DownloadedIndicator(
             modifier = modifier.padding(all = 10.dp),
         )
     }
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
     Box(
-        modifier = modifier.size(IconButtonTokens.StateLayerSize),
+        modifier = modifier
+            .size(IconButtonTokens.StateLayerSize)
+            .commonClickable(
+                enabled = enabled,
+                onLongClick = { isMenuExpanded = true },
+                onClick = { isMenuExpanded = true },
+            ),
         contentAlignment = Alignment.Center,
     ) {
+        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.action_delete)) },
+                onClick = {
+                    onClick(EpisodeDownloadAction.DELETE)
+                    isMenuExpanded = false
+                },
+            )
+        }
+
         Icon(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = null,
-            modifier = Modifier.size(IndicatorSize)
-                .commonClickable(
-                    enabled = enabled,
-                    onLongClick = { isMenuExpanded = true },
-                    onClick = { isMenuExpanded = true },
-                ),
+            modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.action_delete)) },
-            onClick = {
-                onClick(EpisodeDownloadAction.DELETE)
-                isMenuExpanded = false
-            },
         )
     }
 }

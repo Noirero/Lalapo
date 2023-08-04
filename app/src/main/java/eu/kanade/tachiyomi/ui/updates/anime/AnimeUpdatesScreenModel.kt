@@ -127,9 +127,9 @@ class AnimeUpdatesScreenModel(
                 downloadStateProvider = { downloadState },
                 downloadProgressProvider = { activeDownload?.progress ?: 0 },
                 selected = update.episodeId in selectedEpisodeIds,
-                // AM (FS) -->
+                // AM (FILE-SIZE) -->
                 fileSize = null,
-                // <-- AM (FS)
+                // <-- AM (FILE-SIZE)
             )
         }
     }
@@ -446,7 +446,7 @@ data class AnimeUpdatesItem(
     val downloadStateProvider: () -> AnimeDownload.State,
     val downloadProgressProvider: () -> Int,
     val selected: Boolean = false,
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     var fileSize: Long?,
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
 )

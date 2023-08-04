@@ -1240,9 +1240,9 @@ data class EpisodeItem(
     val episode: Episode,
     val downloadState: AnimeDownload.State,
     val downloadProgress: Int,
-    // <-- AM (FS)
+    // AM (FILE-SIZE) -->
     var fileSize: Long? = null,
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
     val selected: Boolean = false,
 ) {
     val isDownloaded = downloadState == AnimeDownload.State.DOWNLOADED

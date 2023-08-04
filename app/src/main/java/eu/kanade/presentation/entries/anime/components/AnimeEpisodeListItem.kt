@@ -84,9 +84,9 @@ fun AnimeEpisodeListItem(
     onClick: () -> Unit,
     onDownloadClick: ((EpisodeDownloadAction) -> Unit)?,
     onEpisodeSwipe: (LibraryPreferences.EpisodeSwipeAction) -> Unit,
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     fileSize: Long?,
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
 ) {
     val textAlpha = remember(seen) { if (seen) ReadItemAlpha else 1f }
     val textSubtitleAlpha = remember(seen) { if (seen) ReadItemAlpha else SecondaryItemAlpha }
@@ -309,9 +309,9 @@ fun AnimeEpisodeListItem(
                             downloadStateProvider = downloadStateProvider,
                             downloadProgressProvider = downloadProgressProvider,
                             onClick = onDownloadClick,
-                            // AM (FS) -->
+                            // AM (FILE-SIZE) -->
                             fileSize = fileSize,
-                            // <-- AM (FS)
+                            // <-- AM (FILE-SIZE)
                         )
                     }
                 }

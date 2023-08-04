@@ -217,7 +217,7 @@ class AnimeDownloadProvider(
         return listOf(episodeDirName, oldEpisodeDirName)
     }
 
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     /**
      * Returns an episode file size in bytes.
      * Returns null if the episode is not found in expected location
@@ -239,5 +239,5 @@ class AnimeDownloadProvider(
                 DiskUtil.getDirectorySize(File(it))
             }
     }
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
 }

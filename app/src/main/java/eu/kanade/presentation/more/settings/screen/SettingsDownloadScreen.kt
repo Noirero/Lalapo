@@ -52,7 +52,7 @@ object SettingsDownloadScreen : SearchableSettings {
         val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
         val basePreferences = remember { Injekt.get<BasePreferences>() }
 
-        // AM (FS) -->
+        // AM (FILE-SIZE) -->
         LaunchedEffect(Unit) {
             downloadPreferences.showEpisodeFileSize().changes()
                 .drop(1)
@@ -62,7 +62,7 @@ object SettingsDownloadScreen : SearchableSettings {
                     }
                 }
         }
-        // <-- AM (FS)
+        // <-- AM (FILE-SIZE)
 
         return listOf(
             getDownloadLocationPreference(downloadPreferences = downloadPreferences),

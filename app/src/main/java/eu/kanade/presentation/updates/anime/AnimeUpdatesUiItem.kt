@@ -45,8 +45,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.updates.anime.model.AnimeUpdatesWithRelations
@@ -155,9 +154,9 @@ fun LazyListScope.animeUpdatesUiItems(
                     }.takeIf { !selectionMode },
                     downloadStateProvider = updatesItem.downloadStateProvider,
                     downloadProgressProvider = updatesItem.downloadProgressProvider,
-                    // AM (FS) -->
+                    // AM (FILE-SIZE) -->
                     updatesItem = updatesItem,
-                    // <-- AM (FS)
+                    // <-- AM (FILE-SIZE)
                 )
             }
         }
@@ -178,9 +177,9 @@ fun AnimeUpdatesUiItem(
     // Download Indicator
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
-    // AM (FS) -->
+    // AM (FILE-SIZE) -->
     updatesItem: AnimeUpdatesItem,
-    // <-- AM (FS)
+    // <-- AM (FILE-SIZE)
 ) {
     val haptic = LocalHapticFeedback.current
     val textAlpha = if (update.seen) ReadItemAlpha else 1f
@@ -263,14 +262,14 @@ fun AnimeUpdatesUiItem(
             }
         }
 
-        // AM (FS) -->
+        // AM (FILE-SIZE) -->
         var fileSizeAsync: Long? by remember { mutableStateOf(updatesItem.fileSize) }
         if (downloadStateProvider() == AnimeDownload.State.DOWNLOADED &&
             preferences.showEpisodeFileSize().get() &&
             fileSizeAsync == null
         ) {
             LaunchedEffect(update, Unit) {
-                fileSizeAsync = withContext(Dispatchers.IO) {
+                fileSizeAsync = withIOContext {
                     animeDownloadProvider.getEpisodeFileSize(
                         update.episodeName,
                         update.scanlator,
@@ -281,7 +280,7 @@ fun AnimeUpdatesUiItem(
                 updatesItem.fileSize = fileSizeAsync
             }
         }
-        // <-- AM (FS)
+        // <-- AM (FILE-SIZE)
 
         EpisodeDownloadIndicator(
             enabled = onDownloadEpisode != null,
@@ -289,9 +288,9 @@ fun AnimeUpdatesUiItem(
             downloadStateProvider = downloadStateProvider,
             downloadProgressProvider = downloadProgressProvider,
             onClick = { onDownloadEpisode?.invoke(it) },
-            // AM (FS) -->
+            // AM (FILE-SIZE) -->
             fileSize = fileSizeAsync,
-            // <-- AM (FS)
+            // <-- AM (FILE-SIZE)
         )
     }
 }
