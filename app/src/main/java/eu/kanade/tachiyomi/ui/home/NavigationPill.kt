@@ -8,7 +8,6 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -33,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -67,10 +67,9 @@ fun NavigationPill(
         tabNavigator.current = tabMap[it] ?: tabNavigator.current
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
         var offsetX by remember { mutableStateOf(0f) }
         var currentIndex by remember { mutableStateOf(currTabIndex) }
-        val maxWidth by remember { mutableStateOf(constraints.maxWidth) }
 
         Row(
             modifier = modifier
@@ -104,16 +103,18 @@ fun NavigationPill(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             tabs.fastForEach {
-                NavigationBarItem(it, maxWidth)
+                NavigationBarItem(it)
             }
         }
     }
 }
 
 @Composable
-private fun NavigationBarItem(tab: Tab, maxWidth: Int) {
+private fun NavigationBarItem(tab: Tab) {
     val tabNavigator = LocalTabNavigator.current
     val navigator = LocalNavigator.currentOrThrow
+    val configuration = LocalConfiguration.current
+
     val scope = rememberCoroutineScope()
     val selected = tabNavigator.current::class == tab::class
     val onClick: () -> Unit = {
@@ -131,7 +132,7 @@ private fun NavigationBarItem(tab: Tab, maxWidth: Int) {
 
     Box(
         modifier = Modifier
-            .size(width = (maxWidth / 15).dp, height = 48.dp)
+            .size(width = (configuration.screenWidthDp / 6).dp, height = 48.dp)
             .clip(MaterialTheme.shapes.extraLarge)
             .selectable(
                 selected = selected,
