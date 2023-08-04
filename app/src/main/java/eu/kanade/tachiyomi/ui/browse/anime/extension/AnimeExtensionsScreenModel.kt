@@ -74,7 +74,7 @@ class AnimeExtensionsScreenModel(
                 state.map { it.searchQuery }.distinctUntilChanged().debounce(SEARCH_DEBOUNCE_MILLIS),
                 currentDownloads,
                 getExtensions.subscribe(),
-            ) { query, downloads, (_updates, _installed, _available, _untrusted) ->
+            ) { query, downloads, (_updates, _, _available, _untrusted) ->
                 val searchQuery = query ?: ""
 
                 val itemsGroups: ItemGroups = mutableMapOf()
@@ -83,12 +83,9 @@ class AnimeExtensionsScreenModel(
                 if (updates.isNotEmpty()) {
                     itemsGroups[AnimeExtensionUiModel.Header.Resource(R.string.ext_updates_pending)] = updates
                 }
-                // AM (BROWSE) -->
-                val installed = _installed.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
-                // <-- AM (BROWSE)
                 val untrusted = _untrusted.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
-                if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
-                    itemsGroups[AnimeExtensionUiModel.Header.Resource(R.string.ext_installed)] = installed + untrusted
+                if (untrusted.isNotEmpty()) {
+                    itemsGroups[AnimeExtensionUiModel.Header.Resource(R.string.ext_installed)] = untrusted
                 }
 
                 val languagesWithExtensions = _available
