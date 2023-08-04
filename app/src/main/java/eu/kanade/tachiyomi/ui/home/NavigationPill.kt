@@ -60,7 +60,7 @@ fun NavigationPill(
     modifier: Modifier = Modifier,
 ) {
     val tabMap = tabs.associateBy { it.options.index.toInt() }
-    
+
     val tabNavigator = LocalTabNavigator.current
     val currTabIndex = tabNavigator.current.options.index.toInt()
     var currentIndex by remember { mutableStateOf(currTabIndex) }

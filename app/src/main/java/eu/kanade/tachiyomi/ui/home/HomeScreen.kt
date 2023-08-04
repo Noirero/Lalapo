@@ -7,7 +7,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.with
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -81,7 +80,6 @@ object HomeScreen : Screen() {
                     },
                     overlayBottomBar = true,
                     // <-- AM (NAVPILL)
-                    contentWindowInsets = WindowInsets(0),
                 ) { contentPadding ->
                     Box(
                         modifier = Modifier
