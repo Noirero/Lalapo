@@ -36,8 +36,10 @@ import kotlinx.coroutines.launch
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.util.plus
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
@@ -59,9 +61,6 @@ fun AnimeUpdateScreen(
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onUpdateSelected: (AnimeUpdatesItem, Boolean, Boolean, Boolean) -> Unit,
     onOpenEpisode: (AnimeUpdatesItem, altPlayer: Boolean) -> Unit,
-    // AM (UH) -->
-    navigateUp: (() -> Unit)?,
-    // <-- AM (UH)
 ) {
     BackHandler(enabled = state.selectionMode, onBack = { onSelectAll(false) })
 
@@ -76,9 +75,6 @@ fun AnimeUpdateScreen(
                 onInvertSelection = { onInvertSelection() },
                 onCancelActionMode = { onSelectAll(false) },
                 scrollBehavior = scrollBehavior,
-                // AM (UH) -->
-                navigateUp = navigateUp,
-                // <-- AM (UH)
             )
         },
         bottomBar = {
@@ -120,7 +116,8 @@ fun AnimeUpdateScreen(
                     indicatorPadding = contentPadding,
                 ) {
                     FastScrollLazyColumn(
-                        contentPadding = contentPadding,
+                        // AM (NAVPILL)>
+                        contentPadding = contentPadding + bottomSuperLargePaddingValues,
                     ) {
                         if (lastUpdated > 0L) {
                             animeUpdatesLastUpdatedItem(lastUpdated)

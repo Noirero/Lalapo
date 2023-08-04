@@ -23,7 +23,9 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.presentation.core.components.material.PullRefresh
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 import tachiyomi.presentation.core.components.rememberPagerState
+import tachiyomi.presentation.core.util.plus
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -96,7 +98,8 @@ fun AnimeLibraryContent(
         ) {
             AnimeLibraryPager(
                 state = pagerState,
-                contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+                // AM (NAVPILL)>
+                contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()) + bottomSuperLargePaddingValues,
                 pageCount = categories.size,
                 hasActiveFilters = hasActiveFilters,
                 selectedAnime = selection,

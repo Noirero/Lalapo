@@ -17,8 +17,10 @@ import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryState
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.util.plus
 import java.util.Date
 
 @Composable
@@ -29,9 +31,6 @@ fun AnimeHistoryScreen(
     onClickCover: (animeId: Long) -> Unit,
     onClickResume: (animeId: Long, episodeId: Long) -> Unit,
     onDialogChange: (AnimeHistoryScreenModel.Dialog?) -> Unit,
-    // AM (UH) -->
-    navigateUp: (() -> Unit)?,
-    // <-- AM (UH)
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -48,9 +47,6 @@ fun AnimeHistoryScreen(
                     }
                 },
                 scrollBehavior = scrollBehavior,
-                // AM (UH) -->
-                navigateUp = navigateUp,
-                // <-- AM (UH)
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -71,7 +67,8 @@ fun AnimeHistoryScreen(
             } else {
                 AnimeHistoryContent(
                     history = it,
-                    contentPadding = contentPadding,
+                    // AM (NAVPILL)>
+                    contentPadding = contentPadding + bottomSuperLargePaddingValues,
                     onClickCover = { history -> onClickCover(history.animeId) },
                     onClickResume = { history -> onClickResume(history.animeId, history.episodeId) },
                     onClickDelete = { item -> onDialogChange(AnimeHistoryScreenModel.Dialog.Delete(item)) },

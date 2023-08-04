@@ -72,6 +72,9 @@ fun MoreScreen(
     ) { contentPadding ->
         ScrollbarLazyColumn(
             modifier = Modifier.padding(contentPadding),
+            // AM (NAVPILL) -->
+            contentPadding = bottomSuperLargePaddingValues,
+            // <-- AM (NAVPILL)
         ) {
             item {
                 LogoHeader()

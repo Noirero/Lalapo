@@ -139,7 +139,8 @@ fun AnimeSourcesScreen(
                 ) {
                     ScrollbarLazyColumn(
                         state = extensionsListState,
-                        contentPadding = contentPadding + topSmallPaddingValues + bottomSuperLargePaddingValues,
+                        // AM (NAVPILL)>
+                        contentPadding = contentPadding + topSmallPaddingValues + bottomSuperLargePaddingValues + bottomSuperLargePaddingValues,
                     ) {
                         items(
                             items = state.items,
