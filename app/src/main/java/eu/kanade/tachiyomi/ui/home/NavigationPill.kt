@@ -59,17 +59,21 @@ fun NavigationPill(
     tabs: List<Tab>,
     modifier: Modifier = Modifier,
 ) {
+    val tabMap = tabs.associateBy { it.options.index.toInt() }
+    
     val tabNavigator = LocalTabNavigator.current
     val currTabIndex = tabNavigator.current.options.index.toInt()
-    val tabMap = tabs.associateBy { it.options.index.toInt() }
+    var currentIndex by remember { mutableStateOf(currTabIndex) }
 
     val updateTab: (Int) -> Unit = {
-        tabNavigator.current = tabMap[it] ?: tabNavigator.current
+        if (tabMap[it] != null) {
+            tabNavigator.current = tabMap[it]!!
+            currentIndex = it
+        }
     }
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
         var offsetX by remember { mutableStateOf(0f) }
-        var currentIndex by remember { mutableStateOf(currTabIndex) }
 
         Row(
             modifier = modifier
@@ -103,23 +107,24 @@ fun NavigationPill(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             tabs.fastForEach {
-                NavigationBarItem(it)
+                NavigationBarItem(it, updateTab)
             }
         }
     }
 }
 
 @Composable
-private fun NavigationBarItem(tab: Tab) {
+private fun NavigationBarItem(tab: Tab, updateTab: (Int) -> Unit) {
     val tabNavigator = LocalTabNavigator.current
     val navigator = LocalNavigator.currentOrThrow
     val configuration = LocalConfiguration.current
 
     val scope = rememberCoroutineScope()
     val selected = tabNavigator.current::class == tab::class
+    val tabIndex = tab.options.index.toInt()
     val onClick: () -> Unit = {
         if (!selected) {
-            tabNavigator.current = tab
+            updateTab(tabIndex)
         } else {
             scope.launch { tab.onReselect(navigator) }
         }
