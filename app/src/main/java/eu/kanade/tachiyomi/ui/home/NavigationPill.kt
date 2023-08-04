@@ -1,16 +1,17 @@
 // AM (NAVPILL) -->
 package eu.kanade.tachiyomi.ui.home
 
-import androidx.compose.animation.core.animateFloatAsState
+import android.content.res.Configuration
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
@@ -19,8 +20,8 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -54,10 +56,13 @@ import tachiyomi.presentation.core.components.material.padding
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
+private val configuration: Configuration @Composable get() = LocalConfiguration.current
+private val pillItemWidth: Dp @Composable get() = (configuration.screenWidthDp / 6).dp
+private val pillItemHeight: Dp @Composable get() = 48.dp
+
 @Composable
 fun NavigationPill(
     tabs: List<Tab>,
-    modifier: Modifier = Modifier,
 ) {
     val tabMap = tabs.associateBy { it.options.index.toInt() }
 
@@ -73,43 +78,68 @@ fun NavigationPill(
     }
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
-        var offsetX by remember { mutableStateOf(0f) }
+        var flickOffsetX by remember { mutableStateOf(0f) }
 
-        Row(
-            modifier = modifier
+        Surface(
+            modifier = Modifier
                 .selectableGroup()
                 .navigationBarsPadding()
                 .padding(bottom = MaterialTheme.padding.large)
-                .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDrag = { change, dragAmount ->
                             change.consume()
-                            offsetX += dragAmount.x
+                            flickOffsetX += dragAmount.x
                         },
                         onDragEnd = {
                             currentIndex = when {
-                                (offsetX < 0F) -> {
+                                (flickOffsetX < 0F) -> {
                                     currentIndex - 1
                                 }
-                                (offsetX > 0F) -> {
+
+                                (flickOffsetX > 0F) -> {
                                     currentIndex + 1
                                 }
+
                                 else -> currentIndex
                             }
-                            offsetX = 0F
+                            flickOffsetX = 0F
 
                             updateTab(minOf(maxOf(currentIndex, 0), 4))
                         },
                     )
                 },
-            horizontalArrangement = Arrangement.SpaceBetween,
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 3.dp,
         ) {
-            tabs.fastForEach {
-                NavigationBarItem(it, updateTab)
+            NavigationBarItemBackground(currentIndex)
+            Row {
+                tabs.fastForEach {
+                    NavigationBarItem(it, updateTab)
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun NavigationBarItemBackground(
+    currentIndex: Int,
+) {
+    val offset: Dp by animateDpAsState(
+        targetValue = pillItemWidth * currentIndex,
+        animationSpec = tween(500),
+    )
+
+    Surface(
+        modifier = Modifier.offset(x = offset),
+        shape = MaterialTheme.shapes.extraLarge,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = pillItemWidth, height = pillItemHeight)
+                .background(MaterialTheme.colorScheme.secondaryContainer),
+        )
     }
 }
 
@@ -117,7 +147,6 @@ fun NavigationPill(
 private fun NavigationBarItem(tab: Tab, updateTab: (Int) -> Unit) {
     val tabNavigator = LocalTabNavigator.current
     val navigator = LocalNavigator.currentOrThrow
-    val configuration = LocalConfiguration.current
 
     val scope = rememberCoroutineScope()
     val selected = tabNavigator.current::class == tab::class
@@ -130,14 +159,9 @@ private fun NavigationBarItem(tab: Tab, updateTab: (Int) -> Unit) {
         }
     }
 
-    val backgroundAlpha: Float by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = tween(500),
-    )
-
     Box(
         modifier = Modifier
-            .size(width = (configuration.screenWidthDp / 6).dp, height = 48.dp)
+            .size(width = pillItemWidth, height = pillItemHeight)
             .clip(MaterialTheme.shapes.extraLarge)
             .selectable(
                 selected = selected,
@@ -145,8 +169,7 @@ private fun NavigationBarItem(tab: Tab, updateTab: (Int) -> Unit) {
                 role = Role.Tab,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-            )
-            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = backgroundAlpha)),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         NavigationIconItem(tab)
