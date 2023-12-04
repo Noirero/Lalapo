@@ -1,55 +1,50 @@
 package eu.kanade.tachiyomi.ui.stats
 
-import androidx.compose.animation.graphics.res.animatedVectorResource
-import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
-import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
-import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.presentation.components.TabbedScreen
-import eu.kanade.presentation.util.Tab
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
+import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.screen.uniqueScreenKey
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.more.stats.AnimeStatsScreenContent
+import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.stats.anime.animeStatsTab
-import eu.kanade.tachiyomi.ui.stats.manga.mangaStatsTab
-import kotlinx.collections.immutable.persistentListOf
-import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.i18n.stringResource
+import eu.kanade.tachiyomi.ui.stats.anime.AnimeStatsScreenModel
+import tachiyomi.presentation.core.screens.LoadingScreen
 
-data class StatsTab(
-    private val isManga: Boolean = false,
-) : Tab() {
+class StatsScreen : Screen {
 
-    override val options: TabOptions
-        @Composable
-        get() {
-            val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_updates_enter)
-            return TabOptions(
-                index = 8u,
-                title = stringResource(MR.strings.label_stats),
-                icon = rememberAnimatedVectorPainter(image, isSelected),
-            )
-        }
+    override val key = uniqueScreenKey
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
+        val navigator = LocalNavigator.currentOrThrow
 
-        TabbedScreen(
-            titleRes = MR.strings.label_stats,
-            tabs = persistentListOf(
-                animeStatsTab(),
-                mangaStatsTab(),
-            ),
-            startIndex = 1.takeIf { isManga },
+        val screenModel = rememberScreenModel { AnimeStatsScreenModel() }
+        val state by screenModel.state.collectAsState()
 
-        )
+        if (state is StatsScreenState.Loading) {
+            LoadingScreen()
+            return
+        }
 
-        LaunchedEffect(Unit) {
-            (context as? MainActivity)?.ready = true
+        Scaffold(
+            topBar = {
+                AppBar(
+                    title = stringResource(R.string.label_stats),
+                    navigateUp = navigator::pop,
+                )
+            },
+        ) { paddingValues ->
+            AnimeStatsScreenContent(
+                state = state as StatsScreenState.SuccessAnime,
+                paddingValues = paddingValues,
+            )
         }
     }
 }

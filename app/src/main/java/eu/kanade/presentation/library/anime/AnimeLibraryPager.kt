@@ -1,9 +1,14 @@
 package eu.kanade.presentation.library.anime
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -11,12 +16,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
-import eu.kanade.presentation.library.manga.LibraryPagerEmptyScreen
+import eu.kanade.presentation.library.GlobalSearchItem
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.presentation.core.components.HorizontalPager
+import tachiyomi.presentation.core.components.PagerState
+import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun AnimeLibraryPager(
@@ -105,5 +115,41 @@ fun AnimeLibraryPager(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun LibraryPagerEmptyScreen(
+    searchQuery: String?,
+    hasActiveFilters: Boolean,
+    contentPadding: PaddingValues,
+    onGlobalSearchClicked: () -> Unit,
+) {
+    val msg = when {
+        !searchQuery.isNullOrEmpty() -> R.string.no_results_found
+        hasActiveFilters -> R.string.error_no_match
+        else -> R.string.information_no_manga_category
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(contentPadding + PaddingValues(8.dp))
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        if (!searchQuery.isNullOrEmpty()) {
+            GlobalSearchItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally),
+                searchQuery = searchQuery,
+                onClick = onGlobalSearchClicked,
+            )
+        }
+
+        EmptyScreen(
+            textResource = msg,
+            modifier = Modifier.weight(1f),
+        )
     }
 }

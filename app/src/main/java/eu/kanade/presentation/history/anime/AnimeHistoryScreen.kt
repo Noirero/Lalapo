@@ -1,7 +1,10 @@
 package eu.kanade.presentation.history.anime
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -18,27 +21,49 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.util.plus
 import java.util.Date
 
 @Composable
 fun AnimeHistoryScreen(
-    state: AnimeHistoryScreenModel.State,
-    contentPadding: PaddingValues,
-    searchQuery: String? = null,
+    state: AnimeHistoryState,
     snackbarHostState: SnackbarHostState,
+    onSearchQueryChange: (String?) -> Unit,
     onClickCover: (animeId: Long) -> Unit,
     onClickResume: (animeId: Long, episodeId: Long) -> Unit,
     onDialogChange: (AnimeHistoryScreenModel.Dialog?) -> Unit,
     preferences: UiPreferences,
 ) {
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) { _ ->
+        topBar = { scrollBehavior ->
+            SearchToolbar(
+                titleContent = { AppBarTitle(stringResource(R.string.history)) },
+                searchQuery = state.searchQuery,
+                onChangeSearchQuery = onSearchQueryChange,
+                actions = {
+                    IconButton(onClick = { onDialogChange(AnimeHistoryScreenModel.Dialog.DeleteAll) }) {
+                        Icon(
+                            Icons.Outlined.DeleteSweep,
+                            contentDescription = stringResource(R.string.pref_clear_history),
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                // AM (NAVPILL)>
+                modifier = Modifier.padding(bottomSuperLargePaddingValues),
+            )
+        },
+    ) { contentPadding ->
         state.list.let {
             if (it == null) {
                 LoadingScreen(Modifier.padding(contentPadding))
             } else if (it.isEmpty()) {
-                val msg = if (!searchQuery.isNullOrEmpty()) {
+                val msg = if (!state.searchQuery.isNullOrEmpty()) {
                     MR.strings.no_results_found
                 } else {
                     MR.strings.information_no_recent_anime
@@ -50,7 +75,8 @@ fun AnimeHistoryScreen(
             } else {
                 AnimeHistoryContent(
                     history = it,
-                    contentPadding = contentPadding,
+                    // AM (NAVPILL)>
+                    contentPadding = contentPadding + bottomSuperLargePaddingValues,
                     onClickCover = { history -> onClickCover(history.animeId) },
                     onClickResume = { history -> onClickResume(history.animeId, history.episodeId) },
                     onClickDelete = { item ->

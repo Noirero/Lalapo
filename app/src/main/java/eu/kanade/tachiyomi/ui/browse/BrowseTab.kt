@@ -3,35 +3,42 @@ package eu.kanade.tachiyomi.ui.browse
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.presentation.components.TabbedScreen
+import eu.kanade.domain.source.anime.model.installedExtension
+import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.browse.anime.AnimeSourceOptionsDialog
+import eu.kanade.presentation.browse.anime.AnimeSourcesScreen
+import eu.kanade.presentation.extensions.RequestStoragePermission
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreenModel
-import eu.kanade.tachiyomi.ui.browse.anime.extension.animeExtensionsTab
-import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.migrateAnimeSourceTab
-import eu.kanade.tachiyomi.ui.browse.anime.source.animeSourcesTab
-import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.manga.extension.MangaExtensionsScreenModel
-import eu.kanade.tachiyomi.ui.browse.manga.extension.mangaExtensionsTab
-import eu.kanade.tachiyomi.ui.browse.manga.migration.sources.migrateMangaSourceTab
-import eu.kanade.tachiyomi.ui.browse.manga.source.mangaSourcesTab
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
+import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
+import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import eu.kanade.tachiyomi.util.storage.DiskUtil
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 
-data class BrowseTab(
-    private val toExtensions: Boolean = false,
-) : Tab() {
+object BrowseTab : Tab {
 
     override val options: TabOptions
         @Composable
@@ -45,42 +52,79 @@ data class BrowseTab(
             )
         }
 
-    // TODO: Find a way to let it open Global Anime/Manga Search depending on what Tab(e.g. Anime/Manga Source Tab) is open
     override suspend fun onReselect(navigator: Navigator) {
-        navigator.push(GlobalAnimeSearchScreen())
+        navigator.push(AnimeDownloadQueueScreen)
     }
 
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        // AM (BROWSE) -->
+        val snackbarHostState = SnackbarHostState()
+        val navigator = LocalNavigator.currentOrThrow
+        val screenModel = rememberScreenModel { AnimeSourcesScreenModel() }
+        val state by screenModel.state.collectAsState()
+        val sourcePreferences: SourcePreferences by injectLazy()
 
-        // Hoisted for extensions tab's search bar
-        val mangaExtensionsScreenModel = rememberScreenModel { MangaExtensionsScreenModel() }
-        val mangaExtensionsState by mangaExtensionsScreenModel.state.collectAsState()
-
-        val animeExtensionsScreenModel = rememberScreenModel { AnimeExtensionsScreenModel() }
-        val animeExtensionsState by animeExtensionsScreenModel.state.collectAsState()
-
-        TabbedScreen(
-            titleRes = MR.strings.browse,
-            tabs = persistentListOf(
-                animeSourcesTab(),
-                mangaSourcesTab(),
-                animeExtensionsTab(animeExtensionsScreenModel),
-                mangaExtensionsTab(mangaExtensionsScreenModel),
-                migrateAnimeSourceTab(),
-                migrateMangaSourceTab(),
-            ),
-            startIndex = 2.takeIf { toExtensions },
-            mangaSearchQuery = mangaExtensionsState.searchQuery,
-            onChangeMangaSearchQuery = mangaExtensionsScreenModel::search,
-            animeSearchQuery = animeExtensionsState.searchQuery,
-            onChangeAnimeSearchQuery = animeExtensionsScreenModel::search,
-            scrollable = true,
+        AnimeSourcesScreen(
+            state = state,
+            navigator = navigator,
+            onClickItem = { source, listing ->
+                screenModel.onOpenSource(source)
+                navigator.push(BrowseAnimeSourceScreen(source.id, listing.query))
+            },
+            onClickPin = screenModel::togglePin,
+            onLongClickItem = screenModel::showSourceDialog,
+            sourcePreferences = sourcePreferences,
         )
+
+        state.dialog?.let { dialog ->
+            val source = dialog.source
+            AnimeSourceOptionsDialog(
+                source = source,
+                onClickPin = {
+                    screenModel.togglePin(source)
+                    screenModel.closeDialog()
+                },
+                onClickDisable = {
+                    screenModel.toggleSource(source)
+                    screenModel.closeDialog()
+                },
+                onClickUpdate = {
+                    screenModel.updateExtension(source.installedExtension)
+                    screenModel.closeDialog()
+                },
+                onClickUninstall = {
+                    screenModel.uninstallExtension(source.installedExtension.pkgName)
+                    screenModel.closeDialog()
+                },
+                onDismiss = screenModel::closeDialog,
+            )
+        }
+        // <-- AM (BROWSE)
+
+        // For local source
+        DiskUtil.RequestStoragePermission()
 
         LaunchedEffect(Unit) {
             (context as? MainActivity)?.ready = true
         }
+
+        // AM (BROWSE) -->
+        val internalErrString = stringResource(R.string.internal_error)
+        LaunchedEffect(Unit) {
+            // AM (DISCORD) -->
+            DiscordRPCService.setScreen(context, DiscordScreen.BROWSE)
+            // <-- AM (DISCORD)
+            Injekt.get<AnimeExtensionManager>().findAvailableExtensions()
+            screenModel.events.collectLatest { event ->
+                when (event) {
+                    AnimeSourcesScreenModel.Event.FailedFetchingSources -> {
+                        launch { snackbarHostState.showSnackbar(internalErrString) }
+                    }
+                }
+            }
+        }
+        // <-- AM (BROWSE)
     }
 }

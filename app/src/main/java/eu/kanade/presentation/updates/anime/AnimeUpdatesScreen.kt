@@ -1,11 +1,17 @@
 package eu.kanade.presentation.updates.anime
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FlipToBack
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,8 +20,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.entries.EntryBottomActionMenu
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
@@ -28,8 +36,10 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.util.plus
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
@@ -47,6 +57,7 @@ fun AnimeUpdateScreen(
     onUpdateLibrary: () -> Boolean,
     onDownloadEpisode: (List<AnimeUpdatesItem>, EpisodeDownloadAction) -> Unit,
     onMultiBookmarkClicked: (List<AnimeUpdatesItem>, bookmark: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<AnimeUpdatesItem>, fillermark: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<AnimeUpdatesItem>, seen: Boolean) -> Unit,
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onUpdateSelected: (AnimeUpdatesItem, Boolean, Boolean, Boolean) -> Unit,
@@ -57,18 +68,35 @@ fun AnimeUpdateScreen(
     val context = LocalContext.current
 
     Scaffold(
+        topBar = { scrollBehavior ->
+            UpdatesAppBar(
+                onUpdateLibrary = { onUpdateLibrary() },
+                actionModeCounter = state.selected.size,
+                onSelectAll = { onSelectAll(true) },
+                onInvertSelection = { onInvertSelection() },
+                onCancelActionMode = { onSelectAll(false) },
+                scrollBehavior = scrollBehavior,
+            )
+        },
         bottomBar = {
             AnimeUpdatesBottomBar(
                 selected = state.selected,
                 onDownloadEpisode = onDownloadEpisode,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
+                onMultiFillermarkClicked = onMultiFillermarkClicked,
                 onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                 onMultiDeleteClicked = onMultiDeleteClicked,
                 onOpenEpisode = onOpenEpisode,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) {
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                // AM (NAVPILL)>
+                modifier = Modifier.padding(bottomSuperLargePaddingValues),
+            )
+        },
+    ) { contentPadding ->
         when {
             state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
             state.items.isEmpty() -> EmptyScreen(
@@ -95,7 +123,8 @@ fun AnimeUpdateScreen(
                     indicatorPadding = contentPadding,
                 ) {
                     FastScrollLazyColumn(
-                        contentPadding = contentPadding,
+                        // AM (NAVPILL)>
+                        contentPadding = contentPadding + bottomSuperLargePaddingValues,
                     ) {
                         animeUpdatesLastUpdatedItem(lastUpdated)
 
@@ -115,10 +144,55 @@ fun AnimeUpdateScreen(
 }
 
 @Composable
+private fun UpdatesAppBar(
+    modifier: Modifier = Modifier,
+    onUpdateLibrary: () -> Unit,
+    // For action mode
+    actionModeCounter: Int,
+    onSelectAll: () -> Unit,
+    onInvertSelection: () -> Unit,
+    onCancelActionMode: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    navigateUp: (() -> Unit)? = null,
+) {
+    AppBar(
+        modifier = modifier,
+        title = stringResource(R.string.label_recent_updates),
+        actions = {
+            IconButton(onClick = onUpdateLibrary) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = stringResource(R.string.action_update_library),
+                )
+            }
+        },
+        actionModeCounter = actionModeCounter,
+        onCancelActionMode = onCancelActionMode,
+        actionModeActions = {
+            IconButton(onClick = onSelectAll) {
+                Icon(
+                    imageVector = Icons.Outlined.SelectAll,
+                    contentDescription = stringResource(R.string.action_select_all),
+                )
+            }
+            IconButton(onClick = onInvertSelection) {
+                Icon(
+                    imageVector = Icons.Outlined.FlipToBack,
+                    contentDescription = stringResource(R.string.action_select_inverse),
+                )
+            }
+        },
+        scrollBehavior = scrollBehavior,
+        navigateUp = navigateUp,
+    )
+}
+
+@Composable
 private fun AnimeUpdatesBottomBar(
     selected: List<AnimeUpdatesItem>,
     onDownloadEpisode: (List<AnimeUpdatesItem>, EpisodeDownloadAction) -> Unit,
     onMultiBookmarkClicked: (List<AnimeUpdatesItem>, bookmark: Boolean) -> Unit,
+    onMultiFillermarkClicked: (List<AnimeUpdatesItem>, fillermark: Boolean) -> Unit,
     onMultiMarkAsSeenClicked: (List<AnimeUpdatesItem>, seen: Boolean) -> Unit,
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onOpenEpisode: (AnimeUpdatesItem, altPlayer: Boolean) -> Unit,
@@ -133,6 +207,14 @@ private fun AnimeUpdatesBottomBar(
         onRemoveBookmarkClicked = {
             onMultiBookmarkClicked.invoke(selected, false)
         }.takeIf { selected.fastAll { it.update.bookmark } },
+        // AM (FILLER) -->
+        onFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected, true)
+        }.takeIf { selected.fastAny { !it.update.fillermark } },
+        onRemoveFillermarkClicked = {
+            onMultiFillermarkClicked.invoke(selected, false)
+        }.takeIf { selected.fastAll { it.update.fillermark } },
+        // <-- AM (FILLER)
         onMarkAsViewedClicked = {
             onMultiMarkAsSeenClicked(selected, true)
         }.takeIf { selected.fastAny { !it.update.seen } },

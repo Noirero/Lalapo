@@ -15,7 +15,7 @@
     <string name="pref_bottom_nav_no_history">Mover historial a la pestaña Más</string>
     <string name="pref_bottom_nav_no_updates">Mover las actualizaciones a la pestaña Más</string>
     <string name="pref_bottom_nav_no_manga">Desplazar Manga a la pestaña Más</string>
-    <string name="unlock_app">Desbloquear Aniyomi</string>
+    <string name="unlock_app">Desbloquear Animiru</string>
     <string name="action_filter_unseen">Sin ver</string>
     <string name="action_sort_total_episodes">Episodios totales</string>
     <string name="action_sort_last_seen">Ultimo visto</string>
@@ -61,10 +61,10 @@
     <string name="pref_anime_library_update_categories_details">El anime de las categorías excluidas no se actualizará, ni siquiera si pertenece a alguna de las categorías que sí estén incluidas.</string>
     <string name="untrusted_extension_message">Esta extensión está firmada por una fuente sin certificar y por lo tanto no se ha activado.
 \n
-\nUna extensión maliciosa puede leer credenciales de inicio guardadas en Aniyomi o ejecutar cualquier tipo de código en tu dispositivo.
+\nUna extensión maliciosa puede leer credenciales de inicio guardadas en Animiru o ejecutar cualquier tipo de código en tu dispositivo.
 \n
 \nAl confiar en este certificado aceptas estos riesgos.</string>
-    <string name="unofficial_extension_message_aniyomi">Esta extensión no es de la lista oficial de extensiones de Aniyomi.</string>
+    <string name="unofficial_extension_message_animiru">Esta extensión no es de la lista oficial de extensiones de Animiru.</string>
     <string name="rotation_reverse_landscape">Paisaje invertido</string>
     <string name="rotation_sensor_portrait">Retrato del sensor</string>
     <string name="rotation_sensor_landscape">Paisaje de sensores</string>

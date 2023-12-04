@@ -62,7 +62,6 @@
             android:name=".crash.CrashActivity"
             android:exported="false" />
 
-
         <activity
             android:name=".ui.deeplink.anime.DeepLinkAnimeActivity"
             android:launchMode="singleTask"
@@ -91,48 +90,6 @@
         </activity>
 
         <activity
-            android:name=".ui.deeplink.manga.DeepLinkMangaActivity"
-            android:launchMode="singleTask"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:label="@string/action_search"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.SEARCH" />
-                <action android:name="com.google.android.gms.actions.SEARCH_ACTION" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="eu.kanade.tachiyomi.SEARCH" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="eu.kanade.tachiyomi.ANIMESEARCH" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.app.searchable"
-                android:resource="@xml/searchable" />
-        </activity>
-
-        <activity
-            android:name=".ui.reader.ReaderActivity"
-            android:launchMode="singleTask"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.samsung.android.support.REMOTE_ACTION" />
-            </intent-filter>
-
-            <meta-data android:name="com.samsung.android.support.REMOTE_ACTION"
-                android:resource="@xml/s_pen_actions"/>
-        </activity>
-        <activity
             android:name=".ui.player.PlayerActivity"
             android:launchMode="singleTask"
             android:screenOrientation="fullSensor"
@@ -148,6 +105,7 @@
             <meta-data android:name="com.samsung.android.support.REMOTE_ACTION"
                 android:resource="@xml/s_pen_actions"/>
         </activity>
+
         <activity
             android:name=".ui.security.UnlockActivity"
             android:theme="@style/Theme.Tachiyomi"
@@ -156,11 +114,6 @@
         <activity
             android:name=".ui.webview.WebViewActivity"
             android:configChanges="uiMode|orientation|screenSize"
-            android:exported="false" />
-
-        <activity
-            android:name=".extension.manga.util.MangaExtensionInstallActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="false" />
 
         <activity
@@ -182,26 +135,39 @@
                 <data android:host="bangumi-auth"/>
                 <data android:host="myanimelist-auth"/>
                 <data android:host="shikimori-auth"/>
-
-                <data android:scheme="tachiyomi"/>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:host="simkl-auth"/>
-                <data android:scheme="aniyomi"/>
+
+                <data android:scheme="animiru"/>
             </intent-filter>
         </activity>
 
+        <activity android:label="Discord Login"
+            android:name=".ui.setting.connections.DiscordLoginActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="false"
+            tools:ignore="AppLinkUrlError">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="account.samsung.com" android:path="/accounts/oauth/callback"/>
+            </intent-filter>
+        </activity>
+        <service
+            android:name=".data.connections.discord.DiscordRPCService"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name ="android.intent.action.VIEW"/>
+                <category android:name ="android.intent.category.DEFAULT"/>
+                <category android:name ="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"
+                    android:host="account.samsung.com"
+                    android:path="/accounts/oauth/callback"/>
+            </intent-filter>
+        </service>
         <receiver
             android:name=".data.notification.NotificationReceiver"
-            android:exported="false" />
-
-        <service
-            android:name=".data.download.manga.MangaDownloadService"
             android:exported="false" />
 
         <service
@@ -215,6 +181,7 @@
         <service
             android:name=".extension.anime.util.AnimeExtensionInstallService"
             android:exported="false" />
+
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"

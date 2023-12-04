@@ -30,7 +30,6 @@ import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.viewer.SetAsCover
-import eu.kanade.tachiyomi.ui.reader.SaveImageNotifier
 import eu.kanade.tachiyomi.util.AniSkipApi
 import eu.kanade.tachiyomi.util.Stamp
 import eu.kanade.tachiyomi.util.editCover
@@ -96,8 +95,8 @@ class PlayerViewModel @JvmOverloads constructor(
     private val eventChannel = Channel<Event>()
     val eventFlow = eventChannel.receiveAsFlow()
 
-    private val incognitoMode = basePreferences.incognitoMode().get()
     private val downloadAheadAmount = downloadPreferences.autoDownloadWhileWatching().get()
+    internal val incognitoMode = basePreferences.incognitoMode().get()
 
     internal val relativeTime = uiPreferences.relativeTime().get()
     internal val dateFormat = UiPreferences.dateFormat(uiPreferences.dateFormat().get())
@@ -165,20 +164,24 @@ class PlayerViewModel @JvmOverloads constructor(
         val episodesForPlayer = episodes.filterNot {
             anime.unseenFilterRaw == Anime.EPISODE_SHOW_SEEN && !it.seen ||
                 anime.unseenFilterRaw == Anime.EPISODE_SHOW_UNSEEN && it.seen ||
+                // AM (CU)>
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(
                     it.name,
                     it.scanlator,
-                    anime.title,
+                    anime.ogTitle,
                     anime.source,
                 ) ||
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(
                     it.name,
                     it.scanlator,
-                    anime.title,
+                    anime.ogTitle,
                     anime.source,
                 ) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
-                anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark
+                anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
+                // AM (FILLER)>
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
         }.toMutableList()
 
         if (episodesForPlayer.all { it.id != episodeId }) {
@@ -247,7 +250,6 @@ class PlayerViewModel @JvmOverloads constructor(
                 val episode = this.currentPlaylist.first { it.id == episodeId }
 
                 val source = sourceManager.getOrStub(anime.source)
-
                 mutableState.update { it.copy(episode = episode, anime = anime, source = source) }
 
                 val currentEp = currentEpisode ?: throw Exception("No episode loaded.")
@@ -400,7 +402,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private fun deleteEpisodeIfNeeded(chosenEpisode: Episode) {
         // Determine which episode should be deleted and enqueue
         val currentEpisodePosition = this.currentPlaylist.indexOf(chosenEpisode)
-        val removeAfterSeenSlots = downloadPreferences.removeAfterReadSlots().get()
+        val removeAfterSeenSlots = downloadPreferences.removeAfterSeenSlots().get()
         val episodeToDelete = this.currentPlaylist.getOrNull(
             currentEpisodePosition - removeAfterSeenSlots,
         )
@@ -472,6 +474,22 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
+    // AM (FILLER) -->
+    /**
+     * Fillermarks the currently active episode.
+     */
+    fun fillermarkCurrentEpisode(episodeId: Long?, fillermarked: Boolean) {
+        viewModelScope.launchNonCancellable {
+            updateEpisode.await(
+                EpisodeUpdate(
+                    id = episodeId!!,
+                    fillermark = fillermarked,
+                ),
+            )
+        }
+    }
+    // <-- AM (FILLER)
+
     /**
      * Saves the screenshot on the pictures directory and notifies the UI of the result.
      * There's also a notification to allow sharing the image somewhere else or deleting it.
@@ -487,7 +505,8 @@ class PlayerViewModel @JvmOverloads constructor(
         val filename = generateFilename(anime, seconds) ?: return
 
         // Pictures directory.
-        val relativePath = DiskUtil.buildValidFilename(anime.title)
+        // AM (CU)>
+        val relativePath = DiskUtil.buildValidFilename(anime.ogTitle)
 
         // Copy file in background.
         viewModelScope.launchNonCancellable {

@@ -8,6 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
+import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Circle
@@ -43,6 +48,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +74,9 @@ fun AnimeEpisodeListItem(
     scanlator: String?,
     seen: Boolean,
     bookmark: Boolean,
+    // AM (FILLER) -->
+    fillermark: Boolean,
+    // <-- AM (FILLER)
     selected: Boolean,
     downloadIndicatorEnabled: Boolean,
     downloadStateProvider: () -> AnimeDownload.State,
@@ -77,6 +88,9 @@ fun AnimeEpisodeListItem(
     onDownloadClick: ((EpisodeDownloadAction) -> Unit)?,
     onEpisodeSwipe: (LibraryPreferences.EpisodeSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
+    // AM (FILE-SIZE) -->
+    fileSize: Long?,
+    // <-- AM (FILE-SIZE)
 ) {
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
@@ -165,6 +179,18 @@ fun AnimeEpisodeListItem(
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         }
+                        // AM (FILLER) -->
+                        if (fillermark) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp),
+                                contentDescription = stringResource(R.string.action_filter_fillermarked),
+                                modifier = Modifier
+                                    .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
+                                tint = MaterialTheme.colorScheme.tertiary,
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                        }
+                        // <-- AM (FILLER)
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyMedium,
@@ -217,6 +243,9 @@ fun AnimeEpisodeListItem(
                         downloadStateProvider = downloadStateProvider,
                         downloadProgressProvider = downloadProgressProvider,
                         onClick = onDownloadClick,
+                        // AM (FILE-SIZE) -->
+                        fileSize = fileSize,
+                        // <-- AM (FILE-SIZE)
                     )
                 }
             }
@@ -228,6 +257,7 @@ private fun getSwipeAction(
     action: LibraryPreferences.EpisodeSwipeAction,
     seen: Boolean,
     bookmark: Boolean,
+    fillermark: Boolean,
     downloadState: AnimeDownload.State,
     background: Color,
     onSwipe: () -> Unit,
@@ -245,6 +275,15 @@ private fun getSwipeAction(
             isUndo = bookmark,
             onSwipe = onSwipe,
         )
+        // AM (FILLER) -->
+        LibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> {
+            if (!fillermark) {
+                ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp)
+            } else {
+                ImageVector.vectorResource(id = R.drawable.ic_fillermark_border_24dp)
+            }
+        }
+        // <-- AM (FILLER)
         LibraryPreferences.EpisodeSwipeAction.Download -> swipeAction(
             icon = when (downloadState) {
                 AnimeDownload.State.NOT_DOWNLOADED, AnimeDownload.State.ERROR -> Icons.Outlined.Download

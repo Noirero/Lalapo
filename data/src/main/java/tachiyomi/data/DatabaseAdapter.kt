@@ -2,7 +2,6 @@ package tachiyomi.data
 
 import app.cash.sqldelight.ColumnAdapter
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
-import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import java.util.Date
 
 object DateColumnAdapter : ColumnAdapter<Date, Long> {

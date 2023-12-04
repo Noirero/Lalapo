@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
+import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
@@ -28,6 +29,10 @@ class AnimeLibrarySettingsScreenModel(
     val trackers
         get() = trackerManager.trackers.filter { it.isLoggedIn }
 
+    // AM (GU) -->
+    val grouping by libraryPreferences.groupLibraryBy().asState(coroutineScope)
+    // <-- AM (GU)
+
     fun toggleFilter(preference: (LibraryPreferences) -> Preference<TriState>) {
         preference(libraryPreferences).getAndSet {
             it.next()
@@ -51,4 +56,8 @@ class AnimeLibrarySettingsScreenModel(
             setSortModeForCategory.await(category, mode, direction)
         }
     }
+
+    // AM (GU) -->
+    fun setGrouping(grouping: Int) { coroutineScope.launchIO { libraryPreferences.groupLibraryBy().set(grouping) } }
+    // <-- AM (GU)
 }

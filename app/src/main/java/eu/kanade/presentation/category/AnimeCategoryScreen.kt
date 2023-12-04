@@ -6,8 +6,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import eu.kanade.presentation.category.components.CategoryContent
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
+import eu.kanade.presentation.components.AppBar
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
@@ -20,23 +23,30 @@ import tachiyomi.presentation.core.util.plus
 @Composable
 fun AnimeCategoryScreen(
     state: AnimeCategoryScreenState.Success,
-    contentPadding: PaddingValues,
     onClickCreate: () -> Unit,
     onClickRename: (Category) -> Unit,
     onClickHide: (Category) -> Unit,
     onClickDelete: (Category) -> Unit,
     onClickMoveUp: (Category) -> Unit,
     onClickMoveDown: (Category) -> Unit,
+    navigateUp: () -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
     Scaffold(
+        topBar = { scrollBehavior ->
+            AppBar(
+                title = stringResource(R.string.action_edit_categories),
+                navigateUp = navigateUp,
+                scrollBehavior = scrollBehavior,
+            )
+        },
         floatingActionButton = {
             CategoryFloatingActionButton(
                 lazyListState = lazyListState,
                 onCreate = onClickCreate,
             )
         },
-    ) {
+    ) { paddingValues ->
         if (state.isEmpty) {
             EmptyScreen(
                 stringRes = MR.strings.information_empty_category,

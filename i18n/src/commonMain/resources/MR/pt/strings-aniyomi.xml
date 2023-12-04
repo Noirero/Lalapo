@@ -14,7 +14,7 @@
     <string name="pref_bottom_nav_no_history">Mover Histórico para o separador Mais</string>
     <string name="pref_bottom_nav_no_updates">Mover Atualizações para o separador Mais</string>
     <string name="pref_bottom_nav_no_manga">Mover Mangá para o separador Mais</string>
-    <string name="unlock_app">Desbloquear o Aniyomi</string>
+    <string name="unlock_app">Desbloquear o Animiru</string>
     <string name="action_sort_total_episodes">Total de episódios</string>
     <string name="action_sort_last_seen">Visto da última vez</string>
     <string name="action_sort_last_checked">Última verificação</string>
@@ -51,7 +51,7 @@
 \nUma extensão maliciosa pode ler qualquer credencial de entrada armazenada no Aniyomi ou executar código arbitrário.
 \n
 \nAo confiar neste certificado serão aceites estes riscos.</string>
-    <string name="unofficial_extension_message_aniyomi">Esta extensão não está na lista oficial de extensões do Aniyomi.</string>
+    <string name="unofficial_extension_message_animiru">Esta extensão não está na lista oficial de extensões do Animiru.</string>
     <string name="pref_category_progress">Progresso</string>
     <string name="pref_progress_mark_as_seen">Em que ponto marcar o episódio como visto</string>
     <string name="pref_preserve_watching_position">Lembrar a posição de reprodução nos episódios vistos</string>

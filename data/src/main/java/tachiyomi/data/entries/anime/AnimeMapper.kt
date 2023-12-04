@@ -40,12 +40,14 @@ object AnimeMapper {
         episodeFlags = chapterFlags,
         coverLastModified = coverLastModified,
         url = url,
-        title = title,
-        artist = artist,
-        author = author,
-        description = description,
-        genre = genre,
-        status = status,
+        // AM (CU) -->
+        ogTitle = title,
+        ogArtist = artist,
+        ogAuthor = author,
+        ogDescription = description,
+        ogGenre = genre,
+        ogStatus = status,
+        // <-- AM (CU)
         thumbnailUrl = thumbnailUrl,
         updateStrategy = updateStrategy,
         initialized = initialized,
@@ -82,6 +84,7 @@ object AnimeMapper {
         episodeFetchedAt: Long,
         lastSeen: Long,
         bookmarkCount: Double,
+        fillermarkCount: Double,
         category: Long,
     ): LibraryAnime = LibraryAnime(
         anime = mapAnime(
@@ -112,6 +115,9 @@ object AnimeMapper {
         totalEpisodes = totalCount,
         seenCount = seenCount.toLong(),
         bookmarkCount = bookmarkCount.toLong(),
+        // AM (FILLER) -->
+        fillermarkCount = fillermarkCount.toLong(),
+        // <-- AM (FILLER)
         latestUpload = latestUpload,
         episodeFetchedAt = episodeFetchedAt,
         lastSeen = lastSeen,

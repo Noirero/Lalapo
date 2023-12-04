@@ -1,4 +1,4 @@
-package eu.kanade.presentation.entries.anime.components
+Wpackage eu.kanade.presentation.entries.anime.components
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -46,8 +46,8 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entries.EditCoverAction
-import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
-import kotlinx.collections.immutable.persistentListOf
+import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.util.ReaderPageImageView
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold

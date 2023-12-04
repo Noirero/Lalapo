@@ -10,6 +10,11 @@ plugins {
     id("com.github.zellius.shortcut-helper")
 }
 
+// if (gradle.startParameter.taskRequests.toString().contains("Standard")) {
+//    apply<com.google.gms.googleservices.GoogleServicesPlugin>()
+//    apply<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsPlugin>()
+// }
+
 shortcutHelper.setFilePath("./shortcuts.xml")
 
 val SUPPORTED_ABIS = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -18,10 +23,10 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "xyz.jmir.tachiyomi.mi"
+        applicationId = "xyz.Quickdev.Animiru.mi"
 
         versionCode = 110
-        versionName = "0.14.7"
+        versionName = "0.16.0.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -29,17 +34,8 @@ android {
         buildConfigField("boolean", "INCLUDE_UPDATER", "false")
         buildConfigField("boolean", "PREVIEW", "false")
 
-        // Put these fields in acra.properties
-        val acraProperties = Properties()
-        rootProject.file("acra.properties")
-            .takeIf { it.exists() }
-            ?.let { acraProperties.load(FileInputStream(it)) }
-        val acraUri = acraProperties.getProperty("ACRA_URI", "")
-        val acraLogin = acraProperties.getProperty("ACRA_LOGIN", "")
-        val acraPassword = acraProperties.getProperty("ACRA_PASSWORD", "")
-        buildConfigField("String", "ACRA_URI", "\"$acraUri\"")
-        buildConfigField("String", "ACRA_LOGIN", "\"$acraLogin\"")
-        buildConfigField("String", "ACRA_PASSWORD", "\"$acraPassword\"")
+        // Please disable ACRA or use your own instance in forked versions of the project
+        //buildConfigField("String", "ACRA_URI", "\"https://acra.Quickdesh.xyz/report\"")
 
         ndk {
             abiFilters += SUPPORTED_ABIS
@@ -253,8 +249,8 @@ dependencies {
     // Logging
     implementation(libs.logcat)
 
-    // Crash reports
-    implementation(libs.acra.http)
+    // Crash reports/analytics
+    // implementation(libs.acra.http)
 
     // Shizuku
     implementation(libs.bundles.shizuku)
@@ -269,11 +265,14 @@ dependencies {
 
     // mpv-android
     implementation(libs.aniyomi.mpv)
+
     // FFmpeg-kit
     implementation(libs.ffmpeg.kit)
     implementation(libs.arthenica.smartexceptions)
+
     // seeker seek bar
     implementation(libs.seeker)
+    
     // true type parser
     implementation(libs.truetypeparser)
 }

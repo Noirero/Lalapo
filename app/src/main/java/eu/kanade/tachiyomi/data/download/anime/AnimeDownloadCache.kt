@@ -173,7 +173,7 @@ class AnimeDownloadCache(
 
         val sourceDir = rootDownloadsDir.sourceDirs[anime.source]
         if (sourceDir != null) {
-            val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.title)]
+            val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.ogTitle)]
             if (animeDir != null) {
                 return animeDir.episodeDirs.size
             }
@@ -214,7 +214,6 @@ class AnimeDownloadCache(
      * @param animeUniFile the directory of the anime.
      * @param anime the anime of the episode.
      */
-    @Synchronized
     fun addEpisode(episodeDirName: String, animeUniFile: UniFile, anime: Anime) {
         // Retrieve the cached source directory or cache a new one
         var sourceDir = rootDownloadsDir.sourceDirs[anime.source]
@@ -226,7 +225,8 @@ class AnimeDownloadCache(
         }
 
         // Retrieve the cached anime directory or cache a new one
-        val animeDirName = provider.getAnimeDirName(anime.title)
+        // AM (CU)>
+        val animeDirName = provider.getAnimeDirName(anime.ogTitle)
         var animeDir = sourceDir.animeDirs[animeDirName]
         if (animeDir == null) {
             animeDir = AnimeDirectory(animeUniFile)
@@ -245,13 +245,15 @@ class AnimeDownloadCache(
      * @param episode the episode to remove.
      * @param anime the anime of the episode.
      */
-    @Synchronized
-    fun removeEpisode(episode: Episode, anime: Anime) {
-        val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
-        val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.title)] ?: return
-        provider.getValidEpisodeDirNames(episode.name, episode.scanlator).forEach {
-            if (it in animeDir.episodeDirs) {
-                animeDir.episodeDirs -= it
+    suspend fun removeEpisode(episode: Episode, anime: Anime) {
+        rootDownloadsDirLock.withLock {
+            val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
+            // AM (CU)>
+            val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.ogTitle)] ?: return
+            provider.getValidEpisodeDirNames(episode.name, episode.scanlator).forEach {
+                if (it in animeDir.episodeDirs) {
+                    animeDir.episodeDirs -= it
+                }
             }
         }
     }
@@ -262,38 +264,59 @@ class AnimeDownloadCache(
      * @param episodes the list of episode to remove.
      * @param anime the anime of the episode.
      */
-    @Synchronized
-    fun removeEpisodes(episodes: List<Episode>, anime: Anime) {
-        val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
-        val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.title)] ?: return
-        episodes.forEach { episode ->
-            provider.getValidEpisodeDirNames(episode.name, episode.scanlator).forEach {
-                if (it in animeDir.episodeDirs) {
-                    animeDir.episodeDirs -= it
+    suspend fun removeEpisodes(episodes: List<Episode>, anime: Anime) {
+        rootDownloadsDirLock.withLock {
+            val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
+            // AM (CU)>
+            val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.ogTitle)] ?: return
+            episodes.forEach { episode ->
+                provider.getValidEpisodeDirNames(episode.name, episode.scanlator).forEach {
+                    if (it in animeDir.episodeDirs) {
+                        animeDir.episodeDirs -= it
+                    }
                 }
             }
         }
         notifyChanges()
     }
 
+    // AM (CU) -->
+    suspend fun removeFolders(folders: List<String>, anime: Anime) {
+        rootDownloadsDirLock.withLock {
+            val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
+            // AM (CU)>
+            val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.ogTitle)] ?: return
+            folders.forEach { episode ->
+                if (episode in animeDir.episodeDirs) {
+                    animeDir.episodeDirs -= episode
+                }
+            }
+        }
+    }
+    // <-- AM (CU)
+
     /**
      * Removes an anime that has been deleted from this cache.
      *
      * @param anime the anime to remove.
      */
-    @Synchronized
-    fun removeAnime(anime: Anime) {
-        val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
-        val animeDirName = provider.getAnimeDirName(anime.title)
-        if (sourceDir.animeDirs.containsKey(animeDirName)) {
-            sourceDir.animeDirs -= animeDirName
+    suspend fun removeAnime(anime: Anime) {
+        rootDownloadsDirLock.withLock {
+            val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
+            // AM (CU)>
+            val animeDirName = provider.getAnimeDirName(anime.ogTitle)
+            if (sourceDir.animeDirs.containsKey(animeDirName)) {
+                sourceDir.animeDirs -= animeDirName
+            }
         }
 
         notifyChanges()
     }
 
-    fun removeSource(source: AnimeSource) {
-        rootDownloadsDir.sourceDirs -= source.id
+    suspend fun removeSource(source: AnimeSource) {
+        rootDownloadsDirLock.withLock {
+            rootDownloadsDir.sourceDirs -= source.id
+        }
 
         notifyChanges()
     }

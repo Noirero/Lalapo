@@ -5,6 +5,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_DEFAULT
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
+import eu.kanade.tachiyomi.data.connections.discord.RICH_PRESENCE_TAG
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import tachiyomi.core.i18n.stringResource
@@ -38,19 +39,16 @@ object Notifications {
      */
     private const val GROUP_DOWNLOADER = "group_downloader"
     const val CHANNEL_DOWNLOADER_PROGRESS = "downloader_progress_channel"
-    const val ID_DOWNLOAD_CHAPTER_PROGRESS = -201
     const val ID_DOWNLOAD_EPISODE_PROGRESS = -203
     const val CHANNEL_DOWNLOADER_ERROR = "downloader_error_channel"
-    const val ID_DOWNLOAD_CHAPTER_ERROR = -202
     const val ID_DOWNLOAD_EPISODE_ERROR = -204
 
     /**
      * Notification channel and ids used by the library updater.
      */
-    const val CHANNEL_NEW_CHAPTERS_EPISODES = "new_chapters_episodes_channel"
+    const val CHANNEL_NEW_EPISODES = "new_episodes_channel"
     const val ID_NEW_CHAPTERS = -301
     const val ID_NEW_EPISODES = -1301
-    const val GROUP_NEW_CHAPTERS = "eu.kanade.tachiyomi.NEW_CHAPTERS"
     const val GROUP_NEW_EPISODES = "eu.kanade.tachiyomi.NEW_EPISODES"
 
     /**
@@ -69,6 +67,14 @@ object Notifications {
      */
     const val CHANNEL_INCOGNITO_MODE = "incognito_mode_channel"
     const val ID_INCOGNITO_MODE = -701
+
+    // AM (DISCORD) -->
+    /**
+     * Notification channel used for Discord RPC
+     */
+    const val CHANNEL_DISCORD_RPC = "${RICH_PRESENCE_TAG}_channel"
+    const val ID_DISCORD_RPC = -1701
+    // <-- AM (DISCORD)
 
     /**
      * Notification channel and ids used for app and extension updates.
@@ -90,6 +96,9 @@ object Notifications {
         "updates_ext_channel",
         "downloader_cache_renewal",
         "crash_logs_channel",
+        // AM (DISCORD) --> (You don't need this, Luft)
+        "Discord RPC",
+        // <-- AM (DISCORD)
     )
 
     /**
@@ -141,8 +150,8 @@ object Notifications {
                     setGroup(GROUP_LIBRARY)
                     setShowBadge(false)
                 },
-                buildNotificationChannel(CHANNEL_NEW_CHAPTERS_EPISODES, IMPORTANCE_DEFAULT) {
-                    setName(context.stringResource(MR.strings.channel_new_chapters_episodes))
+                buildNotificationChannel(CHANNEL_NEW_EPISODES, IMPORTANCE_DEFAULT) {
+                    setName(context.getString(MR.string.channel_new_episodes))
                 },
                 buildNotificationChannel(CHANNEL_DOWNLOADER_PROGRESS, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_progress))
@@ -168,6 +177,11 @@ object Notifications {
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_incognito_mode))
                 },
+                // AM (DISCORD) -->
+                buildNotificationChannel(CHANNEL_DISCORD_RPC, IMPORTANCE_LOW) {
+                    setName(context.getString(R.string.pref_discord_rpc))
+                },
+                // <-- AM (DISCORD)
                 buildNotificationChannel(CHANNEL_APP_UPDATE, IMPORTANCE_DEFAULT) {
                     setGroup(GROUP_APK_UPDATES)
                     setName(context.stringResource(MR.strings.channel_app_updates))

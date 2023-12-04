@@ -9,6 +9,9 @@ import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSourcePin
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.anime.AnimeSourceUiModel
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.subscribeToInstallUpdate
 import eu.kanade.tachiyomi.util.system.LAST_USED_KEY
 import eu.kanade.tachiyomi.util.system.PINNED_KEY
 import kotlinx.collections.immutable.ImmutableList
@@ -34,7 +37,10 @@ class AnimeSourcesScreenModel(
     private val getEnabledAnimeSources: GetEnabledAnimeSources = Injekt.get(),
     private val toggleSource: ToggleAnimeSource = Injekt.get(),
     private val toggleSourcePin: ToggleAnimeSourcePin = Injekt.get(),
-) : StateScreenModel<AnimeSourcesScreenModel.State>(State()) {
+    // AM (BROWSE) -->
+    private val extensionManager: AnimeExtensionManager = Injekt.get(),
+    // <-- AM (BROWSE)
+) : StateScreenModel<AnimeSourcesState>(AnimeSourcesState()) {
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
     val events = _events.receiveAsFlow()
@@ -103,6 +109,16 @@ class AnimeSourcesScreenModel(
     fun closeDialog() {
         mutableState.update { it.copy(dialog = null) }
     }
+
+    // AM (BROWSE) -->
+    fun updateExtension(extension: AnimeExtension.Installed) {
+        extensionManager.updateExtension(extension).subscribeToInstallUpdate(extension)
+    }
+
+    fun uninstallExtension(packageName: String) {
+        extensionManager.uninstallExtension(packageName)
+    }
+    // <-- AM (BROWSE)
 
     sealed interface Event {
         data object FailedFetchingSources : Event

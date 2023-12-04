@@ -176,7 +176,7 @@ class AnimeLibraryUpdateNotifier(private val context: Context) {
         // Parent group notification
         context.notify(
             Notifications.ID_NEW_EPISODES,
-            Notifications.CHANNEL_NEW_CHAPTERS_EPISODES,
+            Notifications.CHANNEL_NEW_EPISODES,
         ) {
             setContentTitle(context.stringResource(MR.strings.notification_new_episodes))
             if (updates.size == 1 && !preferences.hideNotificationContent().get()) {
@@ -230,7 +230,7 @@ class AnimeLibraryUpdateNotifier(private val context: Context) {
 
     private suspend fun createNewEpisodesNotification(anime: Anime, episodes: Array<Episode>): Notification {
         val icon = getAnimeIcon(anime)
-        return context.notificationBuilder(Notifications.CHANNEL_NEW_CHAPTERS_EPISODES) {
+        return context.notificationBuilder(Notifications.CHANNEL_NEW_EPISODES) {
             setContentTitle(anime.title)
 
             val description = getNewEpisodesDescription(episodes)

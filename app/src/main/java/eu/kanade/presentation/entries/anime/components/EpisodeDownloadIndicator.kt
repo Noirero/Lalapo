@@ -2,6 +2,7 @@ package eu.kanade.presentation.entries.anime.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -22,6 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.cosose.ui.unit.sp
 import eu.kanade.presentation.components.ArrowModifier
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.IndicatorModifier
@@ -50,6 +54,9 @@ fun EpisodeDownloadIndicator(
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
     onClick: (EpisodeDownloadAction) -> Unit,
+    // AM (FILE-SIZE) -->
+    fileSize: Long?,
+    // <-- AM (FILE-SIZE)
 ) {
     when (val downloadState = downloadStateProvider()) {
         AnimeDownload.State.NOT_DOWNLOADED -> NotDownloadedIndicator(
@@ -68,6 +75,9 @@ fun EpisodeDownloadIndicator(
             enabled = enabled,
             modifier = modifier,
             onClick = onClick,
+            // AM (FILE-SIZE) -->
+            fileSize = fileSize,
+            // <-- AM (FILE-SIZE)
         )
         AnimeDownload.State.ERROR -> ErrorIndicator(
             enabled = enabled,
@@ -182,8 +192,22 @@ private fun DownloadedIndicator(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     onClick: (EpisodeDownloadAction) -> Unit,
+    // AM (FILE-SIZE) -->
+    fileSize: Long?,
+    // <-- AM (FILE-SIZE)
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
+    // AM (FILE-SIZE) -->
+    if (fileSize != null) {
+        Text(
+            text = "${fileSize / 1024 / 1024}MB",
+            maxLines = 1,
+            style = MaterialTheme.typography.bodyMedium
+                .copy(color = MaterialTheme.colorScheme.primary, fontSize = 12.sp),
+            modifier = modifier.padding(all = 10.dp),
+        )
+    }
+    // <-- AM (FILE-SIZE)
     Box(
         modifier = modifier
             .size(IconButtonTokens.StateLayerSize)
@@ -194,12 +218,6 @@ private fun DownloadedIndicator(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = Icons.Filled.CheckCircle,
-            contentDescription = null,
-            modifier = Modifier.size(IndicatorSize),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
             DropdownMenuItem(
                 text = { Text(text = stringResource(MR.strings.action_delete)) },
@@ -209,6 +227,13 @@ private fun DownloadedIndicator(
                 },
             )
         }
+
+        Icon(
+            imageVector = Icons.Filled.CheckCircle,
+            contentDescription = null,
+            modifier = Modifier.size(IndicatorSize),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

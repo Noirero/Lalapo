@@ -40,13 +40,17 @@ import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.hippo.unifile.UniFile
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.PlayerData
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
+import eu.kanade.tachiyomi.source.anime.isNsfw
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.settings.PlayerSettingsScreenModel
@@ -118,6 +122,10 @@ class PlayerActivity : BaseActivity() {
             }
         }
     }
+
+    // AM (CONNECTIONS) -->
+    private val connectionsPreferences: ConnectionsPreferences = Injekt.get()
+    // <-- AM (CONNECTIONS)
 
     override fun onNewIntent(intent: Intent) {
         val animeId = intent.extras!!.getLong("animeId", -1)
@@ -874,6 +882,9 @@ class PlayerActivity : BaseActivity() {
             player.destroy()
         }
         abandonAudioFocus()
+        // AM (DISCORD) -->
+        updateDiscordRPC(exitingPlayer = true)
+        // <-- AM (DISCORD)
         super.onDestroy()
     }
 
@@ -1241,6 +1252,35 @@ class PlayerActivity : BaseActivity() {
                 verticalScrollRight(-1 / maxVolume.toFloat())
                 return true
             }
+            // AM (KC) -->
+            KeyEvent.KEYCODE_SPACE -> {
+                doubleTapPlayPause()
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                val interval = playerPreferences.skipLengthPreference().get()
+                if (interval != 0) {
+                    doubleTapSeek(interval, isDoubleTap = false)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                val interval = playerPreferences.skipLengthPreference().get()
+                if (interval != 0) {
+                    doubleTapSeek(-interval, isDoubleTap = false)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_LEFT_BRACKET -> {
+                changeEpisode(viewModel.getAdjacentEpisodeId(previous = true))
+                return true
+            }
+            KeyEvent.KEYCODE_RIGHT_BRACKET -> {
+                changeEpisode(viewModel.getAdjacentEpisodeId(previous = false))
+                return true
+            }
+            // <-- AM (KC)
+
             // Not entirely sure how to handle these KeyCodes yet, need to learn some more
             /**
              KeyEvent.KEYCODE_MEDIA_NEXT -> {
@@ -1304,7 +1344,8 @@ class PlayerActivity : BaseActivity() {
 
         val intent = uri.toShareIntent(
             context = applicationContext,
-            message = stringResource(MR.strings.share_screenshot_info, anime.title, episode.name, seconds),
+            // AM (CU)>
+            message = stringResource(MR.strings.share_screenshot_info, anime.ogTitle, episode.name, seconds),
         )
         startActivity(Intent.createChooser(intent, stringResource(MR.strings.action_share)))
     }
@@ -1381,6 +1422,9 @@ class PlayerActivity : BaseActivity() {
             playerControls.updatePlaylistButtons()
             playerControls.updateSpeedButton()
             withIOContext { player.loadTracks() }
+            // AM (DISCORD) -->
+            updateDiscordRPC(exitingPlayer = false)
+            // <-- AM (DISCORD)
         }
     }
 
@@ -1846,4 +1890,29 @@ class PlayerActivity : BaseActivity() {
             animationHandler.postDelayed(nextEpisodeRunnable, 1000L)
         }
     }
+
+    // AM (DISCORD) -->
+    private fun updateDiscordRPC(exitingPlayer: Boolean) {
+        if (connectionsPreferences.enableDiscordRPC().get()) {
+            viewModel.viewModelScope.launchIO {
+                if (!exitingPlayer) {
+                    DiscordRPCService.setPlayerActivity(
+                        context = this@PlayerActivity,
+                        PlayerData(
+                            incognitoMode = viewModel.currentSource.isNsfw() || viewModel.incognitoMode,
+                            animeId = viewModel.currentAnime?.id,
+                            // AM (CU)>
+                            animeTitle = viewModel.currentAnime?.ogTitle,
+                            episodeNumber = viewModel.currentEpisode?.episode_number?.toString(),
+                            thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
+                        ),
+                    )
+                } else {
+                    val lastUsedScreen = DiscordRPCService.lastUsedScreen
+                    DiscordRPCService.setScreen(this@PlayerActivity, lastUsedScreen)
+                }
+            }
+        }
+    }
+    // <-- AM (DISCORD)
 }

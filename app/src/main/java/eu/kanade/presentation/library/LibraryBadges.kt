@@ -1,4 +1,4 @@
-package eu.kanade.presentation.animelib.components
+package eu.kanade.presentation.library
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons

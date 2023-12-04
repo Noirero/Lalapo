@@ -22,7 +22,6 @@ import coil.decode.ImageDecoderDecoder
 import coil.disk.DiskCache
 import coil.util.DebugLogger
 import eu.kanade.domain.DomainModule
-import eu.kanade.domain.SYDomainModule
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
@@ -31,10 +30,8 @@ import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
 import eu.kanade.tachiyomi.data.coil.AnimeCoverFetcher
 import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
 import eu.kanade.tachiyomi.data.coil.AnimeKeyer
-import eu.kanade.tachiyomi.data.coil.MangaCoverFetcher
-import eu.kanade.tachiyomi.data.coil.MangaCoverKeyer
-import eu.kanade.tachiyomi.data.coil.MangaKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
 import eu.kanade.tachiyomi.di.PreferenceModule
@@ -63,7 +60,6 @@ import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.widget.entries.anime.AnimeWidgetManager
-import tachiyomi.presentation.widget.entries.manga.MangaWidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -97,9 +93,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(AppModule(this))
         Injekt.importModule(DomainModule())
-        // SY -->
-        Injekt.importModule(SYDomainModule())
-        // SY <--
 
         setupNotificationChannels()
 
@@ -137,9 +130,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode().get())
 
         // Updates widget update
-        with(MangaWidgetManager(Injekt.get(), Injekt.get())) {
-            init(ProcessLifecycleOwner.get().lifecycleScope)
-        }
 
         with(AnimeWidgetManager(Injekt.get(), Injekt.get())) {
             init(ProcessLifecycleOwner.get().lifecycleScope)
@@ -161,14 +151,10 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
                     add(GifDecoder.Factory())
                 }
                 add(TachiyomiImageDecoder.Factory())
-                add(MangaCoverFetcher.MangaFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeCoverFetcher.AnimeFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeCoverFetcher.AnimeCoverFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
                 add(AnimeKeyer())
-                add(MangaCoverFetcher.MangaCoverFactory(lazy(callFactoryInit), lazy(diskCacheInit)))
-                add(MangaKeyer())
                 add(AnimeCoverKeyer())
-                add(MangaCoverKeyer())
             }
             callFactory(callFactoryInit)
             diskCache(diskCacheInit)
@@ -186,10 +172,16 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
     override fun onStart(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStart()
+        // AM (DISCORD) -->
+        DiscordRPCService.start(applicationContext)
+        // <-- AM (DISCORD)
     }
 
     override fun onStop(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStopped()
+        // AM (DISCORD) -->
+        DiscordRPCService.stop(applicationContext)
+        // <-- AM (DISCORD)
     }
 
     override fun getPackageName(): String {
@@ -211,27 +203,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
             }
         }
         return super.getPackageName()
-    }
-
-    private fun setupAcra() {
-        if (BuildConfig.ACRA_URI.isNotEmpty() && isPreviewBuildType || isReleaseBuildType) {
-            initAcra {
-                buildConfigClass = BuildConfig::class.java
-                excludeMatchingSharedPreferencesKeys = listOf(
-                    ".*username.*",
-                    ".*password.*",
-                    ".*token.*",
-                )
-
-                reportFormat = StringFormat.JSON
-                httpSender {
-                    uri = BuildConfig.ACRA_URI
-                    basicAuthLogin = BuildConfig.ACRA_LOGIN
-                    basicAuthPassword = BuildConfig.ACRA_PASSWORD
-                    httpMethod = HttpSender.Method.POST
-                }
-            }
-        }
     }
 
     private fun setupNotificationChannels() {
@@ -273,7 +244,7 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 private const val ACTION_DISABLE_INCOGNITO_MODE = "tachi.action.DISABLE_INCOGNITO_MODE"
 
 /**
- * Direct copy of Coil's internal SingletonDiskCache so that [MangaCoverFetcher] can access it.
+ * Direct copy of Coil's internal SingletonDiskCache so that [AnimeCoverFetcher] can access it.
  */
 private object CoilDiskCache {
 
@@ -294,7 +265,7 @@ private object CoilDiskCache {
 }
 
 /**
- * Direct copy of Coil's internal SingletonDiskCache so that [MangaCoverFetcher] can access it.
+ * Direct copy of Coil's internal SingletonDiskCache so that [AnimeCoverFetcher] can access it.
  */
 internal object CoilDiskCacheAnime {
 

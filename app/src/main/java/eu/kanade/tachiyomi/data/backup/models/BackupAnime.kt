@@ -1,9 +1,10 @@
-package eu.kanade.tachiyomi.data.backup.models
+Spackage eu.kanade.tachiyomi.data.backup.models
 
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.track.anime.model.AnimeTrack
 
@@ -39,16 +40,28 @@ data class BackupAnime(
     @ProtoNumber(105) var updateStrategy: AnimeUpdateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE,
     @ProtoNumber(106) var lastModifiedAt: Long = 0,
     @ProtoNumber(107) var favoriteModifiedAt: Long? = null,
+
+    // AM (CU) -->
+    // Bump values by 200
+    @ProtoNumber(200) var customStatus: Int = 0,
+    @ProtoNumber(201) var customTitle: String? = null,
+    @ProtoNumber(202) var customArtist: String? = null,
+    @ProtoNumber(203) var customAuthor: String? = null,
+    @ProtoNumber(204) var customDescription: String? = null,
+    @ProtoNumber(205) var customGenre: List<String>? = null,
+    // <-- AM (CU)
 ) {
     fun getAnimeImpl(): Anime {
         return Anime.create().copy(
             url = this@BackupAnime.url,
-            title = this@BackupAnime.title,
-            artist = this@BackupAnime.artist,
-            author = this@BackupAnime.author,
-            description = this@BackupAnime.description,
-            genre = this@BackupAnime.genre,
-            status = this@BackupAnime.status.toLong(),
+            // AM (CU) -->
+            ogTitle = this@BackupAnime.title,
+            ogArtist = this@BackupAnime.artist,
+            ogAuthor = this@BackupAnime.author,
+            ogDescription = this@BackupAnime.description,
+            ogGenre = this@BackupAnime.genre,
+            ogStatus = this@BackupAnime.status.toLong(),
+            // <-- AM (CU)
             thumbnailUrl = this@BackupAnime.thumbnailUrl,
             favorite = this@BackupAnime.favorite,
             source = this@BackupAnime.source,
@@ -67,6 +80,29 @@ data class BackupAnime(
         }
     }
 
+    // AM (CU) -->
+    fun getCustomAnimeInfo(): CustomAnimeInfo? {
+        if (customTitle != null ||
+            customArtist != null ||
+            customAuthor != null ||
+            customDescription != null ||
+            customGenre != null ||
+            customStatus != 0
+        ) {
+            return CustomAnimeInfo(
+                id = 0L,
+                title = customTitle,
+                author = customAuthor,
+                artist = customArtist,
+                description = customDescription,
+                genre = customGenre,
+                status = customStatus.takeUnless { it == 0 }?.toLong(),
+            )
+        }
+        return null
+    }
+    // <-- AM (CU)
+
     fun getTrackingImpl(): List<AnimeTrack> {
         return tracking.map {
             it.getTrackingImpl()
@@ -74,15 +110,18 @@ data class BackupAnime(
     }
 
     companion object {
-        fun copyFrom(anime: Anime): BackupAnime {
+        // AM (CU)>
+        fun copyFrom(anime: Anime, customAnimeInfo: CustomAnimeInfo?): BackupAnime {
             return BackupAnime(
                 url = anime.url,
-                title = anime.title,
-                artist = anime.artist,
-                author = anime.author,
-                description = anime.description,
-                genre = anime.genre.orEmpty(),
-                status = anime.status.toInt(),
+                // AM (CU) -->
+                title = anime.ogTitle,
+                artist = anime.ogArtist,
+                author = anime.ogAuthor,
+                description = anime.ogDescription,
+                genre = anime.ogGenre.orEmpty(),
+                status = anime.ogStatus.toInt(),
+                // <-- AM (CU)
                 thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite,
                 source = anime.source,
@@ -92,7 +131,18 @@ data class BackupAnime(
                 updateStrategy = anime.updateStrategy,
                 lastModifiedAt = anime.lastModifiedAt,
                 favoriteModifiedAt = anime.favoriteModifiedAt,
-            )
+                // AM (CU) -->
+            ).also { backupAnime ->
+                customAnimeInfo?.let {
+                    backupAnime.customTitle = it.title
+                    backupAnime.customArtist = it.artist
+                    backupAnime.customAuthor = it.author
+                    backupAnime.customDescription = it.description
+                    backupAnime.customGenre = it.genre
+                    backupAnime.customStatus = it.status?.toInt() ?: 0
+                }
+            }
+            // <-- AM (CU)
         }
     }
 }

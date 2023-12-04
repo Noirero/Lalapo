@@ -12,17 +12,17 @@ class BaselineProfileGenerator {
 
     @Test
     fun generate() = baselineProfileRule.collect(
-        packageName = "xyz.jmir.tachiyomi.mi.benchmark",
+        packageName = "xyz.Quickdev.Animiru.mi.benchmark",
         profileBlock = {
             pressHome()
             startActivityAndWait()
 
-            device.findObject(By.text("Manga")).click()
+            device.findObject(By.text("Anime")).click()
             device.findObject(By.text("Updates")).click()
 
             device.findObject(By.text("History")).click()
 
-            // TODO: automate storage permissions and possibly open manga details screen too?
+            // TODO: automate storage permissions and possibly open Anime details screen too?
             // device.findObject(By.text("Browse")).click()
             // device.findObject(By.text("Extensions")).click()
             // device.swipe(150, 150, 50, 150, 1)

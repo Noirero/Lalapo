@@ -103,6 +103,9 @@ fun Scaffold(
     topBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
     topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
+    // AM (NAVPILL) -->
+    overlayBottomBar: Boolean = false,
+    // <-- AM (NAVPILL)
     startBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
@@ -128,6 +131,9 @@ fun Scaffold(
             snackbar = snackbarHost,
             contentWindowInsets = contentWindowInsets,
             fab = floatingActionButton,
+            // AM (NAVPILL) -->
+            overlayBottomBar = overlayBottomBar,
+            // <-- AM (NAVPILL)
         )
     }
 }
@@ -154,6 +160,9 @@ private fun ScaffoldLayout(
     fab: @Composable () -> Unit,
     contentWindowInsets: WindowInsets,
     bottomBar: @Composable () -> Unit,
+    // AM (NAVPILL) -->
+    overlayBottomBar: Boolean,
+    // <-- AM (NAVPILL)
 ) {
     // Create the backing values for the content padding
     // These values will be updated during measurement, but before measuring and placing

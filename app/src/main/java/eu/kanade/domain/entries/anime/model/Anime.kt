@@ -17,10 +17,14 @@ val Anime.downloadedFilter: TriState
             else -> TriState.DISABLED
         }
     }
+
 fun Anime.episodesFiltered(): Boolean {
     return unseenFilter != TriState.DISABLED ||
         downloadedFilter != TriState.DISABLED ||
-        bookmarkedFilter != TriState.DISABLED
+        bookmarkedFilter != TriState.DISABLED ||
+        // AM (FILLER) -->
+        fillermarkedFilter != TriStateFilter.DISABLED
+        // <-- AM (FILLER)
 }
 fun Anime.forceDownloaded(): Boolean {
     return favorite && Injekt.get<BasePreferences>().downloadedOnly().get()
@@ -39,22 +43,28 @@ fun Anime.toSAnime(): SAnime = SAnime.create().also {
 }
 
 fun Anime.copyFrom(other: SAnime): Anime {
-    val author = other.author ?: author
-    val artist = other.artist ?: artist
-    val description = other.description ?: description
+    // AM (CU) -->
+    val author = other.author ?: ogAuthor
+    val artist = other.artist ?: ogArtist
+    val description = other.description ?: ogDescription
     val genres = if (other.genre != null) {
         other.getGenres()
     } else {
-        genre
+        ogGenre
     }
+    // <-- AM (CU)
     val thumbnailUrl = other.thumbnail_url ?: thumbnailUrl
     return this.copy(
-        author = author,
-        artist = artist,
-        description = description,
-        genre = genre,
+        // AM (CU) -->
+        ogAuthor = author,
+        ogArtist = artist,
+        ogDescription = description,
+        ogGenre = genres,
+        // <-- AM (CU)
         thumbnailUrl = thumbnailUrl,
-        status = other.status.toLong(),
+        // AM (CU) -->
+        ogStatus = other.status.toLong(),
+        // <-- AM (CU)
         updateStrategy = other.update_strategy,
         initialized = other.initialized && initialized,
     )
@@ -63,12 +73,14 @@ fun Anime.copyFrom(other: SAnime): Anime {
 fun SAnime.toDomainAnime(sourceId: Long): Anime {
     return Anime.create().copy(
         url = url,
-        title = title,
-        artist = artist,
-        author = author,
-        description = description,
-        genre = getGenres(),
-        status = status.toLong(),
+        // AM (CU) -->
+        ogTitle = title,
+        ogArtist = artist,
+        ogAuthor = author,
+        ogDescription = description,
+        ogGenre = getGenres(),
+        ogStatus = status.toLong(),
+        // <-- AM (CU)
         thumbnailUrl = thumbnail_url,
         updateStrategy = update_strategy,
         initialized = initialized,

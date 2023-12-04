@@ -13,6 +13,7 @@ import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
 
 /**
  * This class is used to provide the directories where the downloads should be saved.
@@ -93,13 +94,39 @@ class AnimeDownloadProvider(
      * @param source the source of the episode.
      */
     fun findEpisodeDirs(episodes: List<Episode>, anime: Anime, source: AnimeSource): Pair<UniFile?, List<UniFile>> {
-        val animeDir = findAnimeDir(anime.title, source) ?: return null to emptyList()
+        // AM (CU)>
+        val animeDir = findAnimeDir(anime.ogTitle, source) ?: return null to emptyList()
         return animeDir to episodes.mapNotNull { episode ->
             getValidEpisodeDirNames(episode.name, episode.scanlator).asSequence()
                 .mapNotNull { animeDir.findFile(it, true) }
                 .firstOrNull()
         }
     }
+
+    // AM (CU) -->
+    /**
+     * Returns a list of all files in anime directory
+     *
+     * @param episodes the episodes to query.
+     * @param anime the anime of the episode.
+     * @param source the source of the episode.
+     */
+    fun findUnmatchedEpisodeDirs(
+        episodes: List<Episode>,
+        anime: Anime,
+        source: AnimeSource,
+    ): List<UniFile> {
+        // AM (CU)>
+        val animeDir = findAnimeDir(anime.ogTitle, source) ?: return emptyList()
+        return animeDir.listFiles().orEmpty().asList().filter {
+            episodes.find { ep ->
+                getValidEpisodeDirNames(ep.name, ep.scanlator).any { dir ->
+                    animeDir.findFile(dir) != null
+                }
+            } == null || it.name?.endsWith(AnimeDownloader.TMP_DIR_SUFFIX) == true
+        }
+    }
+    // <-- AM (CU)
 
     /**
      * Returns the download directory name for a source.
@@ -152,7 +179,7 @@ class AnimeDownloadProvider(
      * @param episodeName the name of the episode to query.
      * @param episodeScanlator scanlator of the episode to query
      */
-    fun getOldEpisodeDirName(episodeName: String, episodeScanlator: String?): String {
+    private fun getOldEpisodeDirName(episodeName: String, episodeScanlator: String?): String {
         return DiskUtil.buildValidFilename(
             when {
                 episodeScanlator != null -> "${episodeScanlator}_$episodeName"
@@ -177,4 +204,28 @@ class AnimeDownloadProvider(
         val oldEpisodeDirName = getOldEpisodeDirName(episodeName, episodeScanlator)
         return listOf(episodeDirName, oldEpisodeDirName)
     }
+
+    // AM (FILE-SIZE) -->
+    /**
+     * Returns an episode file size in bytes.
+     * Returns null if the episode is not found in expected location
+     *
+     * @param episodeName the name of the episode to query.
+     * @param episodeScanlator scanlator of the episode to query
+     * @param animeTitle the title of the anime
+     * @param animeSource the source of the anime
+     */
+    fun getEpisodeFileSize(
+        episodeName: String,
+        episodeScanlator: String?,
+        animeTitle: String,
+        animeSource: AnimeSource?,
+    ): Long? {
+        if (animeSource == null) return null
+        return findEpisodeDir(episodeName, episodeScanlator, animeTitle, animeSource)
+            ?.filePath?.let {
+                DiskUtil.getDirectorySize(File(it))
+            }
+    }
+    // <-- AM (FILE-SIZE)
 }

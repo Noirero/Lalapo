@@ -71,6 +71,10 @@ fun EntryBottomActionMenu(
     modifier: Modifier = Modifier,
     onBookmarkClicked: (() -> Unit)? = null,
     onRemoveBookmarkClicked: (() -> Unit)? = null,
+    // AM (FILLER) -->
+    onFillermarkClicked: (() -> Unit)? = null,
+    onRemoveFillermarkClicked: (() -> Unit)? = null,
+    // <-- AM (FILLER)
     onMarkAsViewedClicked: (() -> Unit)? = null,
     onMarkAsUnviewedClicked: (() -> Unit)? = null,
     onMarkPreviousAsViewedClicked: (() -> Unit)? = null,
@@ -96,11 +100,11 @@ fun EntryBottomActionMenu(
             tonalElevation = 3.dp,
         ) {
             val haptic = LocalHapticFeedback.current
-            val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false, false, false) }
+            val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false, false, false, false, false) }
             var resetJob: Job? = remember { null }
             val onLongClickItem: (Int) -> Unit = { toConfirmIndex ->
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                (0..<9).forEach { i -> confirm[i] = i == toConfirmIndex }
+                (0..<11).forEach { i -> confirm[i] = i == toConfirmIndex }
                 resetJob?.cancel()
                 resetJob = scope.launch {
                     delay(1.seconds)
@@ -140,6 +144,28 @@ fun EntryBottomActionMenu(
                         onClick = onRemoveBookmarkClicked,
                     )
                 }
+                // AM (FILLER) -->
+                if (onFillermarkClicked != null) {
+                    val fillermark = R.string.action_fillermark_episode
+                    Button(
+                        title = stringResource(fillermark),
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp),
+                        toConfirm = confirm[0],
+                        onLongClick = { onLongClickItem(0) },
+                        onClick = onFillermarkClicked,
+                    )
+                }
+                if (onRemoveFillermarkClicked != null) {
+                    val removeFillermark = R.string.action_remove_fillermark_episode
+                    Button(
+                        title = stringResource(removeFillermark),
+                        icon = ImageVector.vectorResource(id = R.drawable.ic_fillermark_border_24dp),
+                        toConfirm = confirm[1],
+                        onLongClick = { onLongClickItem(1) },
+                        onClick = onRemoveFillermarkClicked,
+                    )
+                }
+                // <-- AM (FILLER)
                 if (onMarkAsViewedClicked != null) {
                     val viewed = if (isManga) MR.strings.action_mark_as_read else MR.strings.action_mark_as_seen
                     Button(

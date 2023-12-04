@@ -9,12 +9,9 @@ import eu.kanade.tachiyomi.util.lang.toDateKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -42,28 +39,21 @@ class AnimeHistoryScreenModel(
     private val _events: Channel<Event> = Channel(Channel.UNLIMITED)
     val events: Flow<Event> = _events.receiveAsFlow()
 
-    private val _query: MutableStateFlow<String?> = MutableStateFlow(null)
-    val query: StateFlow<String?> = _query.asStateFlow()
-
     init {
         screenModelScope.launch {
-            _query.collectLatest { query ->
-                getHistory.subscribe(query ?: "")
-                    .distinctUntilChanged()
-                    .catch { error ->
-                        logcat(LogPriority.ERROR, error)
-                        _events.send(Event.InternalError)
-                    }
-                    .map { it.toAnimeHistoryUiModels() }
-                    .flowOn(Dispatchers.IO)
-                    .collect { newList -> mutableState.update { it.copy(list = newList) } }
-            }
-        }
-    }
-
-    fun search(query: String?) {
-        screenModelScope.launchIO {
-            _query.emit(query)
+            state.map { it.searchQuery }
+                .distinctUntilChanged()
+                .flatMapLatest { query ->
+                    getHistory.subscribe(query ?: "")
+                        .distinctUntilChanged()
+                        .catch { error ->
+                            logcat(LogPriority.ERROR, error)
+                            _events.send(Event.InternalError)
+                        }
+                        .map { it.toHistoryUiModels() }
+                        .flowOn(Dispatchers.IO)
+                }
+                .collect { newList -> mutableState.update { it.copy(list = newList) } }
         }
     }
 
@@ -115,6 +105,12 @@ class AnimeHistoryScreenModel(
             if (!result) return@launchIO
             _events.send(Event.HistoryCleared)
         }
+    }
+
+    val getSearchQuery = mutableState.value.searchQuery
+
+    fun updateSearchQuery(query: String?) {
+        mutableState.update { it.copy(searchQuery = query) }
     }
 
     fun setDialog(dialog: Dialog?) {

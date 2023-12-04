@@ -1,5 +1,6 @@
 package eu.kanade.presentation.browse.anime
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -33,32 +36,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
-import eu.kanade.presentation.browse.manga.ExtensionHeader
-import eu.kanade.presentation.browse.manga.ExtensionTrustDialog
+import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.entries.DotSeparatorNoSpaceText
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionFilterScreen
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreenModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
+import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun AnimeExtensionScreen(
-    state: AnimeExtensionsScreenModel.State,
-    contentPadding: PaddingValues,
-    searchQuery: String?,
+    state: AnimeExtensionsState,
+    // AM (BROWSE) -->
+    navigator: Navigator,
+    // <-- AM (BROWSE)
+    searchQuery: String? = null,
+    // AM (BROWSE) -->
+    onChangeSearchQuery: (String?) -> Unit,
+    // <-- AM (BROWSE)
     onLongClickItem: (AnimeExtension) -> Unit,
     onClickItemCancel: (AnimeExtension) -> Unit,
     onInstallExtension: (AnimeExtension.Available) -> Unit,
@@ -69,37 +81,60 @@ fun AnimeExtensionScreen(
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
 ) {
-    PullRefresh(
-        refreshing = state.isRefreshing,
-        onRefresh = onRefresh,
-        enabled = { !state.isLoading },
-    ) {
-        when {
-            state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
-            state.isEmpty -> {
-                val msg = if (!searchQuery.isNullOrEmpty()) {
-                    MR.strings.no_results_found
-                } else {
-                    MR.strings.empty_screen
+    // AM (BROWSE) -->
+    Scaffold(
+        topBar = { scrollBehavior ->
+            SearchToolbar(
+                titleContent = { AppBarTitle(stringResource(R.string.label_extensions)) },
+                searchQuery = searchQuery,
+                onChangeSearchQuery = onChangeSearchQuery,
+                actions = {
+                    IconButton(onClick = { navigator.push(AnimeExtensionFilterScreen()) }) {
+                        Icon(
+                            Icons.Outlined.Translate,
+                            contentDescription = stringResource(R.string.action_filter),
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigator::pop,
+            )
+        },
+    ) { contentPadding ->
+        // <-- AM (BROWSE)
+        PullRefresh(
+            refreshing = state.isRefreshing,
+            onRefresh = onRefresh,
+            enabled = !state.isLoading,
+        ) {
+            when {
+                state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
+                state.isEmpty -> {
+                    if (!searchQuery.isNullOrEmpty()) {
+                        EmptyScreen(
+                            textResource = R.string.no_results_found,
+                            modifier = Modifier.padding(contentPadding),
+                        )
+                    } else {
+                        LoadingScreen(
+                            modifier = Modifier.padding(contentPadding),
+                        )
+                    }
                 }
-                EmptyScreen(
-                    stringRes = msg,
-                    modifier = Modifier.padding(contentPadding),
-                )
-            }
-            else -> {
-                AnimeExtensionContent(
-                    state = state,
-                    contentPadding = contentPadding,
-                    onLongClickItem = onLongClickItem,
-                    onClickItemCancel = onClickItemCancel,
-                    onInstallExtension = onInstallExtension,
-                    onUninstallExtension = onUninstallExtension,
-                    onUpdateExtension = onUpdateExtension,
-                    onTrustExtension = onTrustExtension,
-                    onOpenExtension = onOpenExtension,
-                    onClickUpdateAll = onClickUpdateAll,
-                )
+                else -> {
+                    AnimeExtensionContent(
+                        state = state,
+                        contentPadding = contentPadding,
+                        onLongClickItem = onLongClickItem,
+                        onClickItemCancel = onClickItemCancel,
+                        onInstallExtension = onInstallExtension,
+                        onUninstallExtension = onUninstallExtension,
+                        onUpdateExtension = onUpdateExtension,
+                        onTrustExtension = onTrustExtension,
+                        onOpenExtension = onOpenExtension,
+                        onClickUpdateAll = onClickUpdateAll,
+                    )
+                }
             }
         }
     }
@@ -386,4 +421,65 @@ private fun AnimeExtensionItemActions(
             }
         }
     }
+}
+
+@Composable
+fun ExtensionHeader(
+    @StringRes textRes: Int,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    ExtensionHeader(
+        text = stringResource(textRes),
+        modifier = modifier,
+        action = action,
+    )
+}
+
+@Composable
+fun ExtensionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    action: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .weight(1f),
+            style = MaterialTheme.typography.header,
+        )
+        action()
+    }
+}
+
+@Composable
+fun ExtensionTrustDialog(
+    onClickConfirm: () -> Unit,
+    onClickDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        title = {
+            Text(text = stringResource(R.string.untrusted_extension))
+        },
+        text = {
+            Text(text = stringResource(R.string.untrusted_extension_message))
+        },
+        confirmButton = {
+            TextButton(onClick = onClickConfirm) {
+                Text(text = stringResource(R.string.ext_trust))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClickDismiss) {
+                Text(text = stringResource(R.string.ext_uninstall))
+            }
+        },
+        onDismissRequest = onDismissRequest,
+    )
 }

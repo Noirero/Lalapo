@@ -45,11 +45,7 @@ class AppUpdateChecker {
 }
 
 val GITHUB_REPO: String by lazy {
-    if (BuildConfig.PREVIEW) {
-        "aniyomiorg/aniyomi-preview"
-    } else {
-        "aniyomiorg/aniyomi"
-    }
+    "Quickdesh/Animiru"
 }
 
 val RELEASE_TAG: String by lazy {

@@ -16,11 +16,9 @@ import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegate
-import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
+import eu.kanade.tachiyomi.ui.setting.connections.DiscordLoginActivity
 import eu.kanade.tachiyomi.util.lang.truncateCenter
 import logcat.LogPriority
 import rikka.sui.Sui
@@ -107,6 +105,17 @@ fun Context.openInBrowser(uri: Uri, forceDefaultBrowser: Boolean = false) {
     }
 }
 
+// AM (DISCORD) -->
+fun Context.openDiscordLoginActivity() {
+    try {
+        val intent = Intent(this, DiscordLoginActivity::class.java)
+        startActivity(intent)
+    } catch (e: Exception) {
+        toast(e.message)
+    }
+}
+// <-- AM (DISCORD)
+
 private fun Context.defaultBrowserPackageName(): String? {
     val browserIntent = Intent(Intent.ACTION_VIEW, "http://".toUri())
     val resolveInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -129,38 +138,6 @@ fun Context.createFileInCacheDir(name: String): File {
     }
     file.createNewFile()
     return file
-}
-
-/**
- * Creates night mode Context depending on reader theme/background
- *
- * Context wrapping method obtained from AppCompatDelegateImpl
- * https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:appcompat/appcompat/src/main/java/androidx/appcompat/app/AppCompatDelegateImpl.java;l=348;drc=e28752c96fc3fb4d3354781469a1af3dbded4898
- */
-fun Context.createReaderThemeContext(): Context {
-    val preferences = Injekt.get<UiPreferences>()
-    val readerPreferences = Injekt.get<ReaderPreferences>()
-    val isDarkBackground = when (readerPreferences.readerTheme().get()) {
-        1, 2 -> true // Black, Gray
-        3 -> applicationContext.isNightMode() // Automatic bg uses activity background by default
-        else -> false // White
-    }
-    val expected = if (isDarkBackground) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
-    if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK != expected) {
-        val overrideConf = Configuration()
-        overrideConf.setTo(resources.configuration)
-        overrideConf.uiMode = overrideConf.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv() or expected
-
-        val wrappedContext = ContextThemeWrapper(this, R.style.Theme_Tachiyomi)
-        wrappedContext.applyOverrideConfiguration(overrideConf)
-        ThemingDelegate.getThemeResIds(
-            preferences.appTheme().get(),
-            preferences.themeDarkAmoled().get(),
-        )
-            .forEach { wrappedContext.theme.applyStyle(it, true) }
-        return wrappedContext
-    }
-    return this
 }
 
 /**

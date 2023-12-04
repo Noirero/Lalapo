@@ -3,9 +3,6 @@ package eu.kanade.tachiyomi.data.track.myanimelist
 import android.net.Uri
 import androidx.core.net.toUri
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.database.models.manga.MangaTrack
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.data.track.model.MangaTrackSearch
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -74,31 +71,6 @@ class MyAnimeListApi(
         }
     }
 
-    suspend fun search(query: String): List<MangaTrackSearch> {
-        return withIOContext {
-            val url = "$baseApiUrl/manga".toUri().buildUpon()
-                // MAL API throws a 400 when the query is over 64 characters...
-                .appendQueryParameter("q", query.take(64))
-                .appendQueryParameter("nsfw", "true")
-                .build()
-            with(json) {
-                authClient.newCall(GET(url.toString()))
-                    .awaitSuccess()
-                    .parseAs<JsonObject>()
-                    .let {
-                        it["data"]!!.jsonArray
-                            .map { data -> data.jsonObject["node"]!!.jsonObject }
-                            .map { node ->
-                                val id = node["id"]!!.jsonPrimitive.int
-                                async { getMangaDetails(id) }
-                            }
-                            .awaitAll()
-                            .filter { trackSearch -> !trackSearch.publishing_type.contains("novel") }
-                    }
-            }
-        }
-    }
-
     suspend fun searchAnime(query: String): List<AnimeTrackSearch> {
         return withIOContext {
             val url = "$baseApiUrl/anime".toUri().buildUpon()
@@ -119,46 +91,6 @@ class MyAnimeListApi(
                                 async { getAnimeDetails(id) }
                             }
                             .awaitAll()
-                    }
-            }
-        }
-    }
-
-    suspend fun getMangaDetails(id: Int): MangaTrackSearch {
-        return withIOContext {
-            val url = "$baseApiUrl/manga".toUri().buildUpon()
-                .appendPath(id.toString())
-                .appendQueryParameter(
-                    "fields",
-                    "id,title,synopsis,num_chapters,main_picture,status,media_type,start_date",
-                )
-                .build()
-            with(json) {
-                authClient.newCall(GET(url.toString()))
-                    .awaitSuccess()
-                    .parseAs<JsonObject>()
-                    .let {
-                        val obj = it.jsonObject
-                        MangaTrackSearch.create(trackId).apply {
-                            media_id = obj["id"]!!.jsonPrimitive.long
-                            title = obj["title"]!!.jsonPrimitive.content
-                            summary = obj["synopsis"]?.jsonPrimitive?.content ?: ""
-                            total_chapters = obj["num_chapters"]!!.jsonPrimitive.int
-                            cover_url =
-                                obj["main_picture"]?.jsonObject?.get("large")?.jsonPrimitive?.content
-                                    ?: ""
-                            tracking_url = "https://myanimelist.net/manga/$media_id"
-                            publishing_status =
-                                obj["status"]!!.jsonPrimitive.content.replace("_", " ")
-                            publishing_type =
-                                obj["media_type"]!!.jsonPrimitive.content.replace("_", " ")
-                            start_date = try {
-                                val outputDf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-                                outputDf.format(obj["start_date"]!!)
-                            } catch (e: Exception) {
-                                ""
-                            }
-                        }
                     }
             }
         }
@@ -204,33 +136,6 @@ class MyAnimeListApi(
         }
     }
 
-    suspend fun updateItem(track: MangaTrack): MangaTrack {
-        return withIOContext {
-            val formBodyBuilder = FormBody.Builder()
-                .add("status", track.toMyAnimeListStatus() ?: "reading")
-                .add("is_rereading", (track.status == MyAnimeList.REREADING).toString())
-                .add("score", track.score.toString())
-                .add("num_chapters_read", track.last_chapter_read.toInt().toString())
-            convertToIsoDate(track.started_reading_date)?.let {
-                formBodyBuilder.add("start_date", it)
-            }
-            convertToIsoDate(track.finished_reading_date)?.let {
-                formBodyBuilder.add("finish_date", it)
-            }
-
-            val request = Request.Builder()
-                .url(mangaUrl(track.media_id).toString())
-                .put(formBodyBuilder.build())
-                .build()
-            with(json) {
-                authClient.newCall(request)
-                    .awaitSuccess()
-                    .parseAs<JsonObject>()
-                    .let { parseMangaItem(it, track) }
-            }
-        }
-    }
-
     suspend fun updateItem(track: AnimeTrack): AnimeTrack {
         return withIOContext {
             val formBodyBuilder = FormBody.Builder()
@@ -258,20 +163,6 @@ class MyAnimeListApi(
         }
     }
 
-    suspend fun deleteMangaItem(track: MangaTrack): MangaTrack {
-        return withIOContext {
-            val request = Request.Builder()
-                .url(mangaUrl(track.media_id).toString())
-                .delete()
-                .build()
-            with(json) {
-                authClient.newCall(request)
-                    .awaitSuccess()
-                track
-            }
-        }
-    }
-
     suspend fun deleteAnimeItem(track: AnimeTrack): AnimeTrack {
         return withIOContext {
             val request = Request.Builder()
@@ -282,29 +173,6 @@ class MyAnimeListApi(
                 authClient.newCall(request)
                     .awaitSuccess()
                 track
-            }
-        }
-    }
-
-    suspend fun findListItem(track: MangaTrack): MangaTrack? {
-        return withIOContext {
-            val uri = "$baseApiUrl/manga".toUri().buildUpon()
-                .appendPath(track.media_id.toString())
-                .appendQueryParameter(
-                    "fields",
-                    "num_chapters,my_list_status{start_date,finish_date}",
-                )
-                .build()
-            with(json) {
-                authClient.newCall(GET(uri.toString()))
-                    .awaitSuccess()
-                    .parseAs<JsonObject>()
-                    .let { obj ->
-                        track.total_chapters = obj["num_chapters"]!!.jsonPrimitive.int
-                        obj.jsonObject["my_list_status"]?.jsonObject?.let {
-                            parseMangaItem(it, track)
-                        }
-                    }
             }
         }
     }
@@ -328,33 +196,6 @@ class MyAnimeListApi(
                             parseAnimeItem(it, track)
                         }
                     }
-            }
-        }
-    }
-
-    suspend fun findListItems(query: String, offset: Int = 0): List<MangaTrackSearch> {
-        return withIOContext {
-            val json = getListPage(offset)
-            val obj = json.jsonObject
-
-            val matches = obj["data"]!!.jsonArray
-                .filter {
-                    it.jsonObject["node"]!!.jsonObject["title"]!!.jsonPrimitive.content.contains(
-                        query,
-                        ignoreCase = true,
-                    )
-                }
-                .map {
-                    val id = it.jsonObject["node"]!!.jsonObject["id"]!!.jsonPrimitive.int
-                    async { getMangaDetails(id) }
-                }
-                .awaitAll()
-
-            // Check next page if there's more
-            if (!obj["paging"]!!.jsonObject["next"]?.jsonPrimitive?.contentOrNull.isNullOrBlank()) {
-                matches + findListItems(query, offset + listPaginationAmount)
-            } else {
-                matches
             }
         }
     }
@@ -407,28 +248,6 @@ class MyAnimeListApi(
         }
     }
 
-    private fun parseMangaItem(response: JsonObject, track: MangaTrack): MangaTrack {
-        val obj = response.jsonObject
-        return track.apply {
-            val isRereading = obj["is_rereading"]!!.jsonPrimitive.boolean
-            status = if (isRereading) {
-                MyAnimeList.REREADING
-            } else {
-                getStatus(
-                    obj["status"]?.jsonPrimitive?.content,
-                )
-            }
-            last_chapter_read = obj["num_chapters_read"]!!.jsonPrimitive.float
-            score = obj["score"]!!.jsonPrimitive.int.toFloat()
-            obj["start_date"]?.let {
-                started_reading_date = parseDate(it.jsonPrimitive.content)
-            }
-            obj["finish_date"]?.let {
-                finished_reading_date = parseDate(it.jsonPrimitive.content)
-            }
-        }
-    }
-
     private fun parseAnimeItem(response: JsonObject, track: AnimeTrack): AnimeTrack {
         val obj = response.jsonObject
         return track.apply {
@@ -468,8 +287,7 @@ class MyAnimeListApi(
     }
 
     companion object {
-        // Registered under arkon's MAL account
-        private const val clientId = "8fd3313bc138e8b890551aa1de1a2589"
+        private const val clientId = "9d84f771b558696ffc83110a28d55d3d"
 
         private const val baseOAuthUrl = "https://myanimelist.net/v1/oauth2"
         private const val baseApiUrl = "https://api.myanimelist.net/v2"
@@ -482,11 +300,6 @@ class MyAnimeListApi(
             .appendQueryParameter("client_id", clientId)
             .appendQueryParameter("code_challenge", getPkceChallengeCode())
             .appendQueryParameter("response_type", "code")
-            .build()
-
-        fun mangaUrl(id: Long): Uri = "$baseApiUrl/manga".toUri().buildUpon()
-            .appendPath(id.toString())
-            .appendPath("my_list_status")
             .build()
 
         fun animeUrl(id: Long): Uri = "$baseApiUrl/anime".toUri().buildUpon()

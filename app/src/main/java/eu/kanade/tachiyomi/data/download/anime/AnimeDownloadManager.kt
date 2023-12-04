@@ -141,7 +141,10 @@ class AnimeDownloadManager(
         alt: Boolean = false,
         video: Video? = null,
     ) {
-        downloader.queueEpisodes(anime, episodes, autoStart, alt, video)
+        // AM (FILLER) -->
+        val filteredEpisodes = getEpisodesToDownload(episodes)
+        // <-- AM (FILLER)
+        downloader.queueEpisodes(anime, filteredEpisodes, autoStart, alt, video)
     }
 
     /**
@@ -167,8 +170,10 @@ class AnimeDownloadManager(
      * @return an observable containing the list of pages from the episode.
      */
     fun buildVideo(source: AnimeSource, anime: Anime, episode: Episode): Video {
-        val episodeDir =
-            provider.findEpisodeDir(episode.name, episode.scanlator, anime.title, source)
+        // AM (CU) -->
+        val episodeDir = 
+            provider.findEpisodeDir(episode.name, episode.scanlator, anime.ogTitle, source)
+        // <-- AM (CU)
         val files = episodeDir?.listFiles().orEmpty()
             .filter { "video" in it.type.orEmpty() }
 
@@ -299,7 +304,9 @@ class AnimeDownloadManager(
             if (removeQueued) {
                 downloader.removeFromQueue(anime)
             }
-            provider.findAnimeDir(anime.title, source)?.delete()
+            // AM (CU) -->
+            provider.findAnimeDir(anime.ogTitle, source)?.delete()
+            // <-- AM (CU)
             cache.removeAnime(anime)
             // Delete source directory if empty
             val sourceDir = provider.findSourceDir(source)
@@ -382,9 +389,10 @@ class AnimeDownloadManager(
      * @param oldEpisode the existing episode with the old name.
      * @param newEpisode the target episode with the new name.
      */
-    fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
+    suspend fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
         val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator)
-        val animeDir = provider.getAnimeDir(anime.title, source)
+        // AM (CU)>
+        val animeDir = provider.getAnimeDir(anime.ogTitle, source)
 
         // Assume there's only 1 version of the episode name formats present
         val oldFolder = oldNames.asSequence()
@@ -417,12 +425,22 @@ class AnimeDownloadManager(
             episodes
         }
 
-        return if (!downloadPreferences.removeBookmarkedChapters().get()) {
+        return if (!downloadPreferences.removeBookmarkedEpisodes().get()) {
             filteredCategoryAnime.filterNot { it.bookmark }
         } else {
             filteredCategoryAnime
         }
     }
+
+    // AM (FILLER) -->
+    private fun getEpisodesToDownload(episodes: List<Episode>): List<Episode> {
+        return if (!downloadPreferences.notDownloadFillermarkedItems().get()) {
+            episodes.filterNot { it.fillermark }
+        } else {
+            episodes
+        }
+    }
+    // <-- AM (FILLER)
 
     fun statusFlow(): Flow<AnimeDownload> = queueState
         .flatMapLatest { downloads ->

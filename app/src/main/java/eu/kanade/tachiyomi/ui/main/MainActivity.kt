@@ -55,6 +55,7 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.AppStateBanners
@@ -67,23 +68,18 @@ import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.core.Constants
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.extension.anime.api.AnimeExtensionGithubApi
-import eu.kanade.tachiyomi.extension.manga.api.MangaExtensionGithubApi
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.browse.BrowseMangaSourceScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.globalsearch.GlobalMangaSearchScreen
-import eu.kanade.tachiyomi.ui.deeplink.manga.DeepLinkMangaScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.player.ExternalIntents
@@ -124,8 +120,6 @@ class MainActivity : BaseActivity() {
     private val preferences: BasePreferences by injectLazy()
 
     private val animeDownloadCache: AnimeDownloadCache by injectLazy()
-    private val downloadCache: MangaDownloadCache by injectLazy()
-    private val chapterCache: ChapterCache by injectLazy()
     private val episodeCache: EpisodeCache by injectLazy()
 
     // To be checked by splash screen. If true then splash screen will be removed.
@@ -136,6 +130,9 @@ class MainActivity : BaseActivity() {
     init {
         registerSecureActivity(this)
     }
+    // AM (CONNECTIONS) -->
+    private val connectionsPreferences: ConnectionsPreferences by injectLazy()
+    // <-- AM (CONNECTIONS)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val isLaunch = savedInstanceState == null
@@ -155,10 +152,13 @@ class MainActivity : BaseActivity() {
                 sourcePreferences = sourcePreferences,
                 securityPreferences = Injekt.get(),
                 libraryPreferences = libraryPreferences,
-                readerPreferences = Injekt.get(),
                 playerPreferences = Injekt.get(),
                 backupPreferences = Injekt.get(),
                 trackerManager = Injekt.get(),
+                // AM (CONNECTIONS) -->
+                connectionsPreferences = connectionsPreferences,
+                connectionsManager = Injekt.get(),
+                // <-- AM (CONNECTIONS)
             )
         } else {
             false
@@ -177,14 +177,13 @@ class MainActivity : BaseActivity() {
         setComposeContent {
             val incognito by preferences.incognitoMode().collectAsState()
             val downloadOnly by preferences.downloadedOnly().collectAsState()
-            val indexing by downloadCache.isInitializing.collectAsState()
             val indexingAnime by animeDownloadCache.isInitializing.collectAsState()
 
             // Set status bar color considering the top app state banner
             val systemUiController = rememberSystemUiController()
             val isSystemInDarkTheme = isSystemInDarkTheme()
             val statusBarBackgroundColor = when {
-                indexing || indexingAnime -> IndexingBannerBackgroundColor
+                indexingAnime -> IndexingBannerBackgroundColor
                 downloadOnly -> DownloadedOnlyBannerBackgroundColor
                 incognito -> IncognitoModeBannerBackgroundColor
                 else -> MaterialTheme.colorScheme.surface
@@ -239,7 +238,7 @@ class MainActivity : BaseActivity() {
                         AppStateBanners(
                             downloadedOnlyMode = downloadOnly,
                             incognitoMode = incognito,
-                            indexing = indexing || indexingAnime,
+                            indexing = indexingAnime,
                             modifier = Modifier.windowInsetsPadding(scaffoldInsets),
                         )
                     },
@@ -263,19 +262,32 @@ class MainActivity : BaseActivity() {
                         .filter { !it }
                         .onEach {
                             val currentScreen = navigator.lastItem
-                            if ((
-                                    currentScreen is BrowseMangaSourceScreen ||
-                                        (currentScreen is MangaScreen && currentScreen.fromSource)
-                                    ) ||
-                                (
-                                    currentScreen is BrowseAnimeSourceScreen ||
-                                        (currentScreen is AnimeScreen && currentScreen.fromSource)
-                                    )
-                            ) {
+                            if ((currentScreen is BrowseAnimeSourceScreen || 
+                                (currentScreen is AnimeScreen && currentScreen.fromSource))) {
                                 navigator.popUntilRoot()
                             }
                         }
                         .launchIn(this)
+
+                    // AM (DISCORD) -->
+                    connectionsPreferences.enableDiscordRPC().changes()
+                        .drop(1)
+                        .onEach {
+                            if (it) {
+                                DiscordRPCService.start(this@MainActivity.applicationContext)
+                            } else {
+                                DiscordRPCService.stop(this@MainActivity.applicationContext, 0L)
+                            }
+                        }.launchIn(this)
+
+                    connectionsPreferences.discordRPCStatus().changes()
+                        .drop(1)
+                        .onEach {
+                            DiscordRPCService.stop(this@MainActivity.applicationContext, 0L)
+                            DiscordRPCService.start(this@MainActivity.applicationContext)
+                            DiscordRPCService.setScreen(this@MainActivity, DiscordScreen.MORE)
+                        }.launchIn(this)
+                    // <-- AM (DISCORD)
                 }
 
                 HandleOnNewIntent(context = context, navigator = navigator)
@@ -324,7 +336,7 @@ class MainActivity : BaseActivity() {
             ActivityResultContracts.StartActivityForResult(),
         ) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-                ExternalIntents.externalIntents.onActivityResult(result.data)
+                ExternalIntents.externalIntents.onActivityResult(this@MainActivity, result.data)
             }
         }
     }
@@ -378,7 +390,6 @@ class MainActivity : BaseActivity() {
         // Extensions updates
         LaunchedEffect(Unit) {
             try {
-                MangaExtensionGithubApi().checkForUpdates(context)
                 AnimeExtensionGithubApi().checkForUpdates(context)
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e)
@@ -441,12 +452,6 @@ class MainActivity : BaseActivity() {
 
         val tabToOpen = when (intent.action) {
             Constants.SHORTCUT_ANIMELIB -> HomeScreen.Tab.Animelib()
-            Constants.SHORTCUT_LIBRARY -> HomeScreen.Tab.Library()
-            Constants.SHORTCUT_MANGA -> {
-                val idToOpen = intent.extras?.getLong(Constants.MANGA_EXTRA) ?: return false
-                navigator.popUntilRoot()
-                HomeScreen.Tab.Library(idToOpen)
-            }
             Constants.SHORTCUT_ANIME -> {
                 val idToOpen = intent.extras?.getLong(Constants.ANIME_EXTRA) ?: return false
                 navigator.popUntilRoot()
@@ -454,12 +459,8 @@ class MainActivity : BaseActivity() {
             }
             Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
             Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
-            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
-            Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse(true)
-            Constants.SHORTCUT_DOWNLOADS -> {
-                navigator.popUntilRoot()
-                HomeScreen.Tab.More(toDownloads = true)
-            }
+            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse
+            Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse
             Constants.SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 HomeScreen.Tab.More(toDownloads = true)
@@ -474,8 +475,7 @@ class MainActivity : BaseActivity() {
                 )
                 if (!query.isNullOrEmpty()) {
                     navigator.popUntilRoot()
-                    navigator.push(GlobalMangaSearchScreen(query))
-                    navigator.push(DeepLinkMangaScreen(query))
+                    navigator.push(GlobalAnimeSearchScreen(query))
                 }
                 null
             }
@@ -484,7 +484,7 @@ class MainActivity : BaseActivity() {
                 if (!query.isNullOrEmpty()) {
                     val filter = intent.getStringExtra(INTENT_SEARCH_FILTER)
                     navigator.popUntilRoot()
-                    navigator.push(GlobalMangaSearchScreen(query, filter))
+                    navigator.push(GlobalAnimeSearchScreen(query, filter))
                 }
                 null
             }
@@ -507,6 +507,26 @@ class MainActivity : BaseActivity() {
         ready = true
         return true
     }
+
+    /*
+    // AM (DISCORD) -->
+
+    override fun onStart() {
+        DiscordRPCService.start(this@MainActivity.applicationContext)
+        super.onStart()
+    }
+
+    override fun onDestroy() {
+        DiscordRPCService.stop(this@MainActivity.applicationContext)
+        super.onDestroy()
+    }
+
+    override fun onStop() {
+        DiscordRPCService.stop(this@MainActivity.applicationContext)
+        super.onStop()
+    }
+    // <-- AM (DISCORD)
+     */
 
     companion object {
         const val INTENT_SEARCH = "eu.kanade.tachiyomi.SEARCH"

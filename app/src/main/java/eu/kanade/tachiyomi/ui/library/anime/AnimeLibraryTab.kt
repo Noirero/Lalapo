@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.util.fastAll
+import androidx.compose.ui.util.fastAny
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -37,9 +38,11 @@ import eu.kanade.presentation.library.anime.AnimeLibraryContent
 import eu.kanade.presentation.library.anime.AnimeLibrarySettingsDialog
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -67,25 +70,17 @@ import uy.kohesive.injekt.injectLazy
 
 object AnimeLibraryTab : Tab() {
 
-    val libraryPreferences: LibraryPreferences by injectLazy()
-    private val fromMore = libraryPreferences.bottomNavStyle().get() == 2
-
     @OptIn(ExperimentalAnimationGraphicsApi::class)
     override val options: TabOptions
         @Composable
         get() {
-            val title = if (fromMore) {
-                MR.strings.label_library
-            } else {
-                MR.strings.label_anime_library
-            }
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(
                 R.drawable.anim_animelibrary_leave,
             )
             return TabOptions(
                 index = 0u,
-                title = stringResource(title),
+                title = stringResource(R.string.label_library),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -109,11 +104,28 @@ object AnimeLibraryTab : Tab() {
         val snackbarHostState = remember { SnackbarHostState() }
 
         val onClickRefresh: (Category?) -> Boolean = { category ->
-            val started = AnimeLibraryUpdateJob.startNow(context, category)
+            // AM (GU) -->
+            val started = AnimeLibraryUpdateJob.startNow(
+                context = context,
+                category = if (state.groupType == AnimeLibraryGroup.BY_DEFAULT) category else null,
+                group = state.groupType,
+                groupExtra = when (state.groupType) {
+                    AnimeLibraryGroup.BY_DEFAULT -> null
+                    AnimeLibraryGroup.BY_SOURCE, AnimeLibraryGroup.BY_TRACK_STATUS -> category?.id?.toString()
+                    AnimeLibraryGroup.BY_STATUS -> category?.id?.minus(1)?.toString()
+                    else -> null
+                },
+            )
+
             scope.launch {
-                val msgRes = if (started) MR.strings.updating_category else MR.strings.update_already_running
+                val msgRes = when {
+                    !started -> R.string.update_already_running
+                    category != null -> R.string.updating_category
+                    else -> R.string.updating_library
+                }
                 snackbarHostState.showSnackbar(context.stringResource(msgRes))
             }
+            // <-- AM (GU)
             started
         }
 
@@ -123,19 +135,11 @@ object AnimeLibraryTab : Tab() {
             MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
         }
 
-        val defaultTitle = if (fromMore) {
-            stringResource(MR.strings.label_library)
-        } else {
-            stringResource(
-                MR.strings.label_anime_library,
-            )
-        }
-
         Scaffold(
             topBar = { scrollBehavior ->
                 val title = state.getToolbarTitle(
-                    defaultTitle = defaultTitle,
-                    defaultCategoryTitle = stringResource(MR.strings.label_default),
+                    defaultTitle = stringResource(MR.string.label_library),
+                    defaultCategoryTitle = stringResource(MR.string.label_default),
                     page = screenModel.activeCategoryIndex,
                 )
                 val tabVisible = state.showCategoryTabs && state.categories.size > 1
@@ -186,7 +190,13 @@ object AnimeLibraryTab : Tab() {
                     isManga = false,
                 )
             },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    // AM (NAVPILL)>
+                    modifier = Modifier.padding(bottomSuperLargePaddingValues),
+                )
+            },
         ) { contentPadding ->
             when {
                 state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
@@ -261,6 +271,9 @@ object AnimeLibraryTab : Tab() {
                     onDismissRequest = onDismissRequest,
                     screenModel = settingsScreenModel,
                     category = category,
+                    // AM (GU) -->
+                    hasCategories = state.categories.fastAny { !it.isSystemCategory },
+                    // <-- AM (GU)
                 )
             }
             is AnimeLibraryScreenModel.Dialog.ChangeCategory -> {
@@ -269,7 +282,7 @@ object AnimeLibraryTab : Tab() {
                     onDismissRequest = onDismissRequest,
                     onEditCategories = {
                         screenModel.clearSelection()
-                        navigator.push(CategoriesTab(false))
+                        navigator.push(CategoryScreen())
                     },
                     onConfirm = { include, exclude ->
                         screenModel.clearSelection()
@@ -305,6 +318,9 @@ object AnimeLibraryTab : Tab() {
         LaunchedEffect(state.isLoading) {
             if (!state.isLoading) {
                 (context as? MainActivity)?.ready = true
+                // AM (DISCORD) -->
+                DiscordRPCService.setScreen(context, DiscordScreen.LIBRARY)
+                // <-- AM (DISCORD)
             }
         }
 

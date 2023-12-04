@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
@@ -47,7 +46,6 @@ fun MoreScreen(
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
     isFDroid: Boolean,
-    onClickAlt: () -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
@@ -82,6 +80,9 @@ fun MoreScreen(
     ) { contentPadding ->
         ScrollbarLazyColumn(
             modifier = Modifier.padding(contentPadding),
+            // AM (NAVPILL) -->
+            contentPadding = bottomSuperLargePaddingValues,
+            // <-- AM (NAVPILL)
         ) {
             item {
                 LogoHeader()
@@ -106,27 +107,6 @@ fun MoreScreen(
             }
 
             item { HorizontalDivider() }
-
-            val libraryPreferences: LibraryPreferences by injectLazy()
-
-            item {
-                val bottomNavStyle = libraryPreferences.bottomNavStyle().get()
-                val titleRes = when (bottomNavStyle) {
-                    0 -> MR.strings.label_recent_manga
-                    1 -> MR.strings.label_recent_updates
-                    else -> MR.strings.label_manga
-                }
-                val icon = when (bottomNavStyle) {
-                    0 -> Icons.Outlined.History
-                    1 -> ImageVector.vectorResource(id = R.drawable.ic_updates_outline_24dp)
-                    else -> Icons.Outlined.CollectionsBookmark
-                }
-                TextPreferenceWidget(
-                    title = stringResource(titleRes),
-                    icon = icon,
-                    onPreferenceClick = onClickAlt,
-                )
-            }
 
             item {
                 val downloadQueueState = downloadQueueStateProvider()

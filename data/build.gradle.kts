@@ -16,12 +16,6 @@ android {
 
     sqldelight {
         databases {
-            create("Database") {
-                packageName.set("tachiyomi.data")
-                dialect(libs.sqldelight.dialects.sql)
-                schemaOutputDirectory.set(project.file("./src/main/sqldelight"))
-                srcDirs.from(project.file("./src/main/sqldelight"))
-            }
             create("AnimeDatabase") {
                 packageName.set("tachiyomi.mi.data")
                 dialect(libs.sqldelight.dialects.sql)
@@ -48,3 +42,13 @@ tasks {
         )
     }
 }
+// AM (CU) -->
+tasks {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.freeCompilerArgs += listOf(
+            "-Xcontext-receivers",
+            "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
+        )
+    }
+}
+// <-- AM (CU)

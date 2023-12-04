@@ -42,10 +42,8 @@ import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.tachiyomi.data.track.EnhancedMangaTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
 import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
@@ -55,7 +53,6 @@ import eu.kanade.tachiyomi.util.system.toast
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.withUIContext
-import tachiyomi.domain.source.manga.service.MangaSourceManager
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -83,8 +80,7 @@ object SettingsTrackingScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val context = LocalContext.current
         val trackPreferences = remember { Injekt.get<TrackPreferences>() }
-        val trackerManager = remember { Injekt.get<TrackerManager>() }
-        val sourceManager = remember { Injekt.get<MangaSourceManager>() }
+        val sourceManager = remember { Injekt.get<AnimeSourceManager>() }
 
         var dialog by remember { mutableStateOf<Any?>(null) }
         dialog?.run {
@@ -105,25 +101,10 @@ object SettingsTrackingScreen : SearchableSettings {
             }
         }
 
-        val enhancedMangaTrackers = trackerManager.trackers
-            .filter { it is EnhancedMangaTracker }
-            .partition { service ->
-                val acceptedMangaSources = (service as EnhancedMangaTracker).getAcceptedSources()
-                sourceManager.getCatalogueSources().any { it::class.qualifiedName in acceptedMangaSources }
-            }
-        var enhancedMangaTrackerInfo = stringResource(MR.strings.enhanced_tracking_info)
-        if (enhancedMangaTrackers.second.isNotEmpty()) {
-            val missingMangaSourcesInfo = stringResource(
-                MR.strings.enhanced_services_not_installed,
-                enhancedMangaTrackers.second.joinToString { it.name },
-            )
-            enhancedMangaTrackerInfo += "\n\n$missingMangaSourcesInfo"
-        }
-
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 pref = trackPreferences.autoUpdateTrack(),
-                title = stringResource(MR.strings.pref_auto_update_manga_sync),
+                title = stringResource(R.string.pref_auto_update_anime_sync),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 pref = trackPreferences.trackOnAddingToLibrary(),
@@ -132,6 +113,10 @@ object SettingsTrackingScreen : SearchableSettings {
             Preference.PreferenceItem.SwitchPreference(
                 pref = trackPreferences.showNextEpisodeAiringTime(),
                 title = stringResource(MR.strings.pref_show_next_episode_airing_time),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                pref = trackPreferences.showNextEpisodeAiringTime(),
+                title = stringResource(R.string.pref_show_next_episode_airing_time),
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
@@ -163,12 +148,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         tracker = trackerManager.kitsu,
                         login = { dialog = LoginDialog(trackerManager.kitsu, MR.strings.email) },
                         logout = { dialog = LogoutDialog(trackerManager.kitsu) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        title = trackerManager.mangaUpdates.name,
-                        tracker = trackerManager.mangaUpdates,
-                        login = { dialog = LoginDialog(trackerManager.mangaUpdates, MR.strings.username) },
-                        logout = { dialog = LogoutDialog(trackerManager.mangaUpdates) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
                         title = trackerManager.shikimori.name,
@@ -205,19 +184,6 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.tracking_info)),
                 ),
-            ),
-            Preference.PreferenceGroup(
-                title = stringResource(MR.strings.enhanced_services),
-                preferenceItems = enhancedMangaTrackers.first
-                    .map { service ->
-                        Preference.PreferenceItem.TrackerPreference(
-                            title = service.name,
-                            tracker = service,
-                            login = { (service as EnhancedMangaTracker).loginNoop() },
-                            logout = service::logout,
-                        )
-                    } + listOf(Preference.PreferenceItem.InfoPreference(enhancedMangaTrackerInfo)),
-
             ),
         )
     }

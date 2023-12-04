@@ -31,6 +31,8 @@ import tachiyomi.presentation.core.components.HorizontalPager
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.TabText
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
+import tachiyomi.presentation.core.components.rememberPagerState
 
 @Composable
 fun TabbedScreen(
@@ -90,7 +92,13 @@ fun TabbedScreen(
                 )
             }
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                // AM (NAVPILL)>
+                modifier = Modifier.padding(bottomSuperLargePaddingValues),
+            )
+        },
     ) { contentPadding ->
         Column(
             modifier = Modifier.padding(

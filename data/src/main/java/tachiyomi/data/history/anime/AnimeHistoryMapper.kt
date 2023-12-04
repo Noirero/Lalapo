@@ -31,7 +31,9 @@ object AnimeHistoryMapper {
         id = historyId,
         episodeId = episodeId,
         animeId = animeId,
-        title = title,
+        // AM (CU) -->
+        ogTitle = title,
+        // <-- AM (CU)
         episodeNumber = episodeNumber,
         seenAt = seenAt,
         coverData = AnimeCover(

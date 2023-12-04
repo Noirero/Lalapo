@@ -11,12 +11,3 @@ object ArchiveAnime {
         return file.extension in SUPPORTED_ARCHIVE_TYPES
     }
 }
-
-object ArchiveManga {
-
-    private val SUPPORTED_ARCHIVE_TYPES = listOf("zip", "cbz", "rar", "cbr", "epub")
-
-    fun isSupported(file: UniFile): Boolean {
-        return file.extension in SUPPORTED_ARCHIVE_TYPES
-    }
-}

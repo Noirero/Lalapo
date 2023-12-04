@@ -21,6 +21,7 @@ import tachiyomi.core.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
@@ -38,6 +39,9 @@ fun AnimeLibrarySettingsDialog(
     onDismissRequest: () -> Unit,
     screenModel: AnimeLibrarySettingsScreenModel,
     category: Category?,
+    // AM (GU) -->
+    hasCategories: Boolean,
+    // <-- AM (GU)
 ) {
     TabbedDialog(
         onDismissRequest = onDismissRequest,
@@ -45,6 +49,9 @@ fun AnimeLibrarySettingsDialog(
             stringResource(MR.strings.action_filter),
             stringResource(MR.strings.action_sort),
             stringResource(MR.strings.action_display),
+            // AM (GU) -->
+            stringResource(MR.string.group),
+            // <-- AM (GU)
         ),
     ) { page ->
         Column(
@@ -63,6 +70,12 @@ fun AnimeLibrarySettingsDialog(
                 2 -> DisplayPage(
                     screenModel = screenModel,
                 )
+                // AM (GU) -->
+                3 -> GroupPage(
+                    screenModel = screenModel,
+                    hasCategories = hasCategories,
+                )
+                // <-- AM (GU)
             }
         }
     }
@@ -101,6 +114,12 @@ private fun ColumnScope.FilterPage(
         label = stringResource(MR.strings.action_filter_bookmarked),
         state = filterBookmarked,
         onClick = { screenModel.toggleFilter(LibraryPreferences::filterBookmarkedAnime) },
+    )
+    val filterFillermarked by screenModel.libraryPreferences.filterFillermarkedAnime().collectAsState()
+    TriStateItem(
+        label = stringResource(R.string.action_filter_fillermarked),
+        state = filterFillermarked,
+        onClick = { screenModel.toggleFilter(LibraryPreferences::filterFillermarkedAnime) },
     )
     val filterCompleted by screenModel.libraryPreferences.filterCompletedAnime().collectAsState()
     TriStateItem(
@@ -146,8 +165,19 @@ private fun ColumnScope.SortPage(
     category: Category?,
     screenModel: AnimeLibrarySettingsScreenModel,
 ) {
-    val sortingMode = category.sort.type
-    val sortDescending = !category.sort.isAscending
+    // AM (GU) -->
+    val globalSortMode by screenModel.libraryPreferences.libraryAnimeSortingMode().collectAsState()
+    val sortingMode = if (screenModel.grouping == AnimeLibraryGroup.BY_DEFAULT) {
+        category.sort.type
+    } else {
+        globalSortMode.type
+    }
+    val sortDescending = if (screenModel.grouping == AnimeLibraryGroup.BY_DEFAULT) {
+        category.sort.isAscending
+    } else {
+        globalSortMode.isAscending
+    }.not()
+    // <-- AM (GU)
 
     val trackerSortOption =
         if (screenModel.trackers.isEmpty()) {
@@ -250,7 +280,7 @@ private fun ColumnScope.DisplayPage(
         pref = screenModel.libraryPreferences.languageBadge(),
     )
     CheckboxItem(
-        label = stringResource(MR.strings.action_display_show_continue_reading_button),
+        label = stringResource(MR.strings.action_display_show_continue_watching_button),
         pref = screenModel.libraryPreferences.showContinueViewingButton(),
     )
 
@@ -264,3 +294,58 @@ private fun ColumnScope.DisplayPage(
         pref = screenModel.libraryPreferences.categoryNumberOfItems(),
     )
 }
+
+// AM (GU) -->
+data class GroupMode(
+    val int: Int,
+    val nameRes: Int,
+    val drawableRes: Int,
+)
+
+private fun groupTypeDrawableRes(type: Int): Int {
+    return when (type) {
+        AnimeLibraryGroup.BY_STATUS -> R.drawable.ic_progress_clock_24dp
+        AnimeLibraryGroup.BY_TRACK_STATUS -> R.drawable.ic_sync_24dp
+        AnimeLibraryGroup.BY_SOURCE -> R.drawable.ic_browse_filled_24dp
+        AnimeLibraryGroup.UNGROUPED -> R.drawable.ic_ungroup_24dp
+        else -> R.drawable.ic_label_24dp
+    }
+}
+
+@Composable
+private fun ColumnScope.GroupPage(
+    screenModel: AnimeLibrarySettingsScreenModel,
+    hasCategories: Boolean,
+) {
+    val groups = remember(hasCategories, screenModel.trackServices) {
+        buildList {
+            add(AnimeLibraryGroup.BY_DEFAULT)
+            add(AnimeLibraryGroup.BY_SOURCE)
+            add(AnimeLibraryGroup.BY_STATUS)
+            if (screenModel.trackServices.isNotEmpty()) {
+                add(AnimeLibraryGroup.BY_TRACK_STATUS)
+            }
+            if (hasCategories) {
+                add(AnimeLibraryGroup.UNGROUPED)
+            }
+        }.map {
+            GroupMode(
+                it,
+                AnimeLibraryGroup.groupTypeStringRes(it, hasCategories),
+                groupTypeDrawableRes(it),
+            )
+        }
+    }
+
+    groups.fastForEach {
+        IconItem(
+            label = stringResource(it.nameRes),
+            icon = painterResource(it.drawableRes),
+            selected = it.int == screenModel.grouping,
+            onClick = {
+                screenModel.setGrouping(it.int)
+            },
+        )
+    }
+}
+// <-- AM (GU)

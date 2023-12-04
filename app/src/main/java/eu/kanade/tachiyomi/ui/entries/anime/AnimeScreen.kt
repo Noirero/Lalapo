@@ -42,7 +42,7 @@ import eu.kanade.tachiyomi.source.anime.isLocalOrStub
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeSearchScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
@@ -114,6 +114,9 @@ class AnimeScreen(
             episodeSwipeEndAction = screenModel.episodeSwipeEndAction,
             showNextEpisodeAirTime = screenModel.showNextEpisodeAirTime,
             alwaysUseExternalPlayer = screenModel.alwaysUseExternalPlayer,
+            // AM (FILE-SIZE) -->
+            showFileSize = screenModel.showFileSize,
+            // <-- AM (FILE-SIZE)
             onBackClicked = navigator::pop,
             onEpisodeClicked = { episode, alt ->
                 scope.launchIO {
@@ -168,7 +171,13 @@ class AnimeScreen(
                 navigator.push(MigrateAnimeSearchScreen(successState.anime.id))
             }.takeIf { successState.anime.favorite },
             changeAnimeSkipIntro = screenModel::showAnimeSkipIntroDialog.takeIf { successState.anime.favorite },
+            // AM (CU) -->
+            onEditInfoClicked = screenModel::showEditAnimeInfoDialog,
+            // <-- AM (CU)
             onMultiBookmarkClicked = screenModel::bookmarkEpisodes,
+            // AM (FILLER) -->
+            onMultiFillermarkClicked = screenModel::fillermarkEpisodes,
+            // <-- AM (FILLER)
             onMultiMarkAsSeenClicked = screenModel::markEpisodesSeen,
             onMarkPreviousAsSeenClicked = screenModel::markPreviousEpisodeSeen,
             onMultiDeleteClicked = screenModel::showDeleteEpisodeDialog,
@@ -191,7 +200,7 @@ class AnimeScreen(
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoriesTab(false)) },
+                    onEditCategories = { navigator.push(CategoryScreen()) },
                     onConfirm = { include, _ ->
                         screenModel.moveAnimeToCategoriesAndAddToLibrary(dialog.anime, include)
                     },
@@ -218,6 +227,9 @@ class AnimeScreen(
                 onDownloadFilterChanged = screenModel::setDownloadedFilter,
                 onUnseenFilterChanged = screenModel::setUnseenFilter,
                 onBookmarkedFilterChanged = screenModel::setBookmarkedFilter,
+                // AM (FILLER) -->
+                onFillermarkedFilterChanged = screenModel::setFillermarkedFilter,
+                // <-- AM (FILLER)
                 onSortModeChanged = screenModel::setSorting,
                 onDisplayModeChanged = screenModel::setDisplayMode,
                 onSetAsDefault = screenModel::setCurrentSettingsAsDefault,
@@ -303,6 +315,15 @@ class AnimeScreen(
                     onDismissRequest = onDismissRequest,
                 )
             }
+            // AM (CU) -->
+            is AnimeInfoScreenModel.Dialog.EditAnimeInfo -> {
+                EditAnimeDialog(
+                    anime = successState.anime,
+                    onDismissRequest = screenModel::dismissDialog,
+                    onPositiveClick = screenModel::updateAnimeInfo,
+                )
+            }
+            // <-- AM (CU)
         }
     }
 

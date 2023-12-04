@@ -22,10 +22,9 @@ class CrashLogUtil(
 
     suspend fun dumpLogs() = withNonCancellableContext {
         try {
-            val file = context.createFileInCacheDir("aniyomi_crash_logs.txt")
+            val file = context.createFileInCacheDir("animiru_crash_logs.txt")
 
             file.appendText(getDebugInfo() + "\n\n")
-            getMangaExtensionsInfo()?.let { file.appendText("$it\n\n") }
             getAnimeExtensionsInfo()?.let { file.appendText("$it\n\n") }
 
             Runtime.getRuntime().exec("logcat *:E -d -f ${file.absolutePath}").waitFor()
