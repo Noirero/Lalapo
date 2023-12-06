@@ -58,9 +58,6 @@ android {
             versionNameSuffix = "-${getCommitCount()}"
             applicationIdSuffix = ".debug"
             isPseudoLocalesEnabled = true
-            isShrinkResources = true
-            isMinifyEnabled = true
-            proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
         }
         named("release") {
             isShrinkResources = true
