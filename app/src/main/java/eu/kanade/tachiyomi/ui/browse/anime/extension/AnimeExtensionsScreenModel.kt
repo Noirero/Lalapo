@@ -15,7 +15,6 @@ import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.collectToInstallUpdate
 import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.currentDownloads
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -29,6 +28,7 @@ import tachiyomi.core.util.lang.launchIO
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.seconds
 
 class AnimeExtensionsScreenModel(
     preferences: SourcePreferences = Injekt.get(),

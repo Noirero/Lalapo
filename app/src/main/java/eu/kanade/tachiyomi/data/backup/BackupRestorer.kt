@@ -26,12 +26,6 @@ import eu.kanade.tachiyomi.source.anime.model.copyFrom
 import eu.kanade.tachiyomi.util.BackupUtil
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
-import java.io.File
-import java.text.SimpleDateFormat
-import java.time.ZonedDateTime
-import java.util.Date
-import java.util.Locale
-import kotlin.math.max
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import tachiyomi.core.i18n.stringResource
@@ -51,6 +45,12 @@ import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
+import java.text.SimpleDateFormat
+import java.time.ZonedDateTime
+import java.util.Date
+import java.util.Locale
+import kotlin.math.max
 
 class BackupRestorer(
     private val context: Context,

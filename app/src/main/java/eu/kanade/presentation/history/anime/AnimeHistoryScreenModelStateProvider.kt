@@ -2,12 +2,12 @@ package eu.kanade.presentation.history.anime
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
+import tachiyomi.domain.entries.anime.model.AnimeCover
+import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import kotlin.random.Random
-import tachiyomi.domain.entries.anime.model.AnimeCover
-import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 
 class AnimeHistoryScreenModelStateProvider : PreviewParameterProvider<AnimeHistoryScreenModel.State> {
 

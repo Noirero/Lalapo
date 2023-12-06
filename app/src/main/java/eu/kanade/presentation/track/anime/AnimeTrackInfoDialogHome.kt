@@ -53,9 +53,9 @@ import eu.kanade.presentation.track.components.TrackLogoIcon
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import java.text.DateFormat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import java.text.DateFormat
 
 private const val UnsetStatusTextAlpha = 0.5F
 

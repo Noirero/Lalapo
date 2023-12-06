@@ -4,9 +4,6 @@ import androidx.annotation.CallSuper
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -15,6 +12,9 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class KitsuSearchAnime(obj: JsonObject) {
     val id = obj["id"]!!.jsonPrimitive.long

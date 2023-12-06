@@ -12,11 +12,11 @@ import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
-import java.io.File
-import java.util.concurrent.TimeUnit
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 class BackupNotifier(private val context: Context) {
 

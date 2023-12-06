@@ -43,7 +43,6 @@ import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
-import java.util.concurrent.TimeUnit
 import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
@@ -55,6 +54,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import uy.kohesive.injekt.injectLazy
+import java.util.concurrent.TimeUnit
 
 private val preferences: DownloadPreferences by injectLazy()
 private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()

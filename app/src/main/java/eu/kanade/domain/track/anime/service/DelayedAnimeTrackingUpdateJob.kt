@@ -11,14 +11,14 @@ import androidx.work.WorkerParameters
 import eu.kanade.domain.track.anime.interactor.TrackEpisode
 import eu.kanade.domain.track.anime.store.DelayedAnimeTrackingStore
 import eu.kanade.tachiyomi.util.system.workManager
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.toJavaDuration
 import logcat.LogPriority
 import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.toJavaDuration
 
 class DelayedAnimeTrackingUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {

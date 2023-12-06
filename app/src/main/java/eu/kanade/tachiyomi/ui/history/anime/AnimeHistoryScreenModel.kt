@@ -6,7 +6,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.presentation.history.anime.AnimeHistoryUiModel
 import eu.kanade.tachiyomi.util.lang.toDateKey
-import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +28,7 @@ import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import tachiyomi.domain.items.episode.model.Episode
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.util.Date
 
 class AnimeHistoryScreenModel(
     private val getHistory: GetAnimeHistory = Injekt.get(),

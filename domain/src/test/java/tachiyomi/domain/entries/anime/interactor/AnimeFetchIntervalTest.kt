@@ -2,6 +2,10 @@ package tachiyomi.domain.entries.anime.interactor
 
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
+import tachiyomi.domain.items.episode.model.Episode
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import kotlin.time.Duration
@@ -10,10 +14,6 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 import kotlin.time.toJavaDuration
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
-import tachiyomi.domain.items.episode.model.Episode
 
 @Execution(ExecutionMode.CONCURRENT)
 class AnimeFetchIntervalTest {

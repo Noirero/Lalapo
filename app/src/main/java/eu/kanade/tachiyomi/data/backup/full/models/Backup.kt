@@ -4,11 +4,11 @@ import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BrokenBackupAnimeSource
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.protobuf.ProtoNumber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.protobuf.ProtoNumber
 
 @Serializable
 data class Backup(

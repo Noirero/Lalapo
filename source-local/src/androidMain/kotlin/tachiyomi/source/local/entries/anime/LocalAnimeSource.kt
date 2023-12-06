@@ -11,11 +11,6 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import eu.kanade.tachiyomi.util.storage.toFFmpegString
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -39,6 +34,11 @@ import tachiyomi.source.local.image.anime.LocalAnimeCoverManager
 import tachiyomi.source.local.io.ArchiveAnime
 import tachiyomi.source.local.io.anime.LocalAnimeSourceFileSystem
 import uy.kohesive.injekt.injectLazy
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 actual class LocalAnimeSource(
     private val context: Context,
@@ -197,10 +197,10 @@ actual class LocalAnimeSource(
             .firstOrNull {
                 it.extension == "json" && it.nameWithoutExtension == "episodes"
             }?.let { file ->
-            runCatching {
-                json.decodeFromStream<List<EpisodeDetails>>(file.openInputStream())
-            }.getOrNull()
-        }
+                runCatching {
+                    json.decodeFromStream<List<EpisodeDetails>>(file.openInputStream())
+                }.getOrNull()
+            }
 
         val episodes = fileSystem.getFilesInAnimeDirectory(anime.url)
             // Only keep supported formats

@@ -2,13 +2,13 @@ package eu.kanade.domain.source.anime.interactor
 
 import eu.kanade.domain.source.service.SetMigrateSorting
 import eu.kanade.domain.source.service.SourcePreferences
-import java.util.Collections
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import tachiyomi.core.util.lang.compareToWithCollator
 import tachiyomi.domain.source.anime.model.AnimeSource
 import tachiyomi.domain.source.anime.repository.AnimeSourceRepository
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
+import java.util.Collections
 
 class GetAnimeSourcesWithFavoriteCount(
     private val repository: AnimeSourceRepository,

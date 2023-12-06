@@ -34,7 +34,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
-import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 import tachiyomi.core.util.lang.launchUI
 import tachiyomi.i18n.MR
@@ -42,6 +41,7 @@ import tachiyomi.presentation.core.components.material.ExtendedFloatingActionBut
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import kotlin.math.roundToInt
 
 @Composable
 fun AnimeDownloadQueueScreen(

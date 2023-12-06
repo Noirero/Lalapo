@@ -67,7 +67,8 @@ fun getCategoriesLabel(
 
     val includedItemsText = when {
         // Some selected, but not all
-        includedCategories.isNotEmpty() && includedCategories.size != allCategories.size -> includedCategories.joinToString {
+        includedCategories.isNotEmpty() &&
+            includedCategories.size != allCategories.size -> includedCategories.joinToString {
             it.visualName(context)
         }
         // All explicitly selected

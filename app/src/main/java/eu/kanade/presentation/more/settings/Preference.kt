@@ -5,9 +5,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import eu.kanade.tachiyomi.data.connections.BaseConnection
 import eu.kanade.tachiyomi.data.track.Tracker
-import tachiyomi.core.preference.Preference as PreferenceData
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.core.preference.Preference as PreferenceData
 
 sealed class Preference {
     abstract val title: String

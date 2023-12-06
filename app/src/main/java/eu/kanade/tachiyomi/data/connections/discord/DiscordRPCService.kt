@@ -18,8 +18,6 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.player.viewer.PipState
 import eu.kanade.tachiyomi.util.system.notificationBuilder
-import kotlin.math.ceil
-import kotlin.math.floor
 import kotlinx.coroutines.DelicateCoroutinesApi
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchIO
@@ -30,6 +28,8 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class DiscordRPCService : Service() {
 
@@ -175,7 +175,9 @@ class DiscordRPCService : Service() {
                 val response = if (!discordIncognito) {
                     try {
                         // Thanks to https://github.com/dead8309/Kizzy
-                        client.newCall(GET("https://kizzy-api.vercel.app/image?url=${playerData.thumbnailUrl}")).execute()
+                        client.newCall(
+                            GET("https://kizzy-api.vercel.app/image?url=${playerData.thumbnailUrl}"),
+                        ).execute()
                     } catch (e: Throwable) {
                         null
                     }

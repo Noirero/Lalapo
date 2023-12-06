@@ -7,12 +7,12 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.domain.source.anime.model.AnimeSource as DomainSource
 import tachiyomi.domain.source.anime.model.AnimeSourceWithCount
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.domain.source.anime.repository.AnimeSourcePagingSourceType
 import tachiyomi.domain.source.anime.repository.AnimeSourceRepository
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.anime.model.AnimeSource as DomainSource
 
 class AnimeSourceRepositoryImpl(
     private val sourceManager: AnimeSourceManager,

@@ -1,8 +1,8 @@
 package eu.kanade.presentation.history.anime
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import java.util.Date
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
+import java.util.Date
 
 internal class AnimeHistoryWithRelationsProvider : PreviewParameterProvider<AnimeHistoryWithRelations> {
 

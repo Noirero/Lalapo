@@ -11,9 +11,6 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.asObservableSuccess
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.newCachelessCallWithProgress
-import java.net.URI
-import java.net.URISyntaxException
-import java.security.MessageDigest
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,6 +18,9 @@ import okhttp3.Response
 import rx.Observable
 import tachiyomi.core.util.lang.awaitSingle
 import uy.kohesive.injekt.injectLazy
+import java.net.URI
+import java.net.URISyntaxException
+import java.security.MessageDigest
 
 /**
  * A simple implementation for sources from a website.

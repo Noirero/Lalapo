@@ -41,7 +41,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import kotlin.math.absoluteValue
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -51,6 +50,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.util.clearFocusOnSoftKeyboardHide
 import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.presentation.core.util.showSoftKeyboard
+import kotlin.math.absoluteValue
 
 @Composable
 fun WheelNumberPicker(

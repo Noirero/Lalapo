@@ -85,11 +85,7 @@ import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import `is`.xyz.mpv.MPVLib
-import `is`.xyz.mpv.MPVView.Chapter as VideoChapter
 import `is`.xyz.mpv.Utils
-import java.io.File
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -107,6 +103,10 @@ import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
+import kotlin.math.abs
+import kotlin.math.roundToInt
+import `is`.xyz.mpv.MPVView.Chapter as VideoChapter
 
 class PlayerActivity : BaseActivity() {
 

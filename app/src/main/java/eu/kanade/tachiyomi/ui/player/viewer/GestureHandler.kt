@@ -6,8 +6,8 @@ import android.view.MotionEvent
 import android.view.View
 import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
-import kotlin.math.abs
 import uy.kohesive.injekt.injectLazy
+import kotlin.math.abs
 
 class GestureHandler(
     private val activity: PlayerActivity,

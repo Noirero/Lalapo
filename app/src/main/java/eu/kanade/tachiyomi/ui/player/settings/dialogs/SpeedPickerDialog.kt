@@ -16,9 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import tachiyomi.i18n.MR
 import java.math.BigDecimal
 import java.math.RoundingMode
-import tachiyomi.i18n.MR
 
 @Composable
 fun SpeedPickerDialog(
