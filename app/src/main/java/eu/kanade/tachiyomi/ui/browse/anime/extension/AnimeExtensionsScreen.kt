@@ -28,7 +28,7 @@ class AnimeExtensionsScreen : Screen {
             onLongClickItem = { extension ->
                 when (extension) {
                     is AnimeExtension.Available -> screenModel.installExtension(extension)
-                    else -> screenModel.uninstallExtension(extension.pkgName)
+                    else -> screenModel.uninstallExtension(extension)
                 }
             },
             onChangeSearchQuery = onChangeSearchQuery,
@@ -37,7 +37,7 @@ class AnimeExtensionsScreen : Screen {
             onInstallExtension = screenModel::installExtension,
             onOpenExtension = { navigator.push(AnimeExtensionDetailsScreen(it.pkgName)) },
             onTrustExtension = { screenModel.trustSignature(it.signatureHash) },
-            onUninstallExtension = { screenModel.uninstallExtension(it.pkgName) },
+            onUninstallExtension = { screenModel.uninstallExtension(it) },
             onUpdateExtension = screenModel::updateExtension,
             onRefresh = screenModel::findAvailableExtensions,
         )

@@ -20,10 +20,12 @@ import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithSource
 import eu.kanade.tachiyomi.animesource.UnmeteredSource
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.SAnime
-import eu.kanade.tachiyomi.animesource.model.UpdateStrategy
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.notification.Notifications
+import eu.kanade.tachiyomi.data.track.TrackStatus
+import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.util.nullIfBlank
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -75,6 +77,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 
 class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
@@ -90,6 +93,11 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
     private val getCategories: GetAnimeCategories = Injekt.get()
     private val syncEpisodesWithSource: SyncEpisodesWithSource = Injekt.get()
     private val animeFetchInterval: AnimeFetchInterval = Injekt.get()
+
+    // AM (GU) -->
+    private val getTracks: GetAnimeTracks = Injekt.get()
+    private val trackerManager: TrackerManager = Injekt.get()
+    // <-- AM (GU)
 
     private val notifier = AnimeLibraryUpdateNotifier(context)
 
@@ -169,7 +177,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
             groupLibraryUpdateType == GroupAnimeLibraryMode.GLOBAL ||
             (groupLibraryUpdateType == GroupAnimeLibraryMode.ALL_BUT_UNGROUPED && group == AnimeLibraryGroup.UNGROUPED)
         ) {
-            val categoriesToUpdate = libraryPreferences.animeLibraryUpdateCategories().get().map { it.toLong() }
+            val categoriesToUpdate = libraryPreferences.animeUpdateCategories().get().map { it.toLong() }
             val includedAnime = if (categoriesToUpdate.isNotEmpty()) {
                 libraryAnime.filter { it.category in categoriesToUpdate }
             } else {
@@ -194,7 +202,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
 
                     libraryAnime.filter { (anime) ->
                         val status = tracks[anime.id]?.firstNotNullOfOrNull { track ->
-                            TrackStatus.parseTrackerStatus(track.syncId, track.status)
+                            TrackStatus.parseTrackerStatus(trackerManager, track.syncId, track.status)
                         } ?: TrackStatus.OTHER
                         status.int == trackingExtra
                     }
@@ -338,7 +346,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                                                 .getAndSet { it + newEpisodes.size }
 
                                             // Convert to the manga that contains new episodes
-                                            newUpdates.add(anime to newEpisodess.toTypedArray())
+                                            newUpdates.add(anime to newEpisodes.toTypedArray())
                                         }
                                     } catch (e: Throwable) {
                                         val errorMessage = when (e) {
@@ -535,7 +543,6 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         fun startNow(
             context: Context,
             category: Category? = null,
-            target: Target = Target.EPISODES,
             // AM (GU) -->
             group: Int = AnimeLibraryGroup.BY_DEFAULT,
             groupExtra: String? = null,
@@ -549,7 +556,6 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
 
             val inputData = workDataOf(
                 KEY_CATEGORY to category?.id,
-                KEY_TARGET to target.name,
                 // AM (GU) -->
                 KEY_GROUP to group,
                 KEY_GROUP_EXTRA to groupExtra,

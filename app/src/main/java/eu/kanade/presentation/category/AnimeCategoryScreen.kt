@@ -6,11 +6,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import eu.kanade.presentation.category.components.CategoryContent
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
@@ -19,6 +17,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.plus
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun AnimeCategoryScreen(
@@ -30,12 +29,13 @@ fun AnimeCategoryScreen(
     onClickMoveUp: (Category) -> Unit,
     onClickMoveDown: (Category) -> Unit,
     navigateUp: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val lazyListState = rememberLazyListState()
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
-                title = stringResource(R.string.action_edit_categories),
+                title = stringResource(MR.strings.action_edit_categories),
                 navigateUp = navigateUp,
                 scrollBehavior = scrollBehavior,
             )
@@ -50,7 +50,7 @@ fun AnimeCategoryScreen(
         if (state.isEmpty) {
             EmptyScreen(
                 stringRes = MR.strings.information_empty_category,
-                modifier = Modifier.padding(contentPadding),
+                modifier = Modifier.padding(paddingValues),
             )
             return@Scaffold
         }
@@ -58,7 +58,7 @@ fun AnimeCategoryScreen(
         CategoryContent(
             categories = state.categories,
             lazyListState = lazyListState,
-            paddingValues = contentPadding + topSmallPaddingValues + PaddingValues(
+            paddingValues = paddingValues + topSmallPaddingValues + PaddingValues(
                 horizontal = MaterialTheme.padding.medium,
             ),
             onClickRename = onClickRename,

@@ -12,39 +12,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import tachiyomi.core.preference.InMemoryPreferenceStore
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
 import java.util.Date
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
+import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 @Composable
 fun AnimeHistoryScreen(
-    state: AnimeHistoryState,
+    state: AnimeHistoryScreenModel.State,
     snackbarHostState: SnackbarHostState,
     onSearchQueryChange: (String?) -> Unit,
     onClickCover: (animeId: Long) -> Unit,
     onClickResume: (animeId: Long, episodeId: Long) -> Unit,
     onDialogChange: (AnimeHistoryScreenModel.Dialog?) -> Unit,
-    preferences: UiPreferences,
+    modifier: Modifier = Modifier,
+    preferences: UiPreferences = Injekt.get(),
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
             SearchToolbar(
-                titleContent = { AppBarTitle(stringResource(R.string.history)) },
+                titleContent = { AppBarTitle(stringResource(MR.strings.history)) },
                 searchQuery = state.searchQuery,
                 onChangeSearchQuery = onSearchQueryChange,
                 actions = {
                     IconButton(onClick = { onDialogChange(AnimeHistoryScreenModel.Dialog.DeleteAll) }) {
                         Icon(
                             Icons.Outlined.DeleteSweep,
-                            contentDescription = stringResource(R.string.pref_clear_history),
+                            contentDescription = stringResource(MR.strings.pref_clear_history),
                         )
                     }
                 },
@@ -54,8 +60,6 @@ fun AnimeHistoryScreen(
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,
-                // AM (NAVPILL)>
-                modifier = Modifier.padding(bottomSuperLargePaddingValues),
             )
         },
     ) { contentPadding ->
@@ -105,9 +109,8 @@ internal fun HistoryScreenPreviews(
     TachiyomiTheme {
         AnimeHistoryScreen(
             state = historyState,
-            contentPadding = topSmallPaddingValues,
             snackbarHostState = SnackbarHostState(),
-            searchQuery = null,
+            onSearchQueryChange = {},
             onClickCover = {},
             onClickResume = { _, _ -> run {} },
             onDialogChange = {},

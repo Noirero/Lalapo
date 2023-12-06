@@ -85,7 +85,7 @@ class BangumiApi(
             authClient.newCall(GET(url.toString()))
                 .awaitSuccess()
                 .use {
-                    var responseBody = it.body?.string().orEmpty()
+                    var responseBody = it.body.string()
                     if (responseBody.isEmpty()) {
                         throw Exception("Null Response")
                     }
@@ -121,7 +121,7 @@ class BangumiApi(
         }
     }
 
-    suspend fun findLibAnime(track: AnimeTrack): AnimeTrack? {
+    suspend fun findLibAnime(track: AnimeTrack): AnimeTrack {
         return withIOContext {
             with(json) {
                 authClient.newCall(GET("$apiUrl/subject/${track.media_id}"))
@@ -143,7 +143,7 @@ class BangumiApi(
 
             // TODO: get user readed chapter here
             var response = authClient.newCall(requestUserRead).awaitSuccess()
-            var responseBody = response.body?.string().orEmpty()
+            var responseBody = response.body.string().orEmpty()
             if (responseBody.isEmpty()) {
                 throw Exception("Null Response")
             }

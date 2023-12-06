@@ -90,6 +90,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Calendar
 import kotlin.math.floor
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 class AnimeScreenModel(
     val context: Context,
@@ -161,8 +162,6 @@ class AnimeScreenModel(
 
     internal val autoOpenTrack: Boolean
         get() = successState?.trackingAvailable == true && trackPreferences.trackOnAddingToLibrary().get()
-
-    val alwaysUseExternalPlayer = playerPreferences.alwaysUseExternalPlayer().get()
 
     // AM (FILE-SIZE) -->
     val showFileSize = downloadPreferences.showEpisodeFileSize().get()
@@ -301,7 +300,7 @@ class AnimeScreenModel(
                 lastUpdate = anime.lastUpdate + 1,
             )
             (sourceManager.get(LocalAnimeSource.ID) as LocalAnimeSource).updateAnimeInfo(anime.toSAnime())
-            coroutineScope.launchNonCancellable {
+            screenModelScope.launchNonCancellable {
                 updateAnime.await(
                     AnimeUpdate(
                         anime.id,
@@ -848,7 +847,7 @@ class AnimeScreenModel(
      * @param episodes the list of episodes to fillermark.
      */
     fun fillermarkEpisodes(episodes: List<Episode>, fillermarked: Boolean) {
-        coroutineScope.launchIO {
+        screenModelScope.launchIO {
             episodes
                 .filterNot { it.fillermark == fillermarked }
                 .map { EpisodeUpdate(id = it.id, fillermark = fillermarked) }
@@ -952,16 +951,16 @@ class AnimeScreenModel(
      * Sets the fillermark filter and requests an UI update.
      * @param state whether to display only fillermarked episodes or all episodes.
      */
-    fun setFillermarkedFilter(state: TriStateFilter) {
+    fun setFillermarkedFilter(state: TriState) {
         val anime = successState?.anime ?: return
 
         val flag = when (state) {
-            TriStateFilter.DISABLED -> Anime.SHOW_ALL
-            TriStateFilter.ENABLED_IS -> Anime.EPISODE_SHOW_FILLERMARKED
-            TriStateFilter.ENABLED_NOT -> Anime.EPISODE_SHOW_NOT_FILLERMARKED
+            TriState.DISABLED -> Anime.SHOW_ALL
+            TriState.ENABLED_IS -> Anime.EPISODE_SHOW_FILLERMARKED
+            TriState.ENABLED_NOT -> Anime.EPISODE_SHOW_NOT_FILLERMARKED
         }
 
-        coroutineScope.launchNonCancellable {
+        screenModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitSetFillermarkFilter(anime, flag)
         }
     }
@@ -1143,7 +1142,7 @@ class AnimeScreenModel(
         data class SetAnimeFetchInterval(val anime: Anime) : Dialog
         data class ShowQualities(val episode: Episode, val anime: Anime, val source: AnimeSource) : Dialog
         // AM (CU) -->
-        data class EditAnimeInfo(val anime: Anime) : Dialog()
+        data class EditAnimeInfo(val anime: Anime) : Dialog
         // <-- AM (CU)
 
         data object ChangeAnimeSkipIntro : Dialog
@@ -1182,14 +1181,7 @@ class AnimeScreenModel(
 
     // AM (CU) -->
     fun showEditAnimeInfoDialog() {
-        mutableState.update { state ->
-            when (state) {
-                AnimeScreenState.Loading -> state
-                is AnimeScreenState.Success -> {
-                    state.copy(dialog = Dialog.EditAnimeInfo(state.anime))
-                }
-            }
-        }
+        updateSuccessState { it.copy(dialog = Dialog.EditAnimeInfo(it.anime)) }
     }
     // <-- AM (CU)
 

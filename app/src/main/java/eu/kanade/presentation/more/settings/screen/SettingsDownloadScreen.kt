@@ -14,8 +14,6 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
-import eu.kanade.presentation.util.collectAsState
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
@@ -38,10 +36,6 @@ object SettingsDownloadScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val getCategories = remember { Injekt.get<GetMangaCategories>() }
-        val allCategories by getCategories.subscribe().collectAsState(
-            initial = runBlocking { getCategories.await() },
-        )
         val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
         val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(
             initial = runBlocking { getAnimeCategories.await() },
@@ -50,29 +44,11 @@ object SettingsDownloadScreen : SearchableSettings {
         val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
         val basePreferences = remember { Injekt.get<BasePreferences>() }
 
-        // AM (FILE-SIZE) -->
-        LaunchedEffect(Unit) {
-            downloadPreferences.showEpisodeFileSize().changes()
-                .drop(1)
-                .collectLatest { value ->
-                    if (value) {
-                        Injekt.get<AnimeDownloadCache>().invalidateCache()
-                    }
-                }
-        }
-        // <-- AM (FILE-SIZE)
-
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 pref = downloadPreferences.downloadOnlyOverWifi(),
                 title = stringResource(MR.strings.connected_to_wifi),
             ),
-            // AM (FS) -->
-            Preference.PreferenceItem.SwitchPreference(
-                pref = downloadPreferences.showEpisodeFileSize(),
-                title = stringResource(R.string.pref_show_downloaded_episode_file_size),
-            ),
-            // <-- AM (FS)
             Preference.PreferenceItem.ListPreference(
                 pref = downloadPreferences.numberOfDownloads(),
                 title = stringResource(MR.strings.pref_download_slots),
@@ -96,7 +72,7 @@ object SettingsDownloadScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getEpisodesGroup(
+    private fun getDeleteEpisodesGroup(
         downloadPreferences: DownloadPreferences,
         categories: List<Category>,
     ): Preference.PreferenceGroup {
@@ -109,14 +85,14 @@ object SettingsDownloadScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.ListPreference(
                     pref = downloadPreferences.removeAfterSeenSlots(),
-                    title = stringResource(MR.strings.pref_remove_after_read),
+                    title = stringResource(MR.strings.pref_remove_after_seen),
                     entries = mapOf(
                         -1 to stringResource(MR.strings.disabled),
                         0 to stringResource(MR.strings.last_read_episode),
-                        1 to stringResource(MR.string.second_to_last_episode),
-                        2 to stringResource(MR.string.third_to_last_episode),
-                        3 to stringResource(MR.string.fourth_to_last_episode),
-                        4 to stringResource(MR.string.fifth_to_last_episode),
+                        1 to stringResource(MR.strings.second_to_last_episode),
+                        2 to stringResource(MR.strings.third_to_last_episode),
+                        3 to stringResource(MR.strings.fourth_to_last_episode),
+                        4 to stringResource(MR.strings.fifth_to_last_episode),
                     ),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
@@ -138,7 +114,7 @@ object SettingsDownloadScreen : SearchableSettings {
     ): Preference.PreferenceItem.MultiSelectListPreference {
         return Preference.PreferenceItem.MultiSelectListPreference(
             pref = downloadPreferences.removeExcludeAnimeCategories(),
-            title = stringResource(MR.string.pref_remove_exclude_categories),
+            title = stringResource(MR.strings.pref_remove_exclude_categories),
             entries = categories().associate { it.id.toString() to it.visualName },
         )
     }
@@ -197,7 +173,7 @@ object SettingsDownloadScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     pref = downloadPreferences.notDownloadFillermarkedItems(),
-                    title = stringResource(R.string.pref_not_download_fillermarked_items),
+                    title = stringResource(MR.strings.pref_not_download_fillermarked_items),
                 ),
             ),
         )

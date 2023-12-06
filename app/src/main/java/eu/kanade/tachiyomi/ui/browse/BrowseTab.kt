@@ -19,26 +19,26 @@ import eu.kanade.domain.source.anime.model.installedExtension
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.anime.AnimeSourceOptionsDialog
 import eu.kanade.presentation.browse.anime.AnimeSourcesScreen
-import eu.kanade.presentation.extensions.RequestStoragePermission
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
-import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 
-object BrowseTab : Tab {
+data class BrowseTab(
+    private var toExtensions: Boolean,
+) : Tab() {
 
     override val options: TabOptions
         @Composable
@@ -53,7 +53,7 @@ object BrowseTab : Tab {
         }
 
     override suspend fun onReselect(navigator: Navigator) {
-        navigator.push(AnimeDownloadQueueScreen)
+        navigator.push(AnimeExtensionsScreen())
     }
 
     @Composable
@@ -70,7 +70,6 @@ object BrowseTab : Tab {
             state = state,
             navigator = navigator,
             onClickItem = { source, listing ->
-                screenModel.onOpenSource(source)
                 navigator.push(BrowseAnimeSourceScreen(source.id, listing.query))
             },
             onClickPin = screenModel::togglePin,
@@ -95,7 +94,7 @@ object BrowseTab : Tab {
                     screenModel.closeDialog()
                 },
                 onClickUninstall = {
-                    screenModel.uninstallExtension(source.installedExtension.pkgName)
+                    screenModel.uninstallExtension(source.installedExtension)
                     screenModel.closeDialog()
                 },
                 onDismiss = screenModel::closeDialog,
@@ -103,15 +102,16 @@ object BrowseTab : Tab {
         }
         // <-- AM (BROWSE)
 
-        // For local source
-        DiskUtil.RequestStoragePermission()
-
         LaunchedEffect(Unit) {
+            if (toExtensions) {
+                toExtensions = false
+                navigator.push(AnimeExtensionsScreen())
+            }
             (context as? MainActivity)?.ready = true
         }
 
         // AM (BROWSE) -->
-        val internalErrString = stringResource(R.string.internal_error)
+        val internalErrString = stringResource(MR.strings.internal_error)
         LaunchedEffect(Unit) {
             // AM (DISCORD) -->
             DiscordRPCService.setScreen(context, DiscordScreen.BROWSE)

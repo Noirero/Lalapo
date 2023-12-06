@@ -21,14 +21,12 @@ import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.merge
 import org.xmlpull.v1.XmlPullParser
 import tachiyomi.core.i18n.stringResource
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -142,40 +140,9 @@ object SettingsAppearanceScreen : SearchableSettings {
             AppCompatDelegate.setApplicationLocales(locale)
         }
 
-        val libraryPrefs = remember { Injekt.get<LibraryPreferences>() }
-
-        LaunchedEffect(Unit) {
-            libraryPrefs.bottomNavStyle().changes()
-                .drop(1)
-                .collectLatest { value ->
-                    HomeScreen.tabs = when (value) {
-                        0 -> HomeScreen.tabsNoHistory
-                        1 -> HomeScreen.tabsNoUpdates
-                        else -> HomeScreen.tabsNoManga
-                    }
-                    (context as? Activity)?.let {
-                        ActivityCompat.recreate(it)
-                    }
-                }
-        }
-
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_display),
             preferenceItems = listOf(
-                Preference.PreferenceItem.ListPreference(
-                    pref = libraryPrefs.bottomNavStyle(),
-                    title = stringResource(MR.strings.pref_bottom_nav_style),
-                    entries = mapOf(
-                        0 to stringResource(MR.strings.pref_bottom_nav_no_history),
-                        1 to stringResource(MR.strings.pref_bottom_nav_no_updates),
-                        2 to stringResource(MR.strings.pref_bottom_nav_no_manga),
-                    ),
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    pref = libraryPrefs.isDefaultHomeTabLibraryManga(),
-                    title = stringResource(MR.strings.pref_default_home_tab_library),
-                    enabled = libraryPrefs.bottomNavStyle().get() != 2,
-                ),
                 Preference.PreferenceItem.BasicListPreference(
                     value = currentLanguage,
                     title = stringResource(MR.strings.pref_app_language),

@@ -3,38 +3,31 @@ package eu.kanade.tachiyomi.ui.browse.anime
 
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import rx.Observable
 
 class AnimeSourceExtensionFunctions {
     companion object {
         var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
-        private fun removeDownloadState(extension: AnimeExtension) {
-            currentDownloads.update { _map ->
-                val map = _map.toMutableMap()
-                map.remove(extension.pkgName)
-                map
-            }
-        }
 
         private fun addDownloadState(extension: AnimeExtension, installStep: InstallStep) {
-            currentDownloads.update { _map ->
-                val map = _map.toMutableMap()
-                map[extension.pkgName] = installStep
-                map
-            }
+            currentDownloads.update { it + Pair(extension.pkgName, installStep) }
         }
 
-        fun Observable<InstallStep>.subscribeToInstallUpdate(extension: AnimeExtension) {
-            this
-                .doOnUnsubscribe { removeDownloadState(extension) }
-                .subscribe(
-                    { installStep -> addDownloadState(extension, installStep) },
-                    { removeDownloadState(extension) },
-                )
+        private fun removeDownloadState(extension: AnimeExtension) {
+            currentDownloads.update { it - extension.pkgName }
         }
+
+        suspend fun Flow<InstallStep>.collectToInstallUpdate(extension: AnimeExtension) =
+            this
+                .onEach { installStep -> addDownloadState(extension, installStep) }
+                .onCompletion { removeDownloadState(extension) }
+                .collect()
     }
 }
 // <-- AM (BROWSE)

@@ -61,7 +61,6 @@ object SettingsLibraryScreen : SearchableSettings {
                 libraryPreferences,
             ),
             getGlobalUpdateGroup(allAnimeCategories, libraryPreferences),
-            getChapterSwipeActionsGroup(libraryPreferences),
             getEpisodeSwipeActionsGroup(libraryPreferences),
         )
     }
@@ -212,11 +211,11 @@ object SettingsLibraryScreen : SearchableSettings {
                 // AM (GU) -->
                 Preference.PreferenceItem.ListPreference(
                     pref = libraryPreferences.groupLibraryUpdateType(),
-                    title = stringResource(R.string.library_group_updates),
+                    title = stringResource(MR.strings.library_group_updates),
                     entries = mapOf(
-                        GroupAnimeLibraryMode.GLOBAL to stringResource(R.string.library_group_updates_global),
-                        GroupAnimeLibraryMode.ALL_BUT_UNGROUPED to stringResource(R.string.library_group_updates_all_but_ungrouped),
-                        GroupAnimeLibraryMode.ALL to stringResource(R.string.library_group_updates_all),
+                        GroupAnimeLibraryMode.GLOBAL to stringResource(MR.strings.library_group_updates_global),
+                        GroupAnimeLibraryMode.ALL_BUT_UNGROUPED to stringResource(MR.strings.library_group_updates_all_but_ungrouped),
+                        GroupAnimeLibraryMode.ALL to stringResource(MR.strings.library_group_updates_all),
                     ),
                 ),
                 // <-- AM (GU)
@@ -243,7 +242,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     pref = libraryPreferences.newShowUpdatesCount(),
-                    title = stringResource(MR.strings.pref_library_update_show_tab_badge),
+                    title = stringResource(MR.strings.pref_library_anime_update_show_tab_badge),
                 ),
             ),
         )

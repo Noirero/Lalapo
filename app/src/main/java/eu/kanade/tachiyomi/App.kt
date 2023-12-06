@@ -51,10 +51,6 @@ import kotlinx.coroutines.flow.onEach
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.LogcatLogger
-import org.acra.config.httpSender
-import org.acra.data.StringFormat
-import org.acra.ktx.initAcra
-import org.acra.sender.HttpSender
 import org.conscrypt.Conscrypt
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.system.logcat
@@ -76,7 +72,6 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
     override fun onCreate() {
         super<Application>.onCreate()
 
-        setupAcra()
         GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
 
         // TLS 1.3 support for Android < 10

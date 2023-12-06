@@ -58,9 +58,10 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
-import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
@@ -80,7 +81,7 @@ object AnimeLibraryTab : Tab() {
             )
             return TabOptions(
                 index = 0u,
-                title = stringResource(R.string.label_library),
+                title = stringResource(MR.strings.label_library),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -119,9 +120,9 @@ object AnimeLibraryTab : Tab() {
 
             scope.launch {
                 val msgRes = when {
-                    !started -> R.string.update_already_running
-                    category != null -> R.string.updating_category
-                    else -> R.string.updating_library
+                    !started -> MR.strings.update_already_running
+                    category != null -> MR.strings.updating_category
+                    else -> MR.strings.updating_library
                 }
                 snackbarHostState.showSnackbar(context.stringResource(msgRes))
             }
@@ -138,8 +139,8 @@ object AnimeLibraryTab : Tab() {
         Scaffold(
             topBar = { scrollBehavior ->
                 val title = state.getToolbarTitle(
-                    defaultTitle = stringResource(MR.string.label_library),
-                    defaultCategoryTitle = stringResource(MR.string.label_default),
+                    defaultTitle = stringResource(MR.strings.label_library),
+                    defaultCategoryTitle = stringResource(MR.strings.label_default),
                     page = screenModel.activeCategoryIndex,
                 )
                 val tabVisible = state.showCategoryTabs && state.categories.size > 1
@@ -193,8 +194,6 @@ object AnimeLibraryTab : Tab() {
             snackbarHost = {
                 SnackbarHost(
                     hostState = snackbarHostState,
-                    // AM (NAVPILL)>
-                    modifier = Modifier.padding(bottomSuperLargePaddingValues),
                 )
             },
         ) { contentPadding ->

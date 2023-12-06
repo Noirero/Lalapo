@@ -16,7 +16,7 @@ class AnimeTrackRepositoryImpl(
     // AM (GU) -->
     override suspend fun getTracks(): List<AnimeTrack> {
         return handler.awaitList {
-            anime_syncQueries.getAnimeTracks(animeTrackMapper)
+            anime_syncQueries.getAnimeTracks(::mapTrack)
         }
     }
     // <-- AM (GU)

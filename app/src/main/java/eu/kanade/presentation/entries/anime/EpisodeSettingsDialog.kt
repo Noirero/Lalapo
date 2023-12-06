@@ -20,6 +20,7 @@ import eu.kanade.domain.entries.anime.model.downloadedFilter
 import eu.kanade.domain.entries.anime.model.forceDownloaded
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.tachiyomi.R
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.preference.TriState
 import tachiyomi.domain.entries.anime.model.Anime
@@ -33,7 +34,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun EpisodeSettingsDialog(
     onDismissRequest: () -> Unit,
-    anime: Anime? = null,
     onDownloadFilterChanged: (TriState) -> Unit,
     onUnseenFilterChanged: (TriState) -> Unit,
     onBookmarkedFilterChanged: (TriState) -> Unit,
@@ -43,6 +43,8 @@ fun EpisodeSettingsDialog(
     onSortModeChanged: (Long) -> Unit,
     onDisplayModeChanged: (Long) -> Unit,
     onSetAsDefault: (applyToExistingAnime: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    anime: Anime? = null,
 ) {
     var showSetAsDefaultDialog by rememberSaveable { mutableStateOf(false) }
     if (showSetAsDefaultDialog) {
@@ -85,7 +87,7 @@ fun EpisodeSettingsDialog(
                         bookmarkedFilter = anime?.bookmarkedFilter ?: TriState.DISABLED,
                         onBookmarkedFilterChanged = onBookmarkedFilterChanged,
                         // AM (FILLER) -->
-                        fillermarkedFilter = anime?.fillermarkedFilter ?: TriStateFilter.DISABLED,
+                        fillermarkedFilter = anime?.fillermarkedFilter ?: TriState.DISABLED,
                         onFillermarkedFilterChanged = onFillermarkedFilterChanged,
                         // <-- AM (FILLER)
                     )
@@ -135,7 +137,7 @@ private fun FilterPage(
         onClick = onBookmarkedFilterChanged,
     )
     TriStateItem(
-        label = stringResource(R.string.action_filter_fillermarked),
+        label = stringResource(MR.strings.action_filter_fillermarked),
         state = fillermarkedFilter,
         onClick = onFillermarkedFilterChanged,
     )

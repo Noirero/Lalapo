@@ -15,9 +15,7 @@ data class BackupExtension(
         other as BackupExtension
 
         if (pkgName != other.pkgName) return false
-        if (!apk.contentEquals(other.apk)) return false
-
-        return true
+        return apk.contentEquals(other.apk)
     }
 
     override fun hashCode(): Int {

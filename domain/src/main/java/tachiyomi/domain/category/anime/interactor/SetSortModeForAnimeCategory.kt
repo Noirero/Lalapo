@@ -20,7 +20,7 @@ class SetSortModeForAnimeCategory(
     ) {
         // AM (GU) -->
         if (preferences.groupLibraryBy().get() != AnimeLibraryGroup.BY_DEFAULT) {
-            preferences.libraryAnimeSortingMode().set(AnimeLibrarySort(type, direction))
+            preferences.animeSortingMode().set(AnimeLibrarySort(type, direction))
             return
         }
         // <-- AM (GU)

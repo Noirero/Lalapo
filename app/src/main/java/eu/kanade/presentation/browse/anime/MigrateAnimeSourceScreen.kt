@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material3.Icon
@@ -29,7 +29,7 @@ import eu.kanade.presentation.browse.anime.components.AnimeSourceIcon
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceState
+import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.domain.source.anime.model.AnimeSource
 import tachiyomi.i18n.MR
@@ -49,13 +49,14 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun MigrateAnimeSourceScreen(
-    state: MigrateAnimeSourceState,
+    state: MigrateAnimeSourceScreenModel.State,
     // AM (BROWSE) -->
     navigateUp: () -> Unit,
     // <-- AM (BROWSE)
     onClickItem: (AnimeSource) -> Unit,
     onToggleSortingDirection: () -> Unit,
     onToggleSortingMode: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     // AM (BROWSE) -->
@@ -63,12 +64,12 @@ fun MigrateAnimeSourceScreen(
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
-                title = stringResource(R.string.label_migration_anime),
+                title = stringResource(MR.strings.label_migration_anime),
                 actions = {
                     IconButton(onClick = { uriHandler.openUri("https://aniyomi.org/help/guides/source-migration/") }) {
                         Icon(
-                            imageVector = Icons.Outlined.HelpOutline,
-                            contentDescription = stringResource(R.string.migration_help_guide),
+                            imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                            contentDescription = stringResource(MR.strings.migration_help_guide),
                         )
                     }
                 },
@@ -81,7 +82,7 @@ fun MigrateAnimeSourceScreen(
         when {
             state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
             state.isEmpty -> EmptyScreen(
-                textResource = R.string.information_empty_library,
+                stringRes = MR.strings.information_empty_library,
                 modifier = Modifier.padding(contentPadding),
             )
             else ->

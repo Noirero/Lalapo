@@ -10,7 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -19,7 +18,6 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
-import eu.kanade.presentation.entries.anime.onDismissEpisodeOptionsDialogScreen
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.anime.AnimeUpdateScreen
 import eu.kanade.presentation.util.Tab
@@ -33,11 +31,14 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesScreenModel
 import kotlinx.coroutines.flow.collectLatest
+import tachiyomi.core.i18n.stringResource
+import tachiyomi.i18n.MR
 import tachiyomi.core.util.lang.launchIO
+import tachiyomi.presentation.core.i18n.stringResource
 
 data class UpdatesTab(
     private val externalPlayer: Boolean,
-) : Tab {
+) : Tab() {
 
     override val options: TabOptions
         @Composable
@@ -46,7 +47,7 @@ data class UpdatesTab(
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_updates_enter)
             return TabOptions(
                 index = 1u,
-                title = stringResource(MR.string.label_recent_updates),
+                title = stringResource(MR.strings.label_recent_updates),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -101,14 +102,15 @@ data class UpdatesTab(
                     isManga = false,
                 )
             }
-            is AnimeUpdatesScreenModel.Dialog.Options -> {
-                onDismissEpisodeOptionsDialogScreen = onDismissDialog
+            is AnimeUpdatesScreenModel.Dialog.ShowQualities -> {
+                EpisodeOptionsDialogScreen.onDismissDialog = onDismissDialog
                 NavigatorAdaptiveSheet(
                     screen = EpisodeOptionsDialogScreen(
+                        useExternalDownloader = screenModel.useExternalDownloader,
+                        episodeTitle = dialog.episodeTitle,
                         episodeId = dialog.episodeId,
                         animeId = dialog.animeId,
                         sourceId = dialog.sourceId,
-                        useExternalDownloader = screenModel.downloadPreferences.useExternalDownloader().get(),
                     ),
                     onDismissRequest = onDismissDialog,
                 )
@@ -122,14 +124,14 @@ data class UpdatesTab(
             // <-- AM (DISCORD)
             screenModel.events.collectLatest { event ->
                 when (event) {
-                    AnimeUpdatesScreenModel.Event.InternalError -> screenModel.snackbarHostState.showSnackbar(context.getString(R.string.internal_error))
+                    AnimeUpdatesScreenModel.Event.InternalError -> screenModel.snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
                     is AnimeUpdatesScreenModel.Event.LibraryUpdateTriggered -> {
-                        val msg = if (event.started) {
-                            R.string.updating_library
+                        val stringRes = if (event.started) {
+                            MR.strings.updating_library
                         } else {
-                            R.string.update_already_running
+                            MR.strings.update_already_running
                         }
-                        screenModel.snackbarHostState.showSnackbar(context.getString(msg))
+                        screenModel.snackbarHostState.showSnackbar(context.stringResource(stringRes))
                     }
                 }
             }

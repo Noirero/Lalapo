@@ -19,10 +19,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.NavigateNext
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.NavigateNext
-import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +58,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import logcat.logcat
 import tachiyomi.core.util.lang.launchUI
 import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.core.util.system.logcat
@@ -149,13 +150,14 @@ fun EpisodeOptionsDialog(
     episodeTitle: String,
     episode: Episode?,
     anime: Anime?,
+    modifier: Modifier = Modifier,
     resultList: Result<List<Video>>? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .animateContentSize()
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
@@ -190,7 +192,7 @@ fun EpisodeOptionsDialog(
                     videoList = videoList,
                 )
             } else {
-                logcat(LogPriority.ERROR) { "Error getting links" }
+                logcat(LogPriority.ERROR, "Error") { "Error getting links" }
                 scope.launchUI { context.toast("Video list is empty") }
                 EpisodeOptionsDialogScreen.onDismissDialog()
             }
@@ -319,7 +321,7 @@ private fun QualityOptions(
 
         ClickableRow(
             text = stringResource(MR.strings.action_play_externally),
-            icon = Icons.Outlined.OpenInNew,
+            icon = Icons.AutoMirrored.Outlined.OpenInNew,
             onClick = {
                 onExtPlayerClicked()
                 closeMenu()
@@ -364,7 +366,7 @@ private fun ClickableRow(
 
         if (showDropdownArrow) {
             Icon(
-                imageVector = Icons.Outlined.NavigateNext,
+                imageVector = Icons.AutoMirrored.Outlined.NavigateNext,
                 contentDescription = null,
                 modifier = Modifier,
                 tint = MaterialTheme.colorScheme.onSurface,

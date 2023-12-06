@@ -1,6 +1,5 @@
 package eu.kanade.presentation.browse.anime
 
-import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
 import eu.kanade.presentation.components.AppBarTitle
@@ -63,12 +63,9 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun AnimeExtensionScreen(
-    state: AnimeExtensionsState,
+    state:  AnimeExtensionsScreenModel.State,
     // AM (BROWSE) -->
     navigator: Navigator,
-    // <-- AM (BROWSE)
-    searchQuery: String? = null,
-    // AM (BROWSE) -->
     onChangeSearchQuery: (String?) -> Unit,
     // <-- AM (BROWSE)
     onLongClickItem: (AnimeExtension) -> Unit,
@@ -80,19 +77,23 @@ fun AnimeExtensionScreen(
     onOpenExtension: (AnimeExtension.Installed) -> Unit,
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    // <-- AM (BROWSE)
+    searchQuery: String? = null,
+    // AM (BROWSE) -->
 ) {
     // AM (BROWSE) -->
     Scaffold(
         topBar = { scrollBehavior ->
             SearchToolbar(
-                titleContent = { AppBarTitle(stringResource(R.string.label_extensions)) },
+                titleContent = { AppBarTitle(stringResource(MR.strings.label_extensions)) },
                 searchQuery = searchQuery,
                 onChangeSearchQuery = onChangeSearchQuery,
                 actions = {
                     IconButton(onClick = { navigator.push(AnimeExtensionFilterScreen()) }) {
                         Icon(
                             Icons.Outlined.Translate,
-                            contentDescription = stringResource(R.string.action_filter),
+                            contentDescription = stringResource(MR.strings.action_filter),
                         )
                     }
                 },
@@ -105,14 +106,14 @@ fun AnimeExtensionScreen(
         PullRefresh(
             refreshing = state.isRefreshing,
             onRefresh = onRefresh,
-            enabled = !state.isLoading,
+            enabled = { !state.isLoading },
         ) {
             when {
                 state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
                 state.isEmpty -> {
                     if (!searchQuery.isNullOrEmpty()) {
                         EmptyScreen(
-                            textResource = R.string.no_results_found,
+                            stringRes = MR.strings.no_results_found,
                             modifier = Modifier.padding(contentPadding),
                         )
                     } else {
@@ -425,7 +426,7 @@ private fun AnimeExtensionItemActions(
 
 @Composable
 fun ExtensionHeader(
-    @StringRes textRes: Int,
+    textRes: StringResource,
     modifier: Modifier = Modifier,
     action: @Composable RowScope.() -> Unit = {},
 ) {
@@ -465,19 +466,19 @@ fun ExtensionTrustDialog(
 ) {
     AlertDialog(
         title = {
-            Text(text = stringResource(R.string.untrusted_extension))
+            Text(text = stringResource(MR.strings.untrusted_extension))
         },
         text = {
-            Text(text = stringResource(R.string.untrusted_extension_message))
+            Text(text = stringResource(MR.strings.untrusted_extension_message))
         },
         confirmButton = {
             TextButton(onClick = onClickConfirm) {
-                Text(text = stringResource(R.string.ext_trust))
+                Text(text = stringResource(MR.strings.ext_trust))
             }
         },
         dismissButton = {
             TextButton(onClick = onClickDismiss) {
-                Text(text = stringResource(R.string.ext_uninstall))
+                Text(text = stringResource(MR.strings.ext_uninstall))
             }
         },
         onDismissRequest = onDismissRequest,

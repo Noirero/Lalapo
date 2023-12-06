@@ -1,4 +1,4 @@
-Wpackage eu.kanade.presentation.entries.anime.components
+package eu.kanade.presentation.entries.anime.components
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -46,8 +46,8 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entries.EditCoverAction
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.util.ReaderPageImageView
+import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -63,6 +63,7 @@ fun AnimeCoverDialog(
     onSaveClick: () -> Unit,
     onEditClick: ((EditCoverAction) -> Unit)?,
     onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,

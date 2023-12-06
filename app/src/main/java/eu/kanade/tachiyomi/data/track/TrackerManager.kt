@@ -23,11 +23,9 @@ class TrackerManager(context: Context) {
     val bangumi = Bangumi(5L)
     val simkl = Simkl(SIMKL)
 
-    val trackers = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi, simkl)
+    val trackers: List<Tracker> = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi, simkl)
 
     fun loggedInTrackers() = trackers.filter { it.isLoggedIn }
 
     fun get(id: Long) = trackers.find { it.id == id }
-
-    fun hasLoggedIn() = trackers.any { it.isLoggedIn }
 }

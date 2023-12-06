@@ -23,14 +23,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Input
 import androidx.compose.material.icons.automirrored.outlined.Label
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.BookmarkRemove
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Input
-import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.RemoveDone
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
@@ -68,6 +68,7 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun EntryBottomActionMenu(
     visible: Boolean,
+    isManga: Boolean,
     modifier: Modifier = Modifier,
     onBookmarkClicked: (() -> Unit)? = null,
     onRemoveBookmarkClicked: (() -> Unit)? = null,
@@ -82,7 +83,6 @@ fun EntryBottomActionMenu(
     onDeleteClicked: (() -> Unit)? = null,
     onExternalClicked: (() -> Unit)? = null,
     onInternalClicked: (() -> Unit)? = null,
-    isManga: Boolean,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -146,7 +146,7 @@ fun EntryBottomActionMenu(
                 }
                 // AM (FILLER) -->
                 if (onFillermarkClicked != null) {
-                    val fillermark = R.string.action_fillermark_episode
+                    val fillermark = MR.strings.action_fillermark_episode
                     Button(
                         title = stringResource(fillermark),
                         icon = ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp),
@@ -156,7 +156,7 @@ fun EntryBottomActionMenu(
                     )
                 }
                 if (onRemoveFillermarkClicked != null) {
-                    val removeFillermark = R.string.action_remove_fillermark_episode
+                    val removeFillermark = MR.strings.action_remove_fillermark_episode
                     Button(
                         title = stringResource(removeFillermark),
                         icon = ImageVector.vectorResource(id = R.drawable.ic_fillermark_border_24dp),
@@ -221,7 +221,7 @@ fun EntryBottomActionMenu(
                 if (!isManga && onExternalClicked != null && !playerPreferences.alwaysUseExternalPlayer().get()) {
                     Button(
                         title = stringResource(MR.strings.action_play_externally),
-                        icon = Icons.Outlined.OpenInNew,
+                        icon = Icons.AutoMirrored.Outlined.OpenInNew,
                         toConfirm = confirm[7],
                         onLongClick = { onLongClickItem(7) },
                         onClick = onExternalClicked,
@@ -230,7 +230,7 @@ fun EntryBottomActionMenu(
                 if (!isManga && onInternalClicked != null && playerPreferences.alwaysUseExternalPlayer().get()) {
                     Button(
                         title = stringResource(MR.strings.action_play_internally),
-                        icon = Icons.Outlined.Input,
+                        icon = Icons.AutoMirrored.Outlined.Input,
                         toConfirm = confirm[8],
                         onLongClick = { onLongClickItem(8) },
                         onClick = onInternalClicked,
@@ -287,13 +287,13 @@ private fun RowScope.Button(
 @Composable
 fun LibraryBottomActionMenu(
     visible: Boolean,
-    modifier: Modifier = Modifier,
+    isManga: Boolean,
     onChangeCategoryClicked: () -> Unit,
     onMarkAsViewedClicked: () -> Unit,
     onMarkAsUnviewedClicked: () -> Unit,
     onDownloadClicked: ((DownloadAction) -> Unit)?,
     onDeleteClicked: () -> Unit,
-    isManga: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
         visible = visible,

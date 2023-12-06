@@ -2,15 +2,14 @@
 package eu.kanade.tachiyomi.data.connections.discord
 
 import android.graphics.Color
-import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.connections.ConnectionsService
+import eu.kanade.tachiyomi.data.connections.BaseConnection
+import tachiyomi.i18n.MR
 
-class Discord(id: Long) : ConnectionsService(id) {
-
-    @StringRes
-    override fun nameRes() = R.string.connections_discord
-
+class Discord(id: Long) : BaseConnection(
+    id,
+    "Discord",
+) {
     override fun getLogo() = R.drawable.ic_discord_24dp
 
     override fun getLogoColor() = Color.rgb(88, 101, 242)

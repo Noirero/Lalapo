@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import eu.kanade.tachiyomi.data.track.Tracker
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
-import eu.kanade.tachiyomi.data.connections.ConnectionsService
+import eu.kanade.tachiyomi.data.connections.BaseConnection
 import tachiyomi.core.preference.Preference as PreferenceData
 
 sealed class Preference {
@@ -166,7 +166,7 @@ sealed class Preference {
          * A [PreferenceItem] for individual connections service.
          */
         data class ConnectionsPreference(
-            val service: ConnectionsService,
+            val service: BaseConnection,
             override val title: String,
             val login: () -> Unit,
             val openSettings: () -> Unit,

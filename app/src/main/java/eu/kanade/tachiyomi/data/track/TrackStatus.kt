@@ -1,30 +1,30 @@
 // AM (GU) -->
 package eu.kanade.tachiyomi.data.track
 
-import androidx.annotation.StringRes
-import eu.kanade.tachiyomi.R
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.bangumi.Bangumi
 import eu.kanade.tachiyomi.data.track.kitsu.Kitsu
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
 import eu.kanade.tachiyomi.data.track.simkl.Simkl
+import tachiyomi.i18n.MR
 
-enum class TrackStatus(val int: Int, @StringRes val res: Int) {
-    WATCHING(1, R.string.watching),
-    REPEATING(2, R.string.repeating_anime),
-    PLAN_TO_WATCH(3, R.string.plan_to_watch),
-    PAUSED(4, R.string.on_hold),
-    COMPLETED(5, R.string.completed),
-    DROPPED(6, R.string.dropped),
-    OTHER(7, R.string.not_tracked),
+enum class TrackStatus(val int: Int, val res: StringResource) {
+    WATCHING(1, MR.strings.watching),
+    REPEATING(2, MR.strings.repeating_anime),
+    PLAN_TO_WATCH(3, MR.strings.plan_to_watch),
+    PAUSED(4, MR.strings.on_hold),
+    COMPLETED(5, MR.strings.completed),
+    DROPPED(6, MR.strings.dropped),
+    OTHER(7, MR.strings.not_tracked),
     ;
 
     companion object {
-        fun parseTrackerStatus(tracker: Long, statusLong: Long): TrackStatus? {
+        fun parseTrackerStatus(trackerManager: TrackerManager, tracker: Long, statusLong: Long): TrackStatus? {
             val status = statusLong.toInt()
             return when (tracker) {
-                TrackManager.MYANIMELIST -> {
+                trackerManager.myAnimeList.id -> {
                     when (status) {
                         MyAnimeList.WATCHING -> WATCHING
                         MyAnimeList.COMPLETED -> COMPLETED
@@ -35,7 +35,7 @@ enum class TrackStatus(val int: Int, @StringRes val res: Int) {
                         else -> null
                     }
                 }
-                TrackManager.ANILIST -> {
+                trackerManager.aniList.id -> {
                     when (status) {
                         Anilist.WATCHING -> WATCHING
                         Anilist.COMPLETED -> COMPLETED
@@ -46,7 +46,7 @@ enum class TrackStatus(val int: Int, @StringRes val res: Int) {
                         else -> null
                     }
                 }
-                TrackManager.KITSU -> {
+                trackerManager.kitsu.id -> {
                     when (status) {
                         Kitsu.WATCHING -> WATCHING
                         Kitsu.COMPLETED -> COMPLETED
@@ -56,7 +56,7 @@ enum class TrackStatus(val int: Int, @StringRes val res: Int) {
                         else -> null
                     }
                 }
-                TrackManager.SHIKIMORI -> {
+                trackerManager.shikimori.id -> {
                     when (status) {
                         Shikimori.READING -> WATCHING
                         Shikimori.COMPLETED -> COMPLETED
@@ -67,7 +67,7 @@ enum class TrackStatus(val int: Int, @StringRes val res: Int) {
                         else -> null
                     }
                 }
-                TrackManager.BANGUMI -> {
+                trackerManager.bangumi.id -> {
                     when (status) {
                         Bangumi.READING -> WATCHING
                         Bangumi.COMPLETED -> COMPLETED
@@ -77,7 +77,7 @@ enum class TrackStatus(val int: Int, @StringRes val res: Int) {
                         else -> null
                     }
                 }
-                TrackManager.SIMKL -> {
+                trackerManager.simkl.id -> {
                     when (status) {
                         Simkl.WATCHING -> WATCHING
                         Simkl.COMPLETED -> COMPLETED

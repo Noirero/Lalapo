@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,10 +27,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun PlayerDialog(
     titleRes: StringResource,
+    onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     hideSystemBars: Boolean = true,
     onConfirmRequest: (() -> Unit)? = null,
-    onDismissRequest: () -> Unit,
     content: @Composable (() -> Unit)? = null,
 ) {
     val onConfirm = {
@@ -37,7 +38,7 @@ fun PlayerDialog(
         onDismissRequest()
     }
 
-    AlertDialog(
+    BasicAlertDialog(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         properties = DialogProperties(
@@ -45,7 +46,7 @@ fun PlayerDialog(
             dismissOnClickOutside = true,
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false,
-        ),
+        )
     ) {
         Surface(
             shape = MaterialTheme.shapes.large,
@@ -55,7 +56,8 @@ fun PlayerDialog(
             if (hideSystemBars) {
                 rememberSystemUiController().apply {
                     isSystemBarsVisible = false
-                    systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 }
             }
 

@@ -25,6 +25,7 @@ fun AnimeSourcesFilterScreen(
     state: AnimeSourcesFilterScreenModel.State.Success,
     onClickLanguage: (String) -> Unit,
     onClickSource: (AnimeSource) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->

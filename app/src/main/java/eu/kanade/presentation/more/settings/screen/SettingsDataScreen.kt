@@ -18,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,14 +40,15 @@ import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.BackupRestoreJob
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.cache.EpisodeCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
+import eu.kanade.tachiyomi.ui.storage.StorageTab
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import logcat.LogPriority
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchNonCancellable
@@ -55,11 +57,13 @@ import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.backup.service.FLAG_CATEGORIES
 import tachiyomi.domain.backup.service.FLAG_CHAPTERS
+import tachiyomi.domain.backup.service.FLAG_CUSTOM_INFO
 import tachiyomi.domain.backup.service.FLAG_EXTENSIONS
 import tachiyomi.domain.backup.service.FLAG_EXT_SETTINGS
 import tachiyomi.domain.backup.service.FLAG_HISTORY
 import tachiyomi.domain.backup.service.FLAG_SETTINGS
 import tachiyomi.domain.backup.service.FLAG_TRACK
+import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.MR
@@ -78,13 +82,14 @@ object SettingsDataScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val backupPreferences = Injekt.get<BackupPreferences>()
         val storagePreferences = Injekt.get<StoragePreferences>()
+        val libraryPreferences = Injekt.get<LibraryPreferences>()
 
         return listOf(
             getStorageLocationPref(storagePreferences = storagePreferences),
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
 
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
-            getDataGroup(backupPreferences = backupPreferences),
+            getDataGroup(libraryPreferences = libraryPreferences),
         )
     }
 
@@ -108,7 +113,6 @@ object SettingsDataScreen : SearchableSettings {
                     storageDirPref.set(it.uri.toString())
                 }
                 Injekt.get<AnimeDownloadCache>().invalidateCache()
-                Injekt.get<MangaDownloadCache>().invalidateCache()
             }
         }
 
@@ -132,6 +136,9 @@ object SettingsDataScreen : SearchableSettings {
         val context = LocalContext.current
         val lastAutoBackup by backupPreferences.lastAutoBackupTimestamp().collectAsState()
 
+        val backupIntervalPref = backupPreferences.backupInterval()
+        val backupInterval by backupIntervalPref.collectAsState()
+
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.label_backup),
             preferenceItems = listOf(
@@ -153,6 +160,29 @@ object SettingsDataScreen : SearchableSettings {
                     ),
                     onValueChanged = {
                         BackupCreateJob.setupTask(context, it)
+                        true
+                    },
+                ),
+
+                Preference.PreferenceItem.MultiSelectListPreference(
+                    pref = backupPreferences.backupFlags(),
+                    enabled = backupInterval != 0,
+                    title = stringResource(MR.strings.pref_backup_flags),
+                    subtitle = stringResource(MR.strings.pref_backup_flags_summary),
+                    entries = mapOf(
+                        FLAG_CATEGORIES to stringResource(MR.strings.categories),
+                        FLAG_CHAPTERS to stringResource(MR.strings.episodes),
+                        FLAG_HISTORY to stringResource(MR.strings.history),
+                        FLAG_TRACK to stringResource(MR.strings.track),
+                        FLAG_SETTINGS to stringResource(MR.strings.settings),
+                        FLAG_EXT_SETTINGS to stringResource(MR.strings.extension_settings),
+                        FLAG_EXTENSIONS to stringResource(MR.strings.label_extensions),
+                        FLAG_CUSTOM_INFO to stringResource(MR.strings.custom_entry_info),
+                    ),
+                    onValueChanged = {
+                        if (FLAG_SETTINGS in it || FLAG_EXT_SETTINGS in it) {
+                            context.stringResource(MR.strings.backup_settings_warning, Toast.LENGTH_LONG)
+                        }
                         true
                     },
                 ),
@@ -302,37 +332,43 @@ object SettingsDataScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getDataGroup(backupPreferences: BackupPreferences): Preference.PreferenceGroup {
+    private fun getDataGroup(libraryPreferences: LibraryPreferences): Preference.PreferenceGroup {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
-        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
 
-        val backupIntervalPref = backupPreferences.backupInterval()
-        val backupInterval by backupIntervalPref.collectAsState()
-
-        val chapterCache = remember { Injekt.get<ChapterCache>() }
         val episodeCache = remember { Injekt.get<EpisodeCache>() }
         var cacheReadableSizeSema by remember { mutableIntStateOf(0) }
-        val cacheReadableMangaSize = remember(cacheReadableSizeSema) { chapterCache.readableSize }
         val cacheReadableAnimeSize = remember(cacheReadableSizeSema) { episodeCache.readableSize }
 
+        val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
+
+        // AM (FILE-SIZE) -->
+        LaunchedEffect(Unit) {
+            downloadPreferences.showEpisodeFileSize().changes()
+                .drop(1)
+                .collectLatest { value ->
+                    if (value) {
+                        Injekt.get<AnimeDownloadCache>().invalidateCache()
+                    }
+                }
+        }
+        // <-- AM (FILE-SIZE)
+
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.label_data),
+            title = stringResource(MR.strings.label_storage),
             preferenceItems = listOf(
-                getMangaStorageInfoPref(cacheReadableMangaSize),
                 getAnimeStorageInfoPref(cacheReadableAnimeSize),
 
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.pref_clear_chapter_cache),
+                    title = stringResource(MR.strings.pref_clear_episode_cache),
                     subtitle = stringResource(
-                        MR.strings.used_cache_both,
+                        MR.strings.used_cache,
                         cacheReadableAnimeSize,
-                        cacheReadableMangaSize,
                     ),
                     onClick = {
                         scope.launchNonCancellable {
                             try {
-                                val deletedFiles = chapterCache.clear() + episodeCache.clear()
+                                val deletedFiles = episodeCache.clear()
                                 withUIContext {
                                     context.toast(context.stringResource(MR.strings.cache_deleted, deletedFiles))
                                     cacheReadableSizeSema++
@@ -346,58 +382,16 @@ object SettingsDataScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     pref = libraryPreferences.autoClearItemCache(),
-                    title = stringResource(MR.strings.pref_auto_clear_chapter_cache),
+                    title = stringResource(MR.strings.pref_auto_clear_episode_cache),
                 ),
-                Preference.PreferenceItem.MultiSelectListPreference(
-                    pref = backupPreferences.backupFlags(),
-                    enabled = backupInterval != 0,
-                    title = stringResource(MR.strings.pref_backup_flags),
-                    subtitle = stringResource(MR.strings.pref_backup_flags_summary),
-                    entries = mapOf(
-                        FLAG_CATEGORIES to stringResource(MR.strings.general_categories),
-                        FLAG_CHAPTERS to stringResource(MR.strings.chapters_episodes),
-                        FLAG_HISTORY to stringResource(MR.strings.history),
-                        FLAG_TRACK to stringResource(MR.strings.track),
-                        FLAG_SETTINGS to stringResource(MR.strings.settings),
-                        FLAG_EXT_SETTINGS to stringResource(MR.strings.extension_settings),
-                        FLAG_EXTENSIONS to stringResource(MR.strings.label_extensions),
-                    ),
-                    onValueChanged = {
-                        if (FLAG_SETTINGS in it || FLAG_EXT_SETTINGS in it) {
-                            context.stringResource(MR.strings.backup_settings_warning, Toast.LENGTH_LONG)
-                        }
-                        true
-                    },
+                // AM (FS) -->
+                Preference.PreferenceItem.SwitchPreference(
+                    pref = downloadPreferences.showEpisodeFileSize(),
+                    title = stringResource(MR.strings.pref_show_downloaded_episode_file_size),
                 ),
+                // <-- AM (FS)
             ),
         )
-    }
-
-    @Composable
-    fun getMangaStorageInfoPref(
-        chapterCacheReadableSize: String,
-    ): Preference.PreferenceItem.CustomPreference {
-        val context = LocalContext.current
-        val available = remember {
-            Formatter.formatFileSize(context, DiskUtil.getAvailableStorageSpace(Environment.getDataDirectory()))
-        }
-        val total = remember {
-            Formatter.formatFileSize(context, DiskUtil.getTotalStorageSpace(Environment.getDataDirectory()))
-        }
-
-        return Preference.PreferenceItem.CustomPreference(
-            title = stringResource(MR.strings.pref_manga_storage_usage),
-        ) {
-            BasePreferenceWidget(
-                title = stringResource(MR.strings.pref_manga_storage_usage),
-                subcomponent = {
-                    // TODO: downloads, SD cards, bar representation?, i18n
-                    Box(modifier = Modifier.padding(horizontal = PrefsHorizontalPadding)) {
-                        Text(text = "Available: $available / $total (chapter cache: $chapterCacheReadableSize)")
-                    }
-                },
-            )
-        }
     }
 
     @Composable
@@ -405,6 +399,8 @@ object SettingsDataScreen : SearchableSettings {
         episodeCacheReadableSize: String,
     ): Preference.PreferenceItem.CustomPreference {
         val context = LocalContext.current
+        val navigator = LocalNavigator.currentOrThrow
+
         val available = remember {
             Formatter.formatFileSize(context, DiskUtil.getAvailableStorageSpace(Environment.getDataDirectory()))
         }
@@ -413,16 +409,17 @@ object SettingsDataScreen : SearchableSettings {
         }
 
         return Preference.PreferenceItem.CustomPreference(
-            title = stringResource(MR.strings.pref_anime_storage_usage),
+            title = stringResource(MR.strings.pref_storage_usage),
         ) {
             BasePreferenceWidget(
-                title = stringResource(MR.strings.pref_anime_storage_usage),
+                title = stringResource(MR.strings.pref_storage_usage),
                 subcomponent = {
                     // TODO: downloads, SD cards, bar representation?, i18n
                     Box(modifier = Modifier.padding(horizontal = PrefsHorizontalPadding)) {
                         Text(text = "Available: $available / $total (Episode cache: $episodeCacheReadableSize)")
                     }
                 },
+                onClick = { navigator.push(StorageTab()) }
             )
         }
     }

@@ -12,8 +12,8 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.collectToInstallUpdate
 import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.currentDownloads
-import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.subscribeToInstallUpdate
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -89,7 +89,7 @@ class AnimeExtensionsScreenModel(
                 state.map { it.searchQuery }.distinctUntilChanged().debounce(SEARCH_DEBOUNCE_MILLIS),
                 currentDownloads,
                 getExtensions.subscribe(),
-            ) { query, downloads, (_updates, _, _available, _untrusted) ->
+            ) { query, downloads, (_updates, _installed, _available, _untrusted) ->
                 val searchQuery = query ?: ""
 
                 val itemsGroups: ItemGroups = mutableMapOf()
@@ -175,19 +175,6 @@ class AnimeExtensionsScreenModel(
         extensionManager.cancelInstallUpdateExtension(extension)
     }
 
-    private fun addDownloadState(extension: AnimeExtension, installStep: InstallStep) {
-        _currentDownloads.update { it + Pair(extension.pkgName, installStep) }
-    }
-
-    private fun removeDownloadState(extension: AnimeExtension) {
-        _currentDownloads.update { it - extension.pkgName }
-    }
-
-    private suspend fun Flow<InstallStep>.collectToInstallUpdate(extension: AnimeExtension) =
-        this
-            .onEach { installStep -> addDownloadState(extension, installStep) }
-            .onCompletion { removeDownloadState(extension) }
-            .collect()
 
     fun uninstallExtension(extension: AnimeExtension) {
         extensionManager.uninstallExtension(extension)

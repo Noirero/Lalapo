@@ -61,6 +61,7 @@ import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.util.Locale
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.DelicateCoroutinesApi
 
 /**
  * This class is the one in charge of downloading episodes.
@@ -293,6 +294,7 @@ class AnimeDownloader(
      * @param episodes the list of episodes to download.
      * @param autoStart whether to start the downloader after enqueing the episodes.
      */
+    @OptIn(DelicateCoroutinesApi::class)
     fun queueEpisodes(
         anime: Anime,
         episodes: List<Episode>,
@@ -362,7 +364,7 @@ class AnimeDownloader(
      */
     private suspend fun downloadEpisode(download: AnimeDownload) {
         // AM (CU)>
-        val animeDir = provider.getAnimeDir(download.anime.ogitle, download.source)
+        val animeDir = provider.getAnimeDir(download.anime.ogTitle, download.source)
 
         val availSpace = DiskUtil.getAvailableStorageSpace(animeDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {

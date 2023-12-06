@@ -154,12 +154,10 @@ actual class LocalAnimeSource(
 
     // AM (CU) -->
     fun updateAnimeInfo(anime: SAnime) {
-        val directory = getBaseDirectories(context).map { File(it, anime.url) }.find {
-            it.exists()
-        } ?: return
+        val directory = fileSystem.getAnimeDirectory(anime.url) ?: return
         val existingFileName = directory.listFiles()?.find { it.extension == "json" }?.name
-        val file = File(directory, existingFileName ?: "info.json")
-        file.outputStream().use {
+        val file = directory.createFile(existingFileName ?: "info.json") ?: return
+        file.openOutputStream().use {
             json.encodeToStream(anime.toJson(), it)
         }
     }

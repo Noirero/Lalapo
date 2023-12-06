@@ -96,8 +96,7 @@ private fun isRequestHeaderSafe(_name: String, _value: String): Boolean {
     val name = _name.lowercase(Locale.ENGLISH)
     val value = _value.lowercase(Locale.ENGLISH)
     if (name in unsafeHeaderNames || name.startsWith("proxy-")) return false
-    if (name == "connection" && value == "upgrade") return false
-    return true
+    return !(name == "connection" && value == "upgrade")
 }
 private val unsafeHeaderNames =
     listOf(

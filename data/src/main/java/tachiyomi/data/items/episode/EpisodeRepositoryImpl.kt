@@ -99,7 +99,7 @@ class EpisodeRepositoryImpl(
 
     // AM (FILLER) -->
     override suspend fun getFillermarkedEpisodesByAnimeId(animeId: Long): List<Episode> {
-        return handler.awaitList { episodesQueries.getFillermarkedEpisodesByAnimeId(animeId, episodeMapper) }
+        return handler.awaitList { episodesQueries.getFillermarkedEpisodesByAnimeId(animeId, ::mapEpisode) }
     }
     // <-- AM (FILLER)
 
@@ -134,6 +134,7 @@ class EpisodeRepositoryImpl(
         scanlator: String?,
         seen: Boolean,
         bookmark: Boolean,
+        fillermark: Boolean,
         lastSecondSeen: Long,
         totalSeconds: Long,
         episodeNumber: Double,
@@ -146,6 +147,7 @@ class EpisodeRepositoryImpl(
         animeId = animeId,
         seen = seen,
         bookmark = bookmark,
+        fillermark = fillermark,
         lastSecondSeen = lastSecondSeen,
         totalSeconds = totalSeconds,
         dateFetch = dateFetch,

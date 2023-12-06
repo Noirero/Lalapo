@@ -28,6 +28,8 @@ import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import kotlin.math.ceil
 import kotlin.math.floor
+import tachiyomi.core.i18n.stringResource
+import tachiyomi.i18n.MR
 
 class DiscordRPCService : Service() {
 
@@ -66,7 +68,7 @@ class DiscordRPCService : Service() {
         val builder = context.notificationBuilder(Notifications.CHANNEL_DISCORD_RPC) {
             setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
             setSmallIcon(R.drawable.ic_discord_24dp)
-            setContentText(context.resources.getString(R.string.pref_discord_rpc))
+            setContentText(context.stringResource(MR.strings.pref_discord_rpc))
             setAutoCancel(false)
             setOngoing(true)
             setUsesChronometer(true)
@@ -115,11 +117,11 @@ class DiscordRPCService : Service() {
 
             if (rpc == null) return
 
-            val name = playerData.animeTitle ?: context.resources.getString(R.string.app_name)
+            val name = playerData.animeTitle ?: context.stringResource(MR.strings.app_name)
 
-            val details = playerData.animeTitle ?: context.resources.getString(discordScreen.details)
+            val details = playerData.animeTitle ?: context.stringResource(discordScreen.details)
 
-            val state = playerData.episodeNumber ?: context.resources.getString(discordScreen.text)
+            val state = playerData.episodeNumber ?: context.stringResource(discordScreen.text)
 
             val imageUrl = playerData.thumbnailUrl ?: discordScreen.imageUrl
 
@@ -133,7 +135,7 @@ class DiscordRPCService : Service() {
                     assets = Activity.Assets(
                         largeImage = "mp:$imageUrl",
                         smallImage = "mp:${DiscordScreen.APP.imageUrl}",
-                        smallText = context.resources.getString(DiscordScreen.APP.text),
+                        smallText = context.stringResource(DiscordScreen.APP.text),
                     ),
                 ),
                 since = since,
@@ -172,7 +174,8 @@ class DiscordRPCService : Service() {
                 val client = networkService.client
                 val response = if (!discordIncognito) {
                     try {
-                        client.newCall(GET("http://140.83.62.114:5000/link?imageLink=${playerData.thumbnailUrl}")).execute()
+                        // Thanks to https://github.com/dead8309/Kizzy
+                        client.newCall(GET("https://kizzy-api.vercel.app/image?url=${playerData.thumbnailUrl}")).execute()
                     } catch (e: Throwable) {
                         null
                     }
@@ -180,9 +183,11 @@ class DiscordRPCService : Service() {
                     null
                 }
 
-                val animeThumbnail = response?.header("discord-image-link")
-                    ?.takeIf { it != "external/Not Found" }
+                val animeThumbnail = response?.body?.string()
+                    ?.takeIf { !it.contains("external/Not Found") }
+                    ?.substringAfter("\"id\": \"")?.substringBefore("\"}")
                     ?.split("external/")?.getOrNull(1)?.let { "external/$it" }
+
 
                 setScreen(
                     context = context,

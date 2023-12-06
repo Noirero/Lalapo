@@ -74,7 +74,7 @@ object SettingsMainScreen : Screen() {
     }
 
     @Composable
-    fun Content(twoPane: Boolean) {
+    fun Content(twoPane: Boolean, modifier: Modifier = Modifier,) {
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.currentOrThrow
         val containerColor = if (twoPane) getPalerSurface() else MaterialTheme.colorScheme.surface
@@ -127,10 +127,10 @@ object SettingsMainScreen : Screen() {
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
                         val selected = indexSelected == index
-                        var modifier: Modifier = Modifier
+                        var modifierNew: Modifier = Modifier
                         var contentColor = LocalContentColor.current
                         if (twoPane) {
-                            modifier = Modifier
+                            modifierNew = Modifier
                                 .padding(horizontal = 8.dp)
                                 .clip(RoundedCornerShape(24.dp))
                                 .then(
@@ -148,7 +148,7 @@ object SettingsMainScreen : Screen() {
                         }
                         CompositionLocalProvider(LocalContentColor provides contentColor) {
                             TextPreferenceWidget(
-                                modifier = modifier,
+                                modifier = modifierNew,
                                 title = stringResource(item.titleRes),
                                 subtitle = item.formatSubtitle(),
                                 icon = item.icon,
@@ -206,8 +206,8 @@ object SettingsMainScreen : Screen() {
         ),
         // AM (CONNECTIONS) -->
         Item(
-            titleRes = R.string.pref_category_connections,
-            subtitleRes = R.string.pref_connections_summary,
+            titleRes = MR.strings.pref_category_connections,
+            subtitleRes = MR.strings.pref_connections_summary,
             icon = Icons.Outlined.Link,
             screen = SettingsConnectionsScreen,
         ),

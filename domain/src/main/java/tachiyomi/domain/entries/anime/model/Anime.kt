@@ -104,11 +104,11 @@ data class Anime(
         }
 
     // AM (FILLER) -->
-    val fillermarkedFilter: TriStateFilter
+    val fillermarkedFilter: TriState
         get() = when (fillermarkedFilterRaw) {
-            EPISODE_SHOW_FILLERMARKED -> TriStateFilter.ENABLED_IS
-            EPISODE_SHOW_NOT_FILLERMARKED -> TriStateFilter.ENABLED_NOT
-            else -> TriStateFilter.DISABLED
+            EPISODE_SHOW_FILLERMARKED -> TriState.ENABLED_IS
+            EPISODE_SHOW_NOT_FILLERMARKED -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
         }
     // <-- AM (FILLER)
 

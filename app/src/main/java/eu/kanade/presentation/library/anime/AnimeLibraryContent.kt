@@ -25,7 +25,6 @@ import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
-import tachiyomi.presentation.core.components.rememberPagerState
 import tachiyomi.presentation.core.util.plus
 import kotlin.time.Duration.Companion.seconds
 
@@ -48,6 +47,7 @@ fun AnimeLibraryContent(
     getNumberOfAnimeForCategory: (Category) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
+    modifier: Modifier = Modifier,
     getAnimeLibraryForPage: (Int) -> List<AnimeLibraryItem>,
 ) {
     Column(
@@ -73,7 +73,8 @@ fun AnimeLibraryContent(
                 categories = categories,
                 pagerState = pagerState,
                 getNumberOfItemsForCategory = getNumberOfAnimeForCategory,
-            ) { scope.launch { pagerState.animateScrollToPage(it) } }
+                onTabItemClick = { scope.launch { pagerState.animateScrollToPage(it) } },
+            )
         }
 
         val notSelectionMode = selection.isEmpty()
@@ -103,7 +104,6 @@ fun AnimeLibraryContent(
                 state = pagerState,
                 // AM (NAVPILL)>
                 contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()) + bottomSuperLargePaddingValues,
-                pageCount = categories.size,
                 hasActiveFilters = hasActiveFilters,
                 selectedAnime = selection,
                 searchQuery = searchQuery,

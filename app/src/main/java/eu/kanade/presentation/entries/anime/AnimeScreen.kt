@@ -37,6 +37,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -66,8 +67,10 @@ import eu.kanade.presentation.entries.anime.components.ExpandableAnimeDescriptio
 import eu.kanade.presentation.entries.anime.components.MissingEpisodeCountListItem
 import eu.kanade.presentation.entries.anime.components.NextEpisodeAiringListItem
 import eu.kanade.presentation.util.formatEpisodeNumber
+import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
 import eu.kanade.tachiyomi.ui.browse.anime.extension.details.SourcePreferencesScreen
@@ -95,6 +98,9 @@ import uy.kohesive.injekt.injectLazy
 import java.text.DateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import tachiyomi.i18n.MR.strings.date
+import tachiyomi.i18n.MR.strings.scanlator
+import tachiyomi.i18n.MR.strings.selected
 
 private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()
 
@@ -391,7 +397,6 @@ private fun AnimeScreenSmallImpl(
                 onClickEditCategory = onEditCategoryClicked,
                 onClickRefresh = onRefresh,
                 onClickMigrate = onMigrateClicked,
-                onClickSettings = onSettingsClicked,
                 changeAnimeSkipIntro = changeAnimeSkipIntro,
                 actionModeCounter = selectedEpisodeCount,
                 // AM (CU) -->
@@ -657,6 +662,7 @@ fun AnimeScreenLargeImpl(
     onEpisodeSelected: (EpisodeList.Item, Boolean, Boolean, Boolean) -> Unit,
     onAllEpisodeSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -702,7 +708,6 @@ fun AnimeScreenLargeImpl(
                 onClickEditCategory = onEditCategoryClicked,
                 onClickRefresh = onRefresh,
                 onClickMigrate = onMigrateClicked,
-                onClickSettings = onSettingsClicked,
                 changeAnimeSkipIntro = changeAnimeSkipIntro,
                 // AM (CU) -->
                 onClickEditInfo = onEditInfoClicked.takeIf { state.anime.favorite },
@@ -998,26 +1003,26 @@ private fun LazyListScope.sharedEpisodeItems(
                 MissingEpisodeCountListItem(count = episodeItem.count)
             }
             is EpisodeList.Item -> {
-                AnimeEpisodeListItem(
 
-                    // AM (FILE-SIZE) -->
-                    var fileSizeAsync: Long? by remember { mutableStateOf(episodeItem.fileSize) }
-                    val isEpisodeDownloaded = episodeItem.downloadState == AnimeDownload.State.DOWNLOADED
-                    if (isEpisodeDownloaded && showFileSize && fileSizeAsync == null) {
-                        LaunchedEffect(episodeItem, Unit) {
-                            fileSizeAsync = withIOContext {
-                                animeDownloadProvider.getEpisodeFileSize(
-                                    episodeItem.episode.name,
-                                    episodeItem.episode.scanlator,
-                                    anime.ogTitle,
-                                    source,
-                                )
-                            }
-                            episodeItem.fileSize = fileSizeAsync
+                // AM (FILE-SIZE) -->
+                var fileSizeAsync: Long? by remember { mutableStateOf(episodeItem.fileSize) }
+                val isEpisodeDownloaded = episodeItem.downloadState == AnimeDownload.State.DOWNLOADED
+                if (isEpisodeDownloaded && showFileSize && fileSizeAsync == null) {
+                    LaunchedEffect(episodeItem, Unit) {
+                        fileSizeAsync = withIOContext {
+                            animeDownloadProvider.getEpisodeFileSize(
+                                episodeItem.episode.name,
+                                episodeItem.episode.scanlator,
+                                anime.ogTitle,
+                                source,
+                            )
                         }
+                        episodeItem.fileSize = fileSizeAsync
                     }
-                    // <-- AM (FILE-SIZE)
+                }
+                // <-- AM (FILE-SIZE)
 
+                AnimeEpisodeListItem(
                     title = if (anime.displayMode == Anime.EPISODE_DISPLAY_NUMBER) {
                         stringResource(
                             MR.strings.display_mode_episode,

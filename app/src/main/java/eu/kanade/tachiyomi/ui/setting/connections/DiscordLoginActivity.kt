@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.toast
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import java.io.File
 
@@ -41,9 +42,9 @@ class DiscordLoginActivity : BaseActivity() {
                     webView.evaluateJavascript(
                         """
                         (function() {
-                            const wreq = webpackChunkdiscord_app.push([[Symbol()], {}, w => w])
+                            const wreq = (webpackChunkdiscord_app.push([[''], {}, e => { m = []; for (let c in e.c) m.push(e.c[c])}]), m)
                             webpackChunkdiscord_app.pop()
-                            const token = Object.values(wreq.c).find(m => m.exports?.Z?.getToken).exports.Z.getToken();
+                            const token = wreq.find(m => m?.exports?.default?.getToken !== void 0).exports.default.getToken(); 
                             return token;
                         })()
                         """.trimIndent(),
@@ -59,7 +60,7 @@ class DiscordLoginActivity : BaseActivity() {
     private fun login(token: String) {
         connectionsPreferences.connectionsToken(connectionsManager.discord).set(token)
         connectionsPreferences.setConnectionsCredentials(connectionsManager.discord, "Discord", "Logged In")
-        toast(R.string.login_success)
+        toast(MR.strings.login_success)
         applicationInfo.dataDir.let { File("$it/app_webview/").deleteRecursively() }
         finish()
     }

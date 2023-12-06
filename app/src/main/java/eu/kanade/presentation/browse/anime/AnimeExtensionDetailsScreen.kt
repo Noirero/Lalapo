@@ -73,6 +73,7 @@ fun AnimeExtensionDetailsScreen(
     onClickClearCookies: () -> Unit,
     onClickUninstall: () -> Unit,
     onClickSource: (sourceId: Long) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -412,11 +413,11 @@ fun NsfwWarningDialog(
 ) {
     AlertDialog(
         text = {
-            Text(text = stringResource(R.string.ext_nsfw_warning))
+            Text(text = stringResource(MR.strings.ext_nsfw_warning))
         },
         confirmButton = {
             TextButton(onClick = onClickConfirm) {
-                Text(text = stringResource(android.R.string.ok))
+                Text(text = stringResource(MR.strings.action_ok))
             }
         },
         onDismissRequest = onClickConfirm,

@@ -26,6 +26,7 @@ import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.i18n.MR
+import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {
     private val animeSourceManager: AnimeSourceManager by injectLazy()

@@ -29,6 +29,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,12 +58,13 @@ import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.entries.ItemCover
 import eu.kanade.presentation.theme.TachiyomiTheme
-import eu.kanade.presentation.track.manga.SearchResultItem
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -80,6 +82,7 @@ fun AnimeTrackerSearch(
     onSelectedChange: (AnimeTrackSearch) -> Unit,
     onConfirmSelection: () -> Unit,
     onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
@@ -190,13 +193,10 @@ fun AnimeTrackerSearch(
                             SearchResultItem(
                                 title = it.title,
                                 coverUrl = it.cover_url,
-                                type = it.publishing_type.toLowerCase(Locale.current).capitalize(
-                                    Locale.current,
-                                ),
+                                type = it.publishing_type.toLowerCase(Locale.current).capitalize(Locale.current),
                                 startDate = it.start_date,
-                                status = it.publishing_status.toLowerCase(Locale.current).capitalize(
-                                    Locale.current,
-                                ),
+                                status = it.publishing_status.toLowerCase(Locale.current).capitalize(Locale.current),
+                                score = it.score,
                                 description = it.summary.trim(),
                                 selected = it == selected,
                                 onClick = { onSelectedChange(it) },
@@ -212,6 +212,121 @@ fun AnimeTrackerSearch(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SearchResultItem(
+    title: String,
+    coverUrl: String,
+    type: String,
+    startDate: String,
+    status: String,
+    score: Float,
+    description: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    val borderColor = if (selected) MaterialTheme.colorScheme.outline else Color.Transparent
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                width = 2.dp,
+                color = borderColor,
+                shape = shape,
+            )
+            .selectable(selected = selected, onClick = onClick)
+            .padding(12.dp),
+    ) {
+        if (selected) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.TopEnd),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Column {
+            Row {
+                ItemCover.Book(
+                    data = coverUrl,
+                    modifier = Modifier.height(96.dp),
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = title,
+                        modifier = Modifier.padding(end = 28.dp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    if (type.isNotBlank()) {
+                        SearchResultItemDetails(
+                            title = stringResource(MR.strings.track_type),
+                            text = type,
+                        )
+                    }
+                    if (startDate.isNotBlank()) {
+                        SearchResultItemDetails(
+                            title = stringResource(MR.strings.label_started),
+                            text = startDate,
+                        )
+                    }
+                    if (status.isNotBlank()) {
+                        SearchResultItemDetails(
+                            title = stringResource(MR.strings.track_status),
+                            text = status,
+                        )
+                    }
+                    if (score != -1f) {
+                        SearchResultItemDetails(
+                            title = stringResource(MR.strings.score),
+                            text = score.toString(),
+                        )
+                    }
+                }
+            }
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    modifier = Modifier
+                        .paddingFromBaseline(top = 24.dp)
+                        .secondaryItemAlpha(),
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SearchResultItemDetails(
+    title: String,
+    text: String,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.tiny)) {
+        Text(
+            text = title,
+            maxLines = 1,
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = text,
+            modifier = Modifier
+                .weight(1f)
+                .secondaryItemAlpha(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 

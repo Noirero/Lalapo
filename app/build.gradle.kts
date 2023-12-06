@@ -26,7 +26,7 @@ android {
         applicationId = "xyz.Quickdev.Animiru.mi"
 
         versionCode = 110
-        versionName = "0.16.0.0"
+        versionName = "0.15.9.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -58,6 +58,9 @@ android {
             versionNameSuffix = "-${getCommitCount()}"
             applicationIdSuffix = ".debug"
             isPseudoLocalesEnabled = true
+            isShrinkResources = true
+            isMinifyEnabled = true
+            proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
         }
         named("release") {
             isShrinkResources = true

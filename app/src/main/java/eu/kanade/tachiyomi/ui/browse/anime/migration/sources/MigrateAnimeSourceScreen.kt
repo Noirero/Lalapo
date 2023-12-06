@@ -9,7 +9,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.anime.MigrateAnimeSourceScreen
-import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.MigrationAnimeScreen
+import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.MigrateAnimeScreen
 
 class MigrateAnimeSourceScreen : Screen {
 
@@ -22,7 +22,7 @@ class MigrateAnimeSourceScreen : Screen {
         MigrateAnimeSourceScreen(
             state = state,
             navigateUp = navigator::pop,
-            onClickItem = { source -> navigator.push(MigrationAnimeScreen(source.id)) },
+            onClickItem = { source -> navigator.push(MigrateAnimeScreen(source.id)) },
             onToggleSortingDirection = screenModel::toggleSortingDirection,
             onToggleSortingMode = screenModel::toggleSortingMode,
         )

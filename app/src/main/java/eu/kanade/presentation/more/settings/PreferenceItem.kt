@@ -12,11 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.unit.dp
-import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.domain.track.service.TrackPreferences
-import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.ConnectionsPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.EditTextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.InfoWidget
@@ -197,7 +194,7 @@ internal fun PreferenceItem(
                     ConnectionsPreferenceWidget(
                         service = this,
                         checked = uName.isNotEmpty(),
-                        onClick = { if (isLogged) item.openSettings() else item.login() },
+                        onClick = { if (isLoggedIn) item.openSettings() else item.login() },
                     )
                 }
             }

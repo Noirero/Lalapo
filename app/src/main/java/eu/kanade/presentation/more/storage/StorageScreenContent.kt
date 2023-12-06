@@ -28,10 +28,10 @@ import kotlin.random.Random
 fun StorageScreenContent(
     state: StorageScreenState,
     isManga: Boolean,
-    modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
     onCategorySelected: (Category) -> Unit,
     onDelete: (Long) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     when (state) {
         is StorageScreenState.Loading -> {
@@ -40,9 +40,9 @@ fun StorageScreenContent(
 
         is StorageScreenState.Success -> {
             @Composable
-            fun Info(modifier: Modifier = Modifier) {
+            fun Info(infoModifier: Modifier = Modifier) {
                 Column(
-                    modifier = modifier,
+                    modifier = infoModifier,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                     content = {
@@ -71,13 +71,11 @@ fun StorageScreenContent(
             }
 
             Row(
-                modifier = modifier
-                    .padding(horizontal = MaterialTheme.padding.small)
-                    .padding(contentPadding),
+                modifier = modifier.padding(horizontal = MaterialTheme.padding.small),
                 content = {
                     if (isTabletUi()) {
                         Info(
-                            modifier = Modifier
+                            infoModifier = Modifier
                                 .weight(2f)
                                 .padding(end = MaterialTheme.padding.extraLarge)
                                 .fillMaxHeight(),

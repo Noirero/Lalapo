@@ -23,9 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.cosose.ui.unit.sp
+import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.components.ArrowModifier
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.IndicatorModifier
@@ -50,13 +49,13 @@ enum class EpisodeDownloadAction {
 @Composable
 fun EpisodeDownloadIndicator(
     enabled: Boolean,
-    modifier: Modifier = Modifier,
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
     onClick: (EpisodeDownloadAction) -> Unit,
     // AM (FILE-SIZE) -->
     fileSize: Long?,
     // <-- AM (FILE-SIZE)
+    modifier: Modifier = Modifier,
 ) {
     when (val downloadState = downloadStateProvider()) {
         AnimeDownload.State.NOT_DOWNLOADED -> NotDownloadedIndicator(
@@ -116,10 +115,10 @@ private fun NotDownloadedIndicator(
 @Composable
 private fun DownloadingIndicator(
     enabled: Boolean,
-    modifier: Modifier = Modifier,
     downloadState: AnimeDownload.State,
     downloadProgressProvider: () -> Int,
     onClick: (EpisodeDownloadAction) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     Box(
@@ -190,11 +189,11 @@ private fun DownloadingIndicator(
 @Composable
 private fun DownloadedIndicator(
     enabled: Boolean,
-    modifier: Modifier = Modifier,
     onClick: (EpisodeDownloadAction) -> Unit,
     // AM (FILE-SIZE) -->
     fileSize: Long?,
     // <-- AM (FILE-SIZE)
+    modifier: Modifier = Modifier,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     // AM (FILE-SIZE) -->
@@ -204,7 +203,7 @@ private fun DownloadedIndicator(
             maxLines = 1,
             style = MaterialTheme.typography.bodyMedium
                 .copy(color = MaterialTheme.colorScheme.primary, fontSize = 12.sp),
-            modifier = modifier.padding(all = 10.dp),
+            modifier = Modifier.padding(all = 10.dp),
         )
     }
     // <-- AM (FILE-SIZE)

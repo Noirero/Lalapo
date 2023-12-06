@@ -249,7 +249,7 @@ class AnimeUpdatesScreenModel(
      * @param updates the list of episodes to fillermark.
      */
     fun fillermarkUpdates(updates: List<AnimeUpdatesItem>, fillermark: Boolean) {
-        coroutineScope.launchIO {
+        screenModelScope.launchIO {
             updates
                 .filterNot { it.update.fillermark == fillermark }
                 .map { EpisodeUpdate(id = it.update.episodeId, fillermark = fillermark) }

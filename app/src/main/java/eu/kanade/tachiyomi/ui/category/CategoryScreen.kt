@@ -14,6 +14,7 @@ import eu.kanade.presentation.category.AnimeCategoryScreen
 import eu.kanade.presentation.category.components.CategoryCreateDialog
 import eu.kanade.presentation.category.components.CategoryDeleteDialog
 import eu.kanade.presentation.category.components.CategoryRenameDialog
+import eu.kanade.presentation.category.components.CategorySortAlphabeticallyDialog
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryDialog
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryEvent
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenModel
@@ -48,6 +49,7 @@ class CategoryScreen : Screen {
             onClickDelete = { screenModel.showDialog(AnimeCategoryDialog.Delete(it)) },
             onClickMoveUp = screenModel::moveUp,
             onClickMoveDown = screenModel::moveDown,
+            onClickHide = screenModel::hideCategory,
             navigateUp = navigator::pop,
         )
 
@@ -73,6 +75,12 @@ class CategoryScreen : Screen {
                     onDismissRequest = screenModel::dismissDialog,
                     onDelete = { screenModel.deleteCategory(dialog.category.id) },
                     category = dialog.category,
+                )
+            }
+            is AnimeCategoryDialog.SortAlphabetically -> {
+                CategorySortAlphabeticallyDialog(
+                    onDismissRequest = screenModel::dismissDialog,
+                    onSort = { screenModel.sortAlphabetically() },
                 )
             }
         }

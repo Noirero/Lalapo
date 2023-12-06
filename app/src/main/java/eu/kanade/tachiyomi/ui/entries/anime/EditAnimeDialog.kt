@@ -18,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
@@ -31,13 +30,16 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.databinding.EditAnimeDialogBinding
 import eu.kanade.tachiyomi.util.dropBlank
+import eu.kanade.tachiyomi.util.getResourceColor
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.system.dpToPx
-import eu.kanade.tachiyomi.util.system.getResourceColor
 import eu.kanade.tachiyomi.util.trimOrNull
 import eu.kanade.tachiyomi.widget.materialdialogs.setTextInput
 import kotlinx.coroutines.CoroutineScope
+import tachiyomi.core.i18n.stringResource
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.source.local.entries.anime.isLocal
 
 @Composable
@@ -84,12 +86,12 @@ fun EditAnimeDialog(
                     onDismissRequest()
                 },
             ) {
-                Text(stringResource(R.string.action_save))
+                Text(stringResource(MR.strings.action_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(stringResource(android.R.string.cancel))
+                Text(stringResource(MR.strings.action_cancel))
             }
         },
         text = {
@@ -121,14 +123,14 @@ private fun onViewCreated(anime: Anime, context: Context, binding: EditAnimeDial
         context,
         android.R.layout.simple_spinner_dropdown_item,
         listOf(
-            R.string.label_default,
-            R.string.ongoing,
-            R.string.completed,
-            R.string.licensed,
-            R.string.publishing_finished,
-            R.string.cancelled,
-            R.string.on_hiatus,
-        ).map { context.getString(it) },
+            MR.strings.label_default,
+            MR.strings.ongoing,
+            MR.strings.completed,
+            MR.strings.licensed,
+            MR.strings.publishing_finished,
+            MR.strings.cancelled,
+            MR.strings.on_hiatus,
+        ).map { context.stringResource(it) },
     )
 
     binding.status.adapter = statusAdapter
@@ -152,7 +154,7 @@ private fun onViewCreated(anime: Anime, context: Context, binding: EditAnimeDial
             binding.title.setText(anime.title)
         }
 
-        binding.title.hint = context.getString(R.string.title_hint, anime.url)
+        binding.title.hint = context.stringResource(MR.strings.title_hint, anime.url)
         binding.animeAuthor.setText(anime.author.orEmpty())
         binding.animeArtist.setText(anime.artist.orEmpty())
         binding.animeDescription.setText(anime.description.orEmpty())
@@ -172,17 +174,17 @@ private fun onViewCreated(anime: Anime, context: Context, binding: EditAnimeDial
         }
         binding.animeGenresTags.setChips(anime.genre.orEmpty().dropBlank(), scope)
 
-        binding.title.hint = context.getString(R.string.title_hint, anime.ogTitle)
+        binding.title.hint = context.stringResource(MR.strings.title_hint, anime.ogTitle)
         if (anime.ogAuthor != null) {
-            binding.animeAuthor.hint = context.getString(R.string.author_hint, anime.ogAuthor)
+            binding.animeAuthor.hint = context.stringResource(MR.strings.author_hint, anime.ogAuthor!!)
         }
         if (anime.ogArtist != null) {
-            binding.animeArtist.hint = context.getString(R.string.artist_hint, anime.ogArtist)
+            binding.animeArtist.hint = context.stringResource(MR.strings.artist_hint, anime.ogArtist!!)
         }
         if (!anime.ogDescription.isNullOrBlank()) {
             binding.animeDescription.hint =
-                context.getString(
-                    R.string.description_hint,
+                context.stringResource(
+                    MR.strings.description_hint,
                     anime.ogDescription!!.replace("\n", " ").chop(20),
                 )
         }
@@ -238,10 +240,10 @@ private fun ChipGroup.setChips(items: List<String>, scope: CoroutineScope) {
                 .setTextInput {
                     newTag = it.trimOrNull()
                 }
-                .setPositiveButton(android.R.string.ok) { _, _ ->
+                .setPositiveButton(R.string.action_ok) { _, _ ->
                     if (newTag != null) setChips(items + listOfNotNull(newTag), scope)
                 }
-                .setNegativeButton(android.R.string.cancel, null)
+                .setNegativeButton(R.string.action_cancel, null)
                 .show()
         }
     }
@@ -249,7 +251,7 @@ private fun ChipGroup.setChips(items: List<String>, scope: CoroutineScope) {
 }
 
 private fun ChipGroup.getTextStrings(): List<String> = children.mapNotNull {
-    if (it is Chip && !it.text.toString().contains(context.getString(R.string.add_tag), ignoreCase = true)) {
+    if (it is Chip && !it.text.toString().contains(context.stringResource(MR.strings.add_tag), ignoreCase = true)) {
         it.text.toString()
     } else {
         null

@@ -230,7 +230,7 @@ class ExternalIntents {
      * @param uri the path data of the video.
      * @param video the video being sent to the external player.
      */
-    private suspend fun standardIntentForPackage(pkgName: String, context: Context, uri: Uri, video: Video): Intent {
+    private fun standardIntentForPackage(pkgName: String, context: Context, uri: Uri, video: Video): Intent {
         return Intent(Intent.ACTION_VIEW).apply {
             if (isPackageInstalled(pkgName, context.packageManager)) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && pkgName.contains("vlc")) {
@@ -268,7 +268,7 @@ class ExternalIntents {
      * @param isSupportedPlayer is it a supported external player.
      * @param intent the [Intent] that the extras and flags are added to.
      */
-    private suspend fun addExtrasAndFlags(isSupportedPlayer: Boolean, intent: Intent): Intent {
+    private fun addExtrasAndFlags(isSupportedPlayer: Boolean, intent: Intent): Intent {
         return intent.apply {
             putExtra("title", anime.title + " - " + episode.name)
             putExtra("position", getLastSecondSeen().toInt())
@@ -470,7 +470,7 @@ class ExternalIntents {
                 ),
             )
             if (trackPreferences.autoUpdateTrack().get() && currEp.seen) {
-                updateTrackEpisodeSeen(currEp.episodeNumber.toDouble(), anime)
+                updateTrackEpisodeSeen(currEp.episodeNumber, anime)
             }
             if (seen) {
                 deleteEpisodeIfNeeded(currentEpisode, anime)

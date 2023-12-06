@@ -50,7 +50,7 @@ class AnimeHistoryScreenModel(
                             logcat(LogPriority.ERROR, error)
                             _events.send(Event.InternalError)
                         }
-                        .map { it.toHistoryUiModels() }
+                        .map { it.toAnimeHistoryUiModels() }
                         .flowOn(Dispatchers.IO)
                 }
                 .collect { newList -> mutableState.update { it.copy(list = newList) } }
@@ -106,8 +106,6 @@ class AnimeHistoryScreenModel(
             _events.send(Event.HistoryCleared)
         }
     }
-
-    val getSearchQuery = mutableState.value.searchQuery
 
     fun updateSearchQuery(query: String?) {
         mutableState.update { it.copy(searchQuery = query) }

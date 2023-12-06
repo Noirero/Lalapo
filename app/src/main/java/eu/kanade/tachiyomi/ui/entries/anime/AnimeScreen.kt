@@ -316,7 +316,7 @@ class AnimeScreen(
                 )
             }
             // AM (CU) -->
-            is AnimeInfoScreenModel.Dialog.EditAnimeInfo -> {
+            is AnimeScreenModel.Dialog.EditAnimeInfo -> {
                 EditAnimeDialog(
                     anime = successState.anime,
                     onDismissRequest = screenModel::dismissDialog,

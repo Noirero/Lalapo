@@ -17,7 +17,7 @@ object AnimeLibraryGroup {
             BY_SOURCE -> R.string.label_sources
             BY_TRACK_STATUS -> R.string.tracking_status
             UNGROUPED -> R.string.ungrouped
-            else -> if (hasCategories) R.string.general_categories else R.string.ungrouped
+            else -> if (hasCategories) R.string.categories else R.string.ungrouped
         }
     }
 }

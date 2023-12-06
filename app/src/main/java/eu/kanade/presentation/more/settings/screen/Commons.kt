@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.category.visualName
+import eu.kanade.tachiyomi.R
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -69,10 +70,10 @@ fun getCategoriesLabel(
         // Some selected, but not all
         includedCategories.isNotEmpty() && includedCategories.size != allCategories.size -> includedCategories.joinToString { it.visualName(context) }
         // All explicitly selected
-        includedCategories.size == allCategories.size -> stringResource(R.string.all)
-        includedCategories.isEmpty() -> stringResource(R.string.none)
-        else -> stringResource(R.string.all)
+        includedCategories.size == allCategories.size -> stringResource(MR.strings.all)
+        includedCategories.isEmpty() -> stringResource(MR.strings.none)
+        else -> stringResource(MR.strings.all)
     }
-    return stringResource(R.string.include, includedItemsText)
+    return stringResource(MR.strings.include, includedItemsText)
 }
 // <-- AM (DISCORD)

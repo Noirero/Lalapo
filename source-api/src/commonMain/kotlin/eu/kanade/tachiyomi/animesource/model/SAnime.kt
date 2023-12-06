@@ -29,21 +29,40 @@ interface SAnime : Serializable {
         return genre?.split(", ")?.map { it.trim() }?.filterNot { it.isBlank() }?.distinct()
     }
 
+    // AM (CU) -->
+    val originalTitle: String
+    val originalAuthor: String?
+    val originalArtist: String?
+    val originalDescription: String?
+    val originalGenre: String?
+    val originalStatus: Int
+    // <-- AM (CU)
+
     fun copyFrom(other: SAnime) {
+        // AM (CU) -->
+        if (other.title.isNotBlank() && originalTitle != other.title) {
+            title = other.originalTitle
+        }
+        // <-- AM (CU)
+
         if (other.author != null) {
-            author = other.author
+            // AM (CU)>
+            author = other.originalAuthor
         }
 
         if (other.artist != null) {
-            artist = other.artist
+            // AM (CU)>
+            artist = other.originalArtist
         }
 
         if (other.description != null) {
-            description = other.description
+            // AM (CU)>
+            description = other.originalDescription
         }
 
         if (other.genre != null) {
-            genre = other.genre
+            // AM (CU)>
+            genre = other.originalGenre
         }
 
         if (other.thumbnail_url != null) {
@@ -61,12 +80,14 @@ interface SAnime : Serializable {
 
     fun copy() = create().also {
         it.url = url
-        it.title = title
-        it.artist = artist
-        it.author = author
-        it.description = description
-        it.genre = genre
-        it.status = status
+        // AM (CU) -->
+        it.title = originalTitle
+        it.artist = originalArtist
+        it.author = originalAuthor
+        it.description = originalDescription
+        it.genre = originalGenre
+        it.status = originalStatus
+        // <-- AM (CU)
         it.thumbnail_url = thumbnail_url
         it.update_strategy = update_strategy
         it.initialized = initialized
@@ -86,3 +107,27 @@ interface SAnime : Serializable {
         }
     }
 }
+
+// AM (CU) -->
+fun SAnime.copy(
+    url: String = this.url,
+    title: String = this.originalTitle,
+    artist: String? = this.originalArtist,
+    author: String? = this.originalAuthor,
+    description: String? = this.originalDescription,
+    genre: String? = this.originalGenre,
+    status: Int = this.status,
+    thumbnail_url: String? = this.thumbnail_url,
+    initialized: Boolean = this.initialized,
+) = SAnime.create().also {
+    it.url = url
+    it.title = title
+    it.artist = artist
+    it.author = author
+    it.description = description
+    it.genre = genre
+    it.status = status
+    it.thumbnail_url = thumbnail_url
+    it.initialized = initialized
+}
+// <-- AM (CU)

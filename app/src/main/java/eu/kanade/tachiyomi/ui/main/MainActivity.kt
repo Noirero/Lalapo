@@ -327,7 +327,6 @@ class MainActivity : BaseActivity() {
 
         if (isLaunch && libraryPreferences.autoClearItemCache().get()) {
             lifecycleScope.launchIO {
-                chapterCache.clear()
                 episodeCache.clear()
             }
         }
@@ -459,8 +458,8 @@ class MainActivity : BaseActivity() {
             }
             Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
             Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
-            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse
-            Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse
+            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse()
+            Constants.SHORTCUT_ANIMEEXTENSIONS -> HomeScreen.Tab.Browse(toExtensions = true)
             Constants.SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 HomeScreen.Tab.More(toDownloads = true)

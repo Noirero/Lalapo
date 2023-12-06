@@ -317,9 +317,7 @@ class ButtonElevation internal constructor(
         if (pressedElevation != other.pressedElevation) return false
         if (focusedElevation != other.focusedElevation) return false
         if (hoveredElevation != other.hoveredElevation) return false
-        if (disabledElevation != other.disabledElevation) return false
-
-        return true
+        return disabledElevation == other.disabledElevation
     }
 
     override fun hashCode(): Int {
@@ -373,9 +371,7 @@ class ButtonColors internal constructor(
         if (containerColor != other.containerColor) return false
         if (contentColor != other.contentColor) return false
         if (disabledContainerColor != other.disabledContainerColor) return false
-        if (disabledContentColor != other.disabledContentColor) return false
-
-        return true
+        return disabledContentColor == other.disabledContentColor
     }
 
     override fun hashCode(): Int {

@@ -20,7 +20,12 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,16 +40,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.anime.model.toDbTrack
+import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
-import eu.kanade.presentation.track.manga.TrackDetailsItem
-import eu.kanade.presentation.track.manga.TrackInfoItemMenu
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -66,9 +71,10 @@ fun AnimeTrackInfoDialogHome(
     onNewSearch: (AnimeTrackItem) -> Unit,
     onOpenInBrowser: (AnimeTrackItem) -> Unit,
     onRemoved: (AnimeTrackItem) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .animateContentSize()
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
@@ -238,8 +244,8 @@ private fun TrackInfoItem(
 
 @Composable
 fun TrackDetailsItem(
-    modifier: Modifier = Modifier,
     text: String?,
+    modifier: Modifier = Modifier,
     placeholder: String = "",
     onClick: () -> Unit,
 ) {
@@ -280,6 +286,42 @@ private fun TrackInfoItemEmpty(
         }
     }
 }
+
+@Composable
+private fun TrackInfoItemMenu(
+    onOpenInBrowser: () -> Unit,
+    onRemoved: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(MR.strings.label_more),
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.action_open_in_browser)) },
+                onClick = {
+                    onOpenInBrowser()
+                    expanded = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.action_remove)) },
+                onClick = {
+                    onRemoved()
+                    expanded = false
+                },
+            )
+        }
+    }
+}
+
 
 @PreviewLightDark
 @Composable

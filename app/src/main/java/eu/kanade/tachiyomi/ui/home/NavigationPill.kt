@@ -2,6 +2,7 @@
 package eu.kanade.tachiyomi.ui.home
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -12,10 +13,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -48,21 +50,22 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
+import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.presentation.core.components.material.padding
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 private val configuration: Configuration @Composable get() = LocalConfiguration.current
-private val pillItemWidth: Dp @Composable get() = (configuration.screenWidthDp / 6).dp
+private val pillItemWidth: Dp @Composable get() = (configuration.screenWidthDp / 5).dp
 private val pillItemHeight: Dp @Composable get() = 48.dp
 
 @Composable
 fun NavigationPill(
     tabs: List<Tab>,
+    modifier: Modifier = Modifier,
 ) {
     val tabMap = tabs.associateBy { it.options.index.toInt() }
 
@@ -77,14 +80,19 @@ fun NavigationPill(
         }
     }
 
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
+    BackHandler(
+        enabled = tabNavigator.current != AnimeLibraryTab,
+        onBack = { updateTab(0) },
+    )
+
+    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
         var flickOffsetX by remember { mutableStateOf(0f) }
 
         Surface(
             modifier = Modifier
+                .fillMaxWidth()
                 .selectableGroup()
                 .navigationBarsPadding()
-                .padding(bottom = MaterialTheme.padding.large)
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDrag = { change, dragAmount ->
@@ -109,8 +117,11 @@ fun NavigationPill(
                         },
                     )
                 },
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 3.dp,
+            shape = MaterialTheme.shapes.extraLarge.copy(
+                bottomEnd = ZeroCornerSize,
+                bottomStart = ZeroCornerSize,
+            ),
+            tonalElevation = 1.3.dp,
         ) {
             NavigationBarItemBackground(currentIndex)
             Row {
@@ -127,12 +138,12 @@ private fun NavigationBarItemBackground(
     currentIndex: Int,
 ) {
     val offset: Dp by animateDpAsState(
-        targetValue = pillItemWidth * currentIndex,
+        targetValue = pillItemWidth * (currentIndex - 2),
         animationSpec = tween(500),
     )
 
     Surface(
-        modifier = Modifier.offset(x = offset),
+        modifier = Modifier.offset(x = offset).requiredWidthIn(max = pillItemWidth),
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         Box(

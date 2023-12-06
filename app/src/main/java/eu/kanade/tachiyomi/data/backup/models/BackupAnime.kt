@@ -1,4 +1,4 @@
-Spackage eu.kanade.tachiyomi.data.backup.models
+package eu.kanade.tachiyomi.data.backup.models
 
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import kotlinx.serialization.Serializable

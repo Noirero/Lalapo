@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DismissDirection
-import androidx.compose.material.DismissValue
-import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Circle
@@ -48,13 +44,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.entries.DotSeparatorText
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import me.saket.swipe.SwipeableActionsBox
 import me.saket.swipe.rememberSwipeableActionsState
@@ -87,10 +83,10 @@ fun AnimeEpisodeListItem(
     onClick: () -> Unit,
     onDownloadClick: ((EpisodeDownloadAction) -> Unit)?,
     onEpisodeSwipe: (LibraryPreferences.EpisodeSwipeAction) -> Unit,
-    modifier: Modifier = Modifier,
     // AM (FILE-SIZE) -->
     fileSize: Long?,
     // <-- AM (FILE-SIZE)
+    modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
@@ -109,6 +105,7 @@ fun AnimeEpisodeListItem(
             action = episodeSwipeStartAction,
             seen = seen,
             bookmark = bookmark,
+            fillermark = fillermark,
             downloadState = downloadStateProvider(),
             background = MaterialTheme.colorScheme.primaryContainer,
             onSwipe = { onEpisodeSwipe(episodeSwipeStartAction) },
@@ -117,6 +114,7 @@ fun AnimeEpisodeListItem(
             action = episodeSwipeEndAction,
             seen = seen,
             bookmark = bookmark,
+            fillermark = fillermark,
             downloadState = downloadStateProvider(),
             background = MaterialTheme.colorScheme.primaryContainer,
             onSwipe = { onEpisodeSwipe(episodeSwipeEndAction) },
@@ -183,7 +181,7 @@ fun AnimeEpisodeListItem(
                         if (fillermark) {
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp),
-                                contentDescription = stringResource(R.string.action_filter_fillermarked),
+                                contentDescription = stringResource(MR.strings.action_filter_fillermarked),
                                 modifier = Modifier
                                     .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
                                 tint = MaterialTheme.colorScheme.tertiary,
@@ -253,6 +251,7 @@ fun AnimeEpisodeListItem(
     }
 }
 
+@Composable
 private fun getSwipeAction(
     action: LibraryPreferences.EpisodeSwipeAction,
     seen: Boolean,
@@ -277,11 +276,17 @@ private fun getSwipeAction(
         )
         // AM (FILLER) -->
         LibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> {
-            if (!fillermark) {
+            val icon = if (!fillermark) {
                 ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp)
             } else {
                 ImageVector.vectorResource(id = R.drawable.ic_fillermark_border_24dp)
             }
+            swipeAction(
+                icon = icon,
+                background = background,
+                isUndo = bookmark,
+                onSwipe = onSwipe,
+            )
         }
         // <-- AM (FILLER)
         LibraryPreferences.EpisodeSwipeAction.Download -> swipeAction(

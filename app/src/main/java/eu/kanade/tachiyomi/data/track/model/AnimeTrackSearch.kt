@@ -48,9 +48,7 @@ class AnimeTrackSearch : AnimeTrack {
 
         if (anime_id != other.anime_id) return false
         if (sync_id != other.sync_id) return false
-        if (media_id != other.media_id) return false
-
-        return true
+        return media_id == other.media_id
     }
 
     override fun hashCode(): Int {

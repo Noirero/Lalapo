@@ -20,7 +20,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import eu.kanade.presentation.components.AppBar
@@ -43,13 +42,13 @@ import tachiyomi.presentation.core.util.plus
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun AnimeUpdateScreen(
     state: AnimeUpdatesScreenModel.State,
     snackbarHostState: SnackbarHostState,
     relativeTime: Boolean,
-    contentPadding: PaddingValues,
     lastUpdated: Long,
     onClickCover: (AnimeUpdatesItem) -> Unit,
     onSelectAll: (Boolean) -> Unit,
@@ -62,6 +61,7 @@ fun AnimeUpdateScreen(
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onUpdateSelected: (AnimeUpdatesItem, Boolean, Boolean, Boolean) -> Unit,
     onOpenEpisode: (AnimeUpdatesItem, altPlayer: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     BackHandler(enabled = state.selectionMode, onBack = { onSelectAll(false) })
 
@@ -92,8 +92,6 @@ fun AnimeUpdateScreen(
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,
-                // AM (NAVPILL)>
-                modifier = Modifier.padding(bottomSuperLargePaddingValues),
             )
         },
     ) { contentPadding ->
@@ -145,7 +143,6 @@ fun AnimeUpdateScreen(
 
 @Composable
 private fun UpdatesAppBar(
-    modifier: Modifier = Modifier,
     onUpdateLibrary: () -> Unit,
     // For action mode
     actionModeCounter: Int,
@@ -153,16 +150,17 @@ private fun UpdatesAppBar(
     onInvertSelection: () -> Unit,
     onCancelActionMode: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
+    modifier: Modifier = Modifier,
     navigateUp: (() -> Unit)? = null,
 ) {
     AppBar(
         modifier = modifier,
-        title = stringResource(R.string.label_recent_updates),
+        title = stringResource(MR.strings.label_recent_updates),
         actions = {
             IconButton(onClick = onUpdateLibrary) {
                 Icon(
                     imageVector = Icons.Outlined.Refresh,
-                    contentDescription = stringResource(R.string.action_update_library),
+                    contentDescription = stringResource(MR.strings.action_update_library),
                 )
             }
         },
@@ -172,13 +170,13 @@ private fun UpdatesAppBar(
             IconButton(onClick = onSelectAll) {
                 Icon(
                     imageVector = Icons.Outlined.SelectAll,
-                    contentDescription = stringResource(R.string.action_select_all),
+                    contentDescription = stringResource(MR.strings.action_select_all),
                 )
             }
             IconButton(onClick = onInvertSelection) {
                 Icon(
                     imageVector = Icons.Outlined.FlipToBack,
-                    contentDescription = stringResource(R.string.action_select_inverse),
+                    contentDescription = stringResource(MR.strings.action_select_inverse),
                 )
             }
         },

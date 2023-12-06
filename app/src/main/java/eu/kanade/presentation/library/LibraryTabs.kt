@@ -20,6 +20,7 @@ fun LibraryTabs(
     pagerState: PagerState,
     getNumberOfItemsForCategory: (Category) -> Int?,
     onTabItemClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     // AM (GU) -->
     val currentPageIndex = pagerState.currentPage.coerceAtMost(categories.lastIndex)
@@ -30,7 +31,6 @@ fun LibraryTabs(
         PrimaryScrollableTabRow(
             selectedTabIndex = pagerState.currentPage,
             edgePadding = 0.dp,
-            indicator = { TabIndicator(it[currentPageIndex], pagerState.currentPageOffsetFraction) },
             // TODO: use default when width is fixed upstream
             // https://issuetracker.google.com/issues/242879624
             divider = {},

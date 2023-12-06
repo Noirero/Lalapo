@@ -37,6 +37,7 @@ fun SourceFilterAnimeDialog(
     onReset: () -> Unit,
     onFilter: () -> Unit,
     onUpdate: (AnimeFilterList) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val updateFilters = { onUpdate(filters) }
 
@@ -97,13 +98,16 @@ private fun FilterItem(filter: AnimeFilter<*>, onUpdate: () -> Unit) {
             }
         }
         is AnimeFilter.TriState -> {
-            TriStateItem(
-                label = filter.name,
-                state = filter.state.toTriStateFilter(),
-            ) {
+            val onClick: ((TriState) -> Unit) = {
                 filter.state = filter.state.toTriStateFilter().next().toTriStateInt()
                 onUpdate()
             }
+
+            TriStateItem(
+                label = filter.name,
+                state = filter.state.toTriStateFilter(),
+                onClick = onClick,
+            )
         }
         is AnimeFilter.Text -> {
             TextItem(

@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.home
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -15,16 +14,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.AnimeDownloadQueueScreen
+import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
@@ -36,14 +32,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
-import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.NavigationBar
-import tachiyomi.presentation.core.components.material.NavigationRail
 import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.i18n.pluralStringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 
 object HomeScreen : Screen() {
@@ -56,12 +45,12 @@ object HomeScreen : Screen() {
 
     private val playerPreferences: PlayerPreferences by injectLazy()
 
-    val tabs = listOf(
+    private val tabs = listOf(
         AnimeLibraryTab,
         UpdatesTab(externalPlayer = playerPreferences.alwaysUseExternalPlayer().get()),
         HistoryTab(externalPlayer = playerPreferences.alwaysUseExternalPlayer().get()),
         // AM (BROWSE) -->
-        BrowseTab,
+        BrowseTab(toExtensions = false),
         // <-- AM (BROWSE)
         MoreTab,
     )
@@ -89,7 +78,6 @@ object HomeScreen : Screen() {
                             NavigationPill(tabs = tabs)
                         }
                     },
-                    overlayBottomBar = true,
                     // <-- AM (NAVPILL)
                 ) { contentPadding ->
                     Box(
@@ -117,10 +105,6 @@ object HomeScreen : Screen() {
             }
 
             val goToAnimelibTab = { tabNavigator.current = AnimeLibraryTab }
-            BackHandler(
-                enabled = tabNavigator.current != AnimeLibraryTab,
-                onBack = goToAnimelibTab,
-            )
 
             LaunchedEffect(Unit) {
                 launch {
@@ -133,7 +117,6 @@ object HomeScreen : Screen() {
                     openTabEvent.receiveAsFlow().collectLatest {
                         tabNavigator.current = when (it) {
                             is Tab.Animelib -> AnimeLibraryTab
-                            is Tab.Library -> MangaLibraryTab
                             is Tab.Updates -> UpdatesTab(
                                 externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
                             )
@@ -146,7 +129,6 @@ object HomeScreen : Screen() {
 
                         if (it is Tab.Animelib && it.animeIdToOpen != null) {
                             navigator.push(AnimeScreen(it.animeIdToOpen))
-                        }
                         }
                         if (it is Tab.More && it.toDownloads) {
                             navigator.push(AnimeDownloadQueueScreen)
@@ -171,8 +153,8 @@ object HomeScreen : Screen() {
 
     sealed interface Tab {
         data class Animelib(val animeIdToOpen: Long? = null) : Tab
-        object Updates : Tab()
-        object History : Tab()
+        data object Updates : Tab
+        data object History : Tab
         data class Browse(val toExtensions: Boolean = false) : Tab
         data class More(val toDownloads: Boolean) : Tab
     }

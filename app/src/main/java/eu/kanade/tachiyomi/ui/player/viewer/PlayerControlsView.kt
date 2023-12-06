@@ -21,6 +21,7 @@ import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.Utils
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.withUIContext
+import tachiyomi.i18n.MR
 import kotlin.math.abs
 
 class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
@@ -161,8 +162,8 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
 
     internal suspend fun updateEpisodeText() {
         val viewModel = activity.viewModel
-        val skipIntroText = activity.getString(
-            R.string.player_controls_skip_intro_text,
+        val skipIntroText = activity.stringResource(
+            MR.strings.player_controls_skip_intro_text,
             viewModel.getAnimeSkipIntroLength(),
         )
         withUIContext {
@@ -473,9 +474,9 @@ class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: Attr
         }
 
         if (isAutoplay) {
-            binding.playerInformation.text = activity.getString(R.string.enable_auto_play)
+            binding.playerInformation.text = activity.stringResource(MR.strings.enable_auto_play)
         } else {
-            binding.playerInformation.text = activity.getString(R.string.disable_auto_play)
+            binding.playerInformation.text = activity.stringResource(MR.strings.disable_auto_play)
         }
 
         if (!playerPreferences.autoplayEnabled().get() == isAutoplay) {

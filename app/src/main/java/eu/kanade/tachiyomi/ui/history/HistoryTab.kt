@@ -10,7 +10,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -30,7 +29,10 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+import tachiyomi.core.i18n.stringResource
 import tachiyomi.domain.items.episode.model.Episode
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 
 private val snackbarHostState = SnackbarHostState()
 
@@ -38,7 +40,7 @@ private val resumeLastEpisodeSeenEvent = Channel<Unit>()
 
 data class HistoryTab(
     private val externalPlayer: Boolean,
-) : Tab {
+) : Tab() {
 
     override val options: TabOptions
         @Composable
@@ -47,7 +49,7 @@ data class HistoryTab(
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_history_enter)
             return TabOptions(
                 index = 2u,
-                title = stringResource(R.string.label_recent_manga),
+                title = stringResource(MR.strings.label_recent_manga),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -109,9 +111,9 @@ data class HistoryTab(
             screenModel.events.collectLatest { e ->
                 when (e) {
                     AnimeHistoryScreenModel.Event.InternalError ->
-                        snackbarHostState.showSnackbar(context.getString(R.string.internal_error))
+                        snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
                     AnimeHistoryScreenModel.Event.HistoryCleared ->
-                        snackbarHostState.showSnackbar(context.getString(R.string.clear_history_completed))
+                        snackbarHostState.showSnackbar(context.stringResource(MR.strings.clear_history_completed))
                     is AnimeHistoryScreenModel.Event.OpenEpisode -> openEpisode(context, e.episode)
                 }
             }
@@ -128,7 +130,7 @@ data class HistoryTab(
         if (episode != null) {
             MainActivity.startPlayerActivity(context, episode.animeId, episode.id, externalPlayer)
         } else {
-            snackbarHostState.showSnackbar(context.getString(R.string.no_next_episode))
+            snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_episode))
         }
     }
 }

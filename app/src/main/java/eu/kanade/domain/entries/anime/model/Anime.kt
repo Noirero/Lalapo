@@ -23,7 +23,7 @@ fun Anime.episodesFiltered(): Boolean {
         downloadedFilter != TriState.DISABLED ||
         bookmarkedFilter != TriState.DISABLED ||
         // AM (FILLER) -->
-        fillermarkedFilter != TriStateFilter.DISABLED
+        fillermarkedFilter != TriState.DISABLED
         // <-- AM (FILLER)
 }
 fun Anime.forceDownloaded(): Boolean {

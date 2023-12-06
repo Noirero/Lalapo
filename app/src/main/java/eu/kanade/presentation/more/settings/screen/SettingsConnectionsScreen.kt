@@ -2,7 +2,6 @@
 package eu.kanade.presentation.more.settings.screen
 
 import android.content.Context
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,14 +39,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
-import eu.kanade.tachiyomi.data.connections.ConnectionsService
+import eu.kanade.tachiyomi.data.connections.BaseConnection
 import eu.kanade.tachiyomi.util.system.openDiscordLoginActivity
 import eu.kanade.tachiyomi.util.system.toast
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.withUIContext
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -56,8 +56,7 @@ object SettingsConnectionsScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    @StringRes
-    override fun getTitleRes() = R.string.pref_category_connections
+    override fun getTitleRes() = MR.strings.pref_category_connections
 
     @Composable
     override fun getPreferences(): List<Preference> {
@@ -80,18 +79,18 @@ object SettingsConnectionsScreen : SearchableSettings {
 
         return listOf(
             Preference.PreferenceGroup(
-                title = stringResource(R.string.special_services),
+                title = stringResource(MR.strings.special_services),
                 preferenceItems = listOf(
                     Preference.PreferenceItem.ConnectionsPreference(
-                        title = stringResource(connectionsManager.discord.nameRes()),
+                        title = connectionsManager.discord.name,
                         service = connectionsManager.discord,
                         login = {
                             context.openDiscordLoginActivity()
                         },
                         openSettings = { navigator.push(SettingsDiscordScreen) },
                     ),
-                    Preference.PreferenceItem.InfoPreference(stringResource(R.string.connections_discord_info)),
-                    Preference.PreferenceItem.InfoPreference(stringResource(R.string.connections_info)),
+                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connections_discord_info)),
+                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connections_info)),
                 ),
             ),
         )
@@ -99,8 +98,8 @@ object SettingsConnectionsScreen : SearchableSettings {
 
     @Composable
     private fun ConnectionsLoginDialog(
-        service: ConnectionsService,
-        @StringRes uNameStringRes: Int,
+        service: BaseConnection,
+        uNameStringRes: StringResource,
         onDismissRequest: () -> Unit,
     ) {
         val context = LocalContext.current
@@ -117,15 +116,15 @@ object SettingsConnectionsScreen : SearchableSettings {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = stringResource(
-                            R.string.login_title,
-                            stringResource(service.nameRes()),
+                            MR.strings.login_title,
+                            service.name,
                         ),
                         modifier = Modifier.weight(1f),
                     )
                     IconButton(onClick = onDismissRequest) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
-                            contentDescription = stringResource(R.string.action_close),
+                            contentDescription = stringResource(MR.strings.action_close),
                         )
                     }
                 }
@@ -147,7 +146,7 @@ object SettingsConnectionsScreen : SearchableSettings {
                         modifier = Modifier.fillMaxWidth(),
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text(text = stringResource(R.string.password)) },
+                        label = { Text(text = stringResource(MR.strings.password)) },
                         trailingIcon = {
                             IconButton(onClick = { hidePassword = !hidePassword }) {
                                 Icon(
@@ -197,8 +196,8 @@ object SettingsConnectionsScreen : SearchableSettings {
                         }
                     },
                 ) {
-                    val id = if (processing) R.string.loading else R.string.login
-                    Text(text = stringResource(id))
+                    val stringRes = if (processing) MR.strings.loading else MR.strings.login
+                    Text(text = stringResource(stringRes))
                 }
             },
         )
@@ -206,13 +205,13 @@ object SettingsConnectionsScreen : SearchableSettings {
 
     private suspend fun checkLogin(
         context: Context,
-        service: ConnectionsService,
+        service: BaseConnection,
         username: String,
         password: String,
     ): Boolean {
         return try {
             service.login(username, password)
-            withUIContext { context.toast(R.string.login_success) }
+            withUIContext { context.toast(MR.strings.login_success) }
             true
         } catch (e: Throwable) {
             service.logout()
@@ -224,7 +223,7 @@ object SettingsConnectionsScreen : SearchableSettings {
 
 @Composable
 internal fun ConnectionsLogoutDialog(
-    service: ConnectionsService,
+    service: BaseConnection,
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -233,7 +232,7 @@ internal fun ConnectionsLogoutDialog(
         onDismissRequest = onDismissRequest,
         title = {
             Text(
-                text = stringResource(R.string.logout_title, stringResource(service.nameRes())),
+                text = stringResource(MR.strings.logout_title, service.name),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -244,14 +243,14 @@ internal fun ConnectionsLogoutDialog(
                     modifier = Modifier.weight(1f),
                     onClick = onDismissRequest,
                 ) {
-                    Text(text = stringResource(R.string.action_cancel))
+                    Text(text = stringResource(MR.strings.action_cancel))
                 }
                 Button(
                     modifier = Modifier.weight(1f),
                     onClick = {
                         service.logout()
                         onDismissRequest()
-                        context.toast(R.string.logout_success)
+                        context.toast(MR.strings.logout_success)
                         navigator.pop()
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -259,7 +258,7 @@ internal fun ConnectionsLogoutDialog(
                         contentColor = MaterialTheme.colorScheme.onError,
                     ),
                 ) {
-                    Text(text = stringResource(R.string.logout))
+                    Text(text = stringResource(MR.strings.logout))
                 }
             }
         },
@@ -267,11 +266,11 @@ internal fun ConnectionsLogoutDialog(
 }
 
 private data class LoginConnectionsDialog(
-    val service: ConnectionsService,
-    @StringRes val uNameStringRes: Int,
+    val service: BaseConnection,
+    val uNameStringRes: StringResource,
 )
 
 internal data class LogoutConnectionsDialog(
-    val service: ConnectionsService,
+    val service: BaseConnection,
 )
 // <-- AM (CONNECTIONS)

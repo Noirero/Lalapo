@@ -30,7 +30,7 @@ object SettingsBrowseScreen : SearchableSettings {
                 preferenceItems = listOf(
                     Preference.PreferenceItem.SwitchPreference(
                         pref = sourcePreferences.hideInAnimeLibraryItems(),
-                        title = stringResource(MR.strings.pref_hide_in_anime_library_items),
+                        title = stringResource(MR.strings.pref_hide_in_library_items),
                     ),
                 ),
             ),

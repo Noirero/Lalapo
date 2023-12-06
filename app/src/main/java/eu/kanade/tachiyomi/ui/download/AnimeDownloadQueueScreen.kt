@@ -1,22 +1,22 @@
 package eu.kanade.tachiyomi.ui.download
 
 import android.view.LayoutInflater
-import android.view.ViewGroup
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowRight
+import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Pause
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -34,40 +34,40 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
-import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.OverflowMenu
-import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadService
+import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadAdapter
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadQueueScreenModel
+import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.util.lang.launchUI
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Pill
+import tachiyomi.presentation.core.components.material.ExtendedFloatingActionButton
+import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import kotlin.math.roundToInt
 
-object AnimeDownloadQueueScreen : Screen {
+object AnimeDownloadQueueScreen : Screen() {
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val screenModel = rememberScreenModel { AnimeDownloadQueueScreenModel() }
@@ -106,7 +106,7 @@ object AnimeDownloadQueueScreen : Screen {
                     titleContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = stringResource(R.string.label_download_queue),
+                                text = stringResource(MR.strings.label_download_queue),
                                 maxLines = 1,
                                 modifier = Modifier.weight(1f, false),
                                 overflow = TextOverflow.Ellipsis,
@@ -126,70 +126,105 @@ object AnimeDownloadQueueScreen : Screen {
                     navigateUp = navigator::pop,
                     actions = {
                         if (downloadList.isNotEmpty()) {
-                            OverflowMenu { closeMenu ->
+                            var sortExpanded by remember { mutableStateOf(false) }
+                            val onDismissRequest = { sortExpanded = false }
+                            DropdownMenu(
+                                expanded = sortExpanded,
+                                onDismissRequest = onDismissRequest,
+                            ) {
+
+                                var expandUploadDateSort by remember { mutableStateOf(false) }
+                                val closeUploadDateSort = { expandUploadDateSort = false }
+
                                 DropdownMenuItem(
-                                    text = { Text(text = stringResource(R.string.action_reorganize_by)) },
-                                    children = {
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(R.string.action_order_by_upload_date)) },
-                                            children = {
-                                                androidx.compose.material3.DropdownMenuItem(
-                                                    text = { Text(text = stringResource(R.string.action_newest)) },
-                                                    onClick = {
-                                                        screenModel.reorderQueue(
-                                                            { it.download.episode.dateUpload },
-                                                            true,
-                                                        )
-                                                        closeMenu()
-                                                    },
-                                                )
-                                                androidx.compose.material3.DropdownMenuItem(
-                                                    text = { Text(text = stringResource(R.string.action_oldest)) },
-                                                    onClick = {
-                                                        screenModel.reorderQueue(
-                                                            { it.download.episode.dateUpload },
-                                                            false,
-                                                        )
-                                                        closeMenu()
-                                                    },
-                                                )
-                                            },
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(R.string.action_order_by_chapter_number)) },
-                                            children = {
-                                                androidx.compose.material3.DropdownMenuItem(
-                                                    text = { Text(text = stringResource(R.string.action_asc)) },
-                                                    onClick = {
-                                                        screenModel.reorderQueue(
-                                                            { it.download.episode.episodeNumber },
-                                                            false,
-                                                        )
-                                                        closeMenu()
-                                                    },
-                                                )
-                                                androidx.compose.material3.DropdownMenuItem(
-                                                    text = { Text(text = stringResource(R.string.action_desc)) },
-                                                    onClick = {
-                                                        screenModel.reorderQueue(
-                                                            { it.download.episode.episodeNumber },
-                                                            true,
-                                                        )
-                                                        closeMenu()
-                                                    },
-                                                )
-                                            },
+                                    text = { Text(text = stringResource(MR.strings.action_order_by_upload_date)) },
+                                    onClick = { expandUploadDateSort = true },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.ArrowRight,
+                                            contentDescription = null,
                                         )
                                     },
                                 )
-                                androidx.compose.material3.DropdownMenuItem(
-                                    text = { Text(text = stringResource(R.string.action_cancel_all)) },
-                                    onClick = {
-                                        screenModel.clearQueue()
-                                        closeMenu()
+                                DropdownMenu(
+                                    expanded = expandUploadDateSort,
+                                    onDismissRequest = closeUploadDateSort,
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(MR.strings.action_newest)) },
+                                        onClick = {
+                                            screenModel.reorderQueue(
+                                                { it.download.episode.dateUpload },
+                                                true,
+                                            )
+                                            closeUploadDateSort()
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(MR.strings.action_oldest)) },
+                                        onClick = {
+                                            screenModel.reorderQueue(
+                                                { it.download.episode.dateUpload },
+                                                false,
+                                            )
+                                            closeUploadDateSort()
+                                        },
+                                    )
+                                }
+
+                                var exandEpisodeNumberSort by remember { mutableStateOf(false) }
+                                val closeEpisodeNumberSort = { exandEpisodeNumberSort = false }
+
+                                DropdownMenuItem(
+                                    text = { Text(text = stringResource(MR.strings.action_order_by_episode_number)) },
+                                    onClick = { exandEpisodeNumberSort = true },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.ArrowRight,
+                                            contentDescription = null,
+                                        )
                                     },
                                 )
+                                DropdownMenu(
+                                    expanded = exandEpisodeNumberSort,
+                                    onDismissRequest = closeEpisodeNumberSort,
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(MR.strings.action_asc)) },
+                                        onClick = {
+                                            screenModel.reorderQueue(
+                                                { it.download.episode.episodeNumber },
+                                                false,
+                                            )
+                                            closeEpisodeNumberSort()
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(text = stringResource(MR.strings.action_desc)) },
+                                        onClick = {
+                                            screenModel.reorderQueue(
+                                                { it.download.episode.episodeNumber },
+                                                true,
+                                            )
+                                            closeEpisodeNumberSort()
+                                        },
+                                    )
+                                }
                             }
+
+                            AppBarActions(
+                                persistentListOf(
+                                    AppBar.Action(
+                                        title = stringResource(MR.strings.action_sort),
+                                        icon = Icons.AutoMirrored.Outlined.Sort,
+                                        onClick = { sortExpanded = true },
+                                    ),
+                                    AppBar.OverflowAction(
+                                        title = stringResource(MR.strings.action_cancel_all),
+                                        onClick = { screenModel.clearQueue() },
+                                    ),
+                                ),
+                            )
                         }
                     },
                     scrollBehavior = scrollBehavior,
@@ -201,13 +236,13 @@ object AnimeDownloadQueueScreen : Screen {
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
-                    val isRunning by AnimeDownloadService.isRunning.collectAsState()
+                    val isRunning by screenModel.isDownloaderRunning.collectAsState()
                     ExtendedFloatingActionButton(
                         text = {
                             val id = if (isRunning) {
-                                R.string.action_pause
+                                MR.strings.action_pause
                             } else {
-                                R.string.action_resume
+                                MR.strings.action_resume
                             }
                             Text(text = stringResource(id))
                         },
@@ -221,25 +256,24 @@ object AnimeDownloadQueueScreen : Screen {
                         },
                         onClick = {
                             if (isRunning) {
-                                AnimeDownloadService.stop(context)
                                 screenModel.pauseDownloads()
                             } else {
-                                AnimeDownloadService.start(context)
+                                screenModel.startDownloads()
                             }
                         },
                         expanded = fabExpanded,
-                        modifier = Modifier.navigationBarsPadding(),
                     )
                 }
             },
         ) { contentPadding ->
             if (downloadList.isEmpty()) {
                 EmptyScreen(
-                    textResource = R.string.information_no_downloads,
+                    stringRes = MR.strings.information_no_downloads,
                     modifier = Modifier.padding(contentPadding),
                 )
                 return@Scaffold
             }
+
             val density = LocalDensity.current
             val layoutDirection = LocalLayoutDirection.current
             val left = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx().roundToInt() }
@@ -249,13 +283,13 @@ object AnimeDownloadQueueScreen : Screen {
 
             Box(modifier = Modifier.nestedScroll(nestedScrollConnection)) {
                 AndroidView(
+                    modifier = Modifier.fillMaxWidth(),
                     factory = { context ->
                         screenModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
                         screenModel.adapter = AnimeDownloadAdapter(screenModel.listener)
-                        screenModel.controllerBinding.recycler.adapter = screenModel.adapter
+                        screenModel.controllerBinding.root.adapter = screenModel.adapter
                         screenModel.adapter?.isHandleDragEnabled = true
-                        screenModel.adapter?.fastScroller = screenModel.controllerBinding.fastScroller
-                        screenModel.controllerBinding.recycler.layoutManager = LinearLayoutManager(context)
+                        screenModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
 
                         ViewCompat.setNestedScrollingEnabled(screenModel.controllerBinding.root, true)
 
@@ -271,21 +305,13 @@ object AnimeDownloadQueueScreen : Screen {
                         screenModel.controllerBinding.root
                     },
                     update = {
-                        screenModel.controllerBinding.recycler
+                        screenModel.controllerBinding.root
                             .updatePadding(
                                 left = left,
                                 top = top,
                                 right = right,
                                 bottom = bottom,
                             )
-
-                        screenModel.controllerBinding.fastScroller
-                            .updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                                leftMargin = left
-                                topMargin = top
-                                rightMargin = right
-                                bottomMargin = bottom
-                            }
 
                         screenModel.adapter?.updateDataSet(downloadList)
                     },

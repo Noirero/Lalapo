@@ -5,12 +5,9 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import androidx.preference.PreferenceManager
-import data.Manga_sync
-import data.Mangas
 import dataanime.Anime_sync
 import dataanime.Animes
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
-import eu.kanade.domain.entries.manga.interactor.UpdateManga
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
@@ -25,9 +22,7 @@ import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
-import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
 import eu.kanade.tachiyomi.source.anime.model.copyFrom
-import eu.kanade.tachiyomi.source.manga.model.copyFrom
 import eu.kanade.tachiyomi.util.BackupUtil
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -36,11 +31,8 @@ import kotlinx.coroutines.isActive
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.system.logcat
 import tachiyomi.data.AnimeUpdateStrategyColumnAdapter
-import tachiyomi.data.MangaUpdateStrategyColumnAdapter
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.data.handlers.manga.MangaDatabaseHandler
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.category.manga.interactor.GetMangaCategories
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.history.anime.model.AnimeHistoryUpdate
@@ -49,7 +41,6 @@ import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.track.anime.model.AnimeTrack
-import tachiyomi.domain.track.manga.model.MangaTrack
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -59,17 +50,12 @@ import java.time.ZonedDateTime
 import java.util.Date
 import java.util.Locale
 import kotlin.math.max
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 
 class BackupRestorer(
     private val context: Context,
     private val notifier: BackupNotifier,
 ) {
-
-    private val mangaHandler: MangaDatabaseHandler = Injekt.get()
-    private val updateManga: UpdateManga = Injekt.get()
-    private val getMangaCategories: GetMangaCategories = Injekt.get()
-    private val getChaptersByMangaId: GetChaptersByMangaId = Injekt.get()
-    private val mangaFetchInterval: MangaFetchInterval = Injekt.get()
 
     private val animeHandler: AnimeDatabaseHandler = Injekt.get()
     private val updateAnime: UpdateAnime = Injekt.get()
@@ -79,8 +65,11 @@ class BackupRestorer(
 
     private val libraryPreferences: LibraryPreferences = Injekt.get()
 
+    // AM (CU) -->
+    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get()
+    // <-- AM (CU)
+
     private var now = ZonedDateTime.now()
-    private var currentMangaFetchWindow = mangaFetchInterval.getWindow(now)
     private var currentAnimeFetchWindow = animeFetchInterval.getWindow(now)
 
     private var restoreAmount = 0
@@ -165,7 +154,6 @@ class BackupRestorer(
         animeSourceMapping = backupAnimeMaps.associate { it.sourceId to it.name }
 
         now = ZonedDateTime.now()
-        currentMangaFetchWindow = mangaFetchInterval.getWindow(now)
         currentAnimeFetchWindow = animeFetchInterval.getWindow(now)
 
         return coroutineScope {
@@ -340,7 +328,7 @@ class BackupRestorer(
                 episodeFlags = anime.episodeFlags,
                 coverLastModified = anime.coverLastModified,
                 dateAdded = anime.dateAdded,
-                animeId = anime.id!!,
+                animeId = anime.id,
                 updateStrategy = anime.updateStrategy.let(AnimeUpdateStrategyColumnAdapter::encode),
             )
         }
@@ -427,7 +415,7 @@ class BackupRestorer(
                     episode.seen,
                     episode.bookmark,
                     // AM (FILLER) -->
-                    episode.filelrmark,
+                    episode.fillermark,
                     // <-- AM (FILLER)
                     episode.lastSecondSeen,
                     episode.totalSeconds,
@@ -498,7 +486,7 @@ class BackupRestorer(
                 description = anime.description,
                 genre = anime.genre,
                 title = anime.title,
-                status = anime.status.toLong(),
+                status = anime.status,
                 thumbnailUrl = anime.thumbnailUrl,
                 favorite = anime.favorite,
                 lastUpdate = anime.lastUpdate,
@@ -644,12 +632,12 @@ class BackupRestorer(
      */
     private suspend fun restoreAnimeTracking(
         anime: Anime,
-        tracks: List<tachiyomi.domain.track.anime.model.AnimeTrack>,
+        tracks: List<AnimeTrack>,
     ) {
         // Get tracks from database
         val dbTracks = animeHandler.awaitList { anime_syncQueries.getTracksByAnimeId(anime.id) }
         val toUpdate = mutableListOf<Anime_sync>()
-        val toInsert = mutableListOf<tachiyomi.domain.track.anime.model.AnimeTrack>()
+        val toInsert = mutableListOf<AnimeTrack>()
 
         tracks
             // Fix foreign keys with the current manga id
@@ -731,7 +719,6 @@ class BackupRestorer(
         preferences: List<BackupPreference>,
         sharedPrefs: SharedPreferences,
     ) {
-        MangaLibraryUpdateJob.setupTask(context)
         AnimeLibraryUpdateJob.setupTask(context)
         BackupCreateJob.setupTask(context)
 
@@ -807,9 +794,9 @@ class BackupRestorer(
     }
 
     // AM (CU) -->
-    internal fun restoreEditedInfo(mangaJson: CustomMangaInfo?) {
+    private fun restoreEditedInfo(mangaJson: CustomAnimeInfo?) {
         mangaJson ?: return
-        setCustomMangaInfo.set(mangaJson)
+        setCustomAnimeInfo.set(mangaJson)
     }
     // <-- AM (CU)
 

@@ -47,6 +47,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInteropFilter
@@ -78,11 +79,12 @@ fun HeadingItem(
 @Composable
 fun HeadingItem(
     text: String,
+    modifier: Modifier = Modifier,
 ) {
     Text(
         text = text,
         style = MaterialTheme.typography.header,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(
                 horizontal = SettingsItemsPaddings.Horizontal,
@@ -95,6 +97,7 @@ fun HeadingItem(
 fun IconItem(
     label: String,
     icon: ImageVector,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     BaseSettingsItem(
@@ -114,6 +117,7 @@ fun IconItem(
 fun SortItem(
     label: String,
     sortDescending: Boolean?,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val arrowIcon = when (sortDescending) {
@@ -156,6 +160,7 @@ fun CheckboxItem(
 fun CheckboxItem(
     label: String,
     checked: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     BaseSettingsItem(
@@ -174,7 +179,9 @@ fun CheckboxItem(
 fun RadioItem(
     label: String,
     selected: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
+
 ) {
     BaseSettingsItem(
         label = label,
@@ -195,12 +202,13 @@ fun SliderItem(
     valueText: String,
     onChange: (Int) -> Unit,
     max: Int,
+    modifier: Modifier = Modifier,
     min: Int = 0,
 ) {
     val haptic = LocalHapticFeedback.current
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(
                 horizontal = SettingsItemsPaddings.Horizontal,
@@ -239,6 +247,7 @@ fun SelectItem(
     options: Array<out Any?>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -247,7 +256,7 @@ fun SelectItem(
         onExpandedChange = { expanded = !expanded },
     ) {
         OutlinedTextField(
-            modifier = Modifier
+            modifier = modifier
                 .menuAnchor()
                 .fillMaxWidth()
                 .padding(
@@ -290,11 +299,12 @@ fun SelectItem(
 fun TriStateItem(
     label: String,
     state: TriState,
-    enabled: Boolean = true,
     onClick: ((TriState) -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clickable(
                 enabled = enabled && onClick != null,
                 onClick = {
@@ -344,8 +354,8 @@ fun <T> SelectItem(
     label: String,
     options: Array<T>,
     selectedIndex: Int,
-    modifier: Modifier = Modifier,
     onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
     toString: (T) -> String = { it.toString() },
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -396,8 +406,8 @@ fun <T> SelectItem(
 
 @Composable
 fun RepeatingIconButton(
-    modifier: Modifier = Modifier,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     maxDelayMillis: Long = 750,
@@ -444,8 +454,9 @@ fun OutlinedNumericChooser(
     suffix: String,
     value: Int,
     step: Int,
-    min: Int? = null,
     onValueChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    min: Int? = null,
 ) {
     var currentValue = value
 
@@ -464,7 +475,7 @@ fun OutlinedNumericChooser(
 
         OutlinedTextField(
             value = "%d".format(currentValue),
-            modifier = Modifier.widthIn(min = 140.dp),
+            modifier = modifier.widthIn(min = 140.dp),
 
             onValueChange = {
                 // Don't allow multiple decimal points, non-numeric characters, or leading zeros
@@ -491,10 +502,11 @@ fun OutlinedNumericChooser(
 fun TextItem(
     label: String,
     value: String,
+    modifier: Modifier = Modifier,
     onChange: (String) -> Unit,
 ) {
     OutlinedTextField(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = SettingsItemsPaddings.Horizontal, vertical = 4.dp),
         label = { Text(text = label) },
@@ -507,12 +519,13 @@ fun TextItem(
 @Composable
 fun SettingsChipRow(
     labelRes: StringResource,
+    modifier: Modifier = Modifier,
     content: @Composable FlowRowScope.() -> Unit,
 ) {
     Column {
         HeadingItem(labelRes)
         FlowRow(
-            modifier = Modifier.padding(
+            modifier = modifier.padding(
                 start = SettingsItemsPaddings.Horizontal,
                 top = 0.dp,
                 end = SettingsItemsPaddings.Horizontal,
@@ -525,7 +538,11 @@ fun SettingsChipRow(
 }
 
 @Composable
-fun SettingsIconGrid(labelRes: StringResource, content: LazyGridScope.() -> Unit) {
+fun SettingsIconGrid(
+    labelRes: StringResource,
+    modifier: Modifier = Modifier,
+    content: LazyGridScope.() -> Unit
+) {
     Column {
         HeadingItem(labelRes)
         LazyVerticalGrid(
@@ -566,3 +583,30 @@ private fun BaseSettingsItem(
         )
     }
 }
+
+// AM (GU) -->
+@Composable
+fun IconItem(
+    label: String,
+    icon: Painter,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    BaseSettingsItem(
+        label = label,
+        widget = {
+            Icon(
+                painter = icon,
+                contentDescription = label,
+                tint = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+            )
+        },
+        onClick = onClick,
+    )
+}
+// <-- AM (GU)

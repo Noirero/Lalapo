@@ -5,7 +5,6 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.data.track.model.MangaTrackSearch
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import okhttp3.OkHttpClient
@@ -22,7 +21,6 @@ data class DummyTracker(
     val valCompletionStatus: Int = 2,
     val valScoreList: ImmutableList<String> = (0..10).map(Int::toString).toImmutableList(),
     val val10PointScore: Double = 5.4,
-    val valMangaSearchResults: List<MangaTrackSearch> = listOf(),
     val valAnimeSearchResults: List<AnimeTrackSearch> = listOf(),
 ) : Tracker {
 

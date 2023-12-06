@@ -105,6 +105,7 @@ import uy.kohesive.injekt.api.get
 import java.io.File
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import tachiyomi.core.util.lang.launchIO
 import `is`.xyz.mpv.MPVView.Chapter as VideoChapter
 
 class PlayerActivity : BaseActivity() {

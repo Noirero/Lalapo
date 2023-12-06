@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,6 +40,7 @@ import eu.kanade.presentation.entries.ItemCover
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadIndicator
 import eu.kanade.presentation.util.relativeTimeSpanString
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
 import tachiyomi.core.util.lang.withIOContext
@@ -52,6 +54,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import java.util.concurrent.TimeUnit
+import uy.kohesive.injekt.injectLazy
 
 private val preferences: DownloadPreferences by injectLazy()
 private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()
@@ -78,7 +81,6 @@ fun LazyListScope.animeUpdatesLastUpdatedItem(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.animeUpdatesUiItems(
     uiModels: List<AnimeUpdatesUiModel>,
     selectionMode: Boolean,
@@ -166,10 +168,10 @@ fun AnimeUpdatesUiItem(
     // Download Indicator
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
-    modifier: Modifier = Modifier,
     // AM (FILE-SIZE) -->
     updatesItem: AnimeUpdatesItem,
     // <-- AM (FILE-SIZE)
+    modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
     val textAlpha = if (update.seen) ReadItemAlpha else 1f

@@ -34,6 +34,12 @@ import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.domain.source.anime.model.installedExtension
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
+import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreen
+import eu.kanade.tachiyomi.ui.browse.anime.extension.details.AnimeExtensionDetailsScreen
+import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceScreen
+import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesFilterScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreenModel.Listing
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
@@ -45,20 +51,20 @@ import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.ExtendedFloatingActionButton
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.SecondaryItemAlpha
-import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.header
+import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.isScrollingDown
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 @Composable
 fun AnimeSourcesScreen(
-    state: AnimeSourcesState,
+    state: AnimeSourcesScreenModel.State,
     // AM (BROWSE) -->
     navigator: Navigator,
     // <-- AM (BROWSE)
@@ -68,29 +74,30 @@ fun AnimeSourcesScreen(
     // AM (BROWSE) -->
     sourcePreferences: SourcePreferences,
     // <-- AM (BROWSE)
+    modifier: Modifier = Modifier,
 ) {
     // AM (BROWSE) -->
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
-                titleContent = { AppBarTitle(stringResource(R.string.browse)) },
+                titleContent = { AppBarTitle(stringResource(MR.strings.browse)) },
                 actions = {
                     IconButton(onClick = { navigator.push(GlobalAnimeSearchScreen()) }) {
                         Icon(
                             Icons.Outlined.TravelExplore,
-                            contentDescription = stringResource(R.string.action_global_search),
+                            contentDescription = stringResource(MR.strings.action_global_search),
                         )
                     }
                     IconButton(onClick = { navigator.push(AnimeSourcesFilterScreen()) }) {
                         Icon(
                             Icons.Outlined.FilterList,
-                            contentDescription = stringResource(R.string.action_filter),
+                            contentDescription = stringResource(MR.strings.action_filter),
                         )
                     }
                     IconButton(onClick = { navigator.push(MigrateAnimeSourceScreen()) }) {
                         Icon(
                             Icons.Outlined.SwapCalls,
-                            contentDescription = stringResource(R.string.action_migrate),
+                            contentDescription = stringResource(MR.strings.action_migrate),
                         )
                     }
                 },
@@ -102,7 +109,7 @@ fun AnimeSourcesScreen(
         when {
             state.isLoading -> LoadingScreen(modifier = Modifier.padding(contentPadding))
             state.isEmpty -> EmptyScreen(
-                textResource = R.string.source_empty_screen,
+                stringRes = MR.strings.source_empty_screen,
                 modifier = Modifier.padding(contentPadding),
             )
             else -> {
@@ -111,7 +118,7 @@ fun AnimeSourcesScreen(
                     floatingActionButton = {
                         // AM (BROWSE) -->
                         val extensionUpdateCount by sourcePreferences.animeExtensionUpdatesCount().collectAsState()
-                        val buttonText = if (extensionUpdateCount != 0) R.string.ext_update else R.string.ext_install
+                        val buttonText = if (extensionUpdateCount != 0) MR.strings.ext_update else MR.strings.ext_install
                         val buttonIcon = if (extensionUpdateCount != 0) Icons.Filled.Upload else Icons.Filled.Download
                         ExtendedFloatingActionButton(
                             text = { Text(text = stringResource(buttonText)) },
@@ -124,16 +131,12 @@ fun AnimeSourcesScreen(
                             },
                             onClick = { navigator.push(AnimeExtensionsScreen()) },
                             expanded = !(extensionsListState.isScrollingDown()) || extensionUpdateCount != 0,
-                            // AM (NAVPILL) -->
-                            modifier = Modifier.offset(y = -MaterialTheme.padding.superLarge),
-                            // <-- AM (NAVPILL)
                         )
                     },
                 ) {
                     ScrollbarLazyColumn(
                         state = extensionsListState,
-                        // AM (NAVPILL)>
-                        contentPadding = contentPadding + topSmallPaddingValues + bottomSuperLargePaddingValues + bottomSuperLargePaddingValues,
+                        contentPadding = contentPadding + topSmallPaddingValues,
                     ) {
                         items(
                             items = state.items,
@@ -153,12 +156,12 @@ fun AnimeSourcesScreen(
                             when (model) {
                                 is AnimeSourceUiModel.Header -> {
                                     AnimeSourceHeader(
-                                        modifier = Modifier.animateItemPlacement(),
+                                        // modifier = Modifier.animateItemPlacement(),
                                         language = model.language,
                                     )
                                 }
                                 is AnimeSourceUiModel.Item -> AnimeSourceItem(
-                                    modifier = Modifier.animateItemPlacement(),
+                                    // modifier = Modifier.animateItemPlacement(),
                                     navigator = navigator,
                                     source = model.source,
                                     onClickItem = onClickItem,
@@ -193,7 +196,6 @@ private fun AnimeSourceHeader(
 
 @Composable
 private fun AnimeSourceItem(
-    modifier: Modifier = Modifier,
     // AM (BROWSE) -->
     navigator: Navigator,
     // <-- AM (BROWSE)
@@ -214,7 +216,7 @@ private fun AnimeSourceItem(
                 TextButton(
                     onClick = { onClickItem(source, Listing.Latest) },
                     modifier = if (source.id == LocalAnimeSource.ID) {
-                        modifier.padding(end = 48.dp)
+                        Modifier.padding(end = 48.dp)
                     } else {
                         Modifier
                     },
@@ -284,7 +286,7 @@ private fun AnimeSourceSettingsButton(
         Icon(
             imageVector = Icons.Outlined.Settings,
             tint = MaterialTheme.colorScheme.primary,
-            contentDescription = stringResource(R.string.settings),
+            contentDescription = stringResource(MR.strings.settings),
         )
     }
 }
@@ -326,7 +328,7 @@ fun AnimeSourceOptionsDialog(
                     // AM (BROWSE) -->
                     if (source.installedExtension.hasUpdate) {
                         Text(
-                            text = stringResource(id = R.string.ext_update),
+                            text = stringResource(resource = MR.strings.ext_update),
                             modifier = Modifier
                                 .clickable(onClick = onClickUpdate)
                                 .fillMaxWidth()
@@ -334,7 +336,7 @@ fun AnimeSourceOptionsDialog(
                         )
                     }
                     Text(
-                        text = stringResource(id = R.string.ext_uninstall),
+                        text = stringResource(resource = MR.strings.ext_uninstall),
                         modifier = Modifier
                             .clickable(onClick = onClickUninstall)
                             .fillMaxWidth()

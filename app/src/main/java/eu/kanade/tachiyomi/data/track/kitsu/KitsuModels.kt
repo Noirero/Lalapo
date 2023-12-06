@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.track.kitsu
 import androidx.annotation.CallSuper
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull

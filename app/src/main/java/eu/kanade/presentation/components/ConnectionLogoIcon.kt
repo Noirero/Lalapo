@@ -14,12 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import eu.kanade.tachiyomi.data.connections.ConnectionsService
+import eu.kanade.tachiyomi.data.connections.BaseConnection
 import tachiyomi.presentation.core.util.clickableNoIndication
 
 @Composable
 fun ConnectionsLogoIcon(
-    service: ConnectionsService,
+    service: BaseConnection,
     onClick: (() -> Unit)? = null,
 ) {
     val modifier = if (onClick != null) {
@@ -37,7 +37,7 @@ fun ConnectionsLogoIcon(
     ) {
         Image(
             painter = painterResource(service.getLogo()),
-            contentDescription = stringResource(service.nameRes()),
+            contentDescription = service.name,
         )
     }
 }

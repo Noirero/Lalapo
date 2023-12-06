@@ -43,9 +43,7 @@ data class AnimeDownloadHeaderItem(
         if (name != other.name) return false
         if (size != other.size) return false
         if (subItemsCount != other.subItemsCount) return false
-        if (subItems !== other.subItems) return false
-
-        return true
+        return subItems === other.subItems
     }
 
     override fun hashCode(): Int {

@@ -151,7 +151,7 @@ object Notifications {
                     setShowBadge(false)
                 },
                 buildNotificationChannel(CHANNEL_NEW_EPISODES, IMPORTANCE_DEFAULT) {
-                    setName(context.getString(MR.string.channel_new_episodes))
+                    setName(context.stringResource(MR.strings.channel_new_episodes))
                 },
                 buildNotificationChannel(CHANNEL_DOWNLOADER_PROGRESS, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_progress))
@@ -179,7 +179,7 @@ object Notifications {
                 },
                 // AM (DISCORD) -->
                 buildNotificationChannel(CHANNEL_DISCORD_RPC, IMPORTANCE_LOW) {
-                    setName(context.getString(R.string.pref_discord_rpc))
+                    setName(context.stringResource(MR.strings.pref_discord_rpc))
                 },
                 // <-- AM (DISCORD)
                 buildNotificationChannel(CHANNEL_APP_UPDATE, IMPORTANCE_DEFAULT) {

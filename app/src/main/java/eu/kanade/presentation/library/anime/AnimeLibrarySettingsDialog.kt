@@ -13,8 +13,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.util.fastForEach
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibrarySettingsScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.preference.TriState
@@ -27,6 +31,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
+import tachiyomi.presentation.core.components.IconItem
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.SortItem
@@ -42,6 +47,7 @@ fun AnimeLibrarySettingsDialog(
     // AM (GU) -->
     hasCategories: Boolean,
     // <-- AM (GU)
+    modifier: Modifier = Modifier,
 ) {
     TabbedDialog(
         onDismissRequest = onDismissRequest,
@@ -50,7 +56,7 @@ fun AnimeLibrarySettingsDialog(
             stringResource(MR.strings.action_sort),
             stringResource(MR.strings.action_display),
             // AM (GU) -->
-            stringResource(MR.string.group),
+            stringResource(MR.strings.group),
             // <-- AM (GU)
         ),
     ) { page ->
@@ -117,7 +123,7 @@ private fun ColumnScope.FilterPage(
     )
     val filterFillermarked by screenModel.libraryPreferences.filterFillermarkedAnime().collectAsState()
     TriStateItem(
-        label = stringResource(R.string.action_filter_fillermarked),
+        label = stringResource(MR.strings.action_filter_fillermarked),
         state = filterFillermarked,
         onClick = { screenModel.toggleFilter(LibraryPreferences::filterFillermarkedAnime) },
     )
@@ -166,7 +172,7 @@ private fun ColumnScope.SortPage(
     screenModel: AnimeLibrarySettingsScreenModel,
 ) {
     // AM (GU) -->
-    val globalSortMode by screenModel.libraryPreferences.libraryAnimeSortingMode().collectAsState()
+    val globalSortMode by screenModel.libraryPreferences.animeSortingMode().collectAsState()
     val sortingMode = if (screenModel.grouping == AnimeLibraryGroup.BY_DEFAULT) {
         category.sort.type
     } else {
@@ -317,12 +323,12 @@ private fun ColumnScope.GroupPage(
     screenModel: AnimeLibrarySettingsScreenModel,
     hasCategories: Boolean,
 ) {
-    val groups = remember(hasCategories, screenModel.trackServices) {
+    val groups = remember(hasCategories, screenModel.trackers) {
         buildList {
             add(AnimeLibraryGroup.BY_DEFAULT)
             add(AnimeLibraryGroup.BY_SOURCE)
             add(AnimeLibraryGroup.BY_STATUS)
-            if (screenModel.trackServices.isNotEmpty()) {
+            if (screenModel.trackers.isNotEmpty()) {
                 add(AnimeLibraryGroup.BY_TRACK_STATUS)
             }
             if (hasCategories) {

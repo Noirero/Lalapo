@@ -5,11 +5,11 @@
 // https://github.com/saikou-app/saikou
 package eu.kanade.tachiyomi.data.connections.discord
 
-import androidx.annotation.StringRes
-import eu.kanade.tachiyomi.R
+import dev.icerock.moko.resources.StringResource
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import tachiyomi.i18n.MR
 
 // Constant for logging tag
 const val RICH_PRESENCE_TAG = "discord_rpc"
@@ -163,15 +163,15 @@ data class PlayerData(
 )
 
 // Enum class for standard Rich Presence in-app screens
-enum class DiscordScreen(@StringRes val text: Int, @StringRes val details: Int, val imageUrl: String) {
-    APP(R.string.app_name, R.string.browsing, animiruImageUrl),
-    LIBRARY(R.string.label_library, R.string.browsing, libraryImageUrl),
-    UPDATES(R.string.label_recent_updates, R.string.scrolling, updatesImageUrl),
-    HISTORY(R.string.label_recent_manga, R.string.scrolling, historyImageUrl),
-    BROWSE(R.string.label_sources, R.string.browsing, browseImageUrl),
-    MORE(R.string.label_settings, R.string.messing, moreImageUrl),
-    WEBVIEW(R.string.action_web_view, R.string.browsing, webviewImageUrl),
-    VIDEO(R.string.video, R.string.watching, videoImageUrl),
+enum class DiscordScreen(val text: StringResource, val details: StringResource, val imageUrl: String) {
+    APP(MR.strings.app_name, MR.strings.browsing, animiruImageUrl),
+    LIBRARY(MR.strings.label_library, MR.strings.browsing, libraryImageUrl),
+    UPDATES(MR.strings.label_recent_updates, MR.strings.scrolling, updatesImageUrl),
+    HISTORY(MR.strings.label_recent_manga, MR.strings.scrolling, historyImageUrl),
+    BROWSE(MR.strings.label_sources, MR.strings.browsing, browseImageUrl),
+    MORE(MR.strings.label_settings, MR.strings.messing, moreImageUrl),
+    WEBVIEW(MR.strings.action_web_view, MR.strings.browsing, webviewImageUrl),
+    VIDEO(MR.strings.video, MR.strings.watching, videoImageUrl),
     // Implement one for COMIC here, Luft
     ;
 }

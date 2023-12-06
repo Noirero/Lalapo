@@ -20,12 +20,12 @@ import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.presentation.components.SEARCH_DEBOUNCE_MILLIS
 import eu.kanade.presentation.entries.DownloadAction
 import eu.kanade.presentation.library.LibraryToolbarTitle
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
+import eu.kanade.tachiyomi.data.track.TrackStatus
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
 import eu.kanade.tachiyomi.util.removeCovers
@@ -69,10 +69,14 @@ import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.domain.track.anime.interactor.GetTracksPerAnime
 import tachiyomi.domain.track.anime.model.AnimeTrack
+import tachiyomi.i18n.MR
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Collections
+import tachiyomi.core.i18n.stringResource
+import tachiyomi.domain.library.model.AnimeLibraryGroup
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 /**
  * Typealias for the library anime, using the category as keys, and list of anime as values.
@@ -118,7 +122,7 @@ class AnimeLibraryScreenModel(
                 ),
                 combine(
                     state.map { it.groupType }.distinctUntilChanged(),
-                    libraryPreferences.libraryAnimeSortingMode().changes(),
+                    libraryPreferences.animeSortingMode().changes(),
                     ::Pair,
                 ),
             ) { searchQuery, library, tracks, (loggedInTrackers, _), (groupType, sort) ->
@@ -129,7 +133,7 @@ class AnimeLibraryScreenModel(
                     // <-- AM (GU)
                     .applyFilters(tracks, loggedInTrackers)
                     // AM (GU)>
-                    .applySort(sort.takeIf { groupType != AnimeLibraryGroup.BY_DEFAULT })
+                    .applySort(tracks, sort.takeIf { groupType != AnimeLibraryGroup.BY_DEFAULT })
                     .mapValues { (_, value) ->
                         if (searchQuery != null) {
                             // Filter query
@@ -459,9 +463,10 @@ class AnimeLibraryScreenModel(
                 mapOf(
                     Category(
                         0,
-                        preferences.context.getString(R.string.ungrouped),
+                        preferences.context.stringResource(MR.strings.ungrouped),
                         0,
                         0,
+                        false,
                     ) to
                         values.flatten().distinctBy { it.libraryAnime.anime.id },
                 )
@@ -809,19 +814,20 @@ class AnimeLibraryScreenModel(
                 val tracks = runBlocking { getAnimeTracks.await() }.groupBy { it.animeId }
                 libraryAnime.groupBy { item ->
                     val status = tracks[item.libraryAnime.anime.id]?.firstNotNullOfOrNull { track ->
-                        TrackStatus.parseTrackerStatus(track.syncId, track.status)
+                        TrackStatus.parseTrackerStatus(trackerManager, track.syncId, track.status)
                     } ?: TrackStatus.OTHER
 
                     status.int
                 }.mapKeys { (id) ->
                     Category(
                         id = id.toLong(),
-                        name = TrackStatus.values()
+                        name = TrackStatus.entries
                             .find { it.int == id }
                             .let { it ?: TrackStatus.OTHER }
-                            .let { context.getString(it.res) },
-                        order = TrackStatus.values().indexOfFirst { it.int == id }.takeUnless { it == -1 }?.toLong() ?: TrackStatus.OTHER.ordinal.toLong(),
+                            .let { context.stringResource(it.res) },
+                        order = TrackStatus.entries.toTypedArray().indexOfFirst { it.int == id }.takeUnless { it == -1 }?.toLong() ?: TrackStatus.OTHER.ordinal.toLong(),
                         flags = 0,
+                        hidden = false,
                     )
                 }
             }
@@ -829,7 +835,7 @@ class AnimeLibraryScreenModel(
                 val sources: List<Long>
                 libraryAnime.groupBy { item ->
                     item.libraryAnime.anime.source
-                }.also {
+                }.also { it ->
                     sources = it.keys
                         .map {
                             sourceManager.getOrStub(it)
@@ -840,12 +846,13 @@ class AnimeLibraryScreenModel(
                     Category(
                         id = it.key,
                         name = if (it.key == LocalAnimeSource.ID) {
-                            context.getString(R.string.local_source)
+                            context.stringResource(MR.strings.local_source)
                         } else {
                             sourceManager.getOrStub(it.key).name
                         },
                         order = sources.indexOf(it.key).takeUnless { it == -1 }?.toLong() ?: Long.MAX_VALUE,
                         flags = 0,
+                        hidden = false,
                     )
                 }
             }
@@ -856,13 +863,13 @@ class AnimeLibraryScreenModel(
                     Category(
                         id = it.key + 1,
                         name = when (it.key) {
-                            SAnime.ONGOING.toLong() -> context.getString(R.string.ongoing)
-                            SAnime.LICENSED.toLong() -> context.getString(R.string.licensed)
-                            SAnime.CANCELLED.toLong() -> context.getString(R.string.cancelled)
-                            SAnime.ON_HIATUS.toLong() -> context.getString(R.string.on_hiatus)
-                            SAnime.PUBLISHING_FINISHED.toLong() -> context.getString(R.string.publishing_finished)
-                            SAnime.COMPLETED.toLong() -> context.getString(R.string.completed)
-                            else -> context.getString(R.string.unknown)
+                            SAnime.ONGOING.toLong() -> context.stringResource(MR.strings.ongoing)
+                            SAnime.LICENSED.toLong() -> context.stringResource(MR.strings.licensed)
+                            SAnime.CANCELLED.toLong() -> context.stringResource(MR.strings.cancelled)
+                            SAnime.ON_HIATUS.toLong() -> context.stringResource(MR.strings.on_hiatus)
+                            SAnime.PUBLISHING_FINISHED.toLong() -> context.stringResource(MR.strings.publishing_finished)
+                            SAnime.COMPLETED.toLong() -> context.stringResource(MR.strings.completed)
+                            else -> context.stringResource(MR.strings.unknown)
                         },
                         order = when (it.key) {
                             SAnime.ONGOING.toLong() -> 1
@@ -874,6 +881,7 @@ class AnimeLibraryScreenModel(
                             else -> 7
                         },
                         flags = 0,
+                        hidden = false,
                     )
                 }
             }
