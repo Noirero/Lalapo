@@ -1,9 +1,9 @@
 package tachiyomi.core.util.system
 
-import tachiyomi.decoder.Format
-import tachiyomi.decoder.ImageDecoder
 import java.io.InputStream
 import java.net.URLConnection
+import tachiyomi.decoder.Format
+import tachiyomi.decoder.ImageDecoder
 
 object ImageUtil {
 

@@ -26,6 +26,12 @@ import eu.kanade.tachiyomi.source.anime.model.copyFrom
 import eu.kanade.tachiyomi.util.BackupUtil
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
+import java.io.File
+import java.text.SimpleDateFormat
+import java.time.ZonedDateTime
+import java.util.Date
+import java.util.Locale
+import kotlin.math.max
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import tachiyomi.core.i18n.stringResource
@@ -34,23 +40,17 @@ import tachiyomi.data.AnimeUpdateStrategyColumnAdapter
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.history.anime.model.AnimeHistoryUpdate
 import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
-import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.File
-import java.text.SimpleDateFormat
-import java.time.ZonedDateTime
-import java.util.Date
-import java.util.Locale
-import kotlin.math.max
-import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 
 class BackupRestorer(
     private val context: Context,
@@ -157,7 +157,6 @@ class BackupRestorer(
         currentAnimeFetchWindow = animeFetchInterval.getWindow(now)
 
         return coroutineScope {
-            
             // Restore individual anime
             backup.backupAnime.forEach {
                 if (!isActive) {

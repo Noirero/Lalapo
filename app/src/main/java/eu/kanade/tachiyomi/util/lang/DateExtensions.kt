@@ -2,14 +2,14 @@ package eu.kanade.tachiyomi.util.lang
 
 import android.content.Context
 import eu.kanade.tachiyomi.R
-import tachiyomi.core.i18n.stringResource
-import tachiyomi.i18n.MR
 import java.text.DateFormat
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
+import tachiyomi.core.i18n.stringResource
+import tachiyomi.i18n.MR
 
 fun Date.toDateTimestampString(dateFormatter: DateFormat): String {
     val date = dateFormatter.format(this)

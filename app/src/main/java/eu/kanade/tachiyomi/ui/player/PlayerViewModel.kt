@@ -39,6 +39,8 @@ import eu.kanade.tachiyomi.util.lang.takeBytes
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import `is`.xyz.mpv.Utils
+import java.io.InputStream
+import java.util.Date
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,8 +67,6 @@ import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.InputStream
-import java.util.Date
 
 class PlayerViewModel @JvmOverloads constructor(
     private val savedState: SavedStateHandle,

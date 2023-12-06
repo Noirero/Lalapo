@@ -6,6 +6,8 @@ import com.jakewharton.disklrucache.DiskLruCache
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.saveTo
+import java.io.File
+import java.io.IOException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
@@ -15,8 +17,6 @@ import okio.sink
 import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.items.episode.model.Episode
 import uy.kohesive.injekt.injectLazy
-import java.io.File
-import java.io.IOException
 
 /**
  * Class used to create episode cache

@@ -22,7 +22,13 @@ fun LogoHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            painter = if (isSystemInDarkTheme()) painterResource(R.drawable.ic_ani) else painterResource(R.drawable.ic_ani_monochrome_launcher),
+            painter = if (isSystemInDarkTheme()) {
+                painterResource(R.drawable.ic_ani)
+            } else {
+                painterResource(
+                    R.drawable.ic_ani_monochrome_launcher,
+                )
+            },
             contentDescription = null,
             tint = Color.Unspecified,
             modifier = Modifier

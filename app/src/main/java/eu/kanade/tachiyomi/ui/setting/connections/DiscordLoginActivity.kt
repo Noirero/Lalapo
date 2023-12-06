@@ -14,9 +14,9 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.ConnectionsManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.toast
+import java.io.File
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
-import java.io.File
 
 class DiscordLoginActivity : BaseActivity() {
 

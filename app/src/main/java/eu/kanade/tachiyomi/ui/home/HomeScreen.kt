@@ -121,7 +121,7 @@ object HomeScreen : Screen() {
                                 externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
                             )
                             is Tab.History -> HistoryTab(
-                                externalPlayer = playerPreferences.alwaysUseExternalPlayer().get()
+                                externalPlayer = playerPreferences.alwaysUseExternalPlayer().get(),
                             )
                             is Tab.Browse -> BrowseTab(it.toExtensions)
                             is Tab.More -> MoreTab

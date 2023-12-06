@@ -14,7 +14,6 @@ class AnimeSourceExtensionFunctions {
     companion object {
         var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
-
         private fun addDownloadState(extension: AnimeExtension, installStep: InstallStep) {
             currentDownloads.update { it + Pair(extension.pkgName, installStep) }
         }

@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.data.track.TrackStatus
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
 import eu.kanade.tachiyomi.util.removeCovers
+import java.util.Collections
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
@@ -44,6 +45,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
+import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.preference.CheckboxState
 import tachiyomi.core.preference.TriState
 import tachiyomi.core.util.lang.compareToWithCollator
@@ -63,6 +65,7 @@ import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
@@ -70,13 +73,10 @@ import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.domain.track.anime.interactor.GetTracksPerAnime
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.i18n.MR
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.Collections
-import tachiyomi.core.i18n.stringResource
-import tachiyomi.domain.library.model.AnimeLibraryGroup
-import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 /**
  * Typealias for the library anime, using the category as keys, and list of anime as values.
@@ -825,7 +825,9 @@ class AnimeLibraryScreenModel(
                             .find { it.int == id }
                             .let { it ?: TrackStatus.OTHER }
                             .let { context.stringResource(it.res) },
-                        order = TrackStatus.entries.toTypedArray().indexOfFirst { it.int == id }.takeUnless { it == -1 }?.toLong() ?: TrackStatus.OTHER.ordinal.toLong(),
+                        order = TrackStatus.entries.toTypedArray().indexOfFirst {
+                            it.int == id
+                        }.takeUnless { it == -1 }?.toLong() ?: TrackStatus.OTHER.ordinal.toLong(),
                         flags = 0,
                         hidden = false,
                     )
@@ -867,7 +869,9 @@ class AnimeLibraryScreenModel(
                             SAnime.LICENSED.toLong() -> context.stringResource(MR.strings.licensed)
                             SAnime.CANCELLED.toLong() -> context.stringResource(MR.strings.cancelled)
                             SAnime.ON_HIATUS.toLong() -> context.stringResource(MR.strings.on_hiatus)
-                            SAnime.PUBLISHING_FINISHED.toLong() -> context.stringResource(MR.strings.publishing_finished)
+                            SAnime.PUBLISHING_FINISHED.toLong() -> context.stringResource(
+                                MR.strings.publishing_finished,
+                            )
                             SAnime.COMPLETED.toLong() -> context.stringResource(MR.strings.completed)
                             else -> context.stringResource(MR.strings.unknown)
                         },

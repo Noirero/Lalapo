@@ -6,6 +6,8 @@ import android.os.Build
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.util.system.getUriSize
 import eu.kanade.tachiyomi.util.system.toast
+import java.io.BufferedReader
+import java.io.InputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,8 +17,6 @@ import logcat.LogPriority
 import rikka.shizuku.Shizuku
 import tachiyomi.core.util.system.logcat
 import tachiyomi.i18n.MR
-import java.io.BufferedReader
-import java.io.InputStream
 
 class ShizukuInstallerAnime(private val service: Service) : InstallerAnime(service) {
 

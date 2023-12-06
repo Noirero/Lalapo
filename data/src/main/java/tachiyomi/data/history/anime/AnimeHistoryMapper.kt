@@ -1,9 +1,9 @@
 package tachiyomi.data.history.anime
 
+import java.util.Date
 import tachiyomi.domain.entries.anime.model.AnimeCover
 import tachiyomi.domain.history.anime.model.AnimeHistory
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
-import java.util.Date
 
 object AnimeHistoryMapper {
     fun mapAnimeHistory(

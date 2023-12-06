@@ -214,7 +214,9 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.library_group_updates),
                     entries = mapOf(
                         GroupAnimeLibraryMode.GLOBAL to stringResource(MR.strings.library_group_updates_global),
-                        GroupAnimeLibraryMode.ALL_BUT_UNGROUPED to stringResource(MR.strings.library_group_updates_all_but_ungrouped),
+                        GroupAnimeLibraryMode.ALL_BUT_UNGROUPED to stringResource(
+                            MR.strings.library_group_updates_all_but_ungrouped,
+                        ),
                         GroupAnimeLibraryMode.ALL to stringResource(MR.strings.library_group_updates_all),
                     ),
                 ),

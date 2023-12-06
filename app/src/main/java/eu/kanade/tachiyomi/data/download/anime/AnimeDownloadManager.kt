@@ -171,7 +171,7 @@ class AnimeDownloadManager(
      */
     fun buildVideo(source: AnimeSource, anime: Anime, episode: Episode): Video {
         // AM (CU) -->
-        val episodeDir = 
+        val episodeDir =
             provider.findEpisodeDir(episode.name, episode.scanlator, anime.ogTitle, source)
         // <-- AM (CU)
         val files = episodeDir?.listFiles().orEmpty()

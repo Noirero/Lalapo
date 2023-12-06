@@ -10,7 +10,7 @@ import uy.kohesive.injekt.injectLazy
 abstract class BaseConnection(
     override val id: Long,
     override val name: String,
-): Connection {
+) : Connection {
 
     val connectionsPreferences: ConnectionsPreferences by injectLazy()
     private val networkService: NetworkHelper by injectLazy()

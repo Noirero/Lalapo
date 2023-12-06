@@ -31,7 +31,6 @@ import tachiyomi.presentation.core.components.HorizontalPager
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.TabText
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.components.material.bottomSuperLargePaddingValues
 
 @Composable
 fun TabbedScreen(

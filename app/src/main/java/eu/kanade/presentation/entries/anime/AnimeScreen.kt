@@ -78,6 +78,9 @@ import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreenModel
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeList
 import eu.kanade.tachiyomi.util.lang.toRelativeString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import java.text.DateFormat
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.delay
 import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.domain.entries.anime.model.Anime
@@ -86,6 +89,9 @@ import tachiyomi.domain.items.service.missingItemsCount
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.MR.strings.date
+import tachiyomi.i18n.MR.strings.scanlator
+import tachiyomi.i18n.MR.strings.selected
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.ExtendedFloatingActionButton
@@ -95,12 +101,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.isScrolledToEnd
 import tachiyomi.presentation.core.util.isScrollingUp
 import uy.kohesive.injekt.injectLazy
-import java.text.DateFormat
-import java.util.Date
-import java.util.concurrent.TimeUnit
-import tachiyomi.i18n.MR.strings.date
-import tachiyomi.i18n.MR.strings.scanlator
-import tachiyomi.i18n.MR.strings.selected
 
 private val animeDownloadProvider: AnimeDownloadProvider by injectLazy()
 
@@ -1003,7 +1003,6 @@ private fun LazyListScope.sharedEpisodeItems(
                 MissingEpisodeCountListItem(count = episodeItem.count)
             }
             is EpisodeList.Item -> {
-
                 // AM (FILE-SIZE) -->
                 var fileSizeAsync: Long? by remember { mutableStateOf(episodeItem.fileSize) }
                 val isEpisodeDownloaded = episodeItem.downloadState == AnimeDownload.State.DOWNLOADED

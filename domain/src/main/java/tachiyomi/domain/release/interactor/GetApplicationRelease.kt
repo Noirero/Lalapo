@@ -1,11 +1,11 @@
 package tachiyomi.domain.release.interactor
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import tachiyomi.core.preference.Preference
 import tachiyomi.core.preference.PreferenceStore
 import tachiyomi.domain.release.model.Release
 import tachiyomi.domain.release.service.ReleaseService
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 class GetApplicationRelease(
     private val service: ReleaseService,

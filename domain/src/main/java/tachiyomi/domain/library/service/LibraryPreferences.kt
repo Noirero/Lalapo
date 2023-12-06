@@ -99,8 +99,8 @@ class LibraryPreferences(
     fun filterBookmarkedAnime() =
         preferenceStore.getEnum("pref_filter_animelib_bookmarked_v2", TriState.DISABLED)
 
-     // AM (FILLER) -->
-    fun filterFillermarkedAnime() = 
+    // AM (FILLER) -->
+    fun filterFillermarkedAnime() =
         preferenceStore.getEnum("pref_filter_animelib_fillermarked_v2", TriState.DISABLED)
     // <-- AM (FILLER)
 
@@ -144,7 +144,7 @@ class LibraryPreferences(
     fun defaultAnimeCategory() = preferenceStore.getInt("default_anime_category", -1)
 
     fun lastUsedAnimeCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_anime_category"), 0)
-    
+
     fun animeUpdateCategories() =
         preferenceStore.getStringSet("animelib_update_categories", emptySet())
 
@@ -163,7 +163,7 @@ class LibraryPreferences(
         preferenceStore.getLong("default_episode_filter_by_bookmarked", Anime.SHOW_ALL)
 
     // AM (FILLER) -->
-    fun filterEpisodeByFillermarked() = 
+    fun filterEpisodeByFillermarked() =
         preferenceStore.getLong("default_episode_filter_by_fillermarked", Anime.SHOW_ALL)
     // <-- AM (FILLER)
 

@@ -4,7 +4,6 @@ package eu.kanade.tachiyomi.data.connections.discord
 import android.graphics.Color
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connections.BaseConnection
-import tachiyomi.i18n.MR
 
 class Discord(id: Long) : BaseConnection(
     id,

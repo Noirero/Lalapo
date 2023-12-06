@@ -68,7 +68,7 @@ class PreferenceModule(val app: Application) : InjektModule {
         }
 
         // AM (CONNECTIONS) -->
-        addSingletonFactory { 
+        addSingletonFactory {
             ConnectionsPreferences(get())
         }
         // <-- AM (CONNECTIONS)

@@ -44,12 +44,11 @@ import eu.kanade.tachiyomi.network.PREF_DOH_QUAD101
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.network.PREF_DOH_SHECAN
 import eu.kanade.tachiyomi.util.CrashLogUtil
-import eu.kanade.tachiyomi.util.system.isPreviewBuildType
-import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.toast
+import java.io.File
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.Headers
@@ -63,7 +62,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.File
 
 object SettingsAdvancedScreen : SearchableSettings {
 
@@ -87,7 +85,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                         pref = basePreferences.acraEnabled(),
                         title = stringResource(MR.strings.pref_enable_acra),
                         subtitle = stringResource(MR.strings.pref_acra_summary),
-                        enabled = false // no acra,
+                        enabled = false, // no acra,
                     ),
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_dump_crash_logs),
@@ -321,7 +319,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                             }
                         }
                     },
-                    enabled = false // Animiru,
+                    enabled = false, // Animiru,
                 ),
             ),
         )

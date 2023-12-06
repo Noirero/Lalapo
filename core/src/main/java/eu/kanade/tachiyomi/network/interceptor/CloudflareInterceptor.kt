@@ -8,6 +8,8 @@ import androidx.core.content.ContextCompat
 import eu.kanade.tachiyomi.network.AndroidCookieJar
 import eu.kanade.tachiyomi.util.system.WebViewClientCompat
 import eu.kanade.tachiyomi.util.system.isOutdated
+import java.io.IOException
+import java.util.concurrent.CountDownLatch
 import okhttp3.Cookie
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
@@ -15,8 +17,6 @@ import okhttp3.Request
 import okhttp3.Response
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.i18n.MR
-import java.io.IOException
-import java.util.concurrent.CountDownLatch
 
 class CloudflareInterceptor(
     private val context: Context,

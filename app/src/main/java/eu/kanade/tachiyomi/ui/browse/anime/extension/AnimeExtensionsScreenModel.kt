@@ -15,24 +15,20 @@ import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.collectToInstallUpdate
 import eu.kanade.tachiyomi.ui.browse.anime.AnimeSourceExtensionFunctions.Companion.currentDownloads
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import kotlin.time.Duration.Companion.seconds
 
 class AnimeExtensionsScreenModel(
     preferences: SourcePreferences = Injekt.get(),
@@ -174,7 +170,6 @@ class AnimeExtensionsScreenModel(
     fun cancelInstallUpdateExtension(extension: AnimeExtension) {
         extensionManager.cancelInstallUpdateExtension(extension)
     }
-
 
     fun uninstallExtension(extension: AnimeExtension) {
         extensionManager.uninstallExtension(extension)

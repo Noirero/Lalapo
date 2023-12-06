@@ -419,7 +419,7 @@ object SettingsDataScreen : SearchableSettings {
                         Text(text = "Available: $available / $total (Episode cache: $episodeCacheReadableSize)")
                     }
                 },
-                onClick = { navigator.push(StorageTab()) }
+                onClick = { navigator.push(StorageTab()) },
             )
         }
     }

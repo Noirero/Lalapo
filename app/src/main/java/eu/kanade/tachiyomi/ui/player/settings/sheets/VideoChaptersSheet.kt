@@ -21,12 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.tachiyomi.ui.player.settings.sheetDialogPadding
+import `is`.xyz.mpv.MPVView.Chapter as VideoChapter
 import `is`.xyz.mpv.Utils
+import kotlin.math.roundToInt
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.math.roundToInt
-import `is`.xyz.mpv.MPVView.Chapter as VideoChapter
 
 @Composable
 fun VideoChaptersSheet(

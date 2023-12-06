@@ -19,10 +19,10 @@ import eu.kanade.tachiyomi.ui.player.PlayerActivity
 import eu.kanade.tachiyomi.ui.player.viewer.components.Seekbar
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.Utils
+import kotlin.math.abs
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.i18n.MR
-import kotlin.math.abs
 
 class PlayerControlsView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     LinearLayout(context, attrs) {

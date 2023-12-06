@@ -54,6 +54,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadAdapter
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadQueueScreenModel
+import kotlin.math.roundToInt
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.util.lang.launchUI
 import tachiyomi.i18n.MR
@@ -62,7 +63,6 @@ import tachiyomi.presentation.core.components.material.ExtendedFloatingActionBut
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
-import kotlin.math.roundToInt
 
 object AnimeDownloadQueueScreen : Screen() {
 
@@ -132,7 +132,6 @@ object AnimeDownloadQueueScreen : Screen() {
                                 expanded = sortExpanded,
                                 onDismissRequest = onDismissRequest,
                             ) {
-
                                 var expandUploadDateSort by remember { mutableStateOf(false) }
                                 val closeUploadDateSort = { expandUploadDateSort = false }
 

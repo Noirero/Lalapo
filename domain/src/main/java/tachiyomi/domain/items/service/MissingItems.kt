@@ -1,7 +1,7 @@
 package tachiyomi.domain.items.service
 
-import tachiyomi.domain.items.episode.model.Episode
 import kotlin.math.floor
+import tachiyomi.domain.items.episode.model.Episode
 
 fun List<Double>.missingItemsCount(): Int {
     if (this.isEmpty()) {

@@ -27,6 +27,8 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.player.settings.dialogs.PlayerDialog
 import `is`.xyz.mpv.MPVLib
+import java.io.File
+import java.io.InputStream
 import tachiyomi.core.preference.Preference
 import tachiyomi.core.preference.toggle
 import tachiyomi.i18n.MR
@@ -36,8 +38,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.File
-import java.io.InputStream
 
 val sheetDialogPadding = PaddingValues(
     vertical = MaterialTheme.padding.small,

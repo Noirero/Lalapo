@@ -18,18 +18,18 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.player.viewer.PipState
 import eu.kanade.tachiyomi.util.system.notificationBuilder
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlinx.coroutines.DelicateCoroutinesApi
+import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.withIOContext
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.model.Category.Companion.UNCATEGORIZED_ID
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
-import kotlin.math.ceil
-import kotlin.math.floor
-import tachiyomi.core.i18n.stringResource
-import tachiyomi.i18n.MR
 
 class DiscordRPCService : Service() {
 
@@ -187,7 +187,6 @@ class DiscordRPCService : Service() {
                     ?.takeIf { !it.contains("external/Not Found") }
                     ?.substringAfter("\"id\": \"")?.substringBefore("\"}")
                     ?.split("external/")?.getOrNull(1)?.let { "external/$it" }
-
 
                 setScreen(
                     context = context,

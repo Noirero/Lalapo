@@ -32,8 +32,8 @@ import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesScreenModel
 import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.core.i18n.stringResource
-import tachiyomi.i18n.MR
 import tachiyomi.core.util.lang.launchIO
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
 data class UpdatesTab(
@@ -124,7 +124,9 @@ data class UpdatesTab(
             // <-- AM (DISCORD)
             screenModel.events.collectLatest { event ->
                 when (event) {
-                    AnimeUpdatesScreenModel.Event.InternalError -> screenModel.snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
+                    AnimeUpdatesScreenModel.Event.InternalError -> screenModel.snackbarHostState.showSnackbar(
+                        context.stringResource(MR.strings.internal_error),
+                    )
                     is AnimeUpdatesScreenModel.Event.LibraryUpdateTriggered -> {
                         val stringRes = if (event.started) {
                             MR.strings.updating_library

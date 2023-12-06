@@ -151,7 +151,6 @@ enum class OpCode(val value: Int) {
 
     /** For future use or unknown opcodes. */
     UNKNOWN(-1),
-    ;
 }
 
 data class PlayerData(
@@ -173,7 +172,6 @@ enum class DiscordScreen(val text: StringResource, val details: StringResource, 
     WEBVIEW(MR.strings.action_web_view, MR.strings.browsing, webviewImageUrl),
     VIDEO(MR.strings.video, MR.strings.watching, videoImageUrl),
     // Implement one for COMIC here, Luft
-    ;
 }
 
 // Constants for standard Rich Presence image urls

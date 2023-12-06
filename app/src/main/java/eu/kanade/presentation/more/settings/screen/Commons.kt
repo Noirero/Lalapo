@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.category.visualName
-import eu.kanade.tachiyomi.R
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -68,7 +67,9 @@ fun getCategoriesLabel(
 
     val includedItemsText = when {
         // Some selected, but not all
-        includedCategories.isNotEmpty() && includedCategories.size != allCategories.size -> includedCategories.joinToString { it.visualName(context) }
+        includedCategories.isNotEmpty() && includedCategories.size != allCategories.size -> includedCategories.joinToString {
+            it.visualName(context)
+        }
         // All explicitly selected
         includedCategories.size == allCategories.size -> stringResource(MR.strings.all)
         includedCategories.isEmpty() -> stringResource(MR.strings.none)

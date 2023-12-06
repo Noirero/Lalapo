@@ -63,7 +63,7 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun AnimeExtensionScreen(
-    state:  AnimeExtensionsScreenModel.State,
+    state: AnimeExtensionsScreenModel.State,
     // AM (BROWSE) -->
     navigator: Navigator,
     onChangeSearchQuery: (String?) -> Unit,

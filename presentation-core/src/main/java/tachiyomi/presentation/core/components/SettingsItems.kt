@@ -541,7 +541,7 @@ fun SettingsChipRow(
 fun SettingsIconGrid(
     labelRes: StringResource,
     modifier: Modifier = Modifier,
-    content: LazyGridScope.() -> Unit
+    content: LazyGridScope.() -> Unit,
 ) {
     Column {
         HeadingItem(labelRes)

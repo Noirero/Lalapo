@@ -13,8 +13,6 @@ class LibraryFlagsTest {
     @Test
     fun `Check the amount of flags`() {
         LibraryDisplayMode.values.size shouldBe 4
-        MangaLibrarySort.types.size shouldBe 9
-        MangaLibrarySort.directions.size shouldBe 2
         AnimeLibrarySort.types.size shouldBe 10
         AnimeLibrarySort.directions.size shouldBe 2
     }
@@ -56,7 +54,7 @@ class LibraryFlagsTest {
             AnimeLibrarySort.Direction.Ascending,
         )
         val animeflag = animesort.flag + animesort
-        
+
         animeflag shouldBe 0b01011100
         animeflag shouldNotBe currentanimeSort.flag
     }

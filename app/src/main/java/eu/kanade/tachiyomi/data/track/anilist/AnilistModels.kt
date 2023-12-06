@@ -5,10 +5,10 @@ import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.util.lang.htmlDecode
-import kotlinx.serialization.Serializable
-import uy.kohesive.injekt.injectLazy
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.serialization.Serializable
+import uy.kohesive.injekt.injectLazy
 
 data class ALAnime(
     val media_id: Long,
