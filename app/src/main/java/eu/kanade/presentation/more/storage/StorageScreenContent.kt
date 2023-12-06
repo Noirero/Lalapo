@@ -42,7 +42,7 @@ fun StorageScreenContent(
             @Composable
             fun Info(infoModifier: Modifier = Modifier) {
                 Column(
-                    modifier = infoModifier,
+                    modifier = infoModifier.padding(contentPadding),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                     content = {
