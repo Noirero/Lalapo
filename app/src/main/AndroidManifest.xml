@@ -175,10 +175,6 @@
             android:exported="false" />
 
         <service
-            android:name=".extension.manga.util.MangaExtensionInstallService"
-            android:exported="false" />
-
-        <service
             android:name=".extension.anime.util.AnimeExtensionInstallService"
             android:exported="false" />
 

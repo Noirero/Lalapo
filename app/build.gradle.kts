@@ -1,6 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.io.FileInputStream
-import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -26,7 +24,7 @@ android {
         applicationId = "xyz.Quickdev.Animiru.mi"
 
         versionCode = 110
-        versionName = "0.15.9.1"
+        versionName = "0.15.9.2"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -35,7 +33,7 @@ android {
         buildConfigField("boolean", "PREVIEW", "false")
 
         // Please disable ACRA or use your own instance in forked versions of the project
-        //buildConfigField("String", "ACRA_URI", "\"https://acra.Quickdesh.xyz/report\"")
+        // buildConfigField("String", "ACRA_URI", "\"https://acra.Quickdesh.xyz/report\"")
 
         ndk {
             abiFilters += SUPPORTED_ABIS
@@ -272,7 +270,7 @@ dependencies {
 
     // seeker seek bar
     implementation(libs.seeker)
-    
+
     // true type parser
     implementation(libs.truetypeparser)
 }
