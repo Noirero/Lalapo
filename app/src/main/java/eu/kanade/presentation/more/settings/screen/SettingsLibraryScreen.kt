@@ -231,7 +231,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_library_update_manga_restriction),
                     entries = mapOf(
                         ENTRY_HAS_UNVIEWED to stringResource(
-                            MR.strings.pref_update_only_completely_read,
+                            MR.strings.pref_update_only_completely_seen,
                         ),
                         ENTRY_NON_VIEWED to stringResource(MR.strings.pref_update_only_started),
                         ENTRY_NON_COMPLETED to stringResource(

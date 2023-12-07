@@ -154,7 +154,7 @@ private fun SortPage(
         onClick = { onItemSelected(Anime.EPISODE_SORTING_SOURCE) },
     )
     SortItem(
-        label = stringResource(MR.strings.sort_by_number),
+        label = stringResource(MR.strings.sort_by_episode_number),
         sortDescending = sortDescending.takeIf { sortingMode == Anime.EPISODE_SORTING_NUMBER },
         onClick = { onItemSelected(Anime.EPISODE_SORTING_NUMBER) },
     )

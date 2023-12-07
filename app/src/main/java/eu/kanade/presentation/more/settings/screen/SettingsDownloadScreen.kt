@@ -84,7 +84,7 @@ object SettingsDownloadScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_remove_after_seen),
                     entries = mapOf(
                         -1 to stringResource(MR.strings.disabled),
-                        0 to stringResource(MR.strings.last_read_episode),
+                        0 to stringResource(MR.strings.last_seen_episode),
                         1 to stringResource(MR.strings.second_to_last_episode),
                         2 to stringResource(MR.strings.third_to_last_episode),
                         3 to stringResource(MR.strings.fourth_to_last_episode),
@@ -131,7 +131,7 @@ object SettingsDownloadScreen : SearchableSettings {
         var showAnimeDialog by rememberSaveable { mutableStateOf(false) }
         if (showAnimeDialog) {
             TriStateListDialog(
-                title = stringResource(MR.strings.anime_categories),
+                title = stringResource(MR.strings.categories),
                 message = stringResource(MR.strings.pref_download_new_categories_details),
                 items = allAnimeCategories,
                 initialChecked = includedAnime.mapNotNull { id -> allAnimeCategories.find { it.id.toString() == id } },
