@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi
 
 import android.content.Context
+import android.os.Build
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import eu.kanade.domain.base.BasePreferences
@@ -15,6 +16,7 @@ import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_CLOUDFLARE
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
+import eu.kanade.tachiyomi.ui.player.viewer.HwDecState
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.workManager
 import tachiyomi.core.i18n.stringResource
@@ -456,6 +458,11 @@ object Migrations {
                     newKey = { Preference.appStateKey(it) },
                 )
             }
+
+            if (Build.MODEL == "Subsystem for Android(TM)") {
+                playerPreferences.hwDec().set(HwDecState.SW.mpvValue)
+            }
+
             return true
         }
         return false
