@@ -25,19 +25,12 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.anime.interactor.TrustAnimeExtension
-import eu.kanade.domain.extension.manga.interactor.TrustMangaExtension
-import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.domain.source.service.SourcePreferences.DataSaver
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearAnimeDatabaseScreen
-import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.anime.AnimeMetadataUpdateJob
-import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
-import eu.kanade.tachiyomi.data.library.manga.MangaMetadataUpdateJob
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
@@ -57,7 +50,6 @@ import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.util.CrashLogUtil
 import eu.kanade.tachiyomi.util.system.isDevFlavor
 import eu.kanade.tachiyomi.util.system.isPreviewBuildType
-import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
@@ -65,15 +57,13 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
-import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.Headers
-import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchNonCancellable
 import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.core.util.system.logcat
-import tachiyomi.domain.entries.manga.interactor.ResetMangaViewerFlags
+import tachiyomi.domain.entries.anime.interactor.ResetAnimeViewerFlags
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -99,12 +89,14 @@ object SettingsAdvancedScreen : SearchableSettings {
         return buildList {
             addAll(
                 listOf(
-                    Preference.PreferenceItem.SwitchPreference(
-                        pref = basePreferences.acraEnabled(),
-                        title = stringResource(MR.strings.pref_enable_acra),
-                        subtitle = stringResource(MR.strings.pref_acra_summary),
-                        enabled = isPreviewBuildType || isReleaseBuildType,
-                    ),
+                    // AM (REMOVE_ACRA_FIREBASE) -->
+                    // Preference.PreferenceItem.SwitchPreference(
+                    //     pref = basePreferences.acraEnabled(),
+                    //     title = stringResource(MR.strings.pref_enable_acra),
+                    //     subtitle = stringResource(MR.strings.pref_acra_summary),
+                    //     enabled = isPreviewBuildType || isReleaseBuildType,
+                    // ),
+                    // <-- AM (REMOVE_ACRA_FIREBASE)
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_dump_crash_logs),
                         subtitle = stringResource(MR.strings.pref_dump_crash_logs_summary),
@@ -153,9 +145,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                     getNetworkGroup(networkPreferences = networkPreferences),
                     getLibraryGroup(),
                     getExtensionsGroup(basePreferences = basePreferences),
-                    // SY -->
-                    getDataSaverGroup(),
-                    // SY <--
                 ),
             )
         }
@@ -210,21 +199,15 @@ object SettingsAdvancedScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_invalidate_download_cache),
-                    subtitle = stringResource(MR.strings.pref_invalidate_download_cache_summary),
+                    subtitle = stringResource(MR.strings.pref_invalidate_episode_download_cache_summary),
                     onClick = {
-                        Injekt.get<MangaDownloadCache>().invalidateCache()
                         Injekt.get<AnimeDownloadCache>().invalidateCache()
                         context.toast(MR.strings.download_cache_invalidated)
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.pref_clear_manga_database),
-                    subtitle = stringResource(MR.strings.pref_clear_manga_database_summary),
-                    onClick = { navigator.push(ClearDatabaseScreen()) },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.pref_clear_anime_database),
-                    subtitle = stringResource(MR.strings.pref_clear_anime_database_summary),
+                    title = stringResource(MR.strings.pref_clear_database),
+                    subtitle = stringResource(MR.strings.pref_clear_database_summary),
                     onClick = { navigator.push(ClearAnimeDatabaseScreen()) },
                 ),
             ),
@@ -333,9 +316,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_refresh_library_covers),
                     onClick = {
                         AnimeLibraryUpdateJob.startNow(context)
-                        MangaLibraryUpdateJob.startNow(context)
                         AnimeMetadataUpdateJob.startNow(context)
-                        MangaMetadataUpdateJob.startNow(context)
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
@@ -343,7 +324,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     subtitle = stringResource(MR.strings.pref_reset_viewer_flags_summary),
                     onClick = {
                         scope.launchNonCancellable {
-                            val success = Injekt.get<ResetMangaViewerFlags>().await()
+                            val success = Injekt.get<ResetAnimeViewerFlags>().await()
                             withUIContext {
                                 val message = if (success) {
                                     MR.strings.pref_reset_viewer_flags_success
@@ -354,6 +335,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                             }
                         }
                     },
+                    enabled = false,
                 ),
             ),
         )
@@ -368,7 +350,6 @@ object SettingsAdvancedScreen : SearchableSettings {
         val extensionInstallerPref = basePreferences.extensionInstaller()
         var shizukuMissing by rememberSaveable { mutableStateOf(false) }
         val trustAnimeExtension = remember { Injekt.get<TrustAnimeExtension>() }
-        val trustMangaExtension = remember { Injekt.get<TrustMangaExtension>() }
 
         if (shizukuMissing) {
             val dismiss = { shizukuMissing = false }
@@ -428,7 +409,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.ext_revoke_trust),
                     onClick = {
-                        trustMangaExtension.revokeAll()
                         trustAnimeExtension.revokeAll()
                         context.toast(MR.strings.requires_app_restart)
                     },
@@ -436,83 +416,4 @@ object SettingsAdvancedScreen : SearchableSettings {
             ),
         )
     }
-
-    // SY -->
-    @Composable
-    private fun getDataSaverGroup(): Preference.PreferenceGroup {
-        val sourcePreferences = remember { Injekt.get<SourcePreferences>() }
-        val dataSaver by sourcePreferences.dataSaver().collectAsState()
-        return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.data_saver),
-            preferenceItems = persistentListOf(
-                Preference.PreferenceItem.ListPreference(
-                    pref = sourcePreferences.dataSaver(),
-                    title = stringResource(MR.strings.data_saver),
-                    subtitle = stringResource(MR.strings.data_saver_summary),
-                    entries = persistentMapOf(
-                        DataSaver.NONE to stringResource(MR.strings.disabled),
-                        DataSaver.BANDWIDTH_HERO to stringResource(MR.strings.bandwidth_hero),
-                        DataSaver.WSRV_NL to stringResource(MR.strings.wsrv),
-                        DataSaver.RESMUSH_IT to stringResource(MR.strings.resmush),
-                    ),
-                ),
-                Preference.PreferenceItem.EditTextPreference(
-                    pref = sourcePreferences.dataSaverServer(),
-                    title = stringResource(MR.strings.bandwidth_data_saver_server),
-                    subtitle = stringResource(MR.strings.data_saver_server_summary),
-                    enabled = dataSaver == DataSaver.BANDWIDTH_HERO,
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    pref = sourcePreferences.dataSaverDownloader(),
-                    title = stringResource(MR.strings.data_saver_downloader),
-                    enabled = dataSaver != DataSaver.NONE,
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    pref = sourcePreferences.dataSaverIgnoreJpeg(),
-                    title = stringResource(MR.strings.data_saver_ignore_jpeg),
-                    enabled = dataSaver != DataSaver.NONE,
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    pref = sourcePreferences.dataSaverIgnoreGif(),
-                    title = stringResource(MR.strings.data_saver_ignore_gif),
-                    enabled = dataSaver != DataSaver.NONE,
-                ),
-                Preference.PreferenceItem.ListPreference(
-                    pref = sourcePreferences.dataSaverImageQuality(),
-                    title = stringResource(MR.strings.data_saver_image_quality),
-                    subtitle = stringResource(MR.strings.data_saver_image_quality_summary),
-                    entries = listOf(
-                        "10%",
-                        "20%",
-                        "40%",
-                        "50%",
-                        "70%",
-                        "80%",
-                        "90%",
-                        "95%",
-                    ).associateBy { it.trimEnd('%').toInt() }.toPersistentMap(),
-                    enabled = dataSaver != DataSaver.NONE,
-                ),
-                kotlin.run {
-                    val dataSaverImageFormatJpeg by sourcePreferences.dataSaverImageFormatJpeg().collectAsState()
-                    Preference.PreferenceItem.SwitchPreference(
-                        pref = sourcePreferences.dataSaverImageFormatJpeg(),
-                        title = stringResource(MR.strings.data_saver_image_format),
-                        subtitle = if (dataSaverImageFormatJpeg) {
-                            stringResource(MR.strings.data_saver_image_format_summary_on)
-                        } else {
-                            stringResource(MR.strings.data_saver_image_format_summary_off)
-                        },
-                        enabled = dataSaver != DataSaver.NONE && dataSaver != DataSaver.RESMUSH_IT,
-                    )
-                },
-                Preference.PreferenceItem.SwitchPreference(
-                    pref = sourcePreferences.dataSaverColorBW(),
-                    title = stringResource(MR.strings.data_saver_color_bw),
-                    enabled = dataSaver == DataSaver.BANDWIDTH_HERO,
-                ),
-            ),
-        )
-    }
-    // SY <--
 }

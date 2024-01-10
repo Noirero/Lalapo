@@ -12,15 +12,12 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.history.anime.animeHistoryTab
 import eu.kanade.tachiyomi.ui.history.anime.resumeLastEpisodeSeenEvent
-import eu.kanade.tachiyomi.ui.history.manga.MangaHistoryScreenModel
-import eu.kanade.tachiyomi.ui.history.manga.mangaHistoryTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
@@ -33,11 +30,7 @@ object HistoriesTab : Tab() {
         get() {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_history_enter)
-            val index: UShort = when (currentNavigationStyle()) {
-                NavStyle.MOVE_HISTORY_TO_MORE -> 5u
-                NavStyle.MOVE_BROWSE_TO_MORE -> 3u
-                else -> 2u
-            }
+            val index: UShort = 2u
             return TabOptions(
                 index = index,
                 title = stringResource(MR.strings.history),
@@ -52,10 +45,7 @@ object HistoriesTab : Tab() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
-        val fromMore = currentNavigationStyle() == NavStyle.MOVE_HISTORY_TO_MORE
         // Hoisted for history tab's search bar
-        val mangaHistoryScreenModel = rememberScreenModel { MangaHistoryScreenModel() }
-        val mangaSearchQuery by mangaHistoryScreenModel.query.collectAsState()
 
         val animeHistoryScreenModel = rememberScreenModel { AnimeHistoryScreenModel() }
         val animeSearchQuery by animeHistoryScreenModel.query.collectAsState()
@@ -63,11 +53,8 @@ object HistoriesTab : Tab() {
         TabbedScreen(
             titleRes = MR.strings.label_recent_manga,
             tabs = persistentListOf(
-                animeHistoryTab(context, fromMore),
-                mangaHistoryTab(context, fromMore),
+                animeHistoryTab(context),
             ),
-            mangaSearchQuery = mangaSearchQuery,
-            onChangeMangaSearchQuery = mangaHistoryScreenModel::search,
             animeSearchQuery = animeSearchQuery,
             onChangeAnimeSearchQuery = animeHistoryScreenModel::search,
         )
@@ -77,6 +64,3 @@ object HistoriesTab : Tab() {
         }
     }
 }
-
-private const val TAB_ANIME = 0
-private const val TAB_MANGA = 1

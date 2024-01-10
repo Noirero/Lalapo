@@ -1,6 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.io.FileInputStream
-import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -18,10 +16,10 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "xyz.jmir.tachiyomi.mi"
+        applicationId = "xyz.Quickdev.Animiru.mi"
 
         versionCode = 122
-        versionName = "0.15.2.4"
+        versionName = "0.16.0.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -29,17 +27,19 @@ android {
         buildConfigField("boolean", "INCLUDE_UPDATER", "false")
         buildConfigField("boolean", "PREVIEW", "false")
 
+        // AM (REMOVE_ACRA_FIREBASE) -->
         // Put these fields in acra.properties
-        val acraProperties = Properties()
-        rootProject.file("acra.properties")
-            .takeIf { it.exists() }
-            ?.let { acraProperties.load(FileInputStream(it)) }
-        val acraUri = acraProperties.getProperty("ACRA_URI", "")
-        val acraLogin = acraProperties.getProperty("ACRA_LOGIN", "")
-        val acraPassword = acraProperties.getProperty("ACRA_PASSWORD", "")
-        buildConfigField("String", "ACRA_URI", "\"$acraUri\"")
-        buildConfigField("String", "ACRA_LOGIN", "\"$acraLogin\"")
-        buildConfigField("String", "ACRA_PASSWORD", "\"$acraPassword\"")
+        // val acraProperties = Properties()
+        // rootProject.file("acra.properties")
+        //     .takeIf { it.exists() }
+        //     ?.let { acraProperties.load(FileInputStream(it)) }
+        // val acraUri = acraProperties.getProperty("ACRA_URI", "")
+        // val acraLogin = acraProperties.getProperty("ACRA_LOGIN", "")
+        // val acraPassword = acraProperties.getProperty("ACRA_PASSWORD", "")
+        // buildConfigField("String", "ACRA_URI", "\"$acraUri\"")
+        // buildConfigField("String", "ACRA_LOGIN", "\"$acraLogin\"")
+        // buildConfigField("String", "ACRA_PASSWORD", "\"$acraPassword\"")
+        // <-- AM (REMOVE_ACRA_FIREBASE)
 
         ndk {
             abiFilters += SUPPORTED_ABIS
@@ -253,8 +253,10 @@ dependencies {
     // Logging
     implementation(libs.logcat)
 
+    // AM (REMOVE_ACRA_FIREBASE) -->
     // Crash reports
-    implementation(libs.bundles.acra)
+    // implementation(libs.bundles.acra)
+    // <-- AM (REMOVE_ACRA_FIREBASE)
 
     // Shizuku
     implementation(libs.bundles.shizuku)

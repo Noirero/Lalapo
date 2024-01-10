@@ -62,9 +62,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadHeaderItem
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadQueueScreenModel
 import eu.kanade.tachiyomi.ui.download.anime.animeDownloadTab
-import eu.kanade.tachiyomi.ui.download.manga.MangaDownloadHeaderItem
-import eu.kanade.tachiyomi.ui.download.manga.MangaDownloadQueueScreenModel
-import eu.kanade.tachiyomi.ui.download.manga.mangaDownloadTab
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
@@ -95,14 +92,9 @@ data class DownloadsTab(
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val animeScreenModel = rememberScreenModel { AnimeDownloadQueueScreenModel() }
-        val mangaScreenModel = rememberScreenModel { MangaDownloadQueueScreenModel() }
         val animeDownloadList by animeScreenModel.state.collectAsState()
-        val mangaDownloadList by mangaScreenModel.state.collectAsState()
         val animeDownloadCount by remember {
             derivedStateOf { animeDownloadList.sumOf { it.subItems.size } }
-        }
-        val mangaDownloadCount by remember {
-            derivedStateOf { mangaDownloadList.sumOf { it.subItems.size } }
         }
 
         val state = rememberPagerState { 2 }
@@ -159,7 +151,6 @@ data class DownloadsTab(
                     actions = {
                         when (state.currentPage) {
                             0 -> AnimeActions(animeScreenModel, animeDownloadList)
-                            1 -> MangaActions(mangaScreenModel, mangaDownloadList)
                         }
                     },
                     scrollBehavior = scrollBehavior,
@@ -169,23 +160,16 @@ data class DownloadsTab(
                 AnimatedVisibility(
                     visible = when (state.currentPage) {
                         0 -> animeDownloadList.isNotEmpty()
-                        1 -> mangaDownloadList.isNotEmpty()
                         else -> false
                     },
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
                     val animeIsRunning by animeScreenModel.isDownloaderRunning.collectAsState()
-                    val mangaIsRunning by mangaScreenModel.isDownloaderRunning.collectAsState()
                     ExtendedFloatingActionButton(
                         text = {
                             val id = when (state.currentPage) {
                                 0 -> if (animeIsRunning) {
-                                    MR.strings.action_pause
-                                } else {
-                                    MR.strings.action_resume
-                                }
-                                1 -> if (mangaIsRunning) {
                                     MR.strings.action_pause
                                 } else {
                                     MR.strings.action_resume
@@ -201,11 +185,6 @@ data class DownloadsTab(
                                 } else {
                                     Icons.Filled.PlayArrow
                                 }
-                                1 -> if (mangaIsRunning) {
-                                    Icons.Outlined.Pause
-                                } else {
-                                    Icons.Filled.PlayArrow
-                                }
                                 else -> Icons.Filled.PlayArrow
                             }
                             Icon(imageVector = icon, contentDescription = null)
@@ -216,12 +195,6 @@ data class DownloadsTab(
                                     animeScreenModel.pauseDownloads()
                                 } else {
                                     animeScreenModel.startDownloads()
-                                }
-
-                                1 -> if (mangaIsRunning) {
-                                    mangaScreenModel.pauseDownloads()
-                                } else {
-                                    mangaScreenModel.startDownloads()
                                 }
                             }
                         },
@@ -253,17 +226,6 @@ data class DownloadsTab(
                             },
                             unselectedContentColor = MaterialTheme.colorScheme.onSurface,
                         ),
-                        Tab(
-                            selected = state.currentPage == 1,
-                            onClick = { scope.launch { state.animateScrollToPage(1) } },
-                            text = {
-                                TabText(
-                                    text = stringResource(MR.strings.manga),
-                                    badgeCount = mangaDownloadCount,
-                                )
-                            },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                        ),
                     )
                 }
 
@@ -275,12 +237,6 @@ data class DownloadsTab(
                 ) { page ->
                     when (page) {
                         0 -> animeDownloadTab(
-                            nestedScrollConnection,
-                        ).content(
-                            PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                            snackbarHostState,
-                        )
-                        1 -> mangaDownloadTab(
                             nestedScrollConnection,
                         ).content(
                             PaddingValues(bottom = contentPadding.calculateBottomPadding()),
@@ -370,90 +326,6 @@ data class DownloadsTab(
                     AppBar.OverflowAction(
                         title = stringResource(MR.strings.action_cancel_all),
                         onClick = { animeScreenModel.clearQueue() },
-                    ),
-                ),
-            )
-        }
-    }
-
-    @Composable
-    private fun MangaActions(
-        mangaScreenModel: MangaDownloadQueueScreenModel,
-        mangaDownloadList: List<MangaDownloadHeaderItem>,
-    ) {
-        if (mangaDownloadList.isNotEmpty()) {
-            var sortExpanded by remember { mutableStateOf(false) }
-            val onDismissRequest = { sortExpanded = false }
-            DropdownMenu(
-                expanded = sortExpanded,
-                onDismissRequest = onDismissRequest,
-            ) {
-                NestedMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_order_by_upload_date)) },
-                    children = { closeMenu ->
-                        DropdownMenuItem(
-                            text = { Text(text = stringResource(MR.strings.action_newest)) },
-                            onClick = {
-                                mangaScreenModel.reorderQueue(
-                                    { it.download.chapter.dateUpload },
-                                    true,
-                                )
-                                closeMenu()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(text = stringResource(MR.strings.action_oldest)) },
-                            onClick = {
-                                mangaScreenModel.reorderQueue(
-                                    { it.download.chapter.dateUpload },
-                                    false,
-                                )
-                                closeMenu()
-                            },
-                        )
-                    },
-                )
-                NestedMenuItem(
-                    text = {
-                        Text(
-                            text = stringResource(MR.strings.action_order_by_chapter_number),
-                        )
-                    },
-                    children = { closeMenu ->
-                        DropdownMenuItem(
-                            text = { Text(text = stringResource(MR.strings.action_asc)) },
-                            onClick = {
-                                mangaScreenModel.reorderQueue(
-                                    { it.download.chapter.chapterNumber },
-                                    false,
-                                )
-                                closeMenu()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(text = stringResource(MR.strings.action_desc)) },
-                            onClick = {
-                                mangaScreenModel.reorderQueue(
-                                    { it.download.chapter.chapterNumber },
-                                    true,
-                                )
-                                closeMenu()
-                            },
-                        )
-                    },
-                )
-            }
-
-            AppBarActions(
-                persistentListOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_sort),
-                        icon = Icons.AutoMirrored.Outlined.Sort,
-                        onClick = { sortExpanded = true },
-                    ),
-                    AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_cancel_all),
-                        onClick = { mangaScreenModel.clearQueue() },
                     ),
                 ),
             )

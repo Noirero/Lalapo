@@ -34,5 +34,7 @@ dependencies {
     implementation(platform(libs.coil.bom))
     implementation(libs.coil.core)
 
+    implementation(libs.material)
+
     api(libs.injekt.core)
 }

@@ -4,14 +4,12 @@ import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
-import tachiyomi.domain.source.manga.service.MangaSourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class BackupFileValidator(
     private val context: Context,
     private val animeSourceManager: AnimeSourceManager = Injekt.get(),
-    private val mangaSourceManager: MangaSourceManager = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
 ) {
 
@@ -27,40 +25,24 @@ class BackupFileValidator(
             throw IllegalStateException(e)
         }
 
-        val sources = backup.backupSources.associate { it.sourceId to it.name }
         val animesources = backup.backupAnimeSources.associate { it.sourceId to it.name }
-        val missingSources = sources
-            .filter { mangaSourceManager.get(it.key) == null }
+        val missingSources = animesources
+            .filter { animeSourceManager.get(it.key) == null }
             .values.map {
                 val id = it.toLongOrNull()
                 if (id == null) {
                     it
                 } else {
-                    mangaSourceManager.getOrStub(id).toString()
+                    animeSourceManager.getOrStub(id).toString()
                 }
             }
             .distinct()
-            .sorted() +
-            animesources
-                .filter { animeSourceManager.get(it.key) == null }
-                .values.map {
-                    val id = it.toLongOrNull()
-                    if (id == null) {
-                        it
-                    } else {
-                        animeSourceManager.getOrStub(id).toString()
-                    }
-                }
-                .distinct()
-                .sorted()
+            .sorted()
 
         val animeTrackers = backup.backupAnime
             .flatMap { it.tracking }
             .map { it.syncId }
-        val mangaTrackers = backup.backupManga
-            .flatMap { it.tracking }
-            .map { it.syncId }
-        val trackers = (animeTrackers + mangaTrackers).distinct()
+        val trackers = (animeTrackers).distinct()
         val missingTrackers = trackers
             .mapNotNull { trackerManager.get(it.toLong()) }
             .filter { !it.isLoggedIn }

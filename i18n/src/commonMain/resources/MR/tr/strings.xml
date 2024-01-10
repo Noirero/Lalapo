@@ -764,7 +764,7 @@
     <string name="onboarding_storage_help_action">Depolama kılavuzu</string>
     <string name="action_add_repo">Depo ekle</string>
     <string name="label_add_repo_input">Depo URL\'si</string>
-    <string name="action_add_repo_message">Aniyomi\'ye ek depolar ekleyin. Bu, \"index.min.json\" ile biten bir URL olmalıdır.</string>
+    <string name="action_add_repo_message">Animiru\'ye ek depolar ekleyin. Bu, \"index.min.json\" ile biten bir URL olmalıdır.</string>
     <string name="error_repo_exists">Bu depo zaten var!</string>
     <string name="action_delete_repo">Depoyu sil</string>
     <string name="invalid_repo_name">Geçersiz depo URL\'si</string>
@@ -881,8 +881,8 @@
     <string name="also_set_chapter_settings_for_library">Kitaplığımdaki tüm girdilere de uygula</string>
     <string name="dialog_with_checkbox_reset">Bu girdi için tüm bölümleri sıfırla</string>
     <string name="download_insufficient_space">Saklama alanı az olduğundan bölümler indirilemedi</string>
-    <string name="download_queue_size_warning">Uyarı: büyük toplu indirmeler kaynakların yavaşlamasına ve/veya Aniyomi\'yi engellemesine neden olabilir. Daha fazlasını öğrenmek için dokunun.</string>
-    <string name="information_webview_required">WebView, Aniyomi için gereklidir</string>
+    <string name="download_queue_size_warning">Uyarı: büyük toplu indirmeler kaynakların yavaşlamasına ve/veya Animiru\'yi engellemesine neden olabilir. Daha fazlasını öğrenmek için dokunun.</string>
+    <string name="information_webview_required">WebView, Animiru için gereklidir</string>
     <string name="download_notifier_download_paused_chapters">İndirme duraklatıldı</string>
     <string name="channel_new_chapters_episodes">Bölüm güncellemeleri</string>
     <string name="pref_default_home_tab_library">Başlangıç ekranını Manga Sekmesi olarak ayarla</string>
@@ -1074,7 +1074,7 @@
     <string name="player_reset_subtitles">Altyazıları varsayılana sıfırla</string>
     <string name="player_subtitle_delay">Altyazı gecikmesi</string>
     <string name="player_subtitle_font_text_field">Font ismi</string>
-    <string name="unlock_app_title">Aniyomi\'nin kilidini aç</string>
+    <string name="unlock_app_title">Animiru\'nin kilidini aç</string>
     <string name="pref_pip_replace_with_previous">10 saniye ilerleme düğmesini sıradaki bölüme geç düğmesi ile değiştirir</string>
     <string name="pref_anime_storage_usage">Anime Depolama kullanımı</string>
     <string name="pref_manga_storage_usage">Manga Depolama kullanımı</string>
@@ -1107,7 +1107,7 @@
     <string name="pref_download_slots">Maksimum indirme sayısı</string>
     <string name="local_source_badge">Lokal</string>
     <string name="anime_interval_expected_update">Yeni bölümlerin yaklaşık %1$s içinde yayınlanacağı tahmin ediliyor ve yaklaşık her %2$s\'de bir kontrol ediliyor.</string>
-    <string name="onboarding_storage_action_create_folder">Varsayılan Aniyomi klasörünü oluştur</string>
+    <string name="onboarding_storage_action_create_folder">Varsayılan Animiru klasörünü oluştur</string>
     <string name="download_speed_limit">İndirme hızı limiti</string>
     <string name="download_speed_limit_hint">Hız sınırını devre dışı bırakmak için 0\'a ayarlayın.</string>
     <string name="download_notifier_download_finish">İndirme tamamlandı</string>

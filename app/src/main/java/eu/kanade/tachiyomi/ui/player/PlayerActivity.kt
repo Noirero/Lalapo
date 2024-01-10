@@ -691,7 +691,7 @@ class PlayerActivity : BaseActivity() {
             scriptsDir()?.delete()
             scriptOptsDir()?.delete()
 
-            // Then, copy the scripts from the Aniyomi directory
+            // Then, copy the scripts from the Animiru directory
             val storageManager: StorageManager = Injekt.get()
             storageManager.getScriptsDirectory()?.listFiles()?.forEach { file ->
                 val outFile = scriptsDir()?.createFile(file.name)
@@ -723,7 +723,7 @@ class PlayerActivity : BaseActivity() {
 
     @Suppress("DEPRECATION")
     private fun setupMediaSession() {
-        mediaSession = MediaSessionCompat(this, "Aniyomi_Player_Session").apply {
+        mediaSession = MediaSessionCompat(this, "Animiru_Player_Session").apply {
             // Enable callbacks from MediaButtons and TransportControls
             setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or

@@ -1,17 +1,18 @@
-| Build | Preview Release | Codefactor | Stable | Translate Aniyomi                                                                                                                                 | Discord Server |
-|-------|-----------|-------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| [![CI](https://github.com/aniyomiorg/aniyomi/actions/workflows/build_push.yml/badge.svg)](https://github.com/aniyomiorg/aniyomi/actions/workflows/build_push.yml) | [![latest preview build](https://img.shields.io/github/v/release/aniyomiorg/aniyomi-preview.svg?maxAge=3600&label=download)](https://github.com/aniyomiorg/aniyomi-preview/releases) | [![CodeFactor](https://www.codefactor.io/repository/github/aniyomiorg/aniyomi/badge)](https://www.codefactor.io/repository/github/aniyomiorg/aniyomi) | [![stable release](https://img.shields.io/github/release/aniyomiorg/aniyomi.svg?maxAge=3600&label=download)](https://github.com/aniyomiorg/aniyomi/releases) | [![Translation status](https://hosted.weblate.org/widgets/aniyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/aniyomi/?utm_source=widget) | [![Discord](https://img.shields.io/discord/841701076242530374?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/F32UjdJZrR) |
+| Stable                                                                                                                                                     | Discord Server                                                                                                                                          | Translate Aniyomi                                                                                                                                 |    
+|------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| [![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv) | [![Translation status](https://hosted.weblate.org/widgets/aniyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/aniyomi/?utm_source=widget) |
 
-# ![app icon](.github/readme-images/app-icon.png)Aniyomi
-Aniyomi is a video player and image viewer for Android 6.0 and above.
+# ![app icon](.github/readme-images/app-icon.png)Animiru
+Animiru is an unofficial fork of [Aniyomi](https://github.com/jmir1/aniyomi)
+
+Animiru strips the reader capabilities of Aniyomi, to make it a video only app for Android 6.0+
+
 
 ## Features
 
 Features include:
-* Watching videos
-* View images
-* Local reading/watching of downloaded content
-* A configurable reader with multiple viewers, reading directions and other settings.
+* Watch videos
+* Local watching of downloaded content
 * A configurable player built on mpv-android with multiple options and settings
 * Tracker support: [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.io/), [MangaUpdates](https://mangaupdates.com), [Shikimori](https://shikimori.one), and [Bangumi](https://bgm.tv/)
 * Categories to organize your library
@@ -19,9 +20,7 @@ Features include:
 * Create backups locally to read/watch offline or to your desired cloud service
 
 ## Download
-Get the app from the [releases page](https://github.com/aniyomiorg/aniyomi/releases).
-
-If you want to try new features before they get to the stable release, you can download the preview version [here](https://github.com/aniyomiorg/aniyomi-preview/releases).
+Get the app from the [releases page](https://github.com/Quickdesh/Animiru/releases).
 
 ## Issues, Feature Requests and Contributing
 
@@ -29,16 +28,15 @@ Please make sure to read the full guidelines. Your issue may be closed without w
 
 <details><summary>Issues</summary>
 
-1. **Before reporting a new issue, take a look at the already opened [issues](https://aniyomi.org/changelogs/).**
-2. If you are unsure, ask here: [![Discord](https://img.shields.io/discord/841701076242530374?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/F32UjdJZrR)
+1. **Before reporting a new issue, take a look at the already opened [issues](https://github.com/Quickdesh/Animiru/issues).**
+2. If you are unsure, ask here: [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv)
 
 </details>
 
 <details><summary>Bugs</summary>
 
 * Include version (More → About → Version)
- * If not latest, try updating, it may have already been solved
- * Preview version is equal to the number of commits as seen on the main page
+* If not latest, try updating, it may have already been solved
 * Include steps to reproduce (if not obvious from description)
 * Include screenshot (if needed)
 * If it could be device-dependent, try reproducing on another device (if possible)

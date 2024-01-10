@@ -13,7 +13,6 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.stats.anime.animeStatsTab
-import eu.kanade.tachiyomi.ui.stats.manga.mangaStatsTab
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -42,7 +41,6 @@ data class StatsTab(
             titleRes = MR.strings.label_stats,
             tabs = persistentListOf(
                 animeStatsTab(),
-                mangaStatsTab(),
             ),
             startIndex = 1.takeIf { isManga },
 

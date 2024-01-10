@@ -15,9 +15,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryEvent
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenModel
 import eu.kanade.tachiyomi.ui.category.anime.animeCategoryTab
-import eu.kanade.tachiyomi.ui.category.manga.MangaCategoryEvent
-import eu.kanade.tachiyomi.ui.category.manga.MangaCategoryScreenModel
-import eu.kanade.tachiyomi.ui.category.manga.mangaCategoryTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
@@ -46,13 +43,11 @@ data class CategoriesTab(
         val context = LocalContext.current
 
         val animeCategoryScreenModel = rememberScreenModel { AnimeCategoryScreenModel() }
-        val mangaCategoryScreenModel = rememberScreenModel { MangaCategoryScreenModel() }
 
         TabbedScreen(
             titleRes = MR.strings.general_categories,
             tabs = persistentListOf(
                 animeCategoryTab(),
-                mangaCategoryTab(),
             ),
             startIndex = 1.takeIf { isManga },
         )
@@ -62,11 +57,6 @@ data class CategoriesTab(
         }
 
         LaunchedEffect(Unit) {
-            mangaCategoryScreenModel.events.collectLatest { event ->
-                if (event is MangaCategoryEvent.LocalizedMessage) {
-                    context.toast(event.stringRes)
-                }
-            }
             animeCategoryScreenModel.events.collectLatest { event ->
                 if (event is AnimeCategoryEvent.LocalizedMessage) {
                     context.toast(event.stringRes)

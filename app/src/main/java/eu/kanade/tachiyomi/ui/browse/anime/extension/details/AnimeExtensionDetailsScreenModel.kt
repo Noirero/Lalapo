@@ -7,10 +7,10 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.extension.anime.interactor.AnimeExtensionSourceItem
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionSources
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -90,7 +90,7 @@ class AnimeExtensionDetailsScreenModel(
         val extension = state.value.extension ?: return
 
         val urls = extension.sources
-            .filterIsInstance<HttpSource>()
+            .filterIsInstance<AnimeHttpSource>()
             .mapNotNull { it.baseUrl.takeUnless { url -> url.isEmpty() } }
             .distinct()
 

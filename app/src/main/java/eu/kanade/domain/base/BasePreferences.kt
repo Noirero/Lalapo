@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.tachiyomi.util.system.isPreviewBuildType
-import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import tachiyomi.core.preference.Preference
 import tachiyomi.core.preference.PreferenceStore
 import tachiyomi.i18n.MR
@@ -24,10 +22,12 @@ class BasePreferences(
 
     fun extensionInstaller() = ExtensionInstallerPreference(context, preferenceStore)
 
-    fun acraEnabled() = preferenceStore.getBoolean(
-        "acra.enable",
-        isPreviewBuildType || isReleaseBuildType,
-    )
+    // AM (REMOVE_ACRA_FIREBASE) -->
+    // fun acraEnabled() = preferenceStore.getBoolean(
+    //    "acra.enable",
+    //     isPreviewBuildType || isReleaseBuildType,
+    // )
+    // <-- AM (REMOVE_ACRA_FIREBASE)
 
     fun deviceHasPip() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.packageManager.hasSystemFeature(
         PackageManager.FEATURE_PICTURE_IN_PICTURE,

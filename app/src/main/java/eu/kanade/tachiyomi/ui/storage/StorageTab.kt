@@ -13,7 +13,6 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.storage.anime.animeStorageTab
-import eu.kanade.tachiyomi.ui.storage.manga.mangaStorageTab
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -42,7 +41,6 @@ data class StorageTab(
             titleRes = MR.strings.label_storage,
             tabs = persistentListOf(
                 animeStorageTab(),
-                mangaStorageTab(),
             ),
             startIndex = 1.takeIf { isManga },
         )

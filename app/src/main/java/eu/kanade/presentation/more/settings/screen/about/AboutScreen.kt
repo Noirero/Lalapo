@@ -184,12 +184,12 @@ object AboutScreen : Screen() {
                         LinkIcon(
                             label = "Discord",
                             icon = CustomIcons.Discord,
-                            url = "https://discord.gg/F32UjdJZrR",
+                            url = "https://discord.gg/yDuHDMwxhv",
                         )
                         LinkIcon(
                             label = "GitHub",
                             icon = CustomIcons.Github,
-                            url = "https://github.com/aniyomiorg/aniyomi",
+                            url = "https://github.com/Quickdesh/Animiru",
                         )
                     }
                 }

@@ -11,7 +11,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.AnimeExtensionReposScreen
-import eu.kanade.presentation.more.settings.screen.browse.MangaExtensionReposScreen
 import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.i18n.stringResource
@@ -34,7 +33,6 @@ object SettingsBrowseScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
 
         val sourcePreferences = remember { Injekt.get<SourcePreferences>() }
-        val mangaReposCount by sourcePreferences.mangaExtensionRepos().collectAsState()
         val animeReposCount by sourcePreferences.animeExtensionRepos().collectAsState()
 
         return listOf(
@@ -43,14 +41,10 @@ object SettingsBrowseScreen : SearchableSettings {
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.SwitchPreference(
                         pref = sourcePreferences.hideInAnimeLibraryItems(),
-                        title = stringResource(MR.strings.pref_hide_in_anime_library_items),
-                    ),
-                    Preference.PreferenceItem.SwitchPreference(
-                        pref = sourcePreferences.hideInMangaLibraryItems(),
-                        title = stringResource(MR.strings.pref_hide_in_manga_library_items),
+                        title = stringResource(MR.strings.pref_hide_in_library_items),
                     ),
                     Preference.PreferenceItem.TextPreference(
-                        title = stringResource(MR.strings.label_anime_extension_repos),
+                        title = stringResource(MR.strings.label_extension_repos),
                         subtitle = pluralStringResource(
                             MR.plurals.num_repos,
                             animeReposCount.size,
@@ -58,17 +52,6 @@ object SettingsBrowseScreen : SearchableSettings {
                         ),
                         onClick = {
                             navigator.push(AnimeExtensionReposScreen())
-                        },
-                    ),
-                    Preference.PreferenceItem.TextPreference(
-                        title = stringResource(MR.strings.label_manga_extension_repos),
-                        subtitle = pluralStringResource(
-                            MR.plurals.num_repos,
-                            mangaReposCount.size,
-                            mangaReposCount.size,
-                        ),
-                        onClick = {
-                            navigator.push(MangaExtensionReposScreen())
                         },
                     ),
                 ),

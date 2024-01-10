@@ -6,19 +6,14 @@ import androidx.preference.PreferenceManager
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.domain.ui.model.NavStyle
-import eu.kanade.domain.ui.model.StartScreen
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
-import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_CLOUDFLARE
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.viewer.HwDecState
-import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
-import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.workManager
 import tachiyomi.core.preference.Preference
@@ -49,7 +44,6 @@ object Migrations {
         sourcePreferences: SourcePreferences,
         securityPreferences: SecurityPreferences,
         libraryPreferences: LibraryPreferences,
-        readerPreferences: ReaderPreferences,
         playerPreferences: PlayerPreferences,
         backupPreferences: BackupPreferences,
         trackerManager: TrackerManager,
@@ -60,7 +54,6 @@ object Migrations {
             lastVersionCode.set(BuildConfig.VERSION_CODE)
 
             // Always set up background tasks to ensure they're running
-            MangaLibraryUpdateJob.setupTask(context)
             AnimeLibraryUpdateJob.setupTask(context)
             BackupCreateJob.setupTask(context)
 
@@ -99,16 +92,6 @@ object Migrations {
             }
             if (oldVersion < 44) {
                 // Reset sorting preference if using removed sort by source
-                val oldMangaSortingMode = prefs.getInt(
-                    libraryPreferences.mangaSortingMode().key(),
-                    0,
-                )
-
-                if (oldMangaSortingMode == 5) { // SOURCE = 5
-                    prefs.edit {
-                        putInt(libraryPreferences.mangaSortingMode().key(), 0) // ALPHABETICAL = 0
-                    }
-                }
 
                 val oldAnimeSortingMode = prefs.getInt(
                     libraryPreferences.animeSortingMode().key(),
@@ -133,19 +116,19 @@ object Migrations {
                 }
                 prefs.edit {
                     putInt(
-                        libraryPreferences.filterDownloadedManga().key(),
+                        libraryPreferences.filterDownloadedAnime().key(),
                         convertBooleanPrefToTriState("pref_filter_downloaded_key"),
                     )
                     remove("pref_filter_downloaded_key")
 
                     putInt(
-                        libraryPreferences.filterUnread().key(),
+                        libraryPreferences.filterUnseen().key(),
                         convertBooleanPrefToTriState("pref_filter_unread_key"),
                     )
                     remove("pref_filter_unread_key")
 
                     putInt(
-                        libraryPreferences.filterCompletedManga().key(),
+                        libraryPreferences.filterCompletedAnime().key(),
                         convertBooleanPrefToTriState("pref_filter_completed_key"),
                     )
                     remove("pref_filter_completed_key")
@@ -177,63 +160,24 @@ object Migrations {
                     }
                 }
             }
-            if (oldVersion < 60) {
-                // Migrate Rotation and Viewer values to default values for viewer_flags
-                val newOrientation = when (prefs.getInt("pref_rotation_type_key", 1)) {
-                    1 -> ReaderOrientation.FREE.flagValue
-                    2 -> ReaderOrientation.PORTRAIT.flagValue
-                    3 -> ReaderOrientation.LANDSCAPE.flagValue
-                    4 -> ReaderOrientation.LOCKED_PORTRAIT.flagValue
-                    5 -> ReaderOrientation.LOCKED_LANDSCAPE.flagValue
-                    else -> ReaderOrientation.FREE.flagValue
-                }
-
-                // Reading mode flag and prefValue is the same value
-                val newReadingMode = prefs.getInt("pref_default_viewer_key", 1)
-
-                prefs.edit {
-                    putInt("pref_default_orientation_type_key", newOrientation)
-                    remove("pref_rotation_type_key")
-                    putInt("pref_default_reading_mode_key", newReadingMode)
-                    remove("pref_default_viewer_key")
-                }
-            }
             if (oldVersion < 61) {
                 // Handle removed every 1 or 2 hour library updates
                 val updateInterval = libraryPreferences.autoUpdateInterval().get()
                 if (updateInterval == 1 || updateInterval == 2) {
                     libraryPreferences.autoUpdateInterval().set(3)
-                    MangaLibraryUpdateJob.setupTask(context, 3)
                     AnimeLibraryUpdateJob.setupTask(context, 3)
                 }
             }
             if (oldVersion < 64) {
                 // Set up background tasks
-                MangaLibraryUpdateJob.setupTask(context)
                 AnimeLibraryUpdateJob.setupTask(context)
             }
             if (oldVersion < 64) {
-                val oldMangaSortingMode = prefs.getInt(
-                    libraryPreferences.mangaSortingMode().key(),
-                    0,
-                )
                 val oldAnimeSortingMode = prefs.getInt(
                     libraryPreferences.animeSortingMode().key(),
                     0,
                 )
                 val oldSortingDirection = prefs.getBoolean("library_sorting_ascending", true)
-
-                val newMangaSortingMode = when (oldMangaSortingMode) {
-                    0 -> "ALPHABETICAL"
-                    1 -> "LAST_READ"
-                    2 -> "LAST_CHECKED"
-                    3 -> "UNREAD"
-                    4 -> "TOTAL_CHAPTERS"
-                    6 -> "LATEST_CHAPTER"
-                    8 -> "DATE_FETCHED"
-                    7 -> "DATE_ADDED"
-                    else -> "ALPHABETICAL"
-                }
 
                 val newAnimeSortingMode = when (oldAnimeSortingMode) {
                     0 -> "ALPHABETICAL"
@@ -253,13 +197,11 @@ object Migrations {
                 }
 
                 prefs.edit(commit = true) {
-                    remove(libraryPreferences.mangaSortingMode().key())
                     remove(libraryPreferences.animeSortingMode().key())
                     remove("library_sorting_ascending")
                 }
 
                 prefs.edit {
-                    putString(libraryPreferences.mangaSortingMode().key(), newMangaSortingMode)
                     putString(libraryPreferences.animeSortingMode().key(), newAnimeSortingMode)
                     putString("library_sorting_ascending", newSortingDirection)
                 }
@@ -274,7 +216,6 @@ object Migrations {
                 val updateInterval = libraryPreferences.autoUpdateInterval().get()
                 if (updateInterval in listOf(3, 4, 6, 8)) {
                     libraryPreferences.autoUpdateInterval().set(12)
-                    MangaLibraryUpdateJob.setupTask(context, 12)
                     AnimeLibraryUpdateJob.setupTask(context, 12)
                 }
             }
@@ -302,27 +243,9 @@ object Migrations {
                     )
                 }
             }
-            if (oldVersion < 77) {
-                val oldReaderTap = prefs.getBoolean("reader_tap", false)
-                if (!oldReaderTap) {
-                    readerPreferences.navigationModePager().set(5)
-                    readerPreferences.navigationModeWebtoon().set(5)
-                }
-            }
             if (oldVersion < 81) {
                 // Handle renamed enum values
                 prefs.edit {
-                    val newMangaSortingMode = when (
-                        val oldSortingMode = prefs.getString(
-                            libraryPreferences.mangaSortingMode().key(),
-                            "ALPHABETICAL",
-                        )
-                    ) {
-                        "LAST_CHECKED" -> "LAST_MANGA_UPDATE"
-                        "UNREAD" -> "UNREAD_COUNT"
-                        "DATE_FETCHED" -> "CHAPTER_FETCH_DATE"
-                        else -> oldSortingMode
-                    }
                     val newAnimeSortingMode = when (
                         val oldSortingMode = prefs.getString(
                             libraryPreferences.animeSortingMode().key(),
@@ -334,22 +257,16 @@ object Migrations {
                         "DATE_FETCHED" -> "CHAPTER_FETCH_DATE"
                         else -> oldSortingMode
                     }
-                    putString(libraryPreferences.mangaSortingMode().key(), newMangaSortingMode)
                     putString(libraryPreferences.animeSortingMode().key(), newAnimeSortingMode)
                 }
             }
             if (oldVersion < 82) {
                 prefs.edit {
-                    val mangasort = prefs.getString(
-                        libraryPreferences.mangaSortingMode().key(),
-                        null,
-                    ) ?: return@edit
                     val animesort = prefs.getString(
                         libraryPreferences.animeSortingMode().key(),
                         null,
                     ) ?: return@edit
                     val direction = prefs.getString("library_sorting_ascending", "ASCENDING")!!
-                    putString(libraryPreferences.mangaSortingMode().key(), "$mangasort,$direction")
                     putString(libraryPreferences.animeSortingMode().key(), "$animesort,$direction")
                     remove("library_sorting_ascending")
                 }
@@ -362,12 +279,6 @@ object Migrations {
             }
             if (oldVersion < 85) {
                 val preferences = listOf(
-                    libraryPreferences.filterChapterByRead(),
-                    libraryPreferences.filterChapterByDownloaded(),
-                    libraryPreferences.filterChapterByBookmarked(),
-                    libraryPreferences.sortChapterBySourceOrNumber(),
-                    libraryPreferences.displayChapterByNameOrNumber(),
-                    libraryPreferences.sortChapterByAscendingOrDescending(),
                     libraryPreferences.filterEpisodeBySeen(),
                     libraryPreferences.filterEpisodeByDownloaded(),
                     libraryPreferences.filterEpisodeByBookmarked(),
@@ -437,9 +348,7 @@ object Migrations {
                 }
             }
             if (oldVersion < 96) {
-                MangaLibraryUpdateJob.cancelAllWorks(context)
                 AnimeLibraryUpdateJob.cancelAllWorks(context)
-                MangaLibraryUpdateJob.setupTask(context)
                 AnimeLibraryUpdateJob.setupTask(context)
             }
             if (oldVersion < 97) {
@@ -517,11 +426,6 @@ object Migrations {
                 // Deleting old download cache index files, but might as well clear it all out
                 context.cacheDir.deleteRecursively()
             }
-            if (oldVersion < 114) {
-                sourcePreferences.mangaExtensionRepos().getAndSet {
-                    it.map { repo -> "https://raw.githubusercontent.com/$repo/repo" }.toSet()
-                }
-            }
             if (oldVersion < 116) {
                 replacePreferences(
                     preferenceStore = preferenceStore,
@@ -532,26 +436,6 @@ object Migrations {
             if (oldVersion < 117) {
                 prefs.edit {
                     remove(Preference.appStateKey("trusted_signatures"))
-                }
-            }
-
-            if (oldVersion < 120) {
-                val bottomNavStyle = preferenceStore.getInt("bottom_nav_style", 0)
-
-                val isDefaultTabManga = preferenceStore.getBoolean("default_home_tab_library", false)
-                prefs.edit {
-                    remove("bottom_nav_style")
-                    remove("default_home_tab_library")
-
-                    val startScreen = if (isDefaultTabManga.get()) StartScreen.MANGA else StartScreen.ANIME
-                    val navStyle = when (bottomNavStyle.get()) {
-                        0 -> NavStyle.MOVE_HISTORY_TO_MORE
-                        1 -> NavStyle.MOVE_UPDATES_TO_MORE
-                        else -> NavStyle.MOVE_MANGA_TO_MORE
-                    }
-
-                    preferenceStore.getEnum("start_screen", StartScreen.ANIME).set(startScreen)
-                    preferenceStore.getEnum("bottom_rail_nav_style", NavStyle.MOVE_HISTORY_TO_MORE).set(navStyle)
                 }
             }
 

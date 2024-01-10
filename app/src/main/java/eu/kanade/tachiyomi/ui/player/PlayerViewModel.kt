@@ -31,7 +31,6 @@ import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.viewer.SetAsCover
-import eu.kanade.tachiyomi.ui.reader.SaveImageNotifier
 import eu.kanade.tachiyomi.util.AniSkipApi
 import eu.kanade.tachiyomi.util.Stamp
 import eu.kanade.tachiyomi.util.editCover
@@ -414,7 +413,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private fun deleteEpisodeIfNeeded(chosenEpisode: Episode) {
         // Determine which episode should be deleted and enqueue
         val currentEpisodePosition = this.currentPlaylist.indexOf(chosenEpisode)
-        val removeAfterSeenSlots = downloadPreferences.removeAfterReadSlots().get()
+        val removeAfterSeenSlots = downloadPreferences.removeAfterSeenSlots().get()
         val episodeToDelete = this.currentPlaylist.getOrNull(
             currentEpisodePosition - removeAfterSeenSlots,
         )

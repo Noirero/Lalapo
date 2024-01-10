@@ -7,7 +7,7 @@ import tachiyomi.i18n.MR
 data class BackupOptions(
     val libraryEntries: Boolean = true,
     val categories: Boolean = true,
-    val chapters: Boolean = true,
+    val episodes: Boolean = true,
     val tracking: Boolean = true,
     val history: Boolean = true,
     val appSettings: Boolean = true,
@@ -19,7 +19,7 @@ data class BackupOptions(
     fun asBooleanArray() = booleanArrayOf(
         libraryEntries,
         categories,
-        chapters,
+        episodes,
         tracking,
         history,
         appSettings,
@@ -44,9 +44,9 @@ data class BackupOptions(
                 enabled = { it.libraryEntries },
             ),
             Entry(
-                label = MR.strings.chapters_episodes,
-                getter = BackupOptions::chapters,
-                setter = { options, enabled -> options.copy(chapters = enabled) },
+                label = MR.strings.episodes,
+                getter = BackupOptions::episodes,
+                setter = { options, enabled -> options.copy(episodes = enabled) },
                 enabled = { it.libraryEntries },
             ),
             Entry(
@@ -93,7 +93,7 @@ data class BackupOptions(
         fun fromBooleanArray(array: BooleanArray) = BackupOptions(
             libraryEntries = array[0],
             categories = array[1],
-            chapters = array[2],
+            episodes = array[2],
             tracking = array[3],
             history = array[4],
             appSettings = array[5],

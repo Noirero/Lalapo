@@ -22,7 +22,6 @@ import eu.kanade.presentation.more.MoreScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
 import eu.kanade.tachiyomi.ui.category.CategoriesTab
 import eu.kanade.tachiyomi.ui.download.DownloadsTab
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
@@ -64,7 +63,6 @@ object MoreTab : Tab() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { MoreScreenModel() }
         val downloadQueueState by screenModel.downloadQueueState.collectAsState()
-        val navStyle = currentNavigationStyle()
         MoreScreen(
             downloadQueueStateProvider = { downloadQueueState },
             downloadedOnly = screenModel.downloadedOnly,
@@ -72,8 +70,6 @@ object MoreTab : Tab() {
             incognitoMode = screenModel.incognitoMode,
             onIncognitoModeChange = { screenModel.incognitoMode = it },
             isFDroid = context.isInstalledFromFDroid(),
-            navStyle = navStyle,
-            onClickAlt = { navigator.push(navStyle.moreTab) },
             onClickDownloadQueue = { navigator.push(DownloadsTab()) },
             onClickCategories = { navigator.push(CategoriesTab()) },
             onClickStats = { navigator.push(StatsTab()) },
@@ -86,7 +82,6 @@ object MoreTab : Tab() {
 }
 
 private class MoreScreenModel(
-    private val downloadManager: MangaDownloadManager = Injekt.get(),
     private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
     preferences: BasePreferences = Injekt.get(),
 ) : ScreenModel {
@@ -103,30 +98,18 @@ private class MoreScreenModel(
         // Handle running/paused status change and queue progress updating
         screenModelScope.launchIO {
             combine(
-                downloadManager.isDownloaderRunning,
-                downloadManager.queueState,
-            ) { isRunningManga, mangaDownloadQueue -> Pair(isRunningManga, mangaDownloadQueue.size) }
-                .collectLatest { (isDownloadingManga, mangaDownloadQueueSize) ->
-                    combine(
-                        animeDownloadManager.isDownloaderRunning,
-                        animeDownloadManager.queueState,
-                    ) { isRunningAnime, animeDownloadQueue ->
-                        Pair(
-                            isRunningAnime,
-                            animeDownloadQueue.size,
-                        )
-                    }
-                        .collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
-                            val isDownloading = isDownloadingAnime || isDownloadingManga
-                            val downloadQueueSize = mangaDownloadQueueSize + animeDownloadQueueSize
-                            val pendingDownloadExists = downloadQueueSize != 0
-                            _state.value = when {
-                                !pendingDownloadExists -> DownloadQueueState.Stopped
-                                !isDownloading -> DownloadQueueState.Paused(downloadQueueSize)
-                                else -> DownloadQueueState.Downloading(downloadQueueSize)
-                            }
-                        }
+                animeDownloadManager.isDownloaderRunning,
+                animeDownloadManager.queueState,
+            ) { isRunningAnime, animeDownloadQueue ->
+                Pair(isRunningAnime, animeDownloadQueue.size)
+            }.collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
+                val pendingDownloadExists = animeDownloadQueueSize != 0
+                _state.value = when {
+                    !pendingDownloadExists -> DownloadQueueState.Stopped
+                    !isDownloadingAnime -> DownloadQueueState.Paused(animeDownloadQueueSize)
+                    else -> DownloadQueueState.Downloading(animeDownloadQueueSize)
                 }
+            }
         }
     }
 }

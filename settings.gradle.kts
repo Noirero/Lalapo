@@ -35,7 +35,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Aniyomi"
+rootProject.name = "Animriu"
 include(":app")
 include(":i18n")
 include(":source-api")

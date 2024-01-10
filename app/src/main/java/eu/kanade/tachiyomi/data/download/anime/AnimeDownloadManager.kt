@@ -419,7 +419,7 @@ class AnimeDownloadManager(
             episodes
         }
 
-        return if (!downloadPreferences.removeBookmarkedChapters().get()) {
+        return if (!downloadPreferences.removeBookmarkedEpisodes().get()) {
             filteredCategoryAnime.filterNot { it.bookmark }
         } else {
             filteredCategoryAnime

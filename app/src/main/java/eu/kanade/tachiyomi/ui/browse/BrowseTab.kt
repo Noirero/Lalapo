@@ -20,10 +20,6 @@ import eu.kanade.tachiyomi.ui.browse.anime.extension.animeExtensionsTab
 import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.migrateAnimeSourceTab
 import eu.kanade.tachiyomi.ui.browse.anime.source.animeSourcesTab
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.manga.extension.MangaExtensionsScreenModel
-import eu.kanade.tachiyomi.ui.browse.manga.extension.mangaExtensionsTab
-import eu.kanade.tachiyomi.ui.browse.manga.migration.sources.migrateMangaSourceTab
-import eu.kanade.tachiyomi.ui.browse.manga.source.mangaSourcesTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
@@ -55,8 +51,6 @@ data class BrowseTab(
         val context = LocalContext.current
 
         // Hoisted for extensions tab's search bar
-        val mangaExtensionsScreenModel = rememberScreenModel { MangaExtensionsScreenModel() }
-        val mangaExtensionsState by mangaExtensionsScreenModel.state.collectAsState()
 
         val animeExtensionsScreenModel = rememberScreenModel { AnimeExtensionsScreenModel() }
         val animeExtensionsState by animeExtensionsScreenModel.state.collectAsState()
@@ -65,18 +59,13 @@ data class BrowseTab(
             titleRes = MR.strings.browse,
             tabs = persistentListOf(
                 animeSourcesTab(),
-                mangaSourcesTab(),
                 animeExtensionsTab(animeExtensionsScreenModel),
-                mangaExtensionsTab(mangaExtensionsScreenModel),
                 migrateAnimeSourceTab(),
-                migrateMangaSourceTab(),
             ),
             startIndex = 2.takeIf { toExtensions },
-            mangaSearchQuery = mangaExtensionsState.searchQuery,
-            onChangeMangaSearchQuery = mangaExtensionsScreenModel::search,
             animeSearchQuery = animeExtensionsState.searchQuery,
             onChangeAnimeSearchQuery = animeExtensionsScreenModel::search,
-            scrollable = true,
+            scrollable = false,
         )
 
         LaunchedEffect(Unit) {

@@ -71,7 +71,7 @@ object AnimeLibraryTab : Tab() {
     override val options: TabOptions
         @Composable
         get() {
-            val title = MR.strings.label_anime_library
+            val title = MR.strings.label_library
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(
                 R.drawable.anim_animelibrary_leave,
@@ -116,7 +116,7 @@ object AnimeLibraryTab : Tab() {
             MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
         }
 
-        val defaultTitle = stringResource(MR.strings.label_anime_library)
+        val defaultTitle = stringResource(MR.strings.label_library)
 
         Scaffold(
             topBar = { scrollBehavior ->

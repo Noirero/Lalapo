@@ -2,7 +2,6 @@ package eu.kanade.domain.ui
 
 import android.os.Build
 import eu.kanade.domain.ui.model.AppTheme
-import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.domain.ui.model.StartScreen
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
@@ -37,8 +36,6 @@ class UiPreferences(
     fun tabletUiMode() = preferenceStore.getEnum("tablet_ui_mode", TabletUiMode.AUTOMATIC)
 
     fun startScreen() = preferenceStore.getEnum("start_screen", StartScreen.ANIME)
-
-    fun navStyle() = preferenceStore.getEnum("bottom_rail_nav_style", NavStyle.MOVE_HISTORY_TO_MORE)
 
     companion object {
         fun dateFormat(format: String): DateFormat = when (format) {

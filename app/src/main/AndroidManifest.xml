@@ -67,17 +67,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="tachiyomi" />
-                <data android:host="add-repo" />
-            </intent-filter>
-
-            <!-- Deep link to add manga repos -->
-            <intent-filter android:label="@string/action_add_repo">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="aniyomi" />
                 <data android:host="add-repo" />
             </intent-filter>
@@ -124,7 +113,7 @@
         <activity
             android:name=".ui.deeplink.anime.DeepLinkAnimeActivity"
             android:exported="true"
-            android:label="@string/action_global_anime_search"
+            android:label="@string/action_global_search"
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
@@ -148,49 +137,6 @@
                 android:resource="@xml/searchable" />
         </activity>
 
-        <activity
-            android:name=".ui.deeplink.manga.DeepLinkMangaActivity"
-            android:exported="true"
-            android:label="@string/action_global_manga_search"
-            android:launchMode="singleTask"
-            android:theme="@android:style/Theme.NoDisplay">
-            <intent-filter>
-                <action android:name="android.intent.action.SEARCH" />
-                <action android:name="com.google.android.gms.actions.SEARCH_ACTION" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="eu.kanade.tachiyomi.SEARCH" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="eu.kanade.tachiyomi.ANIMESEARCH" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.app.searchable"
-                android:resource="@xml/searchable" />
-        </activity>
-
-        <activity
-            android:name=".ui.reader.ReaderActivity"
-            android:exported="false"
-            android:launchMode="singleTask">
-            <intent-filter>
-                <action android:name="com.samsung.android.support.REMOTE_ACTION" />
-            </intent-filter>
-
-            <meta-data
-                android:name="com.samsung.android.support.REMOTE_ACTION"
-                android:resource="@xml/s_pen_actions" />
-        </activity>
         <activity
             android:name=".ui.player.PlayerActivity"
             android:launchMode="singleTask"
@@ -218,11 +164,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".extension.manga.util.MangaExtensionInstallActivity"
-            android:exported="false"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
-        <activity
             android:name=".extension.anime.util.AnimeExtensionInstallActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
@@ -237,7 +178,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="aniyomi"/>
+                <data android:scheme="animiru"/>
 
                 <data android:host="myanimelist-auth" />
                 <data android:host="anilist-auth" />
@@ -250,11 +191,6 @@
         <receiver
             android:name=".data.notification.NotificationReceiver"
             android:exported="false" />
-
-        <service
-            android:name=".extension.manga.util.MangaExtensionInstallService"
-            android:exported="false"
-            android:foregroundServiceType="shortService" />
 
         <service
             android:name=".extension.anime.util.AnimeExtensionInstallService"

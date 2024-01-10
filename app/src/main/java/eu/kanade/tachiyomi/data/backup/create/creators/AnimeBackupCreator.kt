@@ -29,7 +29,7 @@ class AnimeBackupCreator(
         // Entry for this anime
         val animeObject = anime.toBackupAnime()
 
-        if (options.chapters) {
+        if (options.episodes) {
             // Backup all the episodes
             handler.awaitList {
                 episodesQueries.getEpisodesByAnimeId(

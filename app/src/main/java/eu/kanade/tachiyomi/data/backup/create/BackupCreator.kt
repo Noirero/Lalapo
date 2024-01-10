@@ -8,7 +8,6 @@ import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.create.creators.AnimeBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.CategoriesBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.ExtensionsBackupCreator
-import eu.kanade.tachiyomi.data.backup.create.creators.MangaBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.PreferenceBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.SourcesBackupCreator
 import eu.kanade.tachiyomi.data.backup.models.Backup
@@ -16,10 +15,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupExtension
-import eu.kanade.tachiyomi.data.backup.models.BackupManga
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSerializer
-import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
@@ -31,8 +28,6 @@ import tachiyomi.core.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.entries.manga.interactor.GetMangaFavorites
-import tachiyomi.domain.entries.manga.model.Manga
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -48,12 +43,10 @@ class BackupCreator(
 
     private val parser: ProtoBuf = Injekt.get(),
     private val getAnimeFavorites: GetAnimeFavorites = Injekt.get(),
-    private val getMangaFavorites: GetMangaFavorites = Injekt.get(),
     private val backupPreferences: BackupPreferences = Injekt.get(),
 
     private val categoriesBackupCreator: CategoriesBackupCreator = CategoriesBackupCreator(),
     private val animeBackupCreator: AnimeBackupCreator = AnimeBackupCreator(),
-    private val mangaBackupCreator: MangaBackupCreator = MangaBackupCreator(),
     private val preferenceBackupCreator: PreferenceBackupCreator = PreferenceBackupCreator(),
     private val sourcesBackupCreator: SourcesBackupCreator = SourcesBackupCreator(),
     private val extensionsBackupCreator: ExtensionsBackupCreator = ExtensionsBackupCreator(context),
@@ -86,13 +79,9 @@ class BackupCreator(
             }
 
             val databaseAnime = getAnimeFavorites.await()
-            val databaseManga = getMangaFavorites.await()
             val backup = Backup(
-                backupManga = backupMangas(databaseManga, options),
-                backupCategories = backupMangaCategories(options),
                 backupAnime = backupAnimes(databaseAnime, options),
                 backupAnimeCategories = backupAnimeCategories(options),
-                backupSources = backupMangaSources(databaseManga),
                 backupAnimeSources = backupAnimeSources(databaseAnime),
                 backupPreferences = backupAppPreferences(options),
                 backupSourcePreferences = backupSourcePreferences(options),
@@ -135,25 +124,12 @@ class BackupCreator(
         return categoriesBackupCreator.backupAnimeCategories()
     }
 
-    private suspend fun backupMangaCategories(options: BackupOptions): List<BackupCategory> {
-        if (!options.categories) return emptyList()
-
-        return categoriesBackupCreator.backupMangaCategories()
-    }
-
-    private suspend fun backupMangas(mangas: List<Manga>, options: BackupOptions): List<BackupManga> {
-        return mangaBackupCreator.backupMangas(mangas, options)
-    }
-
     private suspend fun backupAnimes(animes: List<Anime>, options: BackupOptions): List<BackupAnime> {
         return animeBackupCreator.backupAnimes(animes, options)
     }
 
     private fun backupAnimeSources(animes: List<Anime>): List<BackupAnimeSource> {
         return sourcesBackupCreator.backupAnimeSources(animes)
-    }
-    private fun backupMangaSources(mangas: List<Manga>): List<BackupSource> {
-        return sourcesBackupCreator.backupMangaSources(mangas)
     }
 
     private fun backupAppPreferences(options: BackupOptions): List<BackupPreference> {
