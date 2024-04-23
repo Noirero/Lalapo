@@ -18,4 +18,8 @@ interface AnimeTrackRepository {
     suspend fun insertAnime(track: AnimeTrack)
 
     suspend fun insertAllAnime(tracks: List<AnimeTrack>)
+
+    // AM (GROUPING) -->
+    suspend fun getTracks(): List<AnimeTrack>
+    // <-- AM (GROUPING)
 }

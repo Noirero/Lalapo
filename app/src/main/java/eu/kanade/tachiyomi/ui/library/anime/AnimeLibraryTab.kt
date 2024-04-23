@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.util.fastAll
+import androidx.compose.ui.util.fastAny
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -50,12 +51,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchIO
+import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -63,6 +67,8 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.entries.anime.isLocal
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 
 object AnimeLibraryTab : Tab() {
@@ -101,14 +107,36 @@ object AnimeLibraryTab : Tab() {
 
         val snackbarHostState = remember { SnackbarHostState() }
 
+        // AM (GROUPING) -->
+        val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
+        val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(
+            initial = runBlocking { getAnimeCategories.await() },
+        )
+
         val onClickRefresh: (Category?) -> Boolean = { category ->
-            val started = AnimeLibraryUpdateJob.startNow(context, category)
+            val started = AnimeLibraryUpdateJob.startNow(
+                context = context,
+                category = if (state.groupType == AnimeLibraryGroup.BY_DEFAULT) category else null,
+                group = state.groupType,
+                groupExtra = when (state.groupType) {
+                    AnimeLibraryGroup.BY_DEFAULT -> null
+                    AnimeLibraryGroup.BY_SOURCE, AnimeLibraryGroup.BY_TRACK_STATUS -> category?.id?.toString()
+                    AnimeLibraryGroup.BY_STATUS -> category?.id?.minus(1)?.toString()
+                    else -> null
+                },
+            )
+
             scope.launch {
-                val msgRes = if (started) MR.strings.updating_category else MR.strings.update_already_running
+                val msgRes = when {
+                    !started -> MR.strings.update_already_running
+                    category != null -> MR.strings.updating_category
+                    else -> MR.strings.updating_library
+                }
                 snackbarHostState.showSnackbar(context.stringResource(msgRes))
             }
             started
         }
+        // <-- AM (GROUPING)
 
         suspend fun openEpisode(episode: Episode) {
             val playerPreferences: PlayerPreferences by injectLazy()
@@ -244,6 +272,9 @@ object AnimeLibraryTab : Tab() {
                     onDismissRequest = onDismissRequest,
                     screenModel = settingsScreenModel,
                     category = category,
+                    // AM (GROUPING) -->
+                    hasCategories = allAnimeCategories.fastAny { !it.isSystemCategory },
+                    // <-- AM (GROUPING)
                 )
             }
             is AnimeLibraryScreenModel.Dialog.ChangeCategory -> {

@@ -6,13 +6,21 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.filled.AvTimer
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.util.fastForEach
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibrarySettingsScreenModel
@@ -23,11 +31,13 @@ import tachiyomi.core.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
+import tachiyomi.domain.library.model.AnimeLibraryGroup
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
+import tachiyomi.presentation.core.components.IconItem
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.SortItem
@@ -40,6 +50,9 @@ fun AnimeLibrarySettingsDialog(
     onDismissRequest: () -> Unit,
     screenModel: AnimeLibrarySettingsScreenModel,
     category: Category?,
+    // AM (GROUPING) -->
+    hasCategories: Boolean,
+    // <-- AM (GROUPING)
 ) {
     TabbedDialog(
         onDismissRequest = onDismissRequest,
@@ -47,6 +60,9 @@ fun AnimeLibrarySettingsDialog(
             stringResource(MR.strings.action_filter),
             stringResource(MR.strings.action_sort),
             stringResource(MR.strings.action_display),
+            // AM (GROUPING) -->
+            stringResource(MR.strings.group),
+            // <-- AM (GROUPING)
         ),
     ) { page ->
         Column(
@@ -65,6 +81,12 @@ fun AnimeLibrarySettingsDialog(
                 2 -> DisplayPage(
                     screenModel = screenModel,
                 )
+                // AM (GROUPING) -->
+                3 -> GroupPage(
+                    screenModel = screenModel,
+                    hasCategories = hasCategories,
+                )
+                // <-- AM (GROUPING)
             }
         }
     }
@@ -162,8 +184,19 @@ private fun ColumnScope.SortPage(
     category: Category?,
     screenModel: AnimeLibrarySettingsScreenModel,
 ) {
-    val sortingMode = category.sort.type
-    val sortDescending = !category.sort.isAscending
+    // AM (GROUPING) -->
+    val globalSortMode by screenModel.libraryPreferences.animeSortingMode().collectAsState()
+    val sortingMode = if (screenModel.grouping == AnimeLibraryGroup.BY_DEFAULT) {
+        category.sort.type
+    } else {
+        globalSortMode.type
+    }
+    val sortDescending = if (screenModel.grouping == AnimeLibraryGroup.BY_DEFAULT) {
+        category.sort.isAscending
+    } else {
+        globalSortMode.isAscending
+    }.not()
+    // <-- AM (GROUPING)
 
     val trackerSortOption =
         if (screenModel.trackers.isEmpty()) {
@@ -280,3 +313,58 @@ private fun ColumnScope.DisplayPage(
         pref = screenModel.libraryPreferences.categoryNumberOfItems(),
     )
 }
+
+// AM (GROUPING) -->
+data class GroupMode(
+    val int: Int,
+    val nameRes: Int,
+    val imageVector: ImageVector,
+)
+
+private fun groupTypeDrawableRes(type: Int): ImageVector {
+    return when (type) {
+        AnimeLibraryGroup.BY_STATUS -> Icons.Default.AvTimer
+        AnimeLibraryGroup.BY_TRACK_STATUS -> Icons.Default.Sync
+        AnimeLibraryGroup.BY_SOURCE -> Icons.Default.Explore
+        AnimeLibraryGroup.UNGROUPED -> Icons.Default.Layers
+        else -> Icons.AutoMirrored.Filled.Label
+    }
+}
+
+@Composable
+private fun ColumnScope.GroupPage(
+    screenModel: AnimeLibrarySettingsScreenModel,
+    hasCategories: Boolean,
+) {
+    val groups = remember(hasCategories, screenModel.trackers) {
+        buildList {
+            if (hasCategories) {
+                add(AnimeLibraryGroup.BY_DEFAULT)
+            }
+            add(AnimeLibraryGroup.BY_SOURCE)
+            add(AnimeLibraryGroup.BY_STATUS)
+            if (screenModel.trackers.isNotEmpty()) {
+                add(AnimeLibraryGroup.BY_TRACK_STATUS)
+            }
+            add(AnimeLibraryGroup.UNGROUPED)
+        }.map {
+            GroupMode(
+                it,
+                AnimeLibraryGroup.groupTypeStringRes(it, hasCategories),
+                groupTypeDrawableRes(it),
+            )
+        }
+    }
+
+    groups.fastForEach {
+        IconItem(
+            label = androidx.compose.ui.res.stringResource(it.nameRes),
+            icon = it.imageVector,
+            selected = it.int == screenModel.grouping,
+            onClick = {
+                screenModel.setGrouping(it.int)
+            },
+        )
+    }
+}
+// <-- AM (GROUPING)

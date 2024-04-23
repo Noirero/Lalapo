@@ -2,6 +2,7 @@ package tachiyomi.data.track.anime
 
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
+import tachiyomi.data.track.anime.AnimeTrackMapper.mapTrack
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 
@@ -68,4 +69,12 @@ class AnimeTrackRepositoryImpl(
             }
         }
     }
+
+    // AM (GROUPING) -->
+    override suspend fun getTracks(): List<AnimeTrack> {
+        return handler.awaitList {
+            anime_syncQueries.getAnimeTracks(::mapTrack)
+        }
+    }
+    // <-- AM (GROUPING)
 }
