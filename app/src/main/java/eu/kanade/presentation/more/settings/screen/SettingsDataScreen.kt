@@ -20,6 +20,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -39,11 +40,14 @@ import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.ui.storage.StorageTab
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.storage.displayablePath
 import tachiyomi.domain.backup.service.BackupPreferences
@@ -84,7 +88,9 @@ object SettingsDataScreen : SearchableSettings {
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
 
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
-            getDataGroup(),
+            // AM (FILE_SIZE) -->
+            getDataGroup(storagePreferences = storagePreferences),
+            // <-- AM (FILE_SIZE)
         )
     }
 
@@ -240,8 +246,20 @@ object SettingsDataScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getDataGroup(): Preference.PreferenceGroup {
+    private fun getDataGroup(storagePreferences: StoragePreferences): Preference.PreferenceGroup {
         val navigator = LocalNavigator.currentOrThrow
+
+        // AM (FILE_SIZE) -->
+        LaunchedEffect(Unit) {
+            storagePreferences.showEpisodeFileSize().changes()
+                .drop(1)
+                .collectLatest { value ->
+                    if (value) {
+                        Injekt.get<AnimeDownloadCache>().invalidateCache()
+                    }
+                }
+        }
+        // <-- AM (FILE_SIZE)
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_storage_usage),
@@ -258,6 +276,13 @@ object SettingsDataScreen : SearchableSettings {
                         },
                     )
                 },
+
+                // AM (FILE_SIZE) -->
+                Preference.PreferenceItem.SwitchPreference(
+                    pref = storagePreferences.showEpisodeFileSize(),
+                    title = stringResource(MR.strings.pref_show_downloaded_episode_file_size),
+                ),
+                // <-- AM (FILE_SIZE)
 
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.label_storage),
