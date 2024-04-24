@@ -7,6 +7,9 @@ SELECT
     episodes.scanlator,
     episodes.seen,
     episodes.bookmark,
+    -- AM (FILLER) -->
+    episodes.fillermark,
+    -- <-- AM (FILLER)
     animes.source,
     animes.favorite,
     animes.thumbnail_url AS thumbnailUrl,

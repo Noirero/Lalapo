@@ -5,6 +5,9 @@ data class Episode(
     val animeId: Long,
     val seen: Boolean,
     val bookmark: Boolean,
+    // AM (FILLER) -->
+    val fillermark: Boolean,
+    // <-- AM (FILLER)
     val lastSecondSeen: Long,
     val totalSeconds: Long,
     val dateFetch: Long,
@@ -35,6 +38,9 @@ data class Episode(
             animeId = -1,
             seen = false,
             bookmark = false,
+            // AM (FILLER) -->
+            fillermark = false,
+            // <-- AM (FILLER)
             lastSecondSeen = 0,
             totalSeconds = 0,
             dateFetch = 0,

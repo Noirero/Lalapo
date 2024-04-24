@@ -178,7 +178,11 @@ class PlayerViewModel @JvmOverloads constructor(
                     anime.source,
                 ) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
-                anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark
+                anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
+                // AM (FILLER) -->
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
+            // <-- AM (FILLER)
         }.toMutableList()
 
         if (episodesForPlayer.all { it.id != episodeId }) {
@@ -484,6 +488,22 @@ class PlayerViewModel @JvmOverloads constructor(
             )
         }
     }
+
+    // AM (FILLER) -->
+    /**
+     * Fillermarks the currently active episode.
+     */
+    fun fillermarkEpisode(episodeId: Long?, fillermarked: Boolean) {
+        viewModelScope.launchNonCancellable {
+            updateEpisode.await(
+                EpisodeUpdate(
+                    id = episodeId!!,
+                    fillermark = fillermarked,
+                ),
+            )
+        }
+    }
+    // <-- AM (FILLER)
 
     /**
      * Saves the screenshot on the pictures directory and notifies the UI of the result.

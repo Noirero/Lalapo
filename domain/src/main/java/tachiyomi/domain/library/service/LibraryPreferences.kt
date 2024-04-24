@@ -80,8 +80,6 @@ class LibraryPreferences(
 
     // Common Cache
 
-    fun autoClearItemCache() = preferenceStore.getBoolean("auto_clear_chapter_cache", false)
-
     // Mixture Columns
 
     fun animePortraitColumns() = preferenceStore.getInt("pref_animelib_columns_portrait_key", 0)
@@ -101,6 +99,11 @@ class LibraryPreferences(
 
     fun filterBookmarkedAnime() =
         preferenceStore.getEnum("pref_filter_animelib_bookmarked_v2", TriState.DISABLED)
+
+    // AM (FILLER) -->
+    fun filterFillermarkedAnime() =
+        preferenceStore.getEnum("pref_filter_animelib_fillermarked_v2", TriState.DISABLED)
+    // <-- AM (FILLER)
 
     fun filterCompletedAnime() =
         preferenceStore.getEnum("pref_filter_animelib_completed_v2", TriState.DISABLED)
@@ -135,6 +138,11 @@ class LibraryPreferences(
     fun filterEpisodeByBookmarked() =
         preferenceStore.getLong("default_episode_filter_by_bookmarked", Anime.SHOW_ALL)
 
+    // AM (FILLER) -->
+    fun filterEpisodeByFillermarked() =
+        preferenceStore.getLong("default_episode_filter_by_fillermarked", Anime.SHOW_ALL)
+    // <-- AM (FILLER)
+
     // and upload date
     fun sortEpisodeBySourceOrNumber() = preferenceStore.getLong(
         "default_episode_sort_by_source_or_number",
@@ -155,6 +163,9 @@ class LibraryPreferences(
         filterEpisodeBySeen().set(anime.unseenFilterRaw)
         filterEpisodeByDownloaded().set(anime.downloadedFilterRaw)
         filterEpisodeByBookmarked().set(anime.bookmarkedFilterRaw)
+        // AM (FILLER) -->
+        filterEpisodeByFillermarked().set(anime.fillermarkedFilterRaw)
+        // <-- AM (FILLER)
         sortEpisodeBySourceOrNumber().set(anime.sorting)
         displayEpisodeByNameOrNumber().set(anime.displayMode)
         sortEpisodeByAscendingOrDescending().set(
@@ -177,6 +188,11 @@ class LibraryPreferences(
     enum class EpisodeSwipeAction {
         ToggleSeen,
         ToggleBookmark,
+
+        // AM (FILLER) -->
+        ToggleFillermark,
+
+        // <-- AM (FILLER)
         Download,
         Disabled,
     }

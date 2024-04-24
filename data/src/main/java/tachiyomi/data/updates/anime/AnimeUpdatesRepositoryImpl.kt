@@ -50,6 +50,9 @@ class AnimeUpdatesRepositoryImpl(
         scanlator: String?,
         seen: Boolean,
         bookmark: Boolean,
+        // AM (FILLER) -->
+        fillermark: Boolean,
+        // <-- AM (FILLER)
         lastSecondSeen: Long,
         totalSeconds: Long,
         sourceId: Long,
@@ -66,6 +69,9 @@ class AnimeUpdatesRepositoryImpl(
         scanlator = scanlator,
         seen = seen,
         bookmark = bookmark,
+        // AM (FILLER) -->
+        fillermark = fillermark,
+        // <-- AM (FILLER)
         lastSecondSeen = lastSecondSeen,
         totalSeconds = totalSeconds,
         sourceId = sourceId,

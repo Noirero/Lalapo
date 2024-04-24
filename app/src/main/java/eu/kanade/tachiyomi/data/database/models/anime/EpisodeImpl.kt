@@ -16,6 +16,10 @@ class EpisodeImpl : Episode {
 
     override var bookmark: Boolean = false
 
+    // AM (FILLER) -->
+    override var fillermark: Boolean = false
+    // <-- AM (FILLER)
+
     override var last_second_seen: Long = 0
 
     override var total_seconds: Long = 0

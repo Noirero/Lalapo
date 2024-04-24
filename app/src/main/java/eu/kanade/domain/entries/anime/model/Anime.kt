@@ -21,7 +21,10 @@ val Anime.downloadedFilter: TriState
 fun Anime.episodesFiltered(): Boolean {
     return unseenFilter != TriState.DISABLED ||
         downloadedFilter != TriState.DISABLED ||
-        bookmarkedFilter != TriState.DISABLED
+        bookmarkedFilter != TriState.DISABLED ||
+        // AM (FILLER) -->
+        fillermarkedFilter != TriState.DISABLED
+    // <-- AM (FILLER)
 }
 fun Anime.forceDownloaded(): Boolean {
     return favorite && Injekt.get<BasePreferences>().downloadedOnly().get()
