@@ -11,6 +11,7 @@ import dataanime.Animes
 import eu.kanade.domain.track.anime.store.DelayedAnimeTrackingStore
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
+import eu.kanade.tachiyomi.data.connection.ConnectionManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
@@ -133,6 +134,10 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { TrackerManager(app) }
         addSingletonFactory { DelayedAnimeTrackingStore(app) }
+
+        // AM (CONNECTION) -->
+        addSingletonFactory { ConnectionManager() }
+        // <-- AM (CONNECTION)
 
         addSingletonFactory { ImageSaver(app) }
 
