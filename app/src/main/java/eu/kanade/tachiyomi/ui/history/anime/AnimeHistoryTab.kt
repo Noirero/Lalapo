@@ -54,7 +54,7 @@ fun Screen.animeHistoryTab(
     }
 
     return TabContent(
-        titleRes = MR.strings.label_anime_history,
+        titleRes = MR.strings.label_recent_manga,
         searchEnabled = true,
         content = { contentPadding, _ ->
             AnimeHistoryScreen(

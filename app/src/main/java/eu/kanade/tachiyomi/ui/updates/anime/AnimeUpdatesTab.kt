@@ -50,7 +50,7 @@ fun Screen.animeUpdatesTab(
     }
 
     return TabContent(
-        titleRes = MR.strings.label_anime_updates,
+        titleRes = MR.strings.label_recent_updates,
         searchEnabled = false,
         content = { contentPadding, _ ->
             AnimeUpdateScreen(

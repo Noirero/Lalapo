@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.history.HistoriesTab
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.recents.RecentsTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -50,8 +51,7 @@ object HomeScreen : Screen() {
 
     private val tabs = listOf(
         AnimeLibraryTab,
-        UpdatesTab,
-        HistoriesTab,
+        RecentsTab,
         BrowseTab(toExtensions = false),
         MoreTab,
     )
@@ -123,6 +123,7 @@ object HomeScreen : Screen() {
                             is Tab.History -> HistoriesTab
                             is Tab.Browse -> BrowseTab(it.toExtensions)
                             is Tab.More -> MoreTab
+                            is Tab.Recents -> RecentsTab
                         }
 
                         if (it is Tab.AnimeLib && it.animeIdToOpen != null) {
@@ -151,6 +152,7 @@ object HomeScreen : Screen() {
 
     sealed interface Tab {
         data class AnimeLib(val animeIdToOpen: Long? = null) : Tab
+        data object Recents : Tab
         data object Updates : Tab
         data object History : Tab
         data class Browse(val toExtensions: Boolean = false) : Tab
