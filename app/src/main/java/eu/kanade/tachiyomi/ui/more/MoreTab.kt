@@ -47,7 +47,9 @@ object MoreTab : Tab() {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_more_enter)
             return TabOptions(
-                index = 4u,
+                // AM (RECENTS) -->
+                index = 3u,
+                // <-- AM (RECENTS)
                 title = stringResource(MR.strings.label_more),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )

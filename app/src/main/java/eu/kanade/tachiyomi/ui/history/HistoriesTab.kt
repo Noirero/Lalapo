@@ -30,9 +30,8 @@ object HistoriesTab : Tab() {
         get() {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_history_enter)
-            val index: UShort = 2u
             return TabOptions(
-                index = index,
+                index = 2u,
                 title = stringResource(MR.strings.history),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )

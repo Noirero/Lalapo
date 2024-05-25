@@ -1,3 +1,4 @@
+// AM (RECENTS) -->
 package eu.kanade.tachiyomi.ui.recents
 
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -20,8 +21,8 @@ import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.history.anime.animeHistoryTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.updates.anime.animeUpdatesTab
-import tachiyomi.i18n.MR
 import kotlinx.collections.immutable.persistentListOf
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
 object RecentsTab : Tab() {
@@ -31,9 +32,8 @@ object RecentsTab : Tab() {
         get() {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_recents_enter)
-            val index: UShort = 1u
             return TabOptions(
-                index = index,
+                index = 1u,
                 title = stringResource(MR.strings.label_recent_recents),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
@@ -65,3 +65,4 @@ object RecentsTab : Tab() {
         }
     }
 }
+// <-- AM (RECENTS)

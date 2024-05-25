@@ -75,7 +75,7 @@ fun NavigationPill(
     val tabNavigator = LocalTabNavigator.current
     val configuration = LocalConfiguration.current
 
-    val pillItemWidth = (configuration.screenWidthDp / 5).dp
+    val pillItemWidth = (configuration.screenWidthDp / tabs.size).dp
     val pillItemHeight = 48.dp
 
     val tabMap = tabs.associateBy { it.options.index.toInt() }
@@ -91,7 +91,7 @@ fun NavigationPill(
     }
 
     val navigationOffsetX: Dp by animateDpAsState(
-        targetValue = pillItemWidth * (currentIndex - 2),
+        targetValue = pillItemWidth * (currentIndex - getOffsetX(tabs.size)),
         animationSpec = tween(labelFade * 2),
     )
 
@@ -314,5 +314,7 @@ private fun NavigationIconItem(tab: Tab) {
         )
     }
 }
+
+private fun getOffsetX(numOfTabs: Int): Float = (0.5f * numOfTabs) - 0.5f
 
 // <-- AM (NAVIGATION_PILL)

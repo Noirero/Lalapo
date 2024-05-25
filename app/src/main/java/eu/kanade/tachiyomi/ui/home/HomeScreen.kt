@@ -51,7 +51,9 @@ object HomeScreen : Screen() {
 
     private val tabs = listOf(
         AnimeLibraryTab,
+        // AM (RECENTS) -->
         RecentsTab,
+        // <-- AM (RECENTS)
         BrowseTab(toExtensions = false),
         MoreTab,
     )
@@ -123,7 +125,9 @@ object HomeScreen : Screen() {
                             is Tab.History -> HistoriesTab
                             is Tab.Browse -> BrowseTab(it.toExtensions)
                             is Tab.More -> MoreTab
+                            // AM (RECENTS) -->
                             is Tab.Recents -> RecentsTab
+                            // <-- AM (RECENTS)
                         }
 
                         if (it is Tab.AnimeLib && it.animeIdToOpen != null) {
@@ -152,7 +156,11 @@ object HomeScreen : Screen() {
 
     sealed interface Tab {
         data class AnimeLib(val animeIdToOpen: Long? = null) : Tab
+
+        // AM (RECENTS) -->
         data object Recents : Tab
+
+        // <-- AM (RECENTS)
         data object Updates : Tab
         data object History : Tab
         data class Browse(val toExtensions: Boolean = false) : Tab
