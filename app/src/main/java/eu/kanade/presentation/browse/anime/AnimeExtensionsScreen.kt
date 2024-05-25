@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -40,15 +41,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.Navigator
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.core.util.fastDistinctBy
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
+import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.entries.components.DotSeparatorNoSpaceText
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionFilterScreen
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreenModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -56,6 +61,7 @@ import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
+import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
@@ -68,8 +74,11 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 @Composable
 fun AnimeExtensionScreen(
     state: AnimeExtensionsScreenModel.State,
-    contentPadding: PaddingValues,
     searchQuery: String?,
+    // AM (BROWSE) -->
+    navigator: Navigator,
+    onChangeSearchQuery: (String?) -> Unit,
+    // <-- AM (BROWSE)
     onLongClickItem: (AnimeExtension) -> Unit,
     onClickItemCancel: (AnimeExtension) -> Unit,
     onOpenWebView: (AnimeExtension.Available) -> Unit,
@@ -81,38 +90,61 @@ fun AnimeExtensionScreen(
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
 ) {
-    PullRefresh(
-        refreshing = state.isRefreshing,
-        onRefresh = onRefresh,
-        enabled = { !state.isLoading },
-    ) {
-        when {
-            state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
-            state.isEmpty -> {
-                val msg = if (!searchQuery.isNullOrEmpty()) {
-                    MR.strings.no_results_found
-                } else {
-                    MR.strings.empty_screen
+    // AM (BROWSE) -->
+    Scaffold(
+        topBar = { scrollBehavior ->
+            SearchToolbar(
+                titleContent = { AppBarTitle(stringResource(MR.strings.label_extensions)) },
+                searchQuery = searchQuery,
+                onChangeSearchQuery = onChangeSearchQuery,
+                actions = {
+                    IconButton(onClick = { navigator.push(AnimeExtensionFilterScreen()) }) {
+                        Icon(
+                            Icons.Outlined.Translate,
+                            contentDescription = stringResource(MR.strings.action_filter),
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigator::pop,
+            )
+        },
+    ) { contentPadding ->
+        // <-- AM (BROWSE)
+        PullRefresh(
+            refreshing = state.isRefreshing,
+            onRefresh = onRefresh,
+            enabled = { !state.isLoading },
+        ) {
+            when {
+                state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
+                state.isEmpty -> {
+                    val msg = if (!searchQuery.isNullOrEmpty()) {
+                        MR.strings.no_results_found
+                    } else {
+                        MR.strings.empty_screen
+                    }
+                    EmptyScreen(
+                        stringRes = msg,
+                        modifier = Modifier.padding(contentPadding),
+                    )
                 }
-                EmptyScreen(
-                    stringRes = msg,
-                    modifier = Modifier.padding(contentPadding),
-                )
-            }
-            else -> {
-                AnimeExtensionContent(
-                    state = state,
-                    contentPadding = contentPadding,
-                    onLongClickItem = onLongClickItem,
-                    onClickItemCancel = onClickItemCancel,
-                    onOpenWebView = onOpenWebView,
-                    onInstallExtension = onInstallExtension,
-                    onUninstallExtension = onUninstallExtension,
-                    onUpdateExtension = onUpdateExtension,
-                    onTrustExtension = onTrustExtension,
-                    onOpenExtension = onOpenExtension,
-                    onClickUpdateAll = onClickUpdateAll,
-                )
+
+                else -> {
+                    AnimeExtensionContent(
+                        state = state,
+                        contentPadding = contentPadding,
+                        onLongClickItem = onLongClickItem,
+                        onClickItemCancel = onClickItemCancel,
+                        onOpenWebView = onOpenWebView,
+                        onInstallExtension = onInstallExtension,
+                        onUninstallExtension = onUninstallExtension,
+                        onUpdateExtension = onUpdateExtension,
+                        onTrustExtension = onTrustExtension,
+                        onOpenExtension = onOpenExtension,
+                        onClickUpdateAll = onClickUpdateAll,
+                    )
+                }
             }
         }
     }
@@ -259,6 +291,9 @@ private fun AnimeExtensionItem(
     onClickItemSecondaryAction: (AnimeExtension) -> Unit,
 ) {
     val (extension, installStep) = item
+    // AM (BROWSE) -->
+    if (extension is AnimeExtension.Installed) return
+    // <-- AM (BROWSE)a
     BaseBrowseItem(
         modifier = modifier
             .combinedClickable(

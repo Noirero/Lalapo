@@ -33,14 +33,16 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
+// AM (BROWSE) -->
+var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
+// <-- // AM (BROWSE)
+
 class AnimeExtensionsScreenModel(
     preferences: SourcePreferences = Injekt.get(),
     basePreferences: BasePreferences = Injekt.get(),
     private val extensionManager: AnimeExtensionManager = Injekt.get(),
     private val getExtensions: GetAnimeExtensionsByType = Injekt.get(),
 ) : StateScreenModel<AnimeExtensionsScreenModel.State>(State()) {
-
-    private var _currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
     init {
         val context = Injekt.get<Application>()
@@ -89,9 +91,9 @@ class AnimeExtensionsScreenModel(
         screenModelScope.launchIO {
             combine(
                 state.map { it.searchQuery }.distinctUntilChanged().debounce(SEARCH_DEBOUNCE_MILLIS),
-                _currentDownloads,
+                currentDownloads,
                 getExtensions.subscribe(),
-            ) { query, downloads, (_updates, _installed, _available, _untrusted) ->
+            ) { query, downloads, (_updates, _, _available, _untrusted) ->
                 val searchQuery = query ?: ""
 
                 val itemsGroups: ItemGroups = mutableMapOf()
@@ -103,15 +105,14 @@ class AnimeExtensionsScreenModel(
                     itemsGroups[AnimeExtensionUiModel.Header.Resource(MR.strings.ext_updates_pending)] = updates
                 }
 
-                val installed = _installed.filter(queryFilter(searchQuery)).map(
-                    extensionMapper(downloads),
-                )
                 val untrusted = _untrusted.filter(queryFilter(searchQuery)).map(
                     extensionMapper(downloads),
                 )
-                if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
-                    itemsGroups[AnimeExtensionUiModel.Header.Resource(MR.strings.ext_installed)] = installed + untrusted
+                // AM (BROWSE) -->
+                if (untrusted.isNotEmpty()) {
+                    itemsGroups[AnimeExtensionUiModel.Header.Resource(MR.strings.ext_untrusted)] = untrusted
                 }
+                // <-- AM (BROWSE)
 
                 val languagesWithExtensions = _available
                     .filter(queryFilter(searchQuery))
@@ -182,11 +183,11 @@ class AnimeExtensionsScreenModel(
     }
 
     private fun addDownloadState(extension: AnimeExtension, installStep: InstallStep) {
-        _currentDownloads.update { it + Pair(extension.pkgName, installStep) }
+        currentDownloads.update { it + Pair(extension.pkgName, installStep) }
     }
 
     private fun removeDownloadState(extension: AnimeExtension) {
-        _currentDownloads.update { it - extension.pkgName }
+        currentDownloads.update { it - extension.pkgName }
     }
 
     private suspend fun Flow<InstallStep>.collectToInstallUpdate(extension: AnimeExtension) =

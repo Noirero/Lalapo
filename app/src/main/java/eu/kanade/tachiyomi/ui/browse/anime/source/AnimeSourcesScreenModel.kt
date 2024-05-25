@@ -3,12 +3,13 @@ package eu.kanade.tachiyomi.ui.browse.anime.source
 import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.source.anime.interactor.GetEnabledAnimeSources
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSourcePin
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.anime.AnimeSourceUiModel
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.util.system.LAST_USED_KEY
 import eu.kanade.tachiyomi.util.system.PINNED_KEY
 import kotlinx.collections.immutable.ImmutableList
@@ -29,11 +30,13 @@ import uy.kohesive.injekt.api.get
 import java.util.TreeMap
 
 class AnimeSourcesScreenModel(
-    private val preferences: BasePreferences = Injekt.get(),
-    private val sourcePreferences: SourcePreferences = Injekt.get(),
     private val getEnabledAnimeSources: GetEnabledAnimeSources = Injekt.get(),
     private val toggleSource: ToggleAnimeSource = Injekt.get(),
     private val toggleSourcePin: ToggleAnimeSourcePin = Injekt.get(),
+    // AM (BROWSE) -->
+    private val extensionManager: AnimeExtensionManager = Injekt.get(),
+    internal val sourcePreferences: SourcePreferences = Injekt.get(),
+    // <-- AM (BROWSE)
 ) : StateScreenModel<AnimeSourcesScreenModel.State>(State()) {
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
@@ -103,6 +106,14 @@ class AnimeSourcesScreenModel(
     fun closeDialog() {
         mutableState.update { it.copy(dialog = null) }
     }
+
+    // AM (BROWSE) -->
+    fun uninstallExtension(extension: AnimeExtension.Installed) {
+        screenModelScope.launchIO {
+            extensionManager.uninstallExtension(extension)
+        }
+    }
+    // <-- AM (BROWSE)
 
     sealed interface Event {
         data object FailedFetchingSources : Event
