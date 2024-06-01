@@ -56,8 +56,9 @@ object RecentsTab : Tab() {
                 animeUpdatesTab(context),
                 animeHistoryTab(context),
             ),
-            animeSearchQuery = animeSearchQuery,
-            onChangeAnimeSearchQuery = animeHistoryScreenModel::search,
+            // Compatibility with hardcoded aniyomi code
+            mangaSearchQuery = animeSearchQuery,
+            onChangeMangaSearchQuery = animeHistoryScreenModel::search,
         )
 
         LaunchedEffect(Unit) {
