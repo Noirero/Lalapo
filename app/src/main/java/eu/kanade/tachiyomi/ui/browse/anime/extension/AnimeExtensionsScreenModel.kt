@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.seconds
 
 // AM (BROWSE) -->
 var currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
-// <-- // AM (BROWSE)
+// <-- AM (BROWSE)
 
 class AnimeExtensionsScreenModel(
     preferences: SourcePreferences = Injekt.get(),

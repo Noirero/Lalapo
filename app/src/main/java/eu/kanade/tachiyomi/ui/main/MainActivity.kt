@@ -55,6 +55,7 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connection.service.ConnectionPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.AppStateBanners
@@ -69,6 +70,7 @@ import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.core.Constants
+import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
@@ -119,6 +121,10 @@ class MainActivity : BaseActivity() {
     private val uiPreferences: UiPreferences by injectLazy()
     private val preferences: BasePreferences by injectLazy()
 
+    // AM (CONNECTION) -->
+    private val connectionPreferences: ConnectionPreferences by injectLazy()
+    // <-- AM (CONNECTION)
+
     private val animeDownloadCache: AnimeDownloadCache by injectLazy()
 
     // To be checked by splash screen. If true then splash screen will be removed.
@@ -151,6 +157,10 @@ class MainActivity : BaseActivity() {
                 playerPreferences = Injekt.get(),
                 backupPreferences = Injekt.get(),
                 trackerManager = Injekt.get(),
+                // AM (CONNECTION) -->
+                connectionManager = Injekt.get(),
+                connectionPreferences = connectionPreferences,
+                // <-- AM (CONNECTION)
             )
         } else {
             false
@@ -259,6 +269,19 @@ class MainActivity : BaseActivity() {
                             ) { navigator.popUntilRoot() }
                         }
                         .launchIn(this)
+
+                    val appContext = this@MainActivity.applicationContext
+
+                    // AM (DISCORD) -->
+                    connectionPreferences.enableDiscordRPC().changes()
+                        .onEach {
+                            if (it) {
+                                DiscordRPCService.start(appContext)
+                            } else {
+                                DiscordRPCService.stop(appContext, 0L)
+                            }
+                        }.launchIn(this)
+                    // <-- AM (DISCORD)
                 }
 
                 HandleOnNewIntent(context = context, navigator = navigator)

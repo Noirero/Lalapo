@@ -20,6 +20,8 @@ import eu.kanade.presentation.browse.anime.AnimeSourceOptionsDialog
 import eu.kanade.presentation.browse.anime.AnimeSourcesScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
@@ -97,6 +99,9 @@ data class BrowseTab(
 
         val internalErrString = stringResource(MR.strings.internal_error)
         LaunchedEffect(Unit) {
+            // AM (DISCORD) -->
+            launch { DiscordRPCService.setScreen(context, DiscordScreen.BROWSE) }
+            // <-- AM (DISCORD)
             (context as? MainActivity)?.ready = true
             launchIO {
                 Injekt.get<AnimeExtensionManager>().findAvailableExtensions()

@@ -43,7 +43,9 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.data.connection.Connection
 import eu.kanade.tachiyomi.data.connection.ConnectionManager
+import eu.kanade.tachiyomi.util.system.openDiscordLoginActivity
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.i18n.MR
@@ -76,7 +78,23 @@ object SettingsConnectionScreen : SearchableSettings {
             }
         }
 
-        return emptyList()
+        return listOf(
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.special_services),
+                preferenceItems = persistentListOf(
+                    Preference.PreferenceItem.ConnectionPreference(
+                        title = connectionManager.discord.name,
+                        connection = connectionManager.discord,
+                        login = {
+                            context.openDiscordLoginActivity()
+                        },
+                        openSettings = { navigator.push(SettingsDiscordScreen) },
+                    ),
+                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connections_discord_info)),
+                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connections_info)),
+                ),
+            ),
+        )
     }
 
     @Composable
@@ -254,6 +272,6 @@ private data class LoginConnectionDialog(
 )
 
 internal data class LogoutConnectionDialog(
-    val service: Connection,
+    val connection: Connection,
 )
 // <-- AM (CONNECTION)

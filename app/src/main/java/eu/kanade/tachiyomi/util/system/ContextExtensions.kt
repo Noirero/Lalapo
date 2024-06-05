@@ -14,14 +14,13 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.BuildConfig
-import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.ui.setting.connection.DiscordLoginActivity
 import eu.kanade.tachiyomi.util.lang.truncateCenter
 import logcat.LogPriority
 import rikka.sui.Sui
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.system.logcat
 import tachiyomi.i18n.MR
-import uy.kohesive.injekt.api.get
 import java.io.File
 
 /**
@@ -79,6 +78,17 @@ fun Context.openInBrowser(uri: Uri, forceDefaultBrowser: Boolean = false) {
         toast(e.message)
     }
 }
+
+// AM (DISCORD) -->
+fun Context.openDiscordLoginActivity() {
+    try {
+        val intent = Intent(this, DiscordLoginActivity::class.java)
+        startActivity(intent)
+    } catch (e: Exception) {
+        toast(e.message)
+    }
+}
+// <-- AM (DISCORD)
 
 private fun Context.defaultBrowserPackageName(): String? {
     val browserIntent = Intent(Intent.ACTION_VIEW, "http://".toUri())

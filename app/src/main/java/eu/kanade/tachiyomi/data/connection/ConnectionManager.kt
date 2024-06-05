@@ -1,10 +1,18 @@
 // AM (CONNECTION) -->
 package eu.kanade.tachiyomi.data.connection
 
+import eu.kanade.tachiyomi.data.connection.discord.Discord
+
 class ConnectionManager {
 
-    companion object {}
+    companion object {
+        const val DISCORD = 201L
+    }
 
-    val services: List<BaseConnection> = emptyList()
+    // AM (DISCORD) -->
+    val discord = Discord(DISCORD)
+    // <-- AM (DISCORD)
+
+    val services: List<BaseConnection> = listOf(discord)
 }
 // <-- AM (CONNECTION)
