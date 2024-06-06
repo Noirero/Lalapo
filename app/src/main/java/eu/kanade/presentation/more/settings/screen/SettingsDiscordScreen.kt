@@ -143,6 +143,7 @@ object SettingsDiscordScreen : SearchableSettings {
                     )
                     showAnimeDialog = false
                 },
+                onlyChecked = true,
             )
         }
 

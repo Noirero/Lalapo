@@ -29,14 +29,25 @@ interface SAnime : Serializable {
         return genre?.split(", ")?.map { it.trim() }?.filterNot { it.isBlank() }?.distinct()
     }
 
+    // AM (CUSTOM) -->
+    val originalTitle: String
+    val originalAuthor: String?
+    val originalArtist: String?
+    val originalDescription: String?
+    val originalGenre: String?
+    val originalStatus: Int
+    // <-- AM (CUSTOM)
+
     fun copy() = create().also {
         it.url = url
-        it.title = title
-        it.artist = artist
-        it.author = author
-        it.description = description
-        it.genre = genre
-        it.status = status
+        // AM (CUSTOM) -->
+        it.title = originalTitle
+        it.artist = originalArtist
+        it.author = originalAuthor
+        it.description = originalDescription
+        it.genre = originalGenre
+        it.status = originalStatus
+        // <-- AM (CUSTOM)
         it.thumbnail_url = thumbnail_url
         it.update_strategy = update_strategy
         it.initialized = initialized
@@ -56,3 +67,27 @@ interface SAnime : Serializable {
         }
     }
 }
+
+// AM (CUSTOM) -->
+fun SAnime.copy(
+    url: String = this.url,
+    title: String = this.originalTitle,
+    artist: String? = this.originalArtist,
+    author: String? = this.originalAuthor,
+    description: String? = this.originalDescription,
+    genre: String? = this.originalGenre,
+    status: Int = this.status,
+    thumbnail_url: String? = this.thumbnail_url,
+    initialized: Boolean = this.initialized,
+) = SAnime.create().also {
+    it.url = url
+    it.title = title
+    it.artist = artist
+    it.author = author
+    it.description = description
+    it.genre = genre
+    it.status = status
+    it.thumbnail_url = thumbnail_url
+    it.initialized = initialized
+}
+// <-- AM (CUSTOM)

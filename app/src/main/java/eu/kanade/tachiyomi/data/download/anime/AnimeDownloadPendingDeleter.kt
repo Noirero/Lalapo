@@ -139,7 +139,9 @@ class AnimeDownloadPendingDeleter(
      */
     private fun AnimeEntry.toModel() = Anime.create().copy(
         url = url,
-        title = title,
+        // AM (CUSTOM) -->
+        ogTitle = title,
+        // <-- AM (CUSTOM)
         source = source,
         id = id,
     )

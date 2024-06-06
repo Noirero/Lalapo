@@ -38,6 +38,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlinx.serialization.json.encodeToStream
 
 actual class LocalAnimeSource(
     private val context: Context,
@@ -150,6 +151,21 @@ actual class LocalAnimeSource(
             Observable.just(getSearchAnime(page, query, filters))
         }
     }
+
+    // AM (CUSTOM) -->
+    fun updateAnimeInfo(anime: SAnime) {
+        val directory = fileSystem.getAnimeDirectory(anime.url) ?: return
+        val existingFileName = directory.listFiles()?.find { it.extension == "json" }?.name
+        val file = directory.createFile(existingFileName ?: "info.json") ?: return
+        file.openOutputStream().use {
+            json.encodeToStream(anime.toJson(), it)
+        }
+    }
+
+    private fun SAnime.toJson(): AnimeDetails {
+        return AnimeDetails(title, author, artist, description, genre?.split(", "), status)
+    }
+    // <-- AM (CUSTOM)
 
     // Anime details related
     override suspend fun getAnimeDetails(anime: SAnime): SAnime = withIOContext {

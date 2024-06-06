@@ -24,6 +24,10 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 class BackupRestorer(
     private val context: Context,
@@ -130,7 +134,10 @@ class BackupRestorer(
                 ensureActive()
 
                 try {
-                    animeRestorer.restoreAnime(it, backupAnimeCategories)
+                    // AM (CUSTOM) -->
+                    val customInfo = it.getCustomAnimeInfo()
+                    // <-- AM (CUSTOM)
+                    animeRestorer.restoreAnime(it, backupAnimeCategories, customInfo)
                 } catch (e: Exception) {
                     val sourceName = animeSourceMapping[it.source] ?: it.source.toString()
                     errors.add(Date() to "${it.title} [$sourceName]: ${e.message}")

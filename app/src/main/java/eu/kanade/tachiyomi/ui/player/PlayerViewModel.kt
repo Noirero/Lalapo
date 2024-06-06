@@ -168,13 +168,17 @@ class PlayerViewModel @JvmOverloads constructor(
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(
                     it.name,
                     it.scanlator,
-                    anime.title,
+                    // AM (CUSTOM) -->
+                    anime.ogTitle,
+                    // <-- AM (CUSTOM)
                     anime.source,
                 ) ||
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(
                     it.name,
                     it.scanlator,
-                    anime.title,
+                    // AM (CUSTOM) -->
+                    anime.ogTitle,
+                    // <-- AM (CUSTOM)
                     anime.source,
                 ) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||

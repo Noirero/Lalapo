@@ -4,7 +4,9 @@ class SAnimeImpl : SAnime {
 
     override lateinit var url: String
 
-    override lateinit var title: String
+    // AM (CUSTOM) -->
+    override var title: String = ""
+    // <-- AM (CUSTOM)
 
     override var artist: String? = null
 
@@ -21,4 +23,19 @@ class SAnimeImpl : SAnime {
     override var initialized: Boolean = false
 
     override var update_strategy: AnimeUpdateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE
+
+    // AM (CUSTOM) -->
+    override val originalTitle: String
+        get() = title
+    override val originalAuthor: String?
+        get() = author
+    override val originalArtist: String?
+        get() = artist
+    override val originalDescription: String?
+        get() = description
+    override val originalGenre: String?
+        get() = genre
+    override val originalStatus: Int
+        get() = status
+    // <-- AM (CUSTOM)
 }

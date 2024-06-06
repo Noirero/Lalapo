@@ -79,7 +79,9 @@ class AnimeHistoryScreenModelStateProvider : PreviewParameterProvider<AnimeHisto
         fun items() = sequence {
             var count = 1
             while (true) {
-                yield(randItem { it.copy(title = "Example Title $count") })
+                // AM (CUSTOM) -->
+                yield(randItem { it.copy(ogTitle = "Example Title $count") })
+                // <-- AM (CUSTOM)
                 count += 1
             }
         }
@@ -91,7 +93,9 @@ class AnimeHistoryScreenModelStateProvider : PreviewParameterProvider<AnimeHisto
                         id = Random.nextLong(),
                         episodeId = Random.nextLong(),
                         animeId = Random.nextLong(),
-                        title = "Test Title",
+                        // AM (CUSTOM) -->
+                        ogTitle = "Test Title",
+                        // <-- AM (CUSTOM)
                         episodeNumber = Random.nextDouble(),
                         seenAt = Date.from(Instant.now()),
                         coverData = AnimeCover(

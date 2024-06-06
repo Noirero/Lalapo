@@ -172,8 +172,10 @@ class AnimeDownloadManager(
      * @return an observable containing the list of pages from the episode.
      */
     fun buildVideo(source: AnimeSource, anime: Anime, episode: Episode): Video {
+        // AM (CUSTOM) -->
         val episodeDir =
-            provider.findEpisodeDir(episode.name, episode.scanlator, anime.title, source)
+            provider.findEpisodeDir(episode.name, episode.scanlator, anime.ogTitle, source)
+        // <-- AM (CUSTOM)
         val files = episodeDir?.listFiles().orEmpty()
             .filter { "video" in it.type.orEmpty() }
 
@@ -304,7 +306,9 @@ class AnimeDownloadManager(
             if (removeQueued) {
                 downloader.removeFromQueue(anime)
             }
-            provider.findAnimeDir(anime.title, source)?.delete()
+            // AM (CUSTOM) -->
+            provider.findAnimeDir(anime.ogTitle, source)?.delete()
+            // <-- AM (CUSTOM)
             cache.removeAnime(anime)
             // Delete source directory if empty
             val sourceDir = provider.findSourceDir(source)
@@ -389,7 +393,9 @@ class AnimeDownloadManager(
      */
     fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
         val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator)
-        val animeDir = provider.getAnimeDir(anime.title, source)
+        // AM (CUSTOM) -->
+        val animeDir = provider.getAnimeDir(anime.ogTitle, source)
+        // <-- AM (CUSTOM)
 
         // Assume there's only 1 version of the episode name formats present
         val oldFolder = oldNames.asSequence()

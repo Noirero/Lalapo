@@ -35,6 +35,7 @@ import tachiyomi.data.DateColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.handlers.anime.AndroidAnimeDatabaseHandler
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
+import tachiyomi.domain.entries.anime.interactor.GetCustomAnimeInfo
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.mi.data.AnimeDatabase
@@ -159,6 +160,10 @@ class AppModule(val app: Application) : InjektModule {
             get<AnimeDatabase>()
 
             get<AnimeDownloadManager>()
+
+            // AM (CUSTOM) -->
+            get<GetCustomAnimeInfo>()
+            // <-- AM (CUSTOM)
         }
     }
 }

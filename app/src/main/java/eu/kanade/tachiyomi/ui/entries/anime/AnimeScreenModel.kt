@@ -32,8 +32,10 @@ import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.AniChartApi
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
+import eu.kanade.tachiyomi.util.nullIfEmpty
 import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.util.shouldDownloadNewEpisodes
+import eu.kanade.tachiyomi.util.trimOrNull
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
@@ -84,6 +86,10 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Calendar
 import kotlin.math.floor
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
+import tachiyomi.domain.entries.anime.model.AnimeUpdate
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 class AnimeScreenModel(
     val context: Context,
@@ -114,6 +120,10 @@ class AnimeScreenModel(
     // AM (FILE_SIZE) -->
     private val storagePreferences: StoragePreferences = Injekt.get(),
     // <-- AM (FILE_SIZE)
+    // AM (CUSTOM) -->
+    private val sourceManager: AnimeSourceManager = Injekt.get(),
+    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get(),
+    // <-- AM (CUSTOM)
 ) : StateScreenModel<AnimeScreenModel.State>(State.Loading) {
 
     private val successState: State.Success?
@@ -261,6 +271,71 @@ class AnimeScreenModel(
             }
         }
     }
+
+    // AM (CUSTOM) -->
+    fun updateAnimeInfo(
+        title: String?,
+        author: String?,
+        artist: String?,
+        description: String?,
+        tags: List<String>?,
+        status: Long?,
+    ) {
+        val state = successState ?: return
+        var anime = state.anime
+        if (state.anime.isLocal()) {
+            val newTitle = if (title.isNullOrBlank()) anime.url else title.trim()
+            val newAuthor = author?.trimOrNull()
+            val newArtist = artist?.trimOrNull()
+            val newDesc = description?.trimOrNull()
+            anime = anime.copy(
+                ogTitle = newTitle,
+                ogAuthor = author?.trimOrNull(),
+                ogArtist = artist?.trimOrNull(),
+                ogDescription = description?.trimOrNull(),
+                ogGenre = tags?.nullIfEmpty(),
+                ogStatus = status ?: 0,
+                lastUpdate = anime.lastUpdate + 1,
+            )
+            (sourceManager.get(LocalAnimeSource.ID) as LocalAnimeSource).updateAnimeInfo(anime.toSAnime())
+            screenModelScope.launchNonCancellable {
+                updateAnime.await(
+                    AnimeUpdate(
+                        anime.id,
+                        title = newTitle,
+                        author = newAuthor,
+                        artist = newArtist,
+                        description = newDesc,
+                        genre = tags,
+                        status = status,
+                    ),
+                )
+            }
+        } else {
+            val genre = if (!tags.isNullOrEmpty() && tags != state.anime.ogGenre) {
+                tags
+            } else {
+                null
+            }
+            setCustomAnimeInfo.set(
+                CustomAnimeInfo(
+                    state.anime.id,
+                    title?.trimOrNull(),
+                    author?.trimOrNull(),
+                    artist?.trimOrNull(),
+                    description?.trimOrNull(),
+                    genre,
+                    status.takeUnless { it == state.anime.ogStatus },
+                ),
+            )
+            anime = anime.copy(lastUpdate = anime.lastUpdate + 1)
+        }
+
+        updateSuccessState { successState ->
+            successState.copy(anime = anime)
+        }
+    }
+    // <-- AM (CUSTOM)
 
     fun toggleFavorite() {
         toggleFavorite(
@@ -513,7 +588,9 @@ class AnimeScreenModel(
                 downloadManager.isEpisodeDownloaded(
                     episode.name,
                     episode.scanlator,
-                    anime.title,
+                    // AM (CUSTOM) -->
+                    anime.ogTitle,
+                    // <-- AM (CUSTOM)
                     anime.source,
                 )
             }
@@ -1068,6 +1145,9 @@ class AnimeScreenModel(
         data class DuplicateAnime(val anime: Anime, val duplicate: Anime) : Dialog
         data class SetAnimeFetchInterval(val anime: Anime) : Dialog
         data class ShowQualities(val episode: Episode, val anime: Anime, val source: AnimeSource) : Dialog
+        // AM (CUSTOM) -->
+        data class EditAnimeInfo(val anime: Anime) : Dialog
+        // <-- AM (CUSTOM)
         data object ChangeAnimeSkipIntro : Dialog
         data object SettingsSheet : Dialog
         data object TrackSheet : Dialog
@@ -1101,6 +1181,12 @@ class AnimeScreenModel(
     private fun showQualitiesDialog(episode: Episode) {
         updateSuccessState { it.copy(dialog = Dialog.ShowQualities(episode, it.anime, it.source)) }
     }
+
+    // AM (CUSTOM) -->
+    fun showEditAnimeInfoDialog() {
+        updateSuccessState { it.copy(dialog = Dialog.EditAnimeInfo(it.anime)) }
+    }
+    // <-- AM (CUSTOM)
 
     sealed interface State {
         @Immutable

@@ -22,6 +22,8 @@ import uy.kohesive.injekt.api.get
 import java.time.ZonedDateTime
 import java.util.Date
 import kotlin.math.max
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 
 class AnimeRestorer(
     private val handler: AnimeDatabaseHandler = Injekt.get(),
@@ -31,6 +33,9 @@ class AnimeRestorer(
     private val updateAnime: UpdateAnime = Injekt.get(),
     private val getTracks: GetAnimeTracks = Injekt.get(),
     private val insertTrack: InsertAnimeTrack = Injekt.get(),
+    // AM (CUSTOM) -->
+    private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get(),
+    // <-- AM (CUSTOM)
     fetchInterval: AnimeFetchInterval = Injekt.get(),
 ) {
 
@@ -56,6 +61,9 @@ class AnimeRestorer(
     suspend fun restoreAnime(
         backupAnime: BackupAnime,
         backupCategories: List<BackupCategory>,
+        // AM (CUSTOM) -->
+        customInfo: CustomAnimeInfo?,
+        // <-- AM (CUSTOM)
     ) {
         val dbAnime = findExistingAnime(backupAnime)
         val anime = backupAnime.getAnimeImpl()
@@ -72,6 +80,9 @@ class AnimeRestorer(
             backupCategories = backupCategories,
             history = backupAnime.history + backupAnime.brokenHistory.map { it.toBackupHistory() },
             tracks = backupAnime.tracking,
+            // AM (CUSTOM) -->
+            customInfo = customInfo,
+            // <-- AM (CUSTOM)
         )
     }
 
@@ -90,12 +101,14 @@ class AnimeRestorer(
     private fun Anime.copyFrom(newer: Anime): Anime {
         return this.copy(
             favorite = this.favorite || newer.favorite,
-            author = newer.author,
-            artist = newer.artist,
-            description = newer.description,
-            genre = newer.genre,
+            // AM (CUSTOM) -->
+            ogAuthor = newer.ogAuthor,
+            ogArtist = newer.ogArtist,
+            ogDescription = newer.ogDescription,
+            ogGenre = newer.ogGenre,
             thumbnailUrl = newer.thumbnailUrl,
-            status = newer.status,
+            ogStatus = newer.ogStatus,
+            // <-- AM (CUSTOM)
             initialized = this.initialized || newer.initialized,
         )
     }
@@ -273,11 +286,17 @@ class AnimeRestorer(
         backupCategories: List<BackupCategory>,
         history: List<BackupAnimeHistory>,
         tracks: List<BackupAnimeTracking>,
+        // AM (CUSTOM) -->
+        customInfo: CustomAnimeInfo?,
+        // <-- AM (CUSTOM)
     ): Anime {
         restoreCategories(anime, categories, backupCategories)
         restoreEpisodes(anime, episodes)
         restoreTracking(anime, tracks)
         restoreHistory(history)
+        // AM (CUSTOM) -->
+        restoreEditedInfo(customInfo?.copy(id = anime.id))
+        // <-- AM (CUSTOM)
         updateAnime.awaitUpdateFetchInterval(anime, now, currentFetchWindow)
         return anime
     }
@@ -406,6 +425,13 @@ class AnimeRestorer(
             }
         }
     }
+
+    // AM (CUSTOM) -->
+    private fun restoreEditedInfo(animeJson: CustomAnimeInfo?) {
+        animeJson ?: return
+        setCustomAnimeInfo.set(animeJson)
+    }
+    // <-- AM (CUSTOM)
 
     private fun AnimeTrack.forComparison() = this.copy(id = 0L, animeId = 0L)
 }

@@ -17,7 +17,9 @@ class NetworkToLocalAnime(
             !localAnime.favorite -> {
                 // if the anime isn't a favorite, set its display title from source
                 // if it later becomes a favorite, updated title will go to db
-                localAnime.copy(title = anime.title)
+                // AM (CUSTOM) -->
+                localAnime.copy(ogTitle = anime.title)
+                // <-- AM (CUSTOM)
             }
             else -> {
                 localAnime

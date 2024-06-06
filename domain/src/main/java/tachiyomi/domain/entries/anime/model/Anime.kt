@@ -6,6 +6,8 @@ import tachiyomi.core.preference.TriState
 import java.io.Serializable
 import java.time.Instant
 import kotlin.math.pow
+import tachiyomi.domain.entries.anime.interactor.GetCustomAnimeInfo
+import uy.kohesive.injekt.injectLazy
 
 data class Anime(
     val id: Long,
@@ -19,18 +21,46 @@ data class Anime(
     val episodeFlags: Long,
     val coverLastModified: Long,
     val url: String,
-    val title: String,
-    val artist: String?,
-    val author: String?,
-    val description: String?,
-    val genre: List<String>?,
-    val status: Long,
+    // AM (CUSTOM) -->
+    val ogTitle: String,
+    val ogArtist: String?,
+    val ogAuthor: String?,
+    val ogDescription: String?,
+    val ogGenre: List<String>?,
+    val ogStatus: Long,
+    // <-- AM (CUSTOM)
     val thumbnailUrl: String?,
     val updateStrategy: AnimeUpdateStrategy,
     val initialized: Boolean,
     val lastModifiedAt: Long,
     val favoriteModifiedAt: Long?,
 ) : Serializable {
+
+    // AM (CUSTOM) -->
+    private val customAnimeInfo = if (favorite) {
+        getCustomAnimeInfo.get(id)
+    } else {
+        null
+    }
+
+    val title: String
+        get() = customAnimeInfo?.title ?: ogTitle
+
+    val author: String?
+        get() = customAnimeInfo?.author ?: ogAuthor
+
+    val artist: String?
+        get() = customAnimeInfo?.artist ?: ogArtist
+
+    val description: String?
+        get() = customAnimeInfo?.description ?: ogDescription
+
+    val genre: List<String>?
+        get() = customAnimeInfo?.genre ?: ogGenre
+
+    val status: Long
+        get() = customAnimeInfo?.status ?: ogStatus
+    // <-- AM (CUSTOM)
 
     val expectedNextUpdate: Instant?
         get() = nextUpdate
@@ -141,7 +171,9 @@ data class Anime(
         fun create() = Anime(
             id = -1L,
             url = "",
-            title = "",
+            // AM (CUSTOM) -->
+            ogTitle = "",
+            // <-- AM (CUSTOM)
             source = -1L,
             favorite = false,
             lastUpdate = 0L,
@@ -151,16 +183,22 @@ data class Anime(
             viewerFlags = 0L,
             episodeFlags = 0L,
             coverLastModified = 0L,
-            artist = null,
-            author = null,
-            description = null,
-            genre = null,
-            status = 0L,
+            // AM (CUSTOM) -->
+            ogArtist = null,
+            ogAuthor = null,
+            ogDescription = null,
+            ogGenre = null,
+            ogStatus = 0L,
+            // <-- AM (CUSTOM)
             thumbnailUrl = null,
             updateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE,
             initialized = false,
             lastModifiedAt = 0L,
             favoriteModifiedAt = null,
         )
+
+        // AM (CUSTOM) -->
+        private val getCustomAnimeInfo: GetCustomAnimeInfo by injectLazy()
+        // <-- AM (CUSTOM)
     }
 }

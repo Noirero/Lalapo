@@ -49,7 +49,9 @@ class EpisodeLoader {
             return downloadManager.isEpisodeDownloaded(
                 episode.name,
                 episode.scanlator,
-                anime.title,
+                // AM (CUSTOM) -->
+                anime.ogTitle,
+                // <-- AM (CUSTOM)
                 anime.source,
                 skipCache = true,
             )

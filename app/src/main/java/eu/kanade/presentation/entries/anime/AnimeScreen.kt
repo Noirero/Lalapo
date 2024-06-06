@@ -138,6 +138,9 @@ fun AnimeScreen(
     onEditFetchIntervalClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
+    // AM (CUSTOM) -->
+    onEditInfoClicked: () -> Unit,
+    // <-- AM (CUSTOM)
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
@@ -200,6 +203,9 @@ fun AnimeScreen(
             onEditIntervalClicked = onEditFetchIntervalClicked,
             onMigrateClicked = onMigrateClicked,
             changeAnimeSkipIntro = changeAnimeSkipIntro,
+            // AM (CUSTOM) -->
+            onEditInfoClicked = onEditInfoClicked,
+            // <-- AM (CUSTOM)
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             // AM (FILLER) -->
             onMultiFillermarkClicked = onMultiFillermarkClicked,
@@ -244,6 +250,9 @@ fun AnimeScreen(
             onEditCategoryClicked = onEditCategoryClicked,
             onEditIntervalClicked = onEditFetchIntervalClicked,
             changeAnimeSkipIntro = changeAnimeSkipIntro,
+            // AM (CUSTOM) -->
+            onEditInfoClicked = onEditInfoClicked,
+            // <-- AM (CUSTOM)
             onMigrateClicked = onMigrateClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             // AM (FILLER) -->
@@ -302,6 +311,9 @@ private fun AnimeScreenSmallImpl(
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
     onSettingsClicked: (() -> Unit)?,
+    // AM (CUSTOM) -->
+    onEditInfoClicked: () -> Unit,
+    // <-- AM (CUSTOM)
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
@@ -372,6 +384,9 @@ private fun AnimeScreenSmallImpl(
                 onClickMigrate = onMigrateClicked,
                 onClickSettings = onSettingsClicked,
                 changeAnimeSkipIntro = changeAnimeSkipIntro,
+                // AM (CUSTOM) -->
+                onClickEditInfo = onEditInfoClicked.takeIf { state.anime.favorite },
+                // <-- AM (CUSTOM)
                 actionModeCounter = selectedEpisodeCount,
                 onSelectAll = { onAllEpisodeSelected(true) },
                 onInvertSelection = { onInvertSelection() },
@@ -608,6 +623,9 @@ fun AnimeScreenLargeImpl(
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
     onSettingsClicked: (() -> Unit)?,
+    // AM (CUSTOM) -->
+    onEditInfoClicked: () -> Unit,
+    // <-- AM (CUSTOM)
 
     // For bottom action menu
     onMultiBookmarkClicked: (List<Episode>, bookmarked: Boolean) -> Unit,
@@ -672,6 +690,9 @@ fun AnimeScreenLargeImpl(
                 onClickMigrate = onMigrateClicked,
                 onClickSettings = onSettingsClicked,
                 changeAnimeSkipIntro = changeAnimeSkipIntro,
+                // AM (CUSTOM) -->
+                onClickEditInfo = onEditInfoClicked.takeIf { state.anime.favorite },
+                // <-- AM (CUSTOM)
                 actionModeCounter = selectedChapterCount,
                 onSelectAll = { onAllEpisodeSelected(true) },
                 onInvertSelection = { onInvertSelection() },
@@ -968,7 +989,9 @@ private fun LazyListScope.sharedEpisodeItems(
                                 episodeItem.episode.name,
                                 episodeItem.episode.url,
                                 episodeItem.episode.scanlator,
-                                anime.title,
+                                // AM (CUSTOM) -->
+                                anime.ogTitle,
+                                // <-- AM (CUSTOM)
                                 source,
                             )
                         }

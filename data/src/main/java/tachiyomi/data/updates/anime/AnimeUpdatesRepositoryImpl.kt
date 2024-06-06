@@ -63,7 +63,9 @@ class AnimeUpdatesRepositoryImpl(
         dateFetch: Long,
     ): AnimeUpdatesWithRelations = AnimeUpdatesWithRelations(
         animeId = animeId,
-        animeTitle = animeTitle,
+        // AM (CUSTOM) -->
+        ogAnimeTitle = animeTitle,
+        // <-- AM (CUSTOM)
         episodeId = episodeId,
         episodeName = episodeName,
         scanlator = scanlator,

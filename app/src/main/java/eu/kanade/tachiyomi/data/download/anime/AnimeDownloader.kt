@@ -305,7 +305,9 @@ class AnimeDownloader(
 
         val episodesToQueue = episodes.asSequence()
             // Filter out those already downloaded.
-            .filter { provider.findEpisodeDir(it.name, it.scanlator, anime.title, source) == null }
+            // AM (CUSTOM) -->
+            .filter { provider.findEpisodeDir(it.name, it.scanlator, anime.ogTitle, source) == null }
+            // <-- AM (CUSTOM)
             // Add episodes to queue from the start.
             .sortedByDescending { it.sourceOrder }
             // Filter out those already enqueued.
@@ -353,7 +355,9 @@ class AnimeDownloader(
     private suspend fun downloadEpisode(download: AnimeDownload) {
         // This try catch manages errors during download
         try {
-            val animeDir = provider.getAnimeDir(download.anime.title, download.source)
+            // AM (CUSTOM) -->
+            val animeDir = provider.getAnimeDir(download.anime.ogTitle, download.source)
+            // <-- AM (CUSTOM)
 
             val availSpace = DiskUtil.getAvailableStorageSpace(animeDir)
             if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
@@ -428,7 +432,9 @@ class AnimeDownloader(
                         attemptDownload(download, tmpDir, filename, preferences.safeDownload().get())
                     } else {
                         val betterFileName = DiskUtil.buildValidFilename(
-                            "${download.anime.title} - ${download.episode.name}",
+                            // AM (CUSTOM) -->
+                            "${download.anime.ogTitle} - ${download.episode.name}",
+                            // <-- AM (CUSTOM)
                         )
                         downloadVideoExternal(download.video!!, download.source, tmpDir, betterFileName)
                     }

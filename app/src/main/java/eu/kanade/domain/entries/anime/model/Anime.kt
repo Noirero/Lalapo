@@ -43,22 +43,28 @@ fun Anime.toSAnime(): SAnime = SAnime.create().also {
 }
 
 fun Anime.copyFrom(other: SAnime): Anime {
-    val author = other.author ?: author
-    val artist = other.artist ?: artist
-    val description = other.description ?: description
+    // AM (CUSTOM) -->
+    val author = other.author ?: ogAuthor
+    val artist = other.artist ?: ogArtist
+    val description = other.description ?: ogDescription
     val genres = if (other.genre != null) {
         other.getGenres()
     } else {
-        genre
+        ogGenre
     }
+    // <-- AM (CUSTOM)
     val thumbnailUrl = other.thumbnail_url ?: thumbnailUrl
     return this.copy(
-        author = author,
-        artist = artist,
-        description = description,
-        genre = genres,
+        // AM (CUSTOM) -->
+        ogAuthor = author,
+        ogArtist = artist,
+        ogDescription = description,
+        ogGenre = genres,
+        // <-- AM (CUSTOM)
         thumbnailUrl = thumbnailUrl,
-        status = other.status.toLong(),
+        // AM (CUSTOM) -->
+        ogStatus = other.status.toLong(),
+        // <-- AM (CUSTOM)
         updateStrategy = other.update_strategy,
         initialized = other.initialized && initialized,
     )
@@ -67,12 +73,14 @@ fun Anime.copyFrom(other: SAnime): Anime {
 fun SAnime.toDomainAnime(sourceId: Long): Anime {
     return Anime.create().copy(
         url = url,
-        title = title,
-        artist = artist,
-        author = author,
-        description = description,
-        genre = getGenres(),
-        status = status.toLong(),
+        // AM (CUSTOM) -->
+        ogTitle = title,
+        ogArtist = artist,
+        ogAuthor = author,
+        ogDescription = description,
+        ogGenre = getGenres(),
+        ogStatus = status.toLong(),
+        // <-- AM (CUSTOM)
         thumbnailUrl = thumbnail_url,
         updateStrategy = update_strategy,
         initialized = initialized,

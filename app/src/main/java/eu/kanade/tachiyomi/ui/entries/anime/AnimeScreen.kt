@@ -176,6 +176,9 @@ class AnimeScreen(
                 navigator.push(MigrateAnimeSearchScreen(successState.anime.id))
             }.takeIf { successState.anime.favorite },
             changeAnimeSkipIntro = screenModel::showAnimeSkipIntroDialog.takeIf { successState.anime.favorite },
+            // AM (CUSTOM) -->
+            onEditInfoClicked = screenModel::showEditAnimeInfoDialog,
+            // <-- AM (CUSTOM)
             onMultiBookmarkClicked = screenModel::bookmarkEpisodes,
             // AM (FILLER) -->
             onMultiFillermarkClicked = screenModel::fillermarkEpisodes,
@@ -320,6 +323,15 @@ class AnimeScreen(
                     onDismissRequest = onDismissRequest,
                 )
             }
+            // AM (CUSTOM) -->
+            is AnimeScreenModel.Dialog.EditAnimeInfo -> {
+                EditAnimeDialog(
+                    anime = successState.anime,
+                    onDismissRequest = screenModel::dismissDialog,
+                    onPositiveClick = screenModel::updateAnimeInfo,
+                )
+            }
+            // <-- AM (CUSTOM)
         }
     }
 
