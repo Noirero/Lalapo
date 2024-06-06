@@ -1298,43 +1298,34 @@ class PlayerActivity : BaseActivity() {
                 return true
             }
             // Not entirely sure how to handle these KeyCodes yet, need to learn some more
-            /**
-             KeyEvent.KEYCODE_MEDIA_NEXT -> {
-             switchEpisode(false)
-             return true
-             }
-
-             KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-             switchEpisode(true)
-             return true
-             }
-             KeyEvent.KEYCODE_MEDIA_PLAY -> {
-             player.paused = true
-             doubleTapPlayPause()
-             return true
-             }
-             KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-             player.paused = false
-             doubleTapPlayPause()
-             return true
-             }
-             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-             doubleTapPlayPause()
-             return true
-             }
-             */
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                doubleTapSeek(playerPreferences.skipLengthPreference().get())
-                return true
-            }
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                doubleTapSeek(-playerPreferences.skipLengthPreference().get())
-                return true
-            }
+            // AM (KEYBOARD_CONTROLS) -->
             KeyEvent.KEYCODE_SPACE -> {
                 doubleTapPlayPause()
                 return true
             }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                val interval = playerPreferences.skipLengthPreference().get()
+                if (interval != 0) {
+                    doubleTapSeek(interval, isDoubleTap = false)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                val interval = playerPreferences.skipLengthPreference().get()
+                if (interval != 0) {
+                    doubleTapSeek(-interval, isDoubleTap = false)
+                }
+                return true
+            }
+            KeyEvent.KEYCODE_LEFT_BRACKET -> {
+                changeEpisode(viewModel.getAdjacentEpisodeId(previous = true))
+                return true
+            }
+            KeyEvent.KEYCODE_RIGHT_BRACKET -> {
+                changeEpisode(viewModel.getAdjacentEpisodeId(previous = false))
+                return true
+            }
+            // <-- AM (KEYBOARD_CONTROLS)
             // add other keycodes as needed
             else -> {
                 if (player.onKey(event!!)) return true
