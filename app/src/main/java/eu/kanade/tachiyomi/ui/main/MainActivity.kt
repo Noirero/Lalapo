@@ -459,8 +459,10 @@ class MainActivity : BaseActivity() {
                 navigator.popUntilRoot()
                 HomeScreen.Tab.AnimeLib(idToOpen)
             }
-            Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
-            Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
+            // AM (RECENTS) -->
+            Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Recents(toHistory = false)
+            Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.Recents(toHistory = true)
+            // <-- AM (RECENTS)
             Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
             Constants.SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()

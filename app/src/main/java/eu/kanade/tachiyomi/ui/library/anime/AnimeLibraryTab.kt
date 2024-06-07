@@ -43,7 +43,7 @@ import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -285,7 +285,9 @@ object AnimeLibraryTab : Tab() {
                     onDismissRequest = onDismissRequest,
                     onEditCategories = {
                         screenModel.clearSelection()
-                        navigator.push(CategoriesTab(false))
+                        // AM (REMOVE_TABBED_SCREENS) -->
+                        navigator.push(CategoryScreen())
+                        // <-- AM (REMOVE_TABBED_SCREENS)
                     },
                     onConfirm = { include, exclude ->
                         screenModel.clearSelection()

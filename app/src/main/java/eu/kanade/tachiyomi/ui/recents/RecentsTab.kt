@@ -18,7 +18,7 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
-import eu.kanade.tachiyomi.ui.download.DownloadsTab
+import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.history.anime.animeHistoryTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -28,7 +28,9 @@ import tachiyomi.core.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
-object RecentsTab : Tab() {
+data class RecentsTab(
+    private val toHistory: Boolean,
+) : Tab() {
 
     override val options: TabOptions
         @Composable
@@ -43,7 +45,9 @@ object RecentsTab : Tab() {
         }
 
     override suspend fun onReselect(navigator: Navigator) {
-        navigator.push(DownloadsTab())
+        // AM (REMOVE_TABBED_SCREENS) -->
+        navigator.push(DownloadQueueScreen)
+        // <-- AM (REMOVE_TABBED_SCREENS)
     }
 
     @Composable
@@ -59,6 +63,7 @@ object RecentsTab : Tab() {
                 animeUpdatesTab(context),
                 animeHistoryTab(context),
             ),
+            startIndex = 1.takeIf { toHistory },
             // Compatibility with hardcoded aniyomi code
             mangaSearchQuery = animeSearchQuery,
             onChangeMangaSearchQuery = animeHistoryScreenModel::search,

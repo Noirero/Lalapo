@@ -54,7 +54,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
-import eu.kanade.tachiyomi.ui.updates.UpdatesTab
+import eu.kanade.tachiyomi.ui.recents.RecentsTab
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import tachiyomi.core.util.lang.launchUI
@@ -68,6 +68,8 @@ import kotlin.math.abs
 @Composable
 fun NavigationPill(
     tabs: List<Tab>,
+    currentTabIndex: Int,
+    setCurrentTabIndex: (Int) -> Unit,
     labelFade: Int,
     modifier: Modifier = Modifier,
 ) {
@@ -79,19 +81,17 @@ fun NavigationPill(
     val pillItemHeight = 48.dp
 
     val tabMap = tabs.associateBy { it.options.index.toInt() }
-    val currTabIndex = tabNavigator.current.options.index.toInt()
-    var currentIndex by remember { mutableIntStateOf(currTabIndex) }
-    var oldIndex by remember { mutableIntStateOf(currTabIndex) }
+    var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
 
     val updateTab: (Int) -> Unit = {
         if (tabMap[it] != null) {
             tabNavigator.current = tabMap[it]!!
-            currentIndex = it
+            setCurrentTabIndex(it)
         }
     }
 
     val navigationOffsetX: Dp by animateDpAsState(
-        targetValue = pillItemWidth * (currentIndex - getOffsetX(tabs.size)),
+        targetValue = pillItemWidth * (currentTabIndex - getOffsetX(tabs.size)),
         animationSpec = tween(labelFade * 2),
     )
 
@@ -116,9 +116,9 @@ fun NavigationPill(
                         },
                         onDragEnd = {
                             val newIndex = when {
-                                (flickOffsetX < 0F) -> currentIndex - 1
-                                (flickOffsetX > 0F) -> currentIndex + 1
-                                else -> currentIndex
+                                (flickOffsetX < 0F) -> currentTabIndex - 1
+                                (flickOffsetX > 0F) -> currentTabIndex + 1
+                                else -> currentTabIndex
                             }
 
                             flickOffsetX = 0F
@@ -143,11 +143,11 @@ fun NavigationPill(
 
                 val alpha = remember { Animatable(-1f) }
 
-                LaunchedEffect(currentIndex) {
+                LaunchedEffect(currentTabIndex) {
                     scope.launchUI {
                         if (alpha.value == -1f) return@launchUI
 
-                        if (oldIndex < currentIndex) {
+                        if (oldIndex < currentTabIndex) {
                             alpha.animateTo(0.5f, animationSpec = tween(durationMillis = labelFade))
                         } else {
                             alpha.animateTo(-0.5f, animationSpec = tween(durationMillis = labelFade))
@@ -161,18 +161,18 @@ fun NavigationPill(
                             -1f -> alpha.snapTo(0f)
 
                             -0.5f -> {
-                                if (oldIndex > currentIndex) {
+                                if (oldIndex > currentTabIndex) {
                                     alpha.snapTo(0.5f)
-                                    oldIndex = currentIndex
+                                    oldIndex = currentTabIndex
                                 } else {
                                     alpha.animateTo(0f, animationSpec = tween(durationMillis = labelFade))
                                 }
                             }
 
                             0.5f -> {
-                                if (oldIndex < currentIndex) {
+                                if (oldIndex < currentTabIndex) {
                                     alpha.snapTo(-0.5f)
-                                    oldIndex = currentIndex
+                                    oldIndex = currentTabIndex
                                 } else {
                                     alpha.animateTo(0f, animationSpec = tween(durationMillis = labelFade))
                                 }
@@ -264,7 +264,9 @@ private fun NavigationIconItem(tab: Tab) {
     BadgedBox(
         badge = {
             when {
-                UpdatesTab::class.isInstance(tab) -> {
+                // AM (RECENTS) -->
+                RecentsTab::class.isInstance(tab) -> {
+                    // <-- AM (RECENTS)
                     val count by produceState(initialValue = 0) {
                         val pref = Injekt.get<LibraryPreferences>()
                         pref.newAnimeUpdatesCount().changes()

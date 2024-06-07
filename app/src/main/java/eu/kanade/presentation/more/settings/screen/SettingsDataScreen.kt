@@ -41,7 +41,7 @@ import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.ui.storage.StorageTab
+import eu.kanade.tachiyomi.ui.storage.StorageScreen
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
@@ -288,7 +288,9 @@ object SettingsDataScreen : SearchableSettings {
                     title = stringResource(MR.strings.label_storage),
                     icon = Icons.Outlined.Storage,
                     onClick = {
-                        navigator.push(StorageTab())
+                        // AM (REMOVE_TABBED_SCREENS) -->
+                        navigator.push(StorageScreen())
+                        // <-- AM (REMOVE_TABBED_SCREENS)
                     },
                 ),
             ),

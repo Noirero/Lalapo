@@ -13,7 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -21,13 +24,11 @@ import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
-import eu.kanade.tachiyomi.ui.download.DownloadsTab
+import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.history.HistoriesTab
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.recents.RecentsTab
-import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -52,7 +53,7 @@ object HomeScreen : Screen() {
     private val tabs = listOf(
         AnimeLibraryTab,
         // AM (RECENTS) -->
-        RecentsTab,
+        RecentsTab(toHistory = false),
         // <-- AM (RECENTS)
         BrowseTab(toExtensions = false),
         MoreTab,
@@ -65,10 +66,13 @@ object HomeScreen : Screen() {
             tab = defaultTab,
             key = TabNavigatorKey,
         ) { tabNavigator ->
+            // AM (NAVIGATION_PILL) -->
+            val currTabIndex = tabNavigator.current.options.index.toInt()
+            var currentTabIndex by remember { mutableIntStateOf(currTabIndex) }
+            val setCurrentTabIndex: (Int) -> Unit = { currentTabIndex = it }
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 Scaffold(
-                    // AM (NAVIGATION_PILL) -->
                     bottomBar = {
                         val bottomNavVisible by produceState(initialValue = true) {
                             showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
@@ -78,7 +82,12 @@ object HomeScreen : Screen() {
                             enter = expandVertically(),
                             exit = shrinkVertically(),
                         ) {
-                            NavigationPill(tabs = tabs, labelFade = TabFadeDuration / 2)
+                            NavigationPill(
+                                tabs = tabs,
+                                currentTabIndex,
+                                setCurrentTabIndex,
+                                labelFade = TabFadeDuration / 2,
+                            )
                         }
                     },
                     // <-- AM (NAVIGATION_PILL)
@@ -121,20 +130,31 @@ object HomeScreen : Screen() {
                     openTabEvent.receiveAsFlow().collectLatest {
                         tabNavigator.current = when (it) {
                             is Tab.AnimeLib -> AnimeLibraryTab
-                            is Tab.Updates -> UpdatesTab
-                            is Tab.History -> HistoriesTab
+                            // AM (RECENTS) -->
+                            is Tab.Recents -> RecentsTab(it.toHistory)
+                            // <-- AM (RECENTS)
                             is Tab.Browse -> BrowseTab(it.toExtensions)
                             is Tab.More -> MoreTab
-                            // AM (RECENTS) -->
-                            is Tab.Recents -> RecentsTab
-                            // <-- AM (RECENTS)
                         }
+
+                        // AM (NAVIGATION_PILL) -->
+                        currentTabIndex = when (it) {
+                            is Tab.AnimeLib -> 0
+                            // AM (RECENTS) -->
+                            is Tab.Recents -> 1
+                            // <-- AM (RECENTS)
+                            is Tab.Browse -> 2
+                            is Tab.More -> 3
+                        }
+                        // <-- AM (NAVIGATION_PILL)
 
                         if (it is Tab.AnimeLib && it.animeIdToOpen != null) {
                             navigator.push(AnimeScreen(it.animeIdToOpen))
                         }
                         if (it is Tab.More && it.toDownloads) {
-                            navigator.push(DownloadsTab())
+                            // AM (REMOVE_TABBED_SCREENS) -->
+                            navigator.push(DownloadQueueScreen)
+                            // <-- AM (REMOVE_TABBED_SCREENS)
                         }
                     }
                 }
@@ -158,11 +178,9 @@ object HomeScreen : Screen() {
         data class AnimeLib(val animeIdToOpen: Long? = null) : Tab
 
         // AM (RECENTS) -->
-        data object Recents : Tab
+        data class Recents(val toHistory: Boolean) : Tab
 
         // <-- AM (RECENTS)
-        data object Updates : Tab
-        data object History : Tab
         data class Browse(val toExtensions: Boolean = false) : Tab
         data class More(val toDownloads: Boolean) : Tab
     }

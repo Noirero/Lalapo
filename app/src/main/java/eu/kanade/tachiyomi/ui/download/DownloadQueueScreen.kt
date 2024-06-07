@@ -1,20 +1,15 @@
+// AM (REMOVE_TABBED_SCREENS) -->
 package eu.kanade.tachiyomi.ui.download
 
+import android.view.LayoutInflater
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.graphics.res.animatedVectorResource
-import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
-import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.filled.PlayArrow
@@ -23,9 +18,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -42,51 +34,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import androidx.core.view.updatePadding
+import androidx.recyclerview.widget.LinearLayoutManager
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
-import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
-import eu.kanade.presentation.util.Tab
-import eu.kanade.tachiyomi.R
+import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.databinding.DownloadListBinding
+import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadAdapter
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadHeaderItem
 import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadQueueScreenModel
-import eu.kanade.tachiyomi.ui.download.anime.animeDownloadTab
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
+import tachiyomi.core.util.lang.launchUI
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.HorizontalPager
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.TabText
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.screens.EmptyScreen
+import kotlin.math.roundToInt
 
-data class DownloadsTab(
-    private val isManga: Boolean = false,
-) : Tab() {
-
-    override val options: TabOptions
-        @Composable
-        get() {
-            val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_history_enter)
-            return TabOptions(
-                index = 6u,
-                title = stringResource(MR.strings.label_download_queue),
-                icon = rememberAnimatedVectorPainter(image, isSelected),
-            )
-        }
-
+object DownloadQueueScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -96,9 +76,6 @@ data class DownloadsTab(
         val animeDownloadCount by remember {
             derivedStateOf { animeDownloadList.sumOf { it.subItems.size } }
         }
-
-        val state = rememberPagerState { 2 }
-        val snackbarHostState = remember { SnackbarHostState() }
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         var fabExpanded by remember { mutableStateOf(true) }
@@ -148,54 +125,39 @@ data class DownloadsTab(
                         }
                     },
                     navigateUp = navigator::pop,
-                    actions = {
-                        when (state.currentPage) {
-                            0 -> AnimeActions(animeScreenModel, animeDownloadList)
-                        }
-                    },
+                    actions = { AnimeActions(animeScreenModel, animeDownloadList) },
                     scrollBehavior = scrollBehavior,
                 )
             },
             floatingActionButton = {
                 AnimatedVisibility(
-                    visible = when (state.currentPage) {
-                        0 -> animeDownloadList.isNotEmpty()
-                        else -> false
-                    },
+                    visible = animeDownloadList.isNotEmpty(),
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
                     val animeIsRunning by animeScreenModel.isDownloaderRunning.collectAsState()
                     ExtendedFloatingActionButton(
                         text = {
-                            val id = when (state.currentPage) {
-                                0 -> if (animeIsRunning) {
-                                    MR.strings.action_pause
-                                } else {
-                                    MR.strings.action_resume
-                                }
-                                else -> MR.strings.action_pause
+                            val id = if (animeIsRunning) {
+                                MR.strings.action_pause
+                            } else {
+                                MR.strings.action_resume
                             }
                             Text(text = stringResource(id))
                         },
                         icon = {
-                            val icon = when (state.currentPage) {
-                                0 -> if (animeIsRunning) {
-                                    Icons.Outlined.Pause
-                                } else {
-                                    Icons.Filled.PlayArrow
-                                }
-                                else -> Icons.Filled.PlayArrow
+                            val icon = if (animeIsRunning) {
+                                Icons.Outlined.Pause
+                            } else {
+                                Icons.Filled.PlayArrow
                             }
                             Icon(imageVector = icon, contentDescription = null)
                         },
                         onClick = {
-                            when (state.currentPage) {
-                                0 -> if (animeIsRunning) {
-                                    animeScreenModel.pauseDownloads()
-                                } else {
-                                    animeScreenModel.startDownloads()
-                                }
+                            if (animeIsRunning) {
+                                animeScreenModel.pauseDownloads()
+                            } else {
+                                animeScreenModel.startDownloads()
                             }
                         },
                         expanded = fabExpanded,
@@ -203,47 +165,60 @@ data class DownloadsTab(
                 }
             },
         ) { contentPadding ->
-            Column(
-                modifier = Modifier.padding(
-                    top = contentPadding.calculateTopPadding(),
-                    start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-                    end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-                ),
-            ) {
-                PrimaryTabRow(
-                    selectedTabIndex = state.currentPage,
-                    modifier = Modifier.zIndex(1f),
-                ) {
-                    listOf(
-                        Tab(
-                            selected = state.currentPage == 0,
-                            onClick = { scope.launch { state.animateScrollToPage(0) } },
-                            text = {
-                                TabText(
-                                    text = stringResource(MR.strings.label_anime),
-                                    badgeCount = animeDownloadCount,
-                                )
-                            },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                        ),
-                    )
-                }
+            if (animeDownloadList.isEmpty()) {
+                EmptyScreen(
+                    stringRes = MR.strings.information_no_downloads,
+                    modifier = Modifier.padding(contentPadding),
+                )
+                return@Scaffold
+            }
 
-                HorizontalPager(
-                    modifier = Modifier.fillMaxSize(),
-                    state = state,
-                    verticalAlignment = Alignment.Top,
-                    pageNestedScrollConnection = nestedScrollConnection,
-                ) { page ->
-                    when (page) {
-                        0 -> animeDownloadTab(
-                            nestedScrollConnection,
-                        ).content(
-                            PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                            snackbarHostState,
+            val density = LocalDensity.current
+            val layoutDirection = LocalLayoutDirection.current
+            val left = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx().roundToInt() }
+            val top = with(density) { contentPadding.calculateTopPadding().toPx().roundToInt() }
+            val right = with(density) { contentPadding.calculateRightPadding(layoutDirection).toPx().roundToInt() }
+            val bottom = with(density) { contentPadding.calculateBottomPadding().toPx().roundToInt() }
+
+            Box(modifier = Modifier.nestedScroll(nestedScrollConnection)) {
+                AndroidView(
+                    modifier = Modifier.fillMaxWidth(),
+                    factory = { context ->
+                        animeScreenModel.controllerBinding = DownloadListBinding.inflate(
+                            LayoutInflater.from(context),
                         )
-                    }
-                }
+                        animeScreenModel.adapter = AnimeDownloadAdapter(animeScreenModel.listener)
+                        animeScreenModel.controllerBinding.root.adapter = animeScreenModel.adapter
+                        animeScreenModel.adapter?.isHandleDragEnabled = true
+                        animeScreenModel.controllerBinding.root.layoutManager = LinearLayoutManager(
+                            context,
+                        )
+
+                        ViewCompat.setNestedScrollingEnabled(animeScreenModel.controllerBinding.root, true)
+
+                        scope.launchUI {
+                            animeScreenModel.getDownloadStatusFlow()
+                                .collect(animeScreenModel::onStatusChange)
+                        }
+                        scope.launchUI {
+                            animeScreenModel.getDownloadProgressFlow()
+                                .collect(animeScreenModel::onUpdateDownloadedPages)
+                        }
+
+                        animeScreenModel.controllerBinding.root
+                    },
+                    update = {
+                        animeScreenModel.controllerBinding.root
+                            .updatePadding(
+                                left = left,
+                                top = top,
+                                right = right,
+                                bottom = bottom,
+                            )
+
+                        animeScreenModel.adapter?.updateDataSet(animeDownloadList)
+                    },
+                )
             }
         }
     }
@@ -332,3 +307,4 @@ data class DownloadsTab(
         }
     }
 }
+// <-- AM (REMOVE_TABBED_SCREENS)

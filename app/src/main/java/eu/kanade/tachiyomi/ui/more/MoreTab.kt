@@ -25,11 +25,11 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
-import eu.kanade.tachiyomi.ui.download.DownloadsTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
-import eu.kanade.tachiyomi.ui.stats.StatsTab
-import eu.kanade.tachiyomi.ui.storage.StorageTab
+import eu.kanade.tachiyomi.ui.stats.StatsScreen
+import eu.kanade.tachiyomi.ui.storage.StorageScreen
 import eu.kanade.tachiyomi.util.system.isInstalledFromFDroid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -75,10 +75,12 @@ object MoreTab : Tab() {
             incognitoMode = screenModel.incognitoMode,
             onIncognitoModeChange = { screenModel.incognitoMode = it },
             isFDroid = context.isInstalledFromFDroid(),
-            onClickDownloadQueue = { navigator.push(DownloadsTab()) },
-            onClickCategories = { navigator.push(CategoriesTab()) },
-            onClickStats = { navigator.push(StatsTab()) },
-            onClickStorage = { navigator.push(StorageTab()) },
+            // AM (REMOVE_TABBED_SCREENS) -->
+            onClickDownloadQueue = { navigator.push(DownloadQueueScreen) },
+            onClickCategories = { navigator.push(CategoryScreen()) },
+            onClickStats = { navigator.push(StatsScreen()) },
+            onClickStorage = { navigator.push(StorageScreen()) },
+            // <-- AM (REMOVE_TABBED_SCREENS)
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
             onClickSettings = { navigator.push(SettingsScreen()) },
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
