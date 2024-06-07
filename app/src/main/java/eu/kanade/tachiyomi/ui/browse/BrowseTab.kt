@@ -100,7 +100,9 @@ data class BrowseTab(
         val internalErrString = stringResource(MR.strings.internal_error)
         LaunchedEffect(Unit) {
             // AM (DISCORD) -->
-            launch { DiscordRPCService.setScreen(context, DiscordScreen.BROWSE) }
+            with(DiscordRPCService) {
+                discordScope.launchIO { setScreen(context.applicationContext, DiscordScreen.BROWSE) }
+            }
             // <-- AM (DISCORD)
             (context as? MainActivity)?.ready = true
             launchIO {

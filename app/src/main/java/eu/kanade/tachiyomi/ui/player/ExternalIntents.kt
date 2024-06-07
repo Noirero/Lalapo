@@ -18,9 +18,12 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connection.discord.PlayerData
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.source.anime.isNsfw
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -87,6 +90,25 @@ class ExternalIntents {
         val videoUrl = getVideoUrl(context, video) ?: return null
 
         val pkgName = playerPreferences.externalPlayerPreference().get()
+
+        // AM (DISCORD) -->
+        with(DiscordRPCService) {
+            discordScope.launchIO {
+                setPlayerActivity(
+                    context = context,
+                    playerData = PlayerData(
+                        incognitoMode = source.isNsfw() || basePreferences.incognitoMode().get(),
+                        animeId = anime.id,
+                        // AM (CUSTOM) -->
+                        animeTitle = anime.ogTitle,
+                        // <-- AM (CUSTOM)
+                        episodeNumber = episode.episodeNumber.toString(),
+                        thumbnailUrl = anime.thumbnailUrl,
+                    ),
+                )
+            }
+        }
+        // <-- AM (DISCORD)
 
         return if (pkgName.isEmpty()) {
             Intent(Intent.ACTION_VIEW).apply {
@@ -336,9 +358,11 @@ class ExternalIntents {
      *
      * @param intent the [Intent] that contains the episode's position and duration.
      */
+    // AM (DISCORD) -->
     @OptIn(DelicateCoroutinesApi::class)
     @Suppress("DEPRECATION")
-    fun onActivityResult(intent: Intent?) {
+    fun onActivityResult(context: Context, intent: Intent?) {
+        // <-- AM (DISCORD)
         val data = intent ?: return
         val anime = anime
         val currentExtEpisode = episode
@@ -369,6 +393,12 @@ class ExternalIntents {
                 duration = data.getIntExtra("duration", 0).toLong()
             }
         }
+
+        // AM (DISCORD) -->
+        with(DiscordRPCService) {
+            discordScope.launchIO { setScreen(context.applicationContext, lastUsedScreen) }
+        }
+        // <-- AM (DISCORD)
 
         // Update the episode's progress and history
         launchIO {
@@ -447,7 +477,7 @@ class ExternalIntents {
                 ),
             )
             if (trackPreferences.autoUpdateTrack().get() && currEp.seen) {
-                updateTrackEpisodeSeen(currEp.episodeNumber.toDouble(), anime)
+                updateTrackEpisodeSeen(currEp.episodeNumber, anime)
             }
             if (seen) {
                 deleteEpisodeIfNeeded(currentEpisode, anime)

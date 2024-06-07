@@ -11,7 +11,9 @@ import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
 import tachiyomi.domain.entries.anime.interactor.GetAnimeByUrlAndSourceId
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
@@ -22,8 +24,6 @@ import uy.kohesive.injekt.api.get
 import java.time.ZonedDateTime
 import java.util.Date
 import kotlin.math.max
-import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
-import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 
 class AnimeRestorer(
     private val handler: AnimeDatabaseHandler = Injekt.get(),

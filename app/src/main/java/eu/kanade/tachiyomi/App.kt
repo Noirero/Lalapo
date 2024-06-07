@@ -175,7 +175,7 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
     override fun onStop(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStopped()
         // AM (DISCORD) -->
-        DiscordRPCService.stop(applicationContext, 5000L)
+        DiscordRPCService.stop(applicationContext, 10000L)
         // <-- AM (DISCORD)
     }
 

@@ -274,6 +274,7 @@ class MainActivity : BaseActivity() {
 
                     // AM (DISCORD) -->
                     connectionPreferences.enableDiscordRPC().changes()
+                        .drop(1)
                         .onEach {
                             if (it) {
                                 DiscordRPCService.start(appContext)
@@ -324,7 +325,9 @@ class MainActivity : BaseActivity() {
             ActivityResultContracts.StartActivityForResult(),
         ) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-                ExternalIntents.externalIntents.onActivityResult(result.data)
+                // AM (DISCORD) -->
+                ExternalIntents.externalIntents.onActivityResult(this.applicationContext, result.data)
+                // <-- AM (DISCORD)
             }
         }
     }

@@ -39,4 +39,3 @@ fun Context.getResourceColor(@AttrRes resource: Int, alphaFactor: Float = 1f): I
     return color
 }
 // <-- AM (CUSTOM)
-

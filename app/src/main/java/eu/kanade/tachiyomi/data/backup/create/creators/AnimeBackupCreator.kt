@@ -20,7 +20,7 @@ class AnimeBackupCreator(
     private val getCategories: GetAnimeCategories = Injekt.get(),
     private val getHistory: GetAnimeHistory = Injekt.get(),
     // AM (CUSTOM) -->
-    private val getCustomAnimeInfo: GetCustomAnimeInfo = Injekt.get()
+    private val getCustomAnimeInfo: GetCustomAnimeInfo = Injekt.get(),
     // <-- AM (CUSTOM)
 ) {
 
@@ -103,14 +103,14 @@ private fun Anime.toBackupAnime(customAnimeInfo: CustomAnimeInfo?) =
         lastModifiedAt = this.lastModifiedAt,
         favoriteModifiedAt = this.favoriteModifiedAt,
     ) // AM (CUSTOM) -->
-    .also { backupAnime ->
-    customAnimeInfo?.let {
-        backupAnime.customTitle = it.title
-        backupAnime.customArtist = it.artist
-        backupAnime.customAuthor = it.author
-        backupAnime.customDescription = it.description
-        backupAnime.customGenre = it.genre
-        backupAnime.customStatus = it.status?.toInt() ?: 0
-    }
-}
+        .also { backupAnime ->
+            customAnimeInfo?.let {
+                backupAnime.customTitle = it.title
+                backupAnime.customArtist = it.artist
+                backupAnime.customAuthor = it.author
+                backupAnime.customDescription = it.description
+                backupAnime.customGenre = it.genre
+                backupAnime.customStatus = it.status?.toInt() ?: 0
+            }
+        }
 // <-- AM (CUSTOM)

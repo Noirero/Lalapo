@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -87,7 +86,9 @@ object MoreTab : Tab() {
 
         // AM (DISCORD) -->
         LaunchedEffect(Unit) {
-            launch { DiscordRPCService.setScreen(context, DiscordScreen.MORE) }
+            with(DiscordRPCService) {
+                discordScope.launchIO { setScreen(context.applicationContext, DiscordScreen.MORE) }
+            }
         }
         // <-- AM (DISCORD)
     }

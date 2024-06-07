@@ -1,9 +1,9 @@
 package tachiyomi.domain.history.anime.model
 
-import tachiyomi.domain.entries.anime.model.AnimeCover
-import java.util.Date
 import tachiyomi.domain.entries.anime.interactor.GetCustomAnimeInfo
+import tachiyomi.domain.entries.anime.model.AnimeCover
 import uy.kohesive.injekt.injectLazy
+import java.util.Date
 
 data class AnimeHistoryWithRelations(
     val id: Long,

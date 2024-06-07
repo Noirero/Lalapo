@@ -20,8 +20,9 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.player.viewer.PipState
 import eu.kanade.tachiyomi.util.system.notificationBuilder
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchIO
 import tachiyomi.core.util.lang.withIOContext
@@ -38,7 +39,6 @@ class DiscordRPCService : Service() {
 
     private val connectionManager: ConnectionManager by injectLazy()
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
         val token = connectionPreferences.connectionToken(connectionManager.discord).get()
@@ -49,7 +49,9 @@ class DiscordRPCService : Service() {
         }
         rpc = if (token.isNotBlank()) DiscordRPC(token, status) else null
         if (rpc != null) {
-            launchIO { setScreen(this@DiscordRPCService, lastUsedScreen) }
+            with(DiscordRPCService) {
+                discordScope.launchIO { setScreen(this@DiscordRPCService.applicationContext, lastUsedScreen) }
+            }
             notification(this)
         } else {
             connectionPreferences.enableDiscordRPC().set(false)
@@ -96,6 +98,9 @@ class DiscordRPCService : Service() {
 
         private val handler = Handler(Looper.getMainLooper())
 
+        private val job = SupervisorJob()
+        internal val discordScope = CoroutineScope(Dispatchers.IO + job)
+
         fun start(context: Context) {
             handler.removeCallbacksAndMessages(null)
             if (rpc == null && connectionPreferences.enableDiscordRPC().get()) {
@@ -112,13 +117,6 @@ class DiscordRPCService : Service() {
             )
         }
 
-        suspend fun reset(context: Context) {
-            stop(context, 0L)
-            delay(1000L)
-            start(context)
-            setScreen(context, DiscordScreen.MORE)
-        }
-
         private var since = 0L
 
         internal var lastUsedScreen = DiscordScreen.APP
@@ -131,6 +129,7 @@ class DiscordRPCService : Service() {
             discordScreen: DiscordScreen,
             playerData: PlayerData = PlayerData(),
         ) {
+            handler.removeCallbacksAndMessages(null)
             if (PipState.mode == PipState.ON && discordScreen != DiscordScreen.VIDEO) return
             lastUsedScreen = discordScreen
 
@@ -209,15 +208,20 @@ class DiscordRPCService : Service() {
                     ?.substringAfter("\"id\": \"")?.substringBefore("\"}")
                     ?.split("external/")?.getOrNull(1)?.let { "external/$it" }
 
-                setScreen(
-                    context = context,
-                    discordScreen = DiscordScreen.VIDEO,
-                    playerData = PlayerData(
-                        animeTitle = animeTitle,
-                        episodeNumber = episodeNumber,
-                        thumbnailUrl = animeThumbnail,
-                    ),
-                )
+                // AM (DISCORD) -->
+                with(DiscordRPCService) {
+                    discordScope.launchIO {
+                        setScreen(
+                            context = context.applicationContext,
+                            discordScreen = DiscordScreen.VIDEO,
+                            playerData = PlayerData(
+                                animeTitle = animeTitle,
+                                episodeNumber = episodeNumber,
+                                thumbnailUrl = animeThumbnail,
+                            ),
+                        )
+                    }
+                }
             }
         }
     }

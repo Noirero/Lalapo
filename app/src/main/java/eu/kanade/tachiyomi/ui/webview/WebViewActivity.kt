@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
 import eu.kanade.presentation.webview.WebViewScreenContent
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
@@ -73,18 +72,20 @@ class WebViewActivity : BaseActivity() {
         }
 
         // AM (DISCORD) -->
-        lifecycleScope.launchIO {
-            DiscordRPCService.setScreen(this@WebViewActivity, DiscordScreen.WEBVIEW)
+        with(DiscordRPCService) {
+            discordScope.launchIO { setScreen(this@WebViewActivity.applicationContext, DiscordScreen.WEBVIEW) }
         }
         // <-- AM (DISCORD)
     }
 
     // AM (DISCORD) -->
     override fun onDestroy() {
-        lifecycleScope.launchIO {
-            DiscordRPCService.setScreen(this@WebViewActivity, DiscordRPCService.lastUsedScreen)
-        }
         super.onDestroy()
+        // AM (DISCORD) -->
+        with(DiscordRPCService) {
+            discordScope.launchIO { setScreen(this@WebViewActivity.applicationContext, lastUsedScreen) }
+        }
+        // <-- AM (DISCORD)
     }
     // <-- AM (DISCORD)
 

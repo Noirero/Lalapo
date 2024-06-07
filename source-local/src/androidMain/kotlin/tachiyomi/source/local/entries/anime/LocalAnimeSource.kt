@@ -16,6 +16,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
 import logcat.LogPriority
 import rx.Observable
 import tachiyomi.core.i18n.stringResource
@@ -38,7 +39,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
-import kotlinx.serialization.json.encodeToStream
 
 actual class LocalAnimeSource(
     private val context: Context,

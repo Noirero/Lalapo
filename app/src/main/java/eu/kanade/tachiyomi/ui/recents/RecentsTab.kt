@@ -24,7 +24,7 @@ import eu.kanade.tachiyomi.ui.history.anime.animeHistoryTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.updates.anime.animeUpdatesTab
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
+import tachiyomi.core.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -66,7 +66,9 @@ object RecentsTab : Tab() {
 
         LaunchedEffect(Unit) {
             // AM (DISCORD) -->
-            launch { DiscordRPCService.setScreen(context, DiscordScreen.RECENTS) }
+            with(DiscordRPCService) {
+                discordScope.launchIO { setScreen(context.applicationContext, DiscordScreen.RECENTS) }
+            }
             // <-- AM (DISCORD)
             (context as? MainActivity)?.ready = true
         }

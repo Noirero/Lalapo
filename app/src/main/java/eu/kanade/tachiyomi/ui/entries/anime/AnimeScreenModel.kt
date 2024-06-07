@@ -66,7 +66,10 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.interactor.GetAnimeWithEpisodes
 import tachiyomi.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import tachiyomi.domain.entries.anime.interactor.SetAnimeEpisodeFlags
+import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.AnimeUpdate
+import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
 import tachiyomi.domain.entries.anime.repository.AnimeRepository
 import tachiyomi.domain.entries.applyFilter
 import tachiyomi.domain.items.episode.interactor.SetAnimeDefaultEpisodeFlags
@@ -81,15 +84,12 @@ import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.i18n.MR
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Calendar
 import kotlin.math.floor
-import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
-import tachiyomi.domain.entries.anime.model.AnimeUpdate
-import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
-import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 class AnimeScreenModel(
     val context: Context,
@@ -1145,8 +1145,10 @@ class AnimeScreenModel(
         data class DuplicateAnime(val anime: Anime, val duplicate: Anime) : Dialog
         data class SetAnimeFetchInterval(val anime: Anime) : Dialog
         data class ShowQualities(val episode: Episode, val anime: Anime, val source: AnimeSource) : Dialog
+
         // AM (CUSTOM) -->
         data class EditAnimeInfo(val anime: Anime) : Dialog
+
         // <-- AM (CUSTOM)
         data object ChangeAnimeSkipIntro : Dialog
         data object SettingsSheet : Dialog

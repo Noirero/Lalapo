@@ -41,14 +41,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.hippo.unifile.UniFile
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connection.service.ConnectionPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SerializableVideo.Companion.serialize
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connection.discord.PlayerData
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.PlayerActivityBinding
+import eu.kanade.tachiyomi.source.anime.isNsfw
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.settings.PlayerSettingsScreenModel
@@ -113,6 +117,10 @@ class PlayerActivity : BaseActivity() {
     internal val viewModel by viewModels<PlayerViewModel>()
 
     internal val playerPreferences: PlayerPreferences = Injekt.get()
+
+    // AM (DISCORD) -->
+    private val connectionPreferences: ConnectionPreferences = Injekt.get()
+    // <-- AM (DISCORD)
 
     companion object {
         fun newIntent(
@@ -932,6 +940,9 @@ class PlayerActivity : BaseActivity() {
         }
         abandonAudioFocus()
         super.onDestroy()
+        // AM (DISCORD) -->
+        updateDiscordRPC(exitingPlayer = true)
+        // <-- AM (DISCORD)
     }
 
     @Deprecated("Deprecated in Java")
@@ -1583,6 +1594,10 @@ class PlayerActivity : BaseActivity() {
             MPVLib.command(arrayOf("loadfile", parseVideoUrl(it.videoUrl)))
         }
         refreshUi()
+
+        // AM (DISCORD) -->
+        updateDiscordRPC(exitingPlayer = false)
+        // <-- AM (DISCORD)
     }
 
     private fun parseVideoUrl(videoUrl: String?): String? {
@@ -1927,4 +1942,31 @@ class PlayerActivity : BaseActivity() {
             animationHandler.postDelayed(nextEpisodeRunnable, 1000L)
         }
     }
+
+    // AM (DISCORD) -->
+    private fun updateDiscordRPC(exitingPlayer: Boolean) {
+        DiscordRPCService.discordScope.launchIO {
+            if (connectionPreferences.enableDiscordRPC().get()) {
+                if (!exitingPlayer) {
+                    DiscordRPCService.setPlayerActivity(
+                        context = applicationContext,
+                        PlayerData(
+                            incognitoMode = viewModel.currentSource.isNsfw() || viewModel.incognitoMode,
+                            animeId = viewModel.currentAnime?.id,
+                            // AM (CUSTOM) -->
+                            animeTitle = viewModel.currentAnime?.ogTitle,
+                            // <-- AM (CUSTOM)
+                            episodeNumber = viewModel.currentEpisode?.episode_number?.toString(),
+                            thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
+                        ),
+                    )
+                } else {
+                    with(DiscordRPCService) {
+                        setScreen(this@PlayerActivity.applicationContext, lastUsedScreen)
+                    }
+                }
+            }
+        }
+    }
+    // <-- AM (DISCORD)
 }

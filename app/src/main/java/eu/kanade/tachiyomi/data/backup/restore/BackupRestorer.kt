@@ -20,14 +20,11 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import tachiyomi.core.i18n.stringResource
 import tachiyomi.i18n.MR
+import uy.kohesive.injekt.api.get
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
-import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class BackupRestorer(
     private val context: Context,
