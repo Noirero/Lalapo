@@ -18,7 +18,7 @@ android {
     defaultConfig {
         applicationId = "xyz.Quickdev.Animiru.mi"
 
-        versionCode = 122
+        versionCode = 123
         versionName = "0.16.0.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
@@ -149,15 +149,15 @@ android {
 }
 
 dependencies {
-    implementation(project(":i18n"))
-    implementation(project(":core"))
-    implementation(project(":core-metadata"))
-    implementation(project(":source-api"))
-    implementation(project(":source-local"))
-    implementation(project(":data"))
-    implementation(project(":domain"))
-    implementation(project(":presentation-core"))
-    implementation(project(":presentation-widget"))
+    implementation(projects.i18n)
+    implementation(projects.core)
+    implementation(projects.coreMetadata)
+    implementation(projects.sourceApi)
+    implementation(projects.sourceLocal)
+    implementation(projects.data)
+    implementation(projects.domain)
+    implementation(projects.presentationCore)
+    implementation(projects.presentationWidget)
 
     // Compose
     implementation(platform(compose.bom))

@@ -60,16 +60,13 @@ enum class HwDecState(val title: String, val mpvValue: String) {
     ;
 
     companion object {
-        internal val isHwSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-
         internal val isWSA = Build.MODEL == "Subsystem for Android(TM)" ||
             Build.BRAND == "Windows" ||
             Build.BOARD == "windows"
 
         internal val defaultHwDec = when {
             isWSA -> SW
-            isHwSupported -> HW_PLUS
-            else -> HW
+            else -> HW_PLUS
         }
     }
 }
@@ -86,6 +83,7 @@ enum class PlayerStatsPage(val page: Int, val textRes: StringResource) {
 }
 
 enum class AudioChannels(val propertyName: String, val propertyValue: String, val textRes: StringResource) {
+    AutoSafe("audio-channels", "auto-safe", MR.strings.pref_player_audio_channels_auto_safe),
     Auto("audio-channels", "auto", MR.strings.pref_player_audio_channels_auto),
     Mono("audio-channels", "mono", MR.strings.pref_player_audio_channels_mono),
     Stereo("audio-channels", "stereo", MR.strings.pref_player_audio_channels_stereo),

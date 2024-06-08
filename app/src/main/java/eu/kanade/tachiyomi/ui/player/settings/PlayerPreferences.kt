@@ -25,7 +25,7 @@ class PlayerPreferences(
     fun rememberPlayerVolume() = preferenceStore.getBoolean("pref_remember_volume", false)
     fun playerVolumeValue() = preferenceStore.getFloat("player_volume_value", -1.0F)
 
-    fun audioChannels() = preferenceStore.getEnum("pref_audio_config", AudioChannels.Auto)
+    fun audioChannels() = preferenceStore.getEnum("pref_audio_config", AudioChannels.AutoSafe)
 
     fun autoplayEnabled() = preferenceStore.getBoolean("pref_auto_play_enabled", false)
 
@@ -118,4 +118,6 @@ class PlayerPreferences(
     fun textColorSubtitles() = preferenceStore.getInt("pref_text_color_subtitles", -1)
     fun borderColorSubtitles() = preferenceStore.getInt("pref_border_color_subtitles", -16777216)
     fun backgroundColorSubtitles() = preferenceStore.getInt("pref_background_color_subtitles", 0)
+
+    fun mpvScripts() = preferenceStore.getBoolean("mpv_scripts", false)
 }

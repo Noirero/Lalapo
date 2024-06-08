@@ -143,13 +143,13 @@ fun AnimeSourcesScreen(
                             when (model) {
                                 is AnimeSourceUiModel.Header -> {
                                     AnimeSourceHeader(
-                                        modifier = Modifier,
+                                        modifier = Modifier.animateItemPlacement(),
                                         language = model.language,
                                     )
                                 }
 
                                 is AnimeSourceUiModel.Item -> AnimeSourceItem(
-                                    modifier = Modifier,
+                                    modifier = Modifier.animateItemPlacement(),
                                     // AM (BROWSE) -->
                                     navigator = navigator,
                                     // <-- AM (BROWSE)

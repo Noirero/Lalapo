@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
 import eu.kanade.tachiyomi.data.track.simkl.Simkl
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.MR.strings.status
 
 enum class TrackStatus(val int: Int, val res: StringResource) {
     WATCHING(1, MR.strings.watching),
@@ -22,8 +23,7 @@ enum class TrackStatus(val int: Int, val res: StringResource) {
     ;
 
     companion object {
-        fun parseTrackerStatus(trackerManager: TrackerManager, tracker: Long, statusLong: Long): TrackStatus? {
-            val status = statusLong.toInt()
+        fun parseTrackerStatus(trackerManager: TrackerManager, tracker: Long, status: Long): TrackStatus? {
             return when (tracker) {
                 trackerManager.myAnimeList.id -> {
                     when (status) {

@@ -16,8 +16,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.float
-import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -119,8 +119,8 @@ class MyAnimeListApi(
                             remote_id = obj["id"]!!.jsonPrimitive.long
                             title = obj["title"]!!.jsonPrimitive.content
                             summary = obj["synopsis"]?.jsonPrimitive?.content ?: ""
-                            total_episodes = obj["num_episodes"]!!.jsonPrimitive.int
-                            score = obj["mean"]?.jsonPrimitive?.floatOrNull ?: -1f
+                            total_episodes = obj["num_episodes"]!!.jsonPrimitive.long
+                            score = obj["mean"]?.jsonPrimitive?.doubleOrNull ?: -1.0
                             cover_url =
                                 obj["main_picture"]?.jsonObject?.get("large")?.jsonPrimitive?.content
                                     ?: ""
@@ -187,7 +187,7 @@ class MyAnimeListApi(
                     .awaitSuccess()
                     .parseAs<JsonObject>()
                     .let { obj ->
-                        track.total_episodes = obj["num_episodes"]!!.jsonPrimitive.int
+                        track.total_episodes = obj["num_episodes"]!!.jsonPrimitive.long
                         obj.jsonObject["my_list_status"]?.jsonObject?.let {
                             parseAnimeItem(it, track)
                         }
@@ -255,8 +255,8 @@ class MyAnimeListApi(
                     obj["status"]!!.jsonPrimitive.content,
                 )
             }
-            last_episode_seen = obj["num_episodes_watched"]!!.jsonPrimitive.float
-            score = obj["score"]!!.jsonPrimitive.int.toFloat()
+            last_episode_seen = obj["num_episodes_watched"]!!.jsonPrimitive.double
+            score = obj["score"]!!.jsonPrimitive.int.toDouble()
             obj["start_date"]?.let {
                 started_watching_date = parseDate(it.jsonPrimitive.content)
             }

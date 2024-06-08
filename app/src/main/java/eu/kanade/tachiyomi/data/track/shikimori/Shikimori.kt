@@ -25,12 +25,12 @@ class Shikimori(id: Long) :
     DeletableAnimeTracker {
 
     companion object {
-        const val READING = 1
-        const val COMPLETED = 2
-        const val ON_HOLD = 3
-        const val DROPPED = 4
-        const val PLAN_TO_READ = 5
-        const val REREADING = 6
+        const val READING = 1L
+        const val COMPLETED = 2L
+        const val ON_HOLD = 3L
+        const val DROPPED = 4L
+        const val PLAN_TO_READ = 5L
+        const val REREADING = 6L
 
         private val SCORE_LIST = IntRange(0, 10)
             .map(Int::toString)
@@ -45,8 +45,8 @@ class Shikimori(id: Long) :
 
     override fun getScoreList(): ImmutableList<String> = SCORE_LIST
 
-    override fun indexToScore(index: Int): Float {
-        return index.toFloat()
+    override fun indexToScore(index: Int): Double {
+        return index.toDouble()
     }
 
     override fun displayScore(track: DomainAnimeTrack): String {
@@ -60,7 +60,7 @@ class Shikimori(id: Long) :
     override suspend fun update(track: AnimeTrack, didWatchEpisode: Boolean): AnimeTrack {
         if (track.status != COMPLETED) {
             if (didWatchEpisode) {
-                if (track.last_episode_seen.toInt() == track.total_episodes && track.total_episodes > 0) {
+                if (track.last_episode_seen.toLong() == track.total_episodes && track.total_episodes > 0) {
                     track.status = COMPLETED
                 } else if (track.status != REREADING) {
                     track.status = READING
@@ -83,14 +83,14 @@ class Shikimori(id: Long) :
 
             if (track.status != COMPLETED) {
                 val isRereading = track.status == REREADING
-                track.status = if (isRereading.not() && hasSeenEpisodes) READING else track.status
+                track.status = if (!isRereading && hasSeenEpisodes) READING else track.status
             }
 
             update(track)
         } else {
             // Set default fields if it's not found in the list
             track.status = if (hasSeenEpisodes) READING else PLAN_TO_READ
-            track.score = 0F
+            track.score = 0.0
             add(track)
         }
     }
@@ -112,11 +112,11 @@ class Shikimori(id: Long) :
 
     override fun getLogoColor() = Color.rgb(40, 40, 40)
 
-    override fun getStatusListAnime(): List<Int> {
+    override fun getStatusListAnime(): List<Long> {
         return listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ, REREADING)
     }
 
-    override fun getStatus(status: Int): StringResource? = when (status) {
+    override fun getStatus(status: Long): StringResource? = when (status) {
         READING -> MR.strings.reading
         PLAN_TO_READ -> MR.strings.plan_to_read
         COMPLETED -> MR.strings.completed
@@ -126,11 +126,11 @@ class Shikimori(id: Long) :
         else -> null
     }
 
-    override fun getWatchingStatus(): Int = READING
+    override fun getWatchingStatus(): Long = READING
 
-    override fun getRewatchingStatus(): Int = REREADING
+    override fun getRewatchingStatus(): Long = REREADING
 
-    override fun getCompletionStatus(): Int = COMPLETED
+    override fun getCompletionStatus(): Long = COMPLETED
 
     override suspend fun login(username: String, password: String) = login(password)
 

@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
@@ -43,13 +44,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.core.util.fastDistinctBy
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.entries.components.DotSeparatorNoSpaceText
+import eu.kanade.presentation.more.settings.screen.browse.AnimeExtensionReposScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
 import eu.kanade.tachiyomi.extension.InstallStep
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
@@ -58,6 +59,7 @@ import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreenModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
+import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -66,6 +68,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
@@ -104,6 +107,12 @@ fun AnimeExtensionScreen(
                             contentDescription = stringResource(MR.strings.action_filter),
                         )
                     }
+                    IconButton(onClick = { navigator.push(AnimeExtensionReposScreen()) }) {
+                        Icon(
+                            Icons.Outlined.MoreVert,
+                            contentDescription = stringResource(MR.strings.label_extension_repos),
+                        )
+                    }
                 },
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigator::pop,
@@ -127,6 +136,13 @@ fun AnimeExtensionScreen(
                     EmptyScreen(
                         stringRes = msg,
                         modifier = Modifier.padding(contentPadding),
+                        actions = persistentListOf(
+                            EmptyScreenAction(
+                                stringRes = MR.strings.label_extension_repos,
+                                icon = Icons.Outlined.Settings,
+                                onClick = { navigator.push(AnimeExtensionReposScreen()) },
+                            ),
+                        ),
                     )
                 }
 
@@ -220,9 +236,15 @@ private fun AnimeExtensionContent(
             }
 
             items(
-                items = items.fastDistinctBy { it.hashCode() },
+                items = items,
                 contentType = { "item" },
-                key = { "extension-${it.hashCode()}" },
+                key = { item ->
+                    when (item.extension) {
+                        is AnimeExtension.Untrusted -> "extension-untrusted-${item.hashCode()}"
+                        is AnimeExtension.Installed -> "extension-installed-${item.hashCode()}"
+                        is AnimeExtension.Available -> "extension-available-${item.hashCode()}"
+                    }
+                },
             ) { item ->
                 AnimeExtensionItem(
                     item = item,

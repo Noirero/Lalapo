@@ -2,7 +2,6 @@ package eu.kanade.domain.base
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.core.preference.Preference
 import tachiyomi.core.preference.PreferenceStore
@@ -29,7 +28,7 @@ class BasePreferences(
     // )
     // <-- AM (REMOVE_ACRA_FIREBASE)
 
-    fun deviceHasPip() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.packageManager.hasSystemFeature(
+    fun deviceHasPip() = context.packageManager.hasSystemFeature(
         PackageManager.FEATURE_PICTURE_IN_PICTURE,
     )
 

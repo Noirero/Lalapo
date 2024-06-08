@@ -5,9 +5,6 @@
 # ![app icon](.github/readme-images/app-icon.png)Animiru
 Animiru is an unofficial fork of [Aniyomi](https://github.com/jmir1/aniyomi)
 
-Animiru strips the reader capabilities of Aniyomi, to make it a video only app for Android 6.0+
-
-
 ## Features
 
 Features include:
@@ -28,8 +25,8 @@ Please make sure to read the full guidelines. Your issue may be closed without w
 
 <details><summary>Issues</summary>
 
-1. **Before reporting a new issue, take a look at the already opened [issues](https://github.com/Quickdesh/Animiru/issues).**
-2. If you are unsure, ask here: [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv)
+1. **Before reporting a new issue, take a look at the already opened and closed [issues](https://github.com/Quickdesh/Animiru/issues).**
+2. If you are unsure, ask on Discord: [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv)
 
 </details>
 
@@ -41,10 +38,6 @@ Please make sure to read the full guidelines. Your issue may be closed without w
 * Include screenshot (if needed)
 * If it could be device-dependent, try reproducing on another device (if possible)
 * Don't group unrelated requests into one issue
-
-DO: https://github.com/tachiyomiorg/tachiyomi/issues/24 https://github.com/tachiyomiorg/tachiyomi/issues/71
-
-DON'T: https://github.com/tachiyomiorg/tachiyomi/issues/75
 
 </details>
 

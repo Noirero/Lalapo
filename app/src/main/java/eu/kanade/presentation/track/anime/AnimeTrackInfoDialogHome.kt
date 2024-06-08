@@ -47,7 +47,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.theme.TachiyomiTheme
+import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
@@ -87,7 +87,7 @@ fun AnimeTrackInfoDialogHome(
                 TrackInfoItem(
                     title = item.track.title,
                     tracker = item.tracker,
-                    status = item.tracker.getStatus(item.track.status.toInt()),
+                    status = item.tracker.getStatus(item.track.status),
                     onStatusClick = { onStatusClick(item) },
                     episodes = "${item.track.lastEpisodeSeen.toInt()}".let {
                         val totalEpisodes = item.track.totalEpisodes
@@ -326,5 +326,5 @@ private fun TrackInfoDialogHomePreviews(
     @PreviewParameter(AnimeTrackInfoDialogHomePreviewProvider::class)
     content: @Composable () -> Unit,
 ) {
-    TachiyomiTheme { content() }
+    TachiyomiPreviewTheme { content() }
 }
