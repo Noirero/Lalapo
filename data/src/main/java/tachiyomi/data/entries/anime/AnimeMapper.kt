@@ -28,6 +28,11 @@ object AnimeMapper {
         calculateInterval: Long,
         lastModifiedAt: Long,
         favoriteModifiedAt: Long?,
+        // AM (SYNC) -->
+        version: Long,
+        @Suppress("UNUSED_PARAMETER")
+        isSyncing: Long,
+        // <-- AM (SYNC)
     ): Anime = Anime(
         id = id,
         source = source,
@@ -53,6 +58,9 @@ object AnimeMapper {
         initialized = initialized,
         lastModifiedAt = lastModifiedAt,
         favoriteModifiedAt = favoriteModifiedAt,
+        // AM (SYNC) -->
+        version = version,
+        // <-- AM (SYNC)
     )
 
     fun mapLibraryAnime(
@@ -78,6 +86,10 @@ object AnimeMapper {
         calculateInterval: Long,
         lastModifiedAt: Long,
         favoriteModifiedAt: Long?,
+        // AM (SYNC) -->
+        version: Long,
+        isSyncing: Long,
+        // <-- AM (SYNC)
         totalCount: Long,
         seenCount: Double,
         latestUpload: Long,
@@ -112,6 +124,10 @@ object AnimeMapper {
             calculateInterval,
             lastModifiedAt,
             favoriteModifiedAt,
+            // AM (SYNC) -->
+            version,
+            isSyncing,
+            // <-- AM (SYNC)
         ),
         category = category,
         totalEpisodes = totalCount,

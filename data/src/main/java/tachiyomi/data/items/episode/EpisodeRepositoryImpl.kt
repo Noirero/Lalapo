@@ -32,6 +32,9 @@ class EpisodeRepositoryImpl(
                         episode.sourceOrder,
                         episode.dateFetch,
                         episode.dateUpload,
+                        // AM (SYNC) -->
+                        episode.version,
+                        // <-- AM (SYNC)
                     )
                     val lastInsertId = episodesQueries.selectLastInsertedRowId().executeAsOne()
                     episode.copy(id = lastInsertId)
@@ -71,6 +74,10 @@ class EpisodeRepositoryImpl(
                     dateFetch = episodeUpdate.dateFetch,
                     dateUpload = episodeUpdate.dateUpload,
                     episodeId = episodeUpdate.id,
+                    // AM (SYNC) -->
+                    version = episodeUpdate.version,
+                    isSyncing = 0,
+                    // <-- AM (SYNC)
                 )
             }
         }
@@ -144,6 +151,10 @@ class EpisodeRepositoryImpl(
         dateFetch: Long,
         dateUpload: Long,
         lastModifiedAt: Long,
+        // AM (SYNC) -->
+        version: Long,
+        isSyncing: Long,
+        // <-- AM (SYNC)
     ): Episode = Episode(
         id = id,
         animeId = animeId,
@@ -162,5 +173,8 @@ class EpisodeRepositoryImpl(
         episodeNumber = episodeNumber,
         scanlator = scanlator,
         lastModifiedAt = lastModifiedAt,
+        // AM (SYNC) -->
+        version = version,
+        // <-- AM (SYNC)
     )
 }

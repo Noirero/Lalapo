@@ -193,7 +193,7 @@ internal fun PreferenceItem(
                 item.connection.run {
                     ConnectionPreferenceWidget(
                         service = this,
-                        checked = uName.isNotEmpty(),
+                        checked = uName.isNotEmpty() || isLoggedIn,
                         onClick = { if (isLoggedIn) item.openSettings() else item.login() },
                     )
                 }

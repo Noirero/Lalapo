@@ -106,6 +106,9 @@ class AnimeRepositoryImpl(
                 coverLastModified = anime.coverLastModified,
                 dateAdded = anime.dateAdded,
                 updateStrategy = anime.updateStrategy,
+                // AM (SYNC) -->
+                version = anime.version,
+                // <-- AM (SYNC)
             )
             animesQueries.selectLastInsertedRowId()
         }
@@ -155,6 +158,10 @@ class AnimeRepositoryImpl(
                     dateAdded = value.dateAdded,
                     animeId = value.id,
                     updateStrategy = value.updateStrategy?.let(AnimeUpdateStrategyColumnAdapter::encode),
+                    // AM (SYNC) -->
+                    version = value.version,
+                    isSyncing = 0,
+                    // <-- AM (SYNC)
                 )
             }
         }

@@ -10,8 +10,8 @@ class Discord(id: Long) : BaseConnection(id, "Discord") {
 
     override fun getLogoColor() = Color.rgb(88, 101, 242)
 
-    override suspend fun login(username: String, password: String) {
-        // Not Needed
-    }
+    override val isLoggedIn: Boolean
+        get() = getUsername().isNotEmpty() &&
+            getPassword().isNotEmpty()
 }
 // <-- AM (DISCORD)

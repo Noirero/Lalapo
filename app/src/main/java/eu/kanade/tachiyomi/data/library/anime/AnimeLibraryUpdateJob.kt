@@ -16,12 +16,14 @@ import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.toSAnime
 import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithSource
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
+import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.track.TrackStatus
@@ -542,6 +544,11 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                 context.workManager.cancelUniqueWork(WORK_NAME_AUTO)
             }
         }
+
+        // AM (SYNC) -->
+        private val syncPreferences: SyncPreferences = Injekt.get()
+        // <-- AM (SYNC)
+
         fun startNow(
             context: Context,
             category: Category? = null,
@@ -563,12 +570,41 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                 KEY_GROUP_EXTRA to groupExtra,
                 // <-- AM (GROUPING)
             )
-            val request = OneTimeWorkRequestBuilder<AnimeLibraryUpdateJob>()
-                .addTag(TAG)
-                .addTag(WORK_NAME_MANUAL)
-                .setInputData(inputData)
-                .build()
-            wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
+
+            // AM (SYNC) -->
+            // Always sync the data before library update if syncing is enabled.
+            if (syncPreferences.isSyncEnabled()) {
+                // Check if SyncDataJob is already running
+                if (SyncDataJob.isRunning(context)) {
+                    // SyncDataJob is already running
+                    return false
+                }
+
+                // Define the SyncDataJob
+                val syncDataJob = OneTimeWorkRequestBuilder<SyncDataJob>()
+                    .addTag(SyncDataJob.TAG_MANUAL)
+                    .build()
+
+                // Chain SyncDataJob to run before AnimeLibraryUpdateJob
+                val libraryUpdateJob = OneTimeWorkRequestBuilder<AnimeLibraryUpdateJob>()
+                    .addTag(TAG)
+                    .addTag(WORK_NAME_MANUAL)
+                    .setInputData(inputData)
+                    .build()
+
+                wm.beginUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, syncDataJob)
+                    .then(libraryUpdateJob)
+                    .enqueue()
+            } else {
+                val request = OneTimeWorkRequestBuilder<AnimeLibraryUpdateJob>()
+                    .addTag(TAG)
+                    .addTag(WORK_NAME_MANUAL)
+                    .setInputData(inputData)
+                    .build()
+
+                wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
+            }
+            // <-- AM (SYNC)
 
             return true
         }

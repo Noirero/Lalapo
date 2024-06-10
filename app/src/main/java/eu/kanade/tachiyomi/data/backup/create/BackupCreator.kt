@@ -118,27 +118,27 @@ class BackupCreator(
         }
     }
 
-    private suspend fun backupAnimeCategories(options: BackupOptions): List<BackupCategory> {
+    internal suspend fun backupAnimeCategories(options: BackupOptions): List<BackupCategory> {
         if (!options.categories) return emptyList()
 
         return categoriesBackupCreator.backupAnimeCategories()
     }
 
-    private suspend fun backupAnimes(animes: List<Anime>, options: BackupOptions): List<BackupAnime> {
+    internal suspend fun backupAnimes(animes: List<Anime>, options: BackupOptions): List<BackupAnime> {
         return animeBackupCreator.backupAnimes(animes, options)
     }
 
-    private fun backupAnimeSources(animes: List<Anime>): List<BackupAnimeSource> {
+    internal fun backupAnimeSources(animes: List<Anime>): List<BackupAnimeSource> {
         return sourcesBackupCreator.backupAnimeSources(animes)
     }
 
-    private fun backupAppPreferences(options: BackupOptions): List<BackupPreference> {
+    internal fun backupAppPreferences(options: BackupOptions): List<BackupPreference> {
         if (!options.appSettings) return emptyList()
 
         return preferenceBackupCreator.backupAppPreferences(includePrivatePreferences = options.privateSettings)
     }
 
-    private fun backupSourcePreferences(options: BackupOptions): List<BackupSourcePreferences> {
+    internal fun backupSourcePreferences(options: BackupOptions): List<BackupSourcePreferences> {
         if (!options.sourceSettings) return emptyList()
 
         return preferenceBackupCreator.backupSourcePreferences(includePrivatePreferences = options.privateSettings)

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.di
 
 import android.app.Application
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.domain.connection.service.ConnectionPreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.service.TrackPreferences
@@ -59,6 +60,11 @@ class PreferenceModule(val app: Application) : InjektModule {
         addSingletonFactory {
             BackupPreferences(get())
         }
+        // AM (SYNC) -->
+        addSingletonFactory {
+            SyncPreferences(get())
+        }
+        // <-- AM (SYNC)
         addSingletonFactory {
             StoragePreferences(
                 folderProvider = get<AndroidStorageFolderProvider>(),

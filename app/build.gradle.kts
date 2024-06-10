@@ -278,6 +278,11 @@ dependencies {
     implementation(libs.seeker)
     // true type parser
     implementation(libs.truetypeparser)
+
+    // AM (SYNC_DRIVE) -->
+    implementation(libs.google.api.services.drive)
+    implementation(libs.google.api.client.oauth)
+    // <-- AM (SYNC_DRIVE)
 }
 
 androidComponents {

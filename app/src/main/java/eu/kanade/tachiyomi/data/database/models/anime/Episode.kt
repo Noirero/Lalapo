@@ -27,6 +27,10 @@ interface Episode : SEpisode, Serializable {
     var source_order: Int
 
     var last_modified: Long
+
+    // AM (SYNC) -->
+    var version: Long
+    // <-- AM (SYNC)
 }
 
 fun Episode.toDomainEpisode(): DomainEpisode? {
@@ -49,5 +53,8 @@ fun Episode.toDomainEpisode(): DomainEpisode? {
         episodeNumber = episode_number.toDouble(),
         scanlator = scanlator,
         lastModifiedAt = last_modified,
+        // AM (SYNC) -->
+        version = version,
+        // <-- AM (SYNC)
     )
 }

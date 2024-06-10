@@ -7,7 +7,7 @@ data class EpisodeUpdate(
     val bookmark: Boolean? = null,
     // AM (FILLER) -->
     val fillermark: Boolean? = null,
-    // AM (FILLER) <--
+    // <-- AM (FILLER)
     val lastSecondSeen: Long? = null,
     val totalSeconds: Long? = null,
     val dateFetch: Long? = null,
@@ -17,6 +17,9 @@ data class EpisodeUpdate(
     val dateUpload: Long? = null,
     val episodeNumber: Double? = null,
     val scanlator: String? = null,
+    // AM (SYNC) -->
+    val version: Long? = null,
+    // <-- AM (SYNC)
 )
 
 fun Episode.toEpisodeUpdate(): EpisodeUpdate {
@@ -27,7 +30,7 @@ fun Episode.toEpisodeUpdate(): EpisodeUpdate {
         bookmark,
         // AM (FILLER) -->
         fillermark,
-        // AM (FILLER) <--
+        // <-- AM (FILLER)
         lastSecondSeen,
         totalSeconds,
         dateFetch,
@@ -37,5 +40,8 @@ fun Episode.toEpisodeUpdate(): EpisodeUpdate {
         dateUpload,
         episodeNumber,
         scanlator,
+        // AM (SYNC) -->
+        version,
+        // <-- AM (SYNC)
     )
 }

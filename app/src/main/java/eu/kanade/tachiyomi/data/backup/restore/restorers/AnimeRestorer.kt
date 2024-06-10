@@ -93,7 +93,9 @@ class AnimeRestorer(
     }
 
     private suspend fun restoreExistingAnime(anime: Anime, dbAnime: Anime): Anime {
-        return if (anime.lastModifiedAt > dbAnime.lastModifiedAt) {
+        // AM (SYNC) -->
+        return if (anime.version > dbAnime.version) {
+            // <-- AM (SYNC)
             updateAnime(dbAnime.copyFrom(anime).copy(id = dbAnime.id))
         } else {
             updateAnime(anime.copyFrom(dbAnime).copy(id = dbAnime.id))
@@ -112,10 +114,13 @@ class AnimeRestorer(
             ogStatus = newer.ogStatus,
             // <-- AM (CUSTOM)
             initialized = this.initialized || newer.initialized,
+            // AM (SYNC) -->
+            version = newer.version,
+            // <-- AM (SYNC)
         )
     }
 
-    private suspend fun updateAnime(anime: Anime): Anime {
+    internal suspend fun updateAnime(anime: Anime): Anime {
         handler.await(true) {
             animesQueries.update(
                 source = anime.source,
@@ -138,6 +143,10 @@ class AnimeRestorer(
                 dateAdded = anime.dateAdded,
                 animeId = anime.id,
                 updateStrategy = anime.updateStrategy.let(AnimeUpdateStrategyColumnAdapter::encode),
+                // AM (SYNC) -->
+                version = anime.version,
+                isSyncing = 1,
+                // <-- AM (SYNC)
             )
         }
         return anime
@@ -149,6 +158,9 @@ class AnimeRestorer(
         return anime.copy(
             initialized = anime.description != null,
             id = insertAnime(anime),
+            // AM (SYNC) -->
+            version = anime.version,
+            // <-- AM (SYNC)
         )
     }
 
@@ -219,6 +231,9 @@ class AnimeRestorer(
                     episode.sourceOrder,
                     episode.dateFetch,
                     episode.dateUpload,
+                    // AM (SYNC) -->
+                    episode.version,
+                    // <-- AM (SYNC)
                 )
             }
         }
@@ -244,6 +259,10 @@ class AnimeRestorer(
                     dateFetch = null,
                     dateUpload = null,
                     episodeId = episode.id,
+                    // AM (SYNC) -->
+                    version = episode.version,
+                    isSyncing = 0,
+                    // <-- AM (SYNC)
                 )
             }
         }
@@ -276,6 +295,9 @@ class AnimeRestorer(
                 coverLastModified = anime.coverLastModified,
                 dateAdded = anime.dateAdded,
                 updateStrategy = anime.updateStrategy,
+                // AM (SYNC) -->
+                version = anime.version,
+                // <-- AM (SYNC)
             )
             animesQueries.selectLastInsertedRowId()
         }

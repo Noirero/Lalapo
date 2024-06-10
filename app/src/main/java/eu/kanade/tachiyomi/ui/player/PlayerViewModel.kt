@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
 import eu.kanade.domain.items.episode.model.toDbEpisode
 import eu.kanade.domain.track.anime.interactor.TrackEpisode
@@ -17,6 +18,7 @@ import eu.kanade.tachiyomi.animesource.model.SerializableVideo.Companion.toVideo
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
 import eu.kanade.tachiyomi.data.database.models.anime.Episode
 import eu.kanade.tachiyomi.data.database.models.anime.toDomainEpisode
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
@@ -87,6 +89,9 @@ class PlayerViewModel @JvmOverloads constructor(
     internal val networkPreferences: NetworkPreferences = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
     private val basePreferences: BasePreferences = Injekt.get(),
+    // AM (SYNC) -->
+    private val syncPreferences: SyncPreferences = Injekt.get(),
+    // <-- AM (SYNC)
     uiPreferences: UiPreferences = Injekt.get(),
 ) : ViewModel() {
 
@@ -380,6 +385,14 @@ class PlayerViewModel @JvmOverloads constructor(
             currentEp.seen = true
             updateTrackEpisodeSeen(currentEp)
             deleteEpisodeIfNeeded(currentEp)
+
+            // AM (SYNC) -->
+            val isSyncEnabled = syncPreferences.isSyncEnabled()
+            val syncTriggerOpt = syncPreferences.getSyncTriggerOptions()
+            if (isSyncEnabled && syncTriggerOpt.syncOnEpisodeSeen) {
+                SyncDataJob.startNow(Injekt.get<Application>())
+            }
+            // <-- AM (SYNC)
         }
 
         saveWatchingProgress(currentEp)
@@ -463,6 +476,13 @@ class PlayerViewModel @JvmOverloads constructor(
                     totalSeconds = episode.total_seconds,
                 ),
             )
+            // AM (SYNC) -->
+            val isSyncEnabled = syncPreferences.isSyncEnabled()
+            val syncTriggerOpt = syncPreferences.getSyncTriggerOptions()
+            if (isSyncEnabled && syncTriggerOpt.syncOnEpisodeOpen && episode.last_second_seen >= 1L) {
+                SyncDataJob.startNow(Injekt.get<Application>())
+            }
+            // <-- AM (SYNC)
         }
     }
 

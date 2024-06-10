@@ -23,6 +23,7 @@ import coil.disk.DiskCache
 import coil.util.DebugLogger
 import eu.kanade.domain.DomainModule
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.crash.CrashActivity
@@ -32,6 +33,7 @@ import eu.kanade.tachiyomi.data.coil.AnimeCoverKeyer
 import eu.kanade.tachiyomi.data.coil.AnimeKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
+import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
 import eu.kanade.tachiyomi.di.PreferenceModule
@@ -63,6 +65,10 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
     private val basePreferences: BasePreferences by injectLazy()
     private val networkPreferences: NetworkPreferences by injectLazy()
+
+    // AM (SYNC) -->
+    private val syncPreferences: SyncPreferences by injectLazy()
+    // <-- AM (SYNC)
 
     private val disableIncognitoReceiver = DisableIncognitoReceiver()
 
@@ -130,6 +136,10 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
             init(ProcessLifecycleOwner.get().lifecycleScope)
         }
 
+        // AM (SYNC) -->
+        startSyncJob(syncPreferences.getSyncTriggerOptions().syncOnAppStart)
+        // <-- AM (SYNC)
+
         if (!LogcatLogger.isInstalled && networkPreferences.verboseLogging().get()) {
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.VERBOSE))
         }
@@ -170,6 +180,9 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         // AM (DISCORD) -->
         DiscordRPCService.start(applicationContext)
         // <-- AM (DISCORD)
+        // AM (SYNC) -->
+        startSyncJob(syncPreferences.getSyncTriggerOptions().syncOnAppResume)
+        // <-- AM (SYNC)
     }
 
     override fun onStop(owner: LifecycleOwner) {
@@ -177,6 +190,9 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
         // AM (DISCORD) -->
         DiscordRPCService.stop(applicationContext, 10000L)
         // <-- AM (DISCORD)
+        // AM (SYNC) -->
+        startSyncJob(syncPreferences.getSyncTriggerOptions().syncOnAppStart)
+        // <-- AM (SYNC)
     }
 
     override fun getPackageName(): String {
@@ -259,6 +275,14 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
             }
         }
     }
+
+    // AM (SYNC) -->
+    private fun startSyncJob(syncTriggerOption: Boolean) {
+        if (syncPreferences.isSyncEnabled() && syncTriggerOption) {
+            SyncDataJob.startNow(this@App)
+        }
+    }
+    // <-- AM (SYNC)
 }
 
 private const val ACTION_DISABLE_INCOGNITO_MODE = "tachi.action.DISABLE_INCOGNITO_MODE"

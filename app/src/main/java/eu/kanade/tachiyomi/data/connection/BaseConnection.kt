@@ -20,15 +20,15 @@ abstract class BaseConnection(
 
     // Name of the connection service to display
 
+    override suspend fun login(username: String, password: String) {
+        // Not Needed
+    }
+
     @CallSuper
     override fun logout() {
         connectionPreferences.setConnectionCredentials(this, "", "")
         connectionPreferences.connectionToken(this).set("")
     }
-
-    override val isLoggedIn: Boolean
-        get() = getUsername().isNotEmpty() &&
-            getPassword().isNotEmpty()
 
     override fun getUsername() = connectionPreferences.connectionUsername(this).get()
 

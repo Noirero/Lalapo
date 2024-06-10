@@ -1,53 +1,30 @@
 // AM (CONNECTION) -->
 package eu.kanade.presentation.more.settings.screen
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.data.connection.Connection
 import eu.kanade.tachiyomi.data.connection.ConnectionManager
 import eu.kanade.tachiyomi.util.system.openDiscordLoginActivity
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
-import tachiyomi.core.util.lang.launchIO
-import tachiyomi.core.util.lang.withUIContext
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -57,7 +34,7 @@ object SettingsConnectionScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_connections
+    override fun getTitleRes() = MR.strings.pref_category_connection
 
     @Composable
     override fun getPreferences(): List<Preference> {
@@ -65,160 +42,32 @@ object SettingsConnectionScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val connectionManager = remember { Injekt.get<ConnectionManager>() }
 
-        var dialog by remember { mutableStateOf<Any?>(null) }
-        dialog?.run {
-            when (this) {
-                is LoginConnectionDialog -> {
-                    ConnectionLoginDialog(
-                        connection = connection,
-                        uNameStringRes = uNameStringRes,
-                        onDismissRequest = { dialog = null },
-                    )
-                }
-            }
-        }
-
         return listOf(
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.special_services),
                 preferenceItems = persistentListOf(
+                    // AM (DISCORD) -->
                     Preference.PreferenceItem.ConnectionPreference(
                         title = connectionManager.discord.name,
                         connection = connectionManager.discord,
-                        login = {
-                            context.openDiscordLoginActivity()
-                        },
+                        login = { context.openDiscordLoginActivity() },
                         openSettings = { navigator.push(SettingsDiscordScreen) },
                     ),
-                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connections_discord_info)),
-                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connections_info)),
+                    // <-- AM (DISCORD)
+                    // AM (SYNC) -->
+                    Preference.PreferenceItem.ConnectionPreference(
+                        title = connectionManager.syncmiru.name,
+                        connection = connectionManager.syncmiru,
+                        login = { navigator.push(SettingsSyncmiruScreen) },
+                        openSettings = { navigator.push(SettingsSyncmiruScreen) },
+                    ),
+                    // <-- AM (SYNC)
+                    // AM (DISCORD) -->
+                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connection_discord_info)),
+                    // <-- AM (DISCORD)
                 ),
             ),
         )
-    }
-
-    @Composable
-    private fun ConnectionLoginDialog(
-        connection: Connection,
-        uNameStringRes: StringResource,
-        onDismissRequest: () -> Unit,
-    ) {
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-
-        var username by remember { mutableStateOf(TextFieldValue(connection.getUsername())) }
-        var password by remember { mutableStateOf(TextFieldValue(connection.getPassword())) }
-        var processing by remember { mutableStateOf(false) }
-        var inputError by remember { mutableStateOf(false) }
-
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(
-                            MR.strings.login_title,
-                            connection.name,
-                        ),
-                        modifier = Modifier.weight(1f),
-                    )
-                    IconButton(onClick = onDismissRequest) {
-                        Icon(
-                            imageVector = Icons.Outlined.Close,
-                            contentDescription = stringResource(MR.strings.action_close),
-                        )
-                    }
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = username,
-                        onValueChange = { username = it },
-                        label = { Text(text = stringResource(uNameStringRes)) },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        singleLine = true,
-                        isError = inputError && username.text.isEmpty(),
-                    )
-
-                    var hidePassword by remember { mutableStateOf(true) }
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text(text = stringResource(MR.strings.password)) },
-                        trailingIcon = {
-                            IconButton(onClick = { hidePassword = !hidePassword }) {
-                                Icon(
-                                    imageVector = if (hidePassword) {
-                                        Icons.Filled.Visibility
-                                    } else {
-                                        Icons.Filled.VisibilityOff
-                                    },
-                                    contentDescription = null,
-                                )
-                            }
-                        },
-                        visualTransformation = if (hidePassword) {
-                            PasswordVisualTransformation()
-                        } else {
-                            VisualTransformation.None
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done,
-                        ),
-                        singleLine = true,
-                        isError = inputError && password.text.isEmpty(),
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !processing,
-                    onClick = {
-                        if (username.text.isEmpty() || password.text.isEmpty()) {
-                            inputError = true
-                            return@Button
-                        }
-                        scope.launchIO {
-                            inputError = false
-                            processing = true
-                            val result = checkLogin(
-                                context = context,
-                                connection = connection,
-                                username = username.text,
-                                password = password.text,
-                            )
-                            if (result) onDismissRequest()
-                            processing = false
-                        }
-                    },
-                ) {
-                    val stringRes = if (processing) MR.strings.loading else MR.strings.login
-                    Text(text = stringResource(stringRes))
-                }
-            },
-        )
-    }
-
-    private suspend fun checkLogin(
-        context: Context,
-        connection: Connection,
-        username: String,
-        password: String,
-    ): Boolean {
-        return try {
-            connection.login(username, password)
-            withUIContext { context.toast(MR.strings.login_success) }
-            true
-        } catch (e: Throwable) {
-            connection.logout()
-            withUIContext { context.toast(e.message.toString()) }
-            false
-        }
     }
 }
 
@@ -228,7 +77,6 @@ internal fun ConnectionLogoutDialog(
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
-    val navigator = LocalNavigator.currentOrThrow
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
@@ -252,7 +100,6 @@ internal fun ConnectionLogoutDialog(
                         connection.logout()
                         onDismissRequest()
                         context.toast(MR.strings.logout_success)
-                        navigator.pop()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error,
@@ -266,9 +113,8 @@ internal fun ConnectionLogoutDialog(
     )
 }
 
-private data class LoginConnectionDialog(
+internal data class LoginConnectionDialog(
     val connection: Connection,
-    val uNameStringRes: StringResource,
 )
 
 internal data class LogoutConnectionDialog(

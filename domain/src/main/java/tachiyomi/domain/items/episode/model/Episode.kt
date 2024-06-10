@@ -18,6 +18,9 @@ data class Episode(
     val episodeNumber: Double,
     val scanlator: String?,
     val lastModifiedAt: Long,
+    // AM (SYNC) -->
+    val version: Long,
+    // <-- AM (SYNC)
 ) {
     val isRecognizedNumber: Boolean
         get() = episodeNumber >= 0f
@@ -51,6 +54,9 @@ data class Episode(
             episodeNumber = -1.0,
             scanlator = null,
             lastModifiedAt = 0,
+            // AM (SYNC) -->
+            version = 1,
+            // <-- AM (SYNC)
         )
     }
 }

@@ -38,6 +38,9 @@ data class BackupAnime(
     @ProtoNumber(105) var updateStrategy: AnimeUpdateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE,
     @ProtoNumber(106) var lastModifiedAt: Long = 0,
     @ProtoNumber(107) var favoriteModifiedAt: Long? = null,
+    // AM (SYNC) -->
+    @ProtoNumber(108) var version: Long = 0,
+    // <-- AM (SYNC)
 
     // AM (CUSTOM) -->
     // Bump values by 200
@@ -69,6 +72,9 @@ data class BackupAnime(
             updateStrategy = this@BackupAnime.updateStrategy,
             lastModifiedAt = this@BackupAnime.lastModifiedAt,
             favoriteModifiedAt = this@BackupAnime.favoriteModifiedAt,
+            // AM (SYNC) -->
+            version = this@BackupAnime.version,
+            // <-- AM (SYNC)
         )
     }
 

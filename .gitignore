@@ -16,3 +16,6 @@ app/**/output.json
 
 # Unnecessary file
 *.swp
+# AM (SYNC_DRIVE) -->
+/app/src/main/assets/client_secrets.json
+# <-- AM (SYNC_DRIVE)

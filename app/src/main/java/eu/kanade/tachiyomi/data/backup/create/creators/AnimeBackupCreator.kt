@@ -102,6 +102,9 @@ private fun Anime.toBackupAnime(customAnimeInfo: CustomAnimeInfo?) =
         updateStrategy = this.updateStrategy,
         lastModifiedAt = this.lastModifiedAt,
         favoriteModifiedAt = this.favoriteModifiedAt,
+        // AM (SYNC) -->
+        version = this.version,
+        // <-- AM (SYNC)
     ) // AM (CUSTOM) -->
         .also { backupAnime ->
             customAnimeInfo?.let {

@@ -17,6 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.util.fastMap
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.connection.service.ConnectionPreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
@@ -37,7 +39,7 @@ object SettingsDiscordScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_connections
+    override fun getTitleRes() = MR.strings.pref_category_connection
 
     @Composable
     override fun RowScope.AppBarAction() {
@@ -53,6 +55,7 @@ object SettingsDiscordScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val context = LocalContext.current
+        val navigator = LocalNavigator.currentOrThrow
         val connectionPreferences = remember { Injekt.get<ConnectionPreferences>() }
         val connectionManager = remember { Injekt.get<ConnectionManager>() }
         val enableDRPCPref = connectionPreferences.enableDiscordRPC()
@@ -69,6 +72,7 @@ object SettingsDiscordScreen : SearchableSettings {
                         onDismissRequest = {
                             dialog = null
                             enableDRPCPref.set(false)
+                            navigator.pop()
                         },
                     )
                 }
@@ -77,7 +81,7 @@ object SettingsDiscordScreen : SearchableSettings {
 
         return listOf(
             Preference.PreferenceGroup(
-                title = stringResource(MR.strings.connections_discord),
+                title = stringResource(MR.strings.connection_discord),
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.SwitchPreference(
                         pref = enableDRPCPref,

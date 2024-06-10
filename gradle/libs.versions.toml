@@ -107,6 +107,11 @@ seeker = "io.github.2307vivek:seeker:1.1.1"
 
 truetypeparser = "io.github.yubyf:truetypeparser-light:2.1.4"
 
+# AM (SYNC_DRIVE) -->
+google-api-services-drive = "com.google.apis:google-api-services-drive:v3-rev197-1.25.0"
+google-api-client-oauth = "com.google.oauth-client:google-oauth-client:1.34.1"
+# <-- AM (SYNC_DRIVE)
+
 [bundles]
 # AM (REMOVE_ACRA_FIREBASE) -->
 # acra = ["acra-http", "acra-scheduler"]
