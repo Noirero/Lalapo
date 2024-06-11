@@ -104,7 +104,7 @@ fun AnimeCoverDialog(
                                 ),
                             ),
                         )
-                        if (onEditClick != null) {
+                        if (onEditClick != null && coverDataProvider().favorite) {
                             Box {
                                 var expanded by remember { mutableStateOf(false) }
                                 IconButton(

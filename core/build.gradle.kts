@@ -29,7 +29,9 @@ dependencies {
     api(libs.okhttp.dnsoverhttps)
     api(libs.okio)
 
-    implementation(libs.image.decoder)
+    // AM (REMOVE_LIBRARIES) -->
+    // implementation(libs.image.decoder)
+    // <-- AM (REMOVE_LIBRARIES)
 
     implementation(libs.unifile)
 

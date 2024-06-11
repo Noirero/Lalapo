@@ -1,3 +1,4 @@
+// AM (REMOVE_LIBRARIES) -->
 package eu.kanade.tachiyomi.util
 
 import android.content.Context
@@ -6,8 +7,6 @@ import android.graphics.drawable.Animatable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
@@ -24,17 +23,15 @@ import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_IN_OUT_QUAD
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
-import com.github.chrisbanes.photoview.PhotoView
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.view.isVisibleOnScreen
-import java.io.InputStream
 import java.nio.ByteBuffer
 
 /**
  * A wrapper view for showing page image.
  *
- * Animated image will be drawn by [PhotoView] while [SubsamplingScaleImageView] will take non-animated image.
+ * Animated image will be drawn while [SubsamplingScaleImageView] will take non-animated image.
  *
  */
 open class ReaderPageImageView @JvmOverloads constructor(
@@ -42,22 +39,21 @@ open class ReaderPageImageView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     @AttrRes defStyleAttrs: Int = 0,
     @StyleRes defStyleRes: Int = 0,
-    private val isWebtoon: Boolean = false,
 ) : FrameLayout(context, attrs, defStyleAttrs, defStyleRes) {
 
     private var pageView: View? = null
 
     private var config: Config? = null
 
-    var onImageLoaded: (() -> Unit)? = null
-    var onImageLoadError: (() -> Unit)? = null
-    var onScaleChanged: ((newScale: Float) -> Unit)? = null
+    private var onImageLoaded: (() -> Unit)? = null
+    private var onImageLoadError: (() -> Unit)? = null
+    private var onScaleChanged: ((newScale: Float) -> Unit)? = null
     var onViewClicked: (() -> Unit)? = null
 
     /**
      * For automatic background. Will be set as background color when [onImageLoaded] is called.
      */
-    var pageBackground: Drawable? = null
+    private var pageBackground: Drawable? = null
 
     @CallSuper
     open fun onImageLoaded() {
@@ -80,15 +76,92 @@ open class ReaderPageImageView @JvmOverloads constructor(
         onViewClicked?.invoke()
     }
 
+    fun setImage(drawable: Drawable, config: Config) {
+        this.config = config
+        if (drawable is Animatable) {
+            prepareImageView()
+            setAnimatedImage(drawable)
+        } else {
+            prepareSubsamplingImageView()
+            setNonAnimatedImage(drawable, config)
+        }
+    }
+
+    private fun prepareSubsamplingImageView() {
+        if (pageView is SubsamplingScaleImageView) return
+        removeView(pageView)
+
+        pageView = SubsamplingScaleImageView(context)
+            .apply {
+                setMaxTileSize(GLUtil.maxTextureSize)
+                setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER)
+                setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_INSIDE)
+                setMinimumTileDpi(180)
+                setOnStateChangedListener(
+                    object : SubsamplingScaleImageView.OnStateChangedListener {
+                        override fun onScaleChanged(newScale: Float, origin: Int) {
+                            this@ReaderPageImageView.onScaleChanged(newScale)
+                        }
+
+                        override fun onCenterChanged(newCenter: PointF?, origin: Int) {
+                            // Not used
+                        }
+                    },
+                )
+                setOnClickListener { this@ReaderPageImageView.onViewClicked() }
+            }
+        addView(pageView, MATCH_PARENT, MATCH_PARENT)
+    }
+
+    private fun setNonAnimatedImage(
+        image: Drawable,
+        config: Config,
+    ) = (pageView as? SubsamplingScaleImageView)?.apply {
+        setDoubleTapZoomDuration(config.zoomDuration.getSystemScaledDuration())
+        setMinimumScaleType(config.minimumScaleType)
+        setMinimumDpi(1) // Just so that very small image will be fit for initial load
+        setCropBorders(config.cropBorders)
+        setOnImageEventListener(
+            object : SubsamplingScaleImageView.DefaultOnImageEventListener() {
+                override fun onReady() {
+                    setupZoom(config)
+                    if (isVisibleOnScreen()) landscapeZoom(true)
+                    this@ReaderPageImageView.onImageLoaded()
+                }
+
+                override fun onImageLoadError(e: Exception) {
+                    this@ReaderPageImageView.onImageLoadError()
+                }
+            },
+        )
+
+        setImage(ImageSource.bitmap((image as BitmapDrawable).bitmap))
+        isVisible = true
+    }
+
+    private fun setupZoom(config: Config?) {
+        val scaleImageView = pageView as? SubsamplingScaleImageView ?: return
+        scaleImageView.maxScale = scaleImageView.scale * MAX_ZOOM_SCALE
+        scaleImageView.setDoubleTapZoomScale(scaleImageView.scale * 2)
+
+        when (config?.zoomStartPosition) {
+            ZoomStartPosition.LEFT -> scaleImageView.setScaleAndCenter(scaleImageView.scale, PointF(0F, 0F))
+            ZoomStartPosition.RIGHT -> scaleImageView.setScaleAndCenter(scaleImageView.scale, PointF(scaleImageView.sWidth.toFloat(), 0F))
+            ZoomStartPosition.CENTER -> scaleImageView.setScaleAndCenter(scaleImageView.scale, scaleImageView.center)
+            null -> {}
+        }
+    }
+
     private fun SubsamplingScaleImageView.landscapeZoom(forward: Boolean) {
+        val config = config
         if (config != null &&
-            config!!.landscapeZoom &&
-            config!!.minimumScaleType == SCALE_TYPE_CENTER_INSIDE &&
+            config.landscapeZoom &&
+            config.minimumScaleType == SCALE_TYPE_CENTER_INSIDE &&
             sWidth > sHeight &&
             scale == minScale
         ) {
             handler?.postDelayed(500) {
-                val point = when (config!!.zoomStartPosition) {
+                val point = when (config.zoomStartPosition) {
                     ZoomStartPosition.LEFT -> if (forward) {
                         PointF(0F, 0F)
                     } else {
@@ -118,142 +191,23 @@ open class ReaderPageImageView @JvmOverloads constructor(
         }
     }
 
-    fun setImage(drawable: Drawable, config: Config) {
-        this.config = config
-        if (drawable is Animatable) {
-            prepareAnimatedImageView()
-            setAnimatedImage(drawable, config)
-        } else {
-            prepareNonAnimatedImageView()
-            setNonAnimatedImage(drawable, config)
-        }
-    }
-
-    private fun prepareNonAnimatedImageView() {
-        if (pageView is SubsamplingScaleImageView) return
-        removeView(pageView)
-
-        pageView = SubsamplingScaleImageView(context)
-            .apply {
-                setMaxTileSize(GLUtil.maxTextureSize)
-                setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER)
-                setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_INSIDE)
-                setMinimumTileDpi(180)
-                setOnStateChangedListener(
-                    object : SubsamplingScaleImageView.OnStateChangedListener {
-                        override fun onScaleChanged(newScale: Float, origin: Int) {
-                            this@ReaderPageImageView.onScaleChanged(newScale)
-                        }
-
-                        override fun onCenterChanged(newCenter: PointF?, origin: Int) {
-                            // Not used
-                        }
-                    },
-                )
-                setOnClickListener { this@ReaderPageImageView.onViewClicked() }
-            }
-        addView(pageView, MATCH_PARENT, MATCH_PARENT)
-    }
-
-    private fun SubsamplingScaleImageView.setupZoom(config: Config?) {
-        // 5x zoom
-        maxScale = scale * MAX_ZOOM_SCALE
-        setDoubleTapZoomScale(scale * 2)
-
-        when (config?.zoomStartPosition) {
-            ZoomStartPosition.LEFT -> setScaleAndCenter(scale, PointF(0F, 0F))
-            ZoomStartPosition.RIGHT -> setScaleAndCenter(scale, PointF(sWidth.toFloat(), 0F))
-            ZoomStartPosition.CENTER -> setScaleAndCenter(scale, center)
-            null -> {}
-        }
-    }
-
-    private fun setNonAnimatedImage(
-        image: Any,
-        config: Config,
-    ) = (pageView as? SubsamplingScaleImageView)?.apply {
-        setDoubleTapZoomDuration(config.zoomDuration.getSystemScaledDuration())
-        setMinimumScaleType(config.minimumScaleType)
-        setMinimumDpi(1) // Just so that very small image will be fit for initial load
-        setCropBorders(config.cropBorders)
-        setOnImageEventListener(
-            object : SubsamplingScaleImageView.DefaultOnImageEventListener() {
-                override fun onReady() {
-                    setupZoom(config)
-                    if (isVisibleOnScreen()) landscapeZoom(true)
-                    this@ReaderPageImageView.onImageLoaded()
-                }
-
-                override fun onImageLoadError(e: Exception) {
-                    this@ReaderPageImageView.onImageLoadError()
-                }
-            },
-        )
-
-        when (image) {
-            is BitmapDrawable -> setImage(ImageSource.bitmap(image.bitmap))
-            is InputStream -> setImage(ImageSource.inputStream(image))
-            else -> throw IllegalArgumentException(
-                "Not implemented for class ${image::class.simpleName}",
-            )
-        }
-        isVisible = true
-    }
-
-    private fun prepareAnimatedImageView() {
+    private fun prepareImageView() {
         if (pageView is AppCompatImageView) return
         removeView(pageView)
 
-        pageView = if (isWebtoon) {
-            AppCompatImageView(context)
-        } else {
-            PhotoView(context)
-        }.apply {
+        pageView = AppCompatImageView(context).apply {
             adjustViewBounds = true
-
-            if (this is PhotoView) {
-                setScaleLevels(1F, 2F, MAX_ZOOM_SCALE)
-                // Force 2 scale levels on double tap
-                setOnDoubleTapListener(
-                    object : GestureDetector.SimpleOnGestureListener() {
-                        override fun onDoubleTap(e: MotionEvent): Boolean {
-                            if (scale > 1F) {
-                                setScale(1F, e.x, e.y, true)
-                            } else {
-                                setScale(2F, e.x, e.y, true)
-                            }
-                            return true
-                        }
-
-                        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                            this@ReaderPageImageView.onViewClicked()
-                            return super.onSingleTapConfirmed(e)
-                        }
-                    },
-                )
-                setOnScaleChangeListener { _, _, _ ->
-                    this@ReaderPageImageView.onScaleChanged(scale)
-                }
-            }
         }
         addView(pageView, MATCH_PARENT, MATCH_PARENT)
     }
 
-    private fun setAnimatedImage(
-        image: Any,
-        config: Config,
-    ) = (pageView as? AppCompatImageView)?.apply {
-        if (this is PhotoView) {
-            setZoomTransitionDuration(config.zoomDuration.getSystemScaledDuration())
-        }
-
-        val data = when (image) {
-            is Drawable -> image
-            is InputStream -> ByteBuffer.wrap(image.readBytes())
-            else -> throw IllegalArgumentException(
-                "Not implemented for class ${image::class.simpleName}",
-            )
-        }
+    private fun setAnimatedImage(image: Drawable) = (pageView as? AppCompatImageView)?.apply {
+        val bitmap = (image as BitmapDrawable).bitmap
+        val byteBuffer = ByteBuffer.allocate(bitmap.byteCount)
+        bitmap.copyPixelsToBuffer(byteBuffer)
+        byteBuffer.rewind()
+        val byteArray = byteBuffer.array()
+        val data = ByteBuffer.wrap(byteArray)
         val request = ImageRequest.Builder(context)
             .data(data)
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -278,9 +232,6 @@ open class ReaderPageImageView @JvmOverloads constructor(
         return (this * context.animatorDurationScale).toInt().coerceAtLeast(1)
     }
 
-    /**
-     * All of the config except [zoomDuration] will only be used for non-animated image.
-     */
     data class Config(
         val zoomDuration: Int,
         val minimumScaleType: Int = SCALE_TYPE_CENTER_INSIDE,
@@ -295,3 +246,4 @@ open class ReaderPageImageView @JvmOverloads constructor(
 }
 
 private const val MAX_ZOOM_SCALE = 5F
+// <-- AM (REMOVE_LIBRARIES)

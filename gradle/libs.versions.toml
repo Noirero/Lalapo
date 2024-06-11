@@ -1,7 +1,11 @@
 [versions]
 aboutlib_version = "10.10.0"
-acra = "5.11.3"
-leakcanary = "2.13"
+# AM (REMOVE_ACRA_FIREBASE) -->
+# acra = "5.11.3"
+# <-- AM (REMOVE_ACRA_FIREBASE)
+# AM (REMOVE_LIBRARIES) -->
+# leakcanary = "2.13"
+# <-- AM (REMOVE_LIBRARIES)
 moko = "0.23.0"
 okhttp_version = "5.0.0-alpha.12"
 richtext = "0.20.0"
@@ -46,7 +50,9 @@ coil-gif = { module = "io.coil-kt:coil-gif" }
 coil-compose = { module = "io.coil-kt:coil-compose" }
 
 subsamplingscaleimageview = "com.github.tachiyomiorg:subsampling-scale-image-view:aeaa170036"
-image-decoder = "com.github.tachiyomiorg:image-decoder:e08e9be535"
+# AM (REMOVE_LIBRARIES) -->
+# image-decoder = "com.github.tachiyomiorg:image-decoder:e08e9be535"
+# <-- AM (REMOVE_LIBRARIES)
 
 natural-comparator = "com.github.gpanther:java-nat-sort:natural-comparator-1.1"
 
@@ -55,9 +61,11 @@ richtext-m3 = { module = "com.halilibo.compose-richtext:richtext-ui-material3", 
 
 material = "com.google.android.material:material:1.11.0"
 flexible-adapter-core = "com.github.arkon.FlexibleAdapter:flexible-adapter:c8013533"
-photoview = "com.github.chrisbanes:PhotoView:2.3.0"
-directionalviewpager = "com.github.tachiyomiorg:DirectionalViewPager:1.0.0"
-insetter = "dev.chrisbanes.insetter:insetter:0.6.1"
+# AM (REMOVE_LIBRARIES) -->
+# photoview = "com.github.chrisbanes:PhotoView:2.3.0"
+# directionalviewpager = "com.github.tachiyomiorg:DirectionalViewPager:1.0.0"
+# insetter = "dev.chrisbanes.insetter:insetter:0.6.1"
+# <-- AM (REMOVE_LIBRARIES)
 compose-materialmotion = "io.github.fornewid:material-motion-compose-core:1.1.0"
 
 swipe = "me.saket.swipe:swipe:1.2.0"
@@ -72,15 +80,19 @@ logcat = "com.squareup.logcat:logcat:0.1"
 # acra-scheduler = { module = "ch.acra:acra-advanced-scheduler", version.ref = "acra" }
 # <-- AM (REMOVE_ACRA_FIREBASE)
 
-aboutLibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutlib_version" }
+# AM (REMOVE_LIBRARIES) -->
+# aboutLibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutlib_version" }
+# <-- AM (REMOVE_LIBRARIES)
 aboutLibraries-gradle = { module = "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin", version.ref = "aboutlib_version" }
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlib_version" }
 
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku_version" }
 shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku_version" }
 
-leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
-leakcanary-plumber = { module = "com.squareup.leakcanary:plumber-android", version.ref = "leakcanary" }
+# AM (REMOVE_LIBRARIES) -->
+# leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
+# leakcanary-plumber = { module = "com.squareup.leakcanary:plumber-android", version.ref = "leakcanary" }
+# <-- AM (REMOVE_LIBRARIES)
 
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions-jvm", version.ref = "sqldelight" }
@@ -95,7 +107,9 @@ mockk = "io.mockk:mockk:1.13.9"
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 voyager-screenmodel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
 voyager-tab-navigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
-voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+# AM (REMOVE_LIBRARIES) -->
+# voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+# <-- AM (REMOVE_LIBRARIES)
 
 ktlint = "org.jlleitschuh.gradle:ktlint-gradle:12.0.3"
 
@@ -122,6 +136,8 @@ sqlite = ["sqlite-framework", "sqlite-ktx", "sqlite-android"]
 coil = ["coil-core", "coil-gif", "coil-compose"]
 shizuku = ["shizuku-api", "shizuku-provider"]
 sqldelight = ["sqldelight-android-driver", "sqldelight-coroutines", "sqldelight-android-paging"]
-voyager = ["voyager-navigator", "voyager-screenmodel", "voyager-tab-navigator", "voyager-transitions"]
+# AM (REMOVE_LIBRARIES) -->
+voyager = ["voyager-navigator", "voyager-screenmodel", "voyager-tab-navigator"]
+# <-- AM (REMOVE_LIBRARIES)
 richtext = ["richtext-commonmark", "richtext-m3"]
 test = ["junit", "kotest-assertions", "mockk"]
