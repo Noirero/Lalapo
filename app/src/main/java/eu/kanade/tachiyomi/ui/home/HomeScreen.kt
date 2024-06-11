@@ -55,7 +55,9 @@ object HomeScreen : Screen() {
         // AM (RECENTS) -->
         RecentsTab(toHistory = false),
         // <-- AM (RECENTS)
-        BrowseTab(toExtensions = false),
+        // AM (BROWSE) -->
+        BrowseTab,
+        // <-- AM (BROWSE)
         MoreTab,
     )
 
@@ -133,7 +135,9 @@ object HomeScreen : Screen() {
                             // AM (RECENTS) -->
                             is Tab.Recents -> RecentsTab(it.toHistory)
                             // <-- AM (RECENTS)
-                            is Tab.Browse -> BrowseTab(it.toExtensions)
+                            // AM (BROWSE) -->
+                            is Tab.Browse -> BrowseTab
+                            // <-- AM (BROWSE)
                             is Tab.More -> MoreTab
                         }
 

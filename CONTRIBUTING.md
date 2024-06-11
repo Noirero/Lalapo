@@ -39,6 +39,7 @@ Surround the new code with:
 - **AM (BROWSE)** --> Thank you Quickdesh!
 - **AM (KEYBOARD_CONTROLS)** --> Thank you Quickdesh!
 - **AM (NAVIGATION_PILL)** --> Thank you Quickdesh!
+- **AM (TAB_HOLD)** --> Thank you Quickdesh!
 - **AM (FILE_SIZE)** --> Thank you Khaled0!
 - **AM (DISCORD_RPC)** --> Original library from dead8309/Kizzy, refactored code by 最高 man/Shivam. Thank you, both of you!
 - **AM (CUSTOM_INFORMATION)** --> Copied from TachiyomiSY, Thank you jobobby4/syer!

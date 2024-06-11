@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
@@ -36,9 +37,9 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-data class BrowseTab(
-    private val toExtensions: Boolean = false,
-) : Tab() {
+// AM (BROWSE) -->
+object BrowseTab : Tab() {
+    // <-- AM (BROWSE)
 
     override val options: TabOptions
         @Composable
@@ -55,6 +56,12 @@ data class BrowseTab(
     override suspend fun onReselect(navigator: Navigator) {
         navigator.push(GlobalAnimeSearchScreen())
     }
+
+    // AM (TAB_HOLD) -->
+    override suspend fun onReselectHold(navigator: Navigator) {
+        navigator.push(MigrateAnimeSourceScreen())
+    }
+    // <-- AM (TAB_HOLD)
 
     @Composable
     override fun Content() {

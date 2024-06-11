@@ -16,7 +16,6 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.ScreenTransitionContent
-import eu.kanade.domain.ui.UiPreferences
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,8 +24,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.plus
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * For invoking back press to the parent activity
@@ -34,12 +31,13 @@ import uy.kohesive.injekt.api.get
 @SuppressLint("ComposeCompositionLocalUsage")
 val LocalBackPress: ProvidableCompositionLocal<(() -> Unit)?> = staticCompositionLocalOf { null }
 
-private val uiPreferences: UiPreferences = Injekt.get()
-
 abstract class Tab : cafe.adriel.voyager.navigator.tab.Tab {
 
     override val key: ScreenKey = uniqueScreenKey
     open suspend fun onReselect(navigator: Navigator) {}
+    // AM (TAB_HOLD) -->
+    open suspend fun onReselectHold(navigator: Navigator) {}
+    // <-- AM (TAB_HOLD)
 }
 
 abstract class Screen : Screen {

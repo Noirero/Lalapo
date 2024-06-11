@@ -1,6 +1,7 @@
 // AM (RECENTS) -->
 package eu.kanade.tachiyomi.ui.recents
 
+import android.content.Context
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -21,12 +22,20 @@ import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.history.anime.AnimeHistoryScreenModel
 import eu.kanade.tachiyomi.ui.history.anime.animeHistoryTab
+import eu.kanade.tachiyomi.ui.history.anime.resumeLastEpisodeSeenEvent
+import eu.kanade.tachiyomi.ui.history.anime.snackbarHostState
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.updates.anime.animeUpdatesTab
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
+import tachiyomi.core.i18n.stringResource
 import tachiyomi.core.util.lang.launchIO
+import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.injectLazy
 
 data class RecentsTab(
     private val toHistory: Boolean,
@@ -45,9 +54,11 @@ data class RecentsTab(
         }
 
     override suspend fun onReselect(navigator: Navigator) {
-        // AM (REMOVE_TABBED_SCREENS) -->
+        resumeLastEpisodeSeenEvent.send(Unit)
+    }
+
+    override suspend fun onReselectHold(navigator: Navigator) {
         navigator.push(DownloadQueueScreen)
-        // <-- AM (REMOVE_TABBED_SCREENS)
     }
 
     @Composable
@@ -76,7 +87,22 @@ data class RecentsTab(
             }
             // <-- AM (DISCORD_RPC)
             (context as? MainActivity)?.ready = true
+            // AM (TAB_HOLD) -->
+            resumeLastEpisodeSeenEvent.receiveAsFlow().collectLatest {
+                openEpisode(context, animeHistoryScreenModel.getNextEpisode())
+            }
         }
     }
 }
+
+internal suspend fun openEpisode(context: Context, episode: Episode?) {
+    val playerPreferences: PlayerPreferences by injectLazy()
+    val extPlayer = playerPreferences.alwaysUseExternalPlayer().get()
+    if (episode != null) {
+        MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
+    } else {
+        snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_episode))
+    }
+}
+// <-- AM (TAB_HOLD)
 // <-- AM (RECENTS)

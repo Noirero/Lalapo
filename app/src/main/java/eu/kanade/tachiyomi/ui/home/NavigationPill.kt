@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material3.Badge
@@ -43,6 +43,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -242,17 +243,31 @@ private fun NavigationBarItem(
         }
     }
 
+    // AM (TAB_HOLD) -->
+    val onLongClick: () -> Unit = {
+        if (selected) {
+            scope.launch { tab.onReselectHold(navigator) }
+        }
+    }
+    // <-- AM (TAB_HOLD)
+
     Box(
         modifier = Modifier
             .size(width = pillItemWidth, height = pillItemHeight)
             .clip(MaterialTheme.shapes.extraLarge)
-            .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.Tab,
+            // AM (TAB_HOLD) -->
+            .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-            ),
+                enabled = true,
+                role = Role.Tab,
+                onLongClick = onLongClick,
+                onClick = onClick,
+            )
+            .semantics {
+                this.selected = selected
+            },
+        // <-- AM (TAB_HOLD)
         contentAlignment = Alignment.Center,
     ) {
         NavigationIconItem(tab)

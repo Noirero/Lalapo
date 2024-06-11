@@ -95,6 +95,12 @@ object AnimeLibraryTab : Tab() {
         requestOpenSettingsSheet()
     }
 
+    // AM (TAB_HOLD) -->
+    override suspend fun onReselectHold(navigator: Navigator) {
+        requestOpenRandomEntry()
+    }
+    // <-- AM (TAB_HOLD)
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
@@ -146,6 +152,21 @@ object AnimeLibraryTab : Tab() {
             MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
         }
 
+        // AM (TAB_HOLD) -->
+        fun openRandomEntry() {
+            scope.launch {
+                val randomItem = screenModel.getRandomAnimelibItemForCurrentCategory()
+                if (randomItem != null) {
+                    navigator.push(AnimeScreen(randomItem.libraryAnime.anime.id))
+                } else {
+                    snackbarHostState.showSnackbar(
+                        context.stringResource(MR.strings.information_no_entries_found),
+                    )
+                }
+            }
+        }
+        // <-- AM (TAB_HOLD)
+
         val defaultTitle = stringResource(MR.strings.label_library)
 
         Scaffold(
@@ -174,18 +195,9 @@ object AnimeLibraryTab : Tab() {
                         )
                     },
                     onClickGlobalUpdate = { onClickRefresh(null) },
-                    onClickOpenRandomEntry = {
-                        scope.launch {
-                            val randomItem = screenModel.getRandomAnimelibItemForCurrentCategory()
-                            if (randomItem != null) {
-                                navigator.push(AnimeScreen(randomItem.libraryAnime.anime.id))
-                            } else {
-                                snackbarHostState.showSnackbar(
-                                    context.stringResource(MR.strings.information_no_entries_found),
-                                )
-                            }
-                        }
-                    },
+                    // AM (TAB_HOLD) -->
+                    onClickOpenRandomEntry = ::openRandomEntry,
+                    // <-- AM (TAB_HOLD)
                     searchQuery = state.searchQuery,
                     onSearchQueryChange = screenModel::search,
                     scrollBehavior = scrollBehavior.takeIf { !tabVisible }, // For scroll overlay when no tab
@@ -221,6 +233,7 @@ object AnimeLibraryTab : Tab() {
                         ),
                     )
                 }
+
                 else -> {
                     AnimeLibraryContent(
                         categories = state.categories,
@@ -279,6 +292,7 @@ object AnimeLibraryTab : Tab() {
                     // <-- AM (GROUPING)
                 )
             }
+
             is AnimeLibraryScreenModel.Dialog.ChangeCategory -> {
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
@@ -295,6 +309,7 @@ object AnimeLibraryTab : Tab() {
                     },
                 )
             }
+
             is AnimeLibraryScreenModel.Dialog.DeleteAnime -> {
                 DeleteLibraryEntryDialog(
                     containsLocalEntry = dialog.anime.any(Anime::isLocal),
@@ -306,6 +321,7 @@ object AnimeLibraryTab : Tab() {
                     isManga = false,
                 )
             }
+
             null -> {}
         }
 
@@ -334,6 +350,9 @@ object AnimeLibraryTab : Tab() {
             // <-- AM (DISCORD_RPC)
             launch { queryEvent.receiveAsFlow().collect(screenModel::search) }
             launch { requestSettingsSheetEvent.receiveAsFlow().collectLatest { screenModel.showSettingsDialog() } }
+            // AM (TAB_HOLD) -->
+            launch { requestOpenRandomEntryEvent.receiveAsFlow().collectLatest { openRandomEntry() } }
+            // <-- AM (TAB_HOLD)
         }
     }
 
@@ -344,4 +363,10 @@ object AnimeLibraryTab : Tab() {
     // For opening settings sheet in LibraryController
     private val requestSettingsSheetEvent = Channel<Unit>()
     private suspend fun requestOpenSettingsSheet() = requestSettingsSheetEvent.send(Unit)
+
+    // AM (TAB_HOLD) -->
+    // For opening random entry
+    private val requestOpenRandomEntryEvent = Channel<Unit>()
+    private suspend fun requestOpenRandomEntry() = requestOpenRandomEntryEvent.send(Unit)
+    // <-- AM (TAB_HOLD)
 }

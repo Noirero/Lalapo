@@ -299,7 +299,7 @@ private fun ColumnScope.DisplayPage(
         pref = screenModel.libraryPreferences.languageBadge(),
     )
     CheckboxItem(
-        label = stringResource(MR.strings.action_display_show_continue_reading_button),
+        label = stringResource(MR.strings.action_display_show_continue_watching_button),
         pref = screenModel.libraryPreferences.showContinueViewingButton(),
     )
 

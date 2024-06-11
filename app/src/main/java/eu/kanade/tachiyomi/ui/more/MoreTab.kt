@@ -62,6 +62,12 @@ object MoreTab : Tab() {
         navigator.push(SettingsScreen())
     }
 
+    // AM (TAB_HOLD) -->
+    override suspend fun onReselectHold(navigator: Navigator) {
+        navigator.push(StorageScreen())
+    }
+    // <-- AM (TAB_HOLD)
+
     @Composable
     override fun Content() {
         val context = LocalContext.current

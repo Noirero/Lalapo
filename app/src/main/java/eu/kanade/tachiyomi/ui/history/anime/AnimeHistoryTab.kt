@@ -19,39 +19,28 @@ import eu.kanade.presentation.history.HistoryDeleteDialog
 import eu.kanade.presentation.history.anime.AnimeHistoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
+import eu.kanade.tachiyomi.ui.recents.openEpisode
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
 import tachiyomi.core.i18n.stringResource
-import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.injectLazy
 
 val resumeLastEpisodeSeenEvent = Channel<Unit>()
+
+// AM (TAB_HOLD) -->
+val snackbarHostState = SnackbarHostState()
+// <-- AM (TAB_HOLD)
 
 @Composable
 fun Screen.animeHistoryTab(
     context: Context,
 ): TabContent {
-    val snackbarHostState = SnackbarHostState()
-
     val navigator = LocalNavigator.currentOrThrow
     val screenModel = rememberScreenModel { AnimeHistoryScreenModel() }
     val state by screenModel.state.collectAsState()
     val searchQuery by screenModel.query.collectAsState()
-
-    suspend fun openEpisode(context: Context, episode: Episode?) {
-        val playerPreferences: PlayerPreferences by injectLazy()
-        val extPlayer = playerPreferences.alwaysUseExternalPlayer().get()
-        if (episode != null) {
-            MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
-        } else {
-            snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_episode))
-        }
-    }
 
     return TabContent(
         // AM (RECENTS) -->
@@ -107,12 +96,6 @@ fun Screen.animeHistoryTab(
                             snackbarHostState.showSnackbar(context.stringResource(MR.strings.clear_history_completed))
                         is AnimeHistoryScreenModel.Event.OpenEpisode -> openEpisode(context, e.episode)
                     }
-                }
-            }
-
-            LaunchedEffect(Unit) {
-                resumeLastEpisodeSeenEvent.receiveAsFlow().collectLatest {
-                    openEpisode(context, screenModel.getNextEpisode())
                 }
             }
         },
