@@ -35,6 +35,7 @@ abstract class Tab : cafe.adriel.voyager.navigator.tab.Tab {
 
     override val key: ScreenKey = uniqueScreenKey
     open suspend fun onReselect(navigator: Navigator) {}
+
     // AM (TAB_HOLD) -->
     open suspend fun onReselectHold(navigator: Navigator) {}
     // <-- AM (TAB_HOLD)

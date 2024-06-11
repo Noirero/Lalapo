@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.extension.anime
 import android.content.Context
 import android.graphics.drawable.Drawable
 import eu.kanade.domain.extension.anime.interactor.TrustAnimeExtension
+import eu.kanade.domain.source.anime.model.updateSourceIdToExtensionMap
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionUpdateNotifier
 import eu.kanade.tachiyomi.extension.InstallStep
@@ -305,6 +306,9 @@ class AnimeExtensionManager(
      */
     private fun registerNewExtension(extension: AnimeExtension.Installed) {
         _installedAnimeExtensionsFlow.value += extension
+        // AM (BROWSE) -->
+        updateSourceIdToExtensionMap()
+        // <-- AM (BROWSE)
     }
 
     /**
@@ -321,6 +325,9 @@ class AnimeExtensionManager(
         }
         mutInstalledAnimeExtensions += extension
         _installedAnimeExtensionsFlow.value = mutInstalledAnimeExtensions
+        // AM (BROWSE) -->
+        updateSourceIdToExtensionMap()
+        // <-- AM (BROWSE)
     }
 
     /**

@@ -17,7 +17,7 @@ val AnimeSource.icon: ImageBitmap?
     }
 
 // AM (BROWSE) -->
-private val sourceIdToExtensionMap: MutableMap<Long, AnimeExtension.Installed> = run {
+private val sourceIdToExtensionMap: MutableMap<Long, AnimeExtension.Installed> by lazy {
     val map = mutableMapOf<Long, AnimeExtension.Installed>()
     Injekt.get<AnimeExtensionManager>()
         .installedExtensionsFlow
@@ -28,6 +28,18 @@ private val sourceIdToExtensionMap: MutableMap<Long, AnimeExtension.Installed> =
             }
         }
     map
+}
+
+fun updateSourceIdToExtensionMap() {
+    sourceIdToExtensionMap.clear()
+    Injekt.get<AnimeExtensionManager>()
+        .installedExtensionsFlow
+        .value
+        .forEach { ext ->
+            ext.sources.forEach { source ->
+                sourceIdToExtensionMap[source.id] = ext
+            }
+        }
 }
 
 val AnimeSource.installedExtension: AnimeExtension.Installed
