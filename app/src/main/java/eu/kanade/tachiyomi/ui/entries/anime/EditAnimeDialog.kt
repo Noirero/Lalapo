@@ -1,4 +1,4 @@
-// AM (CUSTOM) -->
+// AM (CUSTOM_INFORMATION) -->
 package eu.kanade.tachiyomi.ui.entries.anime
 
 import android.content.Context
@@ -257,4 +257,4 @@ private fun ChipGroup.getTextStrings(): List<String> = children.mapNotNull {
         null
     }
 }.toList()
-// <-- AM (CUSTOM)
+// <-- AM (CUSTOM_INFORMATION)

@@ -86,13 +86,13 @@ object MoreTab : Tab() {
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
         )
 
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         LaunchedEffect(Unit) {
             with(DiscordRPCService) {
                 discordScope.launchIO { setScreen(context.applicationContext, DiscordScreen.MORE) }
             }
         }
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
     }
 }
 

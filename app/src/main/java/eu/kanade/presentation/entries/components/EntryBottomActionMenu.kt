@@ -73,10 +73,10 @@ fun EntryBottomActionMenu(
     modifier: Modifier = Modifier,
     onBookmarkClicked: (() -> Unit)? = null,
     onRemoveBookmarkClicked: (() -> Unit)? = null,
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     onFillermarkClicked: (() -> Unit)? = null,
     onRemoveFillermarkClicked: (() -> Unit)? = null,
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
     onMarkAsViewedClicked: (() -> Unit)? = null,
     onMarkAsUnviewedClicked: (() -> Unit)? = null,
     onMarkPreviousAsViewedClicked: (() -> Unit)? = null,
@@ -101,11 +101,11 @@ fun EntryBottomActionMenu(
             tonalElevation = 3.dp,
         ) {
             val haptic = LocalHapticFeedback.current
-            // AM (FILLER) -->
+            // AM (FILLERMARK) -->
             val confirm =
                 remember { mutableStateListOf(false, false, false, false, false, false, false, false, false, false, false) }
             val confirmRange = 0..<11
-            // <-- AM (FILLER)
+            // <-- AM (FILLERMARK)
             var resetJob: Job? = remember { null }
             val onLongClickItem: (Int) -> Unit = { toConfirmIndex ->
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -149,7 +149,7 @@ fun EntryBottomActionMenu(
                         onClick = onRemoveBookmarkClicked,
                     )
                 }
-                // AM (FILLER) -->
+                // AM (FILLERMARK) -->
                 if (onFillermarkClicked != null) {
                     Button(
                         title = stringResource(MR.strings.action_fillermark_episode),
@@ -168,7 +168,7 @@ fun EntryBottomActionMenu(
                         onClick = onRemoveFillermarkClicked,
                     )
                 }
-                // <-- AM (FILLER)
+                // <-- AM (FILLERMARK)
                 if (onMarkAsViewedClicked != null) {
                     val viewed = if (isManga) MR.strings.action_mark_as_read else MR.strings.action_mark_as_seen
                     Button(

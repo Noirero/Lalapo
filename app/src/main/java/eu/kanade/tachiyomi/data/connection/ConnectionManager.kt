@@ -9,9 +9,9 @@ import eu.kanade.tachiyomi.data.connection.syncmiru.SyncYomi
 class ConnectionManager {
 
     companion object {
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         const val DISCORD = 201L
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
 
         // AM (SYNC) -->
         const val SYNCMIRU = 202L
@@ -27,9 +27,9 @@ class ConnectionManager {
         // <-- AM (SYNC)
     }
 
-    // AM (DISCORD) -->
+    // AM (DISCORD_RPC) -->
     val discord = Discord(DISCORD)
-    // <-- AM (DISCORD)
+    // <-- AM (DISCORD_RPC)
 
     // AM (SYNC) -->
     val syncmiru = SyncMiru(SYNCMIRU)

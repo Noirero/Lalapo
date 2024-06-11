@@ -10,8 +10,8 @@ data class SyncSettings(
     val appSettings: Boolean = true,
     val sourceSettings: Boolean = true,
     val privateSettings: Boolean = false,
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     val customInfo: Boolean = true,
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 )
 // <-- AM (SYNC)

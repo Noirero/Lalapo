@@ -1,4 +1,4 @@
-// AM (DISCORD) -->
+// AM (DISCORD_RPC) -->
 package eu.kanade.tachiyomi.data.connection.discord
 
 import android.app.Service
@@ -208,7 +208,7 @@ class DiscordRPCService : Service() {
                     ?.substringAfter("\"id\": \"")?.substringBefore("\"}")
                     ?.split("external/")?.getOrNull(1)?.let { "external/$it" }
 
-                // AM (DISCORD) -->
+                // AM (DISCORD_RPC) -->
                 with(DiscordRPCService) {
                     discordScope.launchIO {
                         setScreen(
@@ -226,4 +226,4 @@ class DiscordRPCService : Service() {
         }
     }
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

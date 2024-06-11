@@ -143,10 +143,10 @@ class AnimeDownloadManager(
         alt: Boolean = false,
         video: Video? = null,
     ) {
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         val filteredEpisodes = getEpisodesToDownload(episodes)
         downloader.queueEpisodes(anime, filteredEpisodes, autoStart, alt, video)
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
     }
 
     /**
@@ -172,10 +172,10 @@ class AnimeDownloadManager(
      * @return an observable containing the list of pages from the episode.
      */
     fun buildVideo(source: AnimeSource, anime: Anime, episode: Episode): Video {
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         val episodeDir =
             provider.findEpisodeDir(episode.name, episode.scanlator, anime.ogTitle, source)
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
         val files = episodeDir?.listFiles().orEmpty()
             .filter { "video" in it.type.orEmpty() }
 
@@ -306,9 +306,9 @@ class AnimeDownloadManager(
             if (removeQueued) {
                 downloader.removeFromQueue(anime)
             }
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             provider.findAnimeDir(anime.ogTitle, source)?.delete()
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
             cache.removeAnime(anime)
             // Delete source directory if empty
             val sourceDir = provider.findSourceDir(source)
@@ -393,9 +393,9 @@ class AnimeDownloadManager(
      */
     fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
         val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator)
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         val animeDir = provider.getAnimeDir(anime.ogTitle, source)
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
 
         // Assume there's only 1 version of the episode name formats present
         val oldFolder = oldNames.asSequence()
@@ -435,7 +435,7 @@ class AnimeDownloadManager(
         }
     }
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     private fun getEpisodesToDownload(episodes: List<Episode>): List<Episode> {
         return if (!downloadPreferences.notDownloadFillermarkedItems().get()) {
             episodes.filterNot { it.fillermark }
@@ -443,7 +443,7 @@ class AnimeDownloadManager(
             episodes
         }
     }
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     fun statusFlow(): Flow<AnimeDownload> = queueState
         .flatMapLatest { downloads ->

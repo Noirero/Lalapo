@@ -120,10 +120,10 @@ class AnimeScreenModel(
     // AM (FILE_SIZE) -->
     private val storagePreferences: StoragePreferences = Injekt.get(),
     // <-- AM (FILE_SIZE)
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get(),
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 ) : StateScreenModel<AnimeScreenModel.State>(State.Loading) {
 
     private val successState: State.Success?
@@ -272,7 +272,7 @@ class AnimeScreenModel(
         }
     }
 
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     fun updateAnimeInfo(
         title: String?,
         author: String?,
@@ -335,7 +335,7 @@ class AnimeScreenModel(
             successState.copy(anime = anime)
         }
     }
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 
     fun toggleFavorite() {
         toggleFavorite(
@@ -588,9 +588,9 @@ class AnimeScreenModel(
                 downloadManager.isEpisodeDownloaded(
                     episode.name,
                     episode.scanlator,
-                    // AM (CUSTOM) -->
+                    // AM (CUSTOM_INFORMATION) -->
                     anime.ogTitle,
-                    // <-- AM (CUSTOM)
+                    // <-- AM (CUSTOM_INFORMATION)
                     anime.source,
                 )
             }
@@ -669,11 +669,11 @@ class AnimeScreenModel(
             LibraryPreferences.EpisodeSwipeAction.ToggleBookmark -> {
                 bookmarkEpisodes(listOf(episode), !episode.bookmark)
             }
-            // AM (FILLER) -->
+            // AM (FILLERMARK) -->
             LibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> {
                 fillermarkEpisodes(listOf(episode), !episode.fillermark)
             }
-            // <-- AM (FILLER)
+            // <-- AM (FILLERMARK)
             LibraryPreferences.EpisodeSwipeAction.Download -> {
                 val downloadAction: EpisodeDownloadAction = when (episodeItem.downloadState) {
                     AnimeDownload.State.ERROR,
@@ -845,7 +845,7 @@ class AnimeScreenModel(
         toggleAllSelection(false)
     }
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     /**
      * Fillermarks the given list of episodes.
      * @param episodes the list of episodes to fillermark.
@@ -859,7 +859,7 @@ class AnimeScreenModel(
         }
         toggleAllSelection(false)
     }
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     /**
      * Deletes the given list of episode.
@@ -950,7 +950,7 @@ class AnimeScreenModel(
         }
     }
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     /**
      * Sets the fillermark filter and requests an UI update.
      * @param state whether to display only fillermarked episodes or all episodes.
@@ -968,7 +968,7 @@ class AnimeScreenModel(
             setAnimeEpisodeFlags.awaitSetFillermarkFilter(anime, flag)
         }
     }
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     /**
      * Sets the active display mode.
@@ -1146,10 +1146,10 @@ class AnimeScreenModel(
         data class SetAnimeFetchInterval(val anime: Anime) : Dialog
         data class ShowQualities(val episode: Episode, val anime: Anime, val source: AnimeSource) : Dialog
 
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         data class EditAnimeInfo(val anime: Anime) : Dialog
 
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
         data object ChangeAnimeSkipIntro : Dialog
         data object SettingsSheet : Dialog
         data object TrackSheet : Dialog
@@ -1184,11 +1184,11 @@ class AnimeScreenModel(
         updateSuccessState { it.copy(dialog = Dialog.ShowQualities(episode, it.anime, it.source)) }
     }
 
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     fun showEditAnimeInfoDialog() {
         updateSuccessState { it.copy(dialog = Dialog.EditAnimeInfo(it.anime)) }
     }
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 
     sealed interface State {
         @Immutable
@@ -1264,15 +1264,15 @@ class AnimeScreenModel(
                 val unseenFilter = anime.unseenFilter
                 val downloadedFilter = anime.downloadedFilter
                 val bookmarkedFilter = anime.bookmarkedFilter
-                // AM (FILLER) -->
+                // AM (FILLERMARK) -->
                 val fillermarkedFilter = anime.fillermarkedFilter
-                // <-- AM (FILLER)
+                // <-- AM (FILLERMARK)
                 return asSequence()
                     .filter { (episode) -> applyFilter(unseenFilter) { !episode.seen } }
                     .filter { (episode) -> applyFilter(bookmarkedFilter) { episode.bookmark } }
-                    // AM (FILLER) -->
+                    // AM (FILLERMARK) -->
                     .filter { (episode) -> applyFilter(fillermarkedFilter) { episode.fillermark } }
-                    // <-- AM (FILLER)
+                    // <-- AM (FILLERMARK)
                     .filter { applyFilter(downloadedFilter) { it.isDownloaded || isLocalAnime } }
                     .sortedWith { (episode1), (episode2) ->
                         getEpisodeSort(anime).invoke(

@@ -177,9 +177,9 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
     override fun onStart(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStart()
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         DiscordRPCService.start(applicationContext)
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
         // AM (SYNC) -->
         startSyncJob(syncPreferences.getSyncTriggerOptions().syncOnAppResume)
         // <-- AM (SYNC)
@@ -187,9 +187,9 @@ class App : Application(), DefaultLifecycleObserver, ImageLoaderFactory {
 
     override fun onStop(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStopped()
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         DiscordRPCService.stop(applicationContext, 10000L)
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
         // AM (SYNC) -->
         startSyncJob(syncPreferences.getSyncTriggerOptions().syncOnAppStart)
         // <-- AM (SYNC)

@@ -1,4 +1,4 @@
-// AM (CUSTOM) -->
+// AM (CUSTOM_INFORMATION) -->
 package eu.kanade.tachiyomi.widget.materialdialogs
 
 import android.view.LayoutInflater
@@ -28,4 +28,4 @@ fun MaterialAlertDialogBuilder.setTextInput(
     }
     return setView(binding.root)
 }
-// <-- AM (CUSTOM)
+// <-- AM (CUSTOM_INFORMATION)

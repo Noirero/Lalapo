@@ -1,4 +1,4 @@
-// AM (CUSTOM) -->
+// AM (CUSTOM_INFORMATION) -->
 package tachiyomi.domain.entries.anime.interactor
 
 import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
@@ -9,4 +9,4 @@ class SetCustomAnimeInfo(
 ) {
     fun set(animeInfo: CustomAnimeInfo) = customAnimeRepository.set(animeInfo)
 }
-// <-- AM (CUSTOM)
+// <-- AM (CUSTOM_INFORMATION)

@@ -1,7 +1,4 @@
-// AM (DISCORD) -->
-
-// Original library from https://github.com/dead8309/KizzyRPC (Thank you)
-// Thank you to the 最高 man for the refactored and simplified code
+// AM (DISCORD_RPC) -->
 package eu.kanade.tachiyomi.data.connection.discord
 
 import dev.icerock.moko.resources.StringResource
@@ -183,4 +180,4 @@ private const val browseImageUrl = "emojis/1247521751575826493.webp?quality=loss
 private const val moreImageUrl = "emojis/1247521761025851472.webp?quality=lossless"
 private const val webviewImageUrl = "emojis/1247521768533524573.webp?quality=lossless"
 private const val videoImageUrl = "emojis/1247521765857693698.webp?quality=lossless"
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

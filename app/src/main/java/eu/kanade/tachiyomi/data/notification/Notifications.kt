@@ -65,13 +65,13 @@ object Notifications {
     const val CHANNEL_INCOGNITO_MODE = "incognito_mode_channel"
     const val ID_INCOGNITO_MODE = -701
 
-    // AM (DISCORD) -->
+    // AM (DISCORD_RPC) -->
     /**
      * Notification channel used for Discord RPC
      */
     const val CHANNEL_DISCORD_RPC = "${RICH_PRESENCE_TAG}_channel"
     const val ID_DISCORD_RPC = -1701
-    // <-- AM (DISCORD)
+    // <-- AM (DISCORD_RPC)
 
     /**
      * Notification channel and ids used for app and extension updates.
@@ -94,9 +94,9 @@ object Notifications {
         "downloader_cache_renewal",
         "crash_logs_channel",
         "library_skipped_channel",
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         "Discord RPC",
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
     )
 
     /**
@@ -170,11 +170,11 @@ object Notifications {
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_incognito_mode))
                 },
-                // AM (DISCORD) -->
+                // AM (DISCORD_RPC) -->
                 buildNotificationChannel(CHANNEL_DISCORD_RPC, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_discord_rpc))
                 },
-                // <-- AM (DISCORD)
+                // <-- AM (DISCORD_RPC)
                 buildNotificationChannel(CHANNEL_APP_UPDATE, IMPORTANCE_DEFAULT) {
                     setGroup(GROUP_APK_UPDATES)
                     setName(context.stringResource(MR.strings.channel_app_updates))

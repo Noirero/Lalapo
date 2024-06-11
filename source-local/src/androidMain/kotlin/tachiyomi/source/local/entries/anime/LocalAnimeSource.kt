@@ -152,7 +152,7 @@ actual class LocalAnimeSource(
         }
     }
 
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     fun updateAnimeInfo(anime: SAnime) {
         val directory = fileSystem.getAnimeDirectory(anime.url) ?: return
         val existingFileName = directory.listFiles()?.find { it.extension == "json" }?.name
@@ -165,7 +165,7 @@ actual class LocalAnimeSource(
     private fun SAnime.toJson(): AnimeDetails {
         return AnimeDetails(title, author, artist, description, genre?.split(", "), status)
     }
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 
     // Anime details related
     override suspend fun getAnimeDetails(anime: SAnime): SAnime = withIOContext {

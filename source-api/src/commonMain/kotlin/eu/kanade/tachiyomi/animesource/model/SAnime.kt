@@ -29,25 +29,25 @@ interface SAnime : Serializable {
         return genre?.split(", ")?.map { it.trim() }?.filterNot { it.isBlank() }?.distinct()
     }
 
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     val originalTitle: String
     val originalAuthor: String?
     val originalArtist: String?
     val originalDescription: String?
     val originalGenre: String?
     val originalStatus: Int
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 
     fun copy() = create().also {
         it.url = url
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         it.title = originalTitle
         it.artist = originalArtist
         it.author = originalAuthor
         it.description = originalDescription
         it.genre = originalGenre
         it.status = originalStatus
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
         it.thumbnail_url = thumbnail_url
         it.update_strategy = update_strategy
         it.initialized = initialized
@@ -68,7 +68,7 @@ interface SAnime : Serializable {
     }
 }
 
-// AM (CUSTOM) -->
+// AM (CUSTOM_INFORMATION) -->
 fun SAnime.copy(
     url: String = this.url,
     title: String = this.originalTitle,
@@ -90,4 +90,4 @@ fun SAnime.copy(
     it.thumbnail_url = thumbnail_url
     it.initialized = initialized
 }
-// <-- AM (CUSTOM)
+// <-- AM (CUSTOM_INFORMATION)

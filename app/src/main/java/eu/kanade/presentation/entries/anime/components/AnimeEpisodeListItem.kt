@@ -69,9 +69,9 @@ fun AnimeEpisodeListItem(
     scanlator: String?,
     seen: Boolean,
     bookmark: Boolean,
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     fillermark: Boolean,
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
     selected: Boolean,
     downloadIndicatorEnabled: Boolean,
     downloadStateProvider: () -> AnimeDownload.State,
@@ -104,9 +104,9 @@ fun AnimeEpisodeListItem(
             action = episodeSwipeStartAction,
             seen = seen,
             bookmark = bookmark,
-            // AM (FILLER) -->
+            // AM (FILLERMARK) -->
             fillermark = fillermark,
-            // <-- AM (FILLER)
+            // <-- AM (FILLERMARK)
             downloadState = downloadStateProvider(),
             background = MaterialTheme.colorScheme.primaryContainer,
             onSwipe = { onEpisodeSwipe(episodeSwipeStartAction) },
@@ -115,9 +115,9 @@ fun AnimeEpisodeListItem(
             action = episodeSwipeEndAction,
             seen = seen,
             bookmark = bookmark,
-            // AM (FILLER) -->
+            // AM (FILLERMARK) -->
             fillermark = fillermark,
-            // <-- AM (FILLER)
+            // <-- AM (FILLERMARK)
             downloadState = downloadStateProvider(),
             background = MaterialTheme.colorScheme.primaryContainer,
             onSwipe = { onEpisodeSwipe(episodeSwipeEndAction) },
@@ -180,7 +180,7 @@ fun AnimeEpisodeListItem(
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         }
-                        // AM (FILLER) -->
+                        // AM (FILLERMARK) -->
                         if (fillermark) {
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp),
@@ -191,7 +191,7 @@ fun AnimeEpisodeListItem(
                             )
                             Spacer(modifier = Modifier.width(2.dp))
                         }
-                        // <-- AM (FILLER)
+                        // <-- AM (FILLERMARK)
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyMedium,
@@ -253,16 +253,16 @@ fun AnimeEpisodeListItem(
     }
 }
 
-// AM (FILLER) -->
+// AM (FILLERMARK) -->
 @Composable
-// <-- AM (FILLER)
+// <-- AM (FILLERMARK)
 private fun getSwipeAction(
     action: LibraryPreferences.EpisodeSwipeAction,
     seen: Boolean,
     bookmark: Boolean,
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     fillermark: Boolean,
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
     downloadState: AnimeDownload.State,
     background: Color,
     onSwipe: () -> Unit,
@@ -280,7 +280,7 @@ private fun getSwipeAction(
             isUndo = bookmark,
             onSwipe = onSwipe,
         )
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         LibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> {
             val icon = if (!fillermark) {
                 ImageVector.vectorResource(id = R.drawable.ic_fillermark_24dp)
@@ -294,7 +294,7 @@ private fun getSwipeAction(
                 onSwipe = onSwipe,
             )
         }
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
         LibraryPreferences.EpisodeSwipeAction.Download -> swipeAction(
             icon = when (downloadState) {
                 AnimeDownload.State.NOT_DOWNLOADED, AnimeDownload.State.ERROR -> Icons.Outlined.Download

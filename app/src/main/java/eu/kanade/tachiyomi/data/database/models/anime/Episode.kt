@@ -14,9 +14,9 @@ interface Episode : SEpisode, Serializable {
 
     var bookmark: Boolean
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     var fillermark: Boolean
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     var last_second_seen: Long
 
@@ -40,9 +40,9 @@ fun Episode.toDomainEpisode(): DomainEpisode? {
         animeId = anime_id!!,
         seen = seen,
         bookmark = bookmark,
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         fillermark = fillermark,
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
         lastSecondSeen = last_second_seen,
         totalSeconds = total_seconds,
         dateFetch = date_fetch,

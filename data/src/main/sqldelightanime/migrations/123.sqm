@@ -9,9 +9,9 @@ SELECT
     episodes.scanlator,
     episodes.seen,
     episodes.bookmark,
-    -- AM (FILLER) -->
+    -- AM (FILLERMARK) -->
     episodes.fillermark,
-    -- <-- AM (FILLER)
+    -- <-- AM (FILLERMARK)
     episodes.last_second_seen,
     episodes.total_seconds AS totalSeconds,
     animes.source,

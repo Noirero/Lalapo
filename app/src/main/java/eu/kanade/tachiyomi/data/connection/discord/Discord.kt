@@ -1,4 +1,4 @@
-// AM (DISCORD) -->
+// AM (DISCORD_RPC) -->
 package eu.kanade.tachiyomi.data.connection.discord
 
 import android.graphics.Color
@@ -14,4 +14,4 @@ class Discord(id: Long) : BaseConnection(id, "Discord") {
         get() = getUsername().isNotEmpty() &&
             getPassword().isNotEmpty()
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

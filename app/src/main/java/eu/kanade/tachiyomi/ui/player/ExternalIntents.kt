@@ -91,7 +91,7 @@ class ExternalIntents {
 
         val pkgName = playerPreferences.externalPlayerPreference().get()
 
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         with(DiscordRPCService) {
             discordScope.launchIO {
                 setPlayerActivity(
@@ -99,16 +99,16 @@ class ExternalIntents {
                     playerData = PlayerData(
                         incognitoMode = source.isNsfw() || basePreferences.incognitoMode().get(),
                         animeId = anime.id,
-                        // AM (CUSTOM) -->
+                        // AM (CUSTOM_INFORMATION) -->
                         animeTitle = anime.ogTitle,
-                        // <-- AM (CUSTOM)
+                        // <-- AM (CUSTOM_INFORMATION)
                         episodeNumber = episode.episodeNumber.toString(),
                         thumbnailUrl = anime.thumbnailUrl,
                     ),
                 )
             }
         }
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
 
         return if (pkgName.isEmpty()) {
             Intent(Intent.ACTION_VIEW).apply {
@@ -140,9 +140,9 @@ class ExternalIntents {
                 downloadManager.isEpisodeDownloaded(
                     episodeName = episode.name,
                     episodeScanlator = episode.scanlator,
-                    // AM (CUSTOM) -->
+                    // AM (CUSTOM_INFORMATION) -->
                     animeTitle = anime.ogTitle,
-                    // <-- AM (CUSTOM)
+                    // <-- AM (CUSTOM_INFORMATION)
                     sourceId = anime.source,
                     skipCache = true,
                 )
@@ -358,11 +358,11 @@ class ExternalIntents {
      *
      * @param intent the [Intent] that contains the episode's position and duration.
      */
-    // AM (DISCORD) -->
+    // AM (DISCORD_RPC) -->
     @OptIn(DelicateCoroutinesApi::class)
     @Suppress("DEPRECATION")
     fun onActivityResult(context: Context, intent: Intent?) {
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
         val data = intent ?: return
         val anime = anime
         val currentExtEpisode = episode
@@ -394,11 +394,11 @@ class ExternalIntents {
             }
         }
 
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         with(DiscordRPCService) {
             discordScope.launchIO { setScreen(context.applicationContext, lastUsedScreen) }
         }
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
 
         // Update the episode's progress and history
         launchIO {
@@ -469,9 +469,9 @@ class ExternalIntents {
                     id = currEp.id,
                     seen = seen,
                     bookmark = currEp.bookmark,
-                    // AM (FILLER) -->
+                    // AM (FILLERMARK) -->
                     fillermark = currEp.fillermark,
-                    // <-- AM (FILLER)
+                    // <-- AM (FILLERMARK)
                     lastSecondSeen = lastSecondSeen,
                     totalSeconds = totalSeconds,
                 ),

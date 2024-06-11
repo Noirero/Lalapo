@@ -176,13 +176,13 @@ class AnimeScreen(
                 navigator.push(MigrateAnimeSearchScreen(successState.anime.id))
             }.takeIf { successState.anime.favorite },
             changeAnimeSkipIntro = screenModel::showAnimeSkipIntroDialog.takeIf { successState.anime.favorite },
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             onEditInfoClicked = screenModel::showEditAnimeInfoDialog,
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
             onMultiBookmarkClicked = screenModel::bookmarkEpisodes,
-            // AM (FILLER) -->
+            // AM (FILLERMARK) -->
             onMultiFillermarkClicked = screenModel::fillermarkEpisodes,
-            // <-- AM (FILLER)
+            // <-- AM (FILLERMARK)
             onMultiMarkAsSeenClicked = screenModel::markEpisodesSeen,
             onMarkPreviousAsSeenClicked = screenModel::markPreviousEpisodeSeen,
             onMultiDeleteClicked = screenModel::showDeleteEpisodeDialog,
@@ -234,9 +234,9 @@ class AnimeScreen(
                 onDownloadFilterChanged = screenModel::setDownloadedFilter,
                 onUnseenFilterChanged = screenModel::setUnseenFilter,
                 onBookmarkedFilterChanged = screenModel::setBookmarkedFilter,
-                // AM (FILLER) -->
+                // AM (FILLERMARK) -->
                 onFillermarkedFilterChanged = screenModel::setFillermarkedFilter,
-                // <-- AM (FILLER)
+                // <-- AM (FILLERMARK)
                 onSortModeChanged = screenModel::setSorting,
                 onDisplayModeChanged = screenModel::setDisplayMode,
                 onSetAsDefault = screenModel::setCurrentSettingsAsDefault,
@@ -325,7 +325,7 @@ class AnimeScreen(
                     onDismissRequest = onDismissRequest,
                 )
             }
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             is AnimeScreenModel.Dialog.EditAnimeInfo -> {
                 EditAnimeDialog(
                     anime = successState.anime,
@@ -333,7 +333,7 @@ class AnimeScreen(
                     onPositiveClick = screenModel::updateAnimeInfo,
                 )
             }
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
         }
     }
 

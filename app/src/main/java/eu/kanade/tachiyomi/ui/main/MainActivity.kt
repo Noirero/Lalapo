@@ -272,7 +272,7 @@ class MainActivity : BaseActivity() {
 
                     val appContext = this@MainActivity.applicationContext
 
-                    // AM (DISCORD) -->
+                    // AM (DISCORD_RPC) -->
                     connectionPreferences.enableDiscordRPC().changes()
                         .drop(1)
                         .onEach {
@@ -282,7 +282,7 @@ class MainActivity : BaseActivity() {
                                 DiscordRPCService.stop(appContext, 0L)
                             }
                         }.launchIn(this)
-                    // <-- AM (DISCORD)
+                    // <-- AM (DISCORD_RPC)
                 }
 
                 HandleOnNewIntent(context = context, navigator = navigator)
@@ -325,9 +325,9 @@ class MainActivity : BaseActivity() {
             ActivityResultContracts.StartActivityForResult(),
         ) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-                // AM (DISCORD) -->
+                // AM (DISCORD_RPC) -->
                 ExternalIntents.externalIntents.onActivityResult(this.applicationContext, result.data)
-                // <-- AM (DISCORD)
+                // <-- AM (DISCORD_RPC)
             }
         }
     }

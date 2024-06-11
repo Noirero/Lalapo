@@ -99,11 +99,11 @@ data class BrowseTab(
 
         val internalErrString = stringResource(MR.strings.internal_error)
         LaunchedEffect(Unit) {
-            // AM (DISCORD) -->
+            // AM (DISCORD_RPC) -->
             with(DiscordRPCService) {
                 discordScope.launchIO { setScreen(context.applicationContext, DiscordScreen.BROWSE) }
             }
-            // <-- AM (DISCORD)
+            // <-- AM (DISCORD_RPC)
             (context as? MainActivity)?.ready = true
             launchIO {
                 Injekt.get<AnimeExtensionManager>().findAvailableExtensions()

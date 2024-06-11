@@ -173,25 +173,25 @@ class PlayerViewModel @JvmOverloads constructor(
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_DOWNLOADED && !downloadManager.isEpisodeDownloaded(
                     it.name,
                     it.scanlator,
-                    // AM (CUSTOM) -->
+                    // AM (CUSTOM_INFORMATION) -->
                     anime.ogTitle,
-                    // <-- AM (CUSTOM)
+                    // <-- AM (CUSTOM_INFORMATION)
                     anime.source,
                 ) ||
                 anime.downloadedFilterRaw == Anime.EPISODE_SHOW_NOT_DOWNLOADED && downloadManager.isEpisodeDownloaded(
                     it.name,
                     it.scanlator,
-                    // AM (CUSTOM) -->
+                    // AM (CUSTOM_INFORMATION) -->
                     anime.ogTitle,
-                    // <-- AM (CUSTOM)
+                    // <-- AM (CUSTOM_INFORMATION)
                     anime.source,
                 ) ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED && !it.bookmark ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED && it.bookmark ||
-                // AM (FILLER) -->
+                // AM (FILLERMARK) -->
                 anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
                 anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
-            // <-- AM (FILLER)
+            // <-- AM (FILLERMARK)
         }.toMutableList()
 
         if (episodesForPlayer.all { it.id != episodeId }) {
@@ -513,7 +513,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     /**
      * Fillermarks the currently active episode.
      */
@@ -527,7 +527,7 @@ class PlayerViewModel @JvmOverloads constructor(
             )
         }
     }
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     /**
      * Saves the screenshot on the pictures directory and notifies the UI of the result.

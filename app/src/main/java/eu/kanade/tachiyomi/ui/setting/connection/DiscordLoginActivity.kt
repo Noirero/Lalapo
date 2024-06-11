@@ -1,7 +1,4 @@
-// AM (DISCORD) -->
-
-// Original library from https://github.com/dead8309/KizzyRPC (Thank you)
-// Thank you to the 最高 man for the refactored and simplified code
+// AM (DISCORD_RPC) -->
 package eu.kanade.tachiyomi.ui.setting.connection
 
 import android.annotation.SuppressLint
@@ -86,4 +83,4 @@ private fun DiscordWebview(
         )
     }
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

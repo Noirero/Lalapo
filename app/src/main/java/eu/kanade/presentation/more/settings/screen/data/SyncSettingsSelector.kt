@@ -124,9 +124,9 @@ private class SyncSettingsSelectorModel(
                 appSettings = syncSettings.appSettings,
                 sourceSettings = syncSettings.sourceSettings,
                 privateSettings = syncSettings.privateSettings,
-                // AM (CUSTOM) -->
+                // AM (CUSTOM_INFORMATION) -->
                 customInfo = syncSettings.customInfo,
-                // <-- AM (CUSTOM)
+                // <-- AM (CUSTOM_INFORMATION)
             )
         }
 
@@ -140,9 +140,9 @@ private class SyncSettingsSelectorModel(
                 appSettings = backupOptions.appSettings,
                 sourceSettings = backupOptions.sourceSettings,
                 privateSettings = backupOptions.privateSettings,
-                // AM (CUSTOM) -->
+                // AM (CUSTOM_INFORMATION) -->
                 customInfo = backupOptions.customInfo,
-                // <-- AM (CUSTOM)
+                // <-- AM (CUSTOM_INFORMATION)
             )
         }
     }

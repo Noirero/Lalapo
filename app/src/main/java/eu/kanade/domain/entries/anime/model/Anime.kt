@@ -22,9 +22,9 @@ fun Anime.episodesFiltered(): Boolean {
     return unseenFilter != TriState.DISABLED ||
         downloadedFilter != TriState.DISABLED ||
         bookmarkedFilter != TriState.DISABLED ||
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         fillermarkedFilter != TriState.DISABLED
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 }
 fun Anime.forceDownloaded(): Boolean {
     return favorite && Injekt.get<BasePreferences>().downloadedOnly().get()
@@ -43,7 +43,7 @@ fun Anime.toSAnime(): SAnime = SAnime.create().also {
 }
 
 fun Anime.copyFrom(other: SAnime): Anime {
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     val author = other.author ?: ogAuthor
     val artist = other.artist ?: ogArtist
     val description = other.description ?: ogDescription
@@ -52,19 +52,19 @@ fun Anime.copyFrom(other: SAnime): Anime {
     } else {
         ogGenre
     }
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
     val thumbnailUrl = other.thumbnail_url ?: thumbnailUrl
     return this.copy(
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         ogAuthor = author,
         ogArtist = artist,
         ogDescription = description,
         ogGenre = genres,
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
         thumbnailUrl = thumbnailUrl,
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         ogStatus = other.status.toLong(),
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
         updateStrategy = other.update_strategy,
         initialized = other.initialized && initialized,
     )
@@ -73,14 +73,14 @@ fun Anime.copyFrom(other: SAnime): Anime {
 fun SAnime.toDomainAnime(sourceId: Long): Anime {
     return Anime.create().copy(
         url = url,
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         ogTitle = title,
         ogArtist = artist,
         ogAuthor = author,
         ogDescription = description,
         ogGenre = getGenres(),
         ogStatus = status.toLong(),
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
         thumbnailUrl = thumbnail_url,
         updateStrategy = update_strategy,
         initialized = initialized,

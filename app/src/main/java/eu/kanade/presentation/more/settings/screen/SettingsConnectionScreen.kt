@@ -46,14 +46,14 @@ object SettingsConnectionScreen : SearchableSettings {
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.special_services),
                 preferenceItems = persistentListOf(
-                    // AM (DISCORD) -->
+                    // AM (DISCORD_RPC) -->
                     Preference.PreferenceItem.ConnectionPreference(
                         title = connectionManager.discord.name,
                         connection = connectionManager.discord,
                         login = { context.openDiscordLoginActivity() },
                         openSettings = { navigator.push(SettingsDiscordScreen) },
                     ),
-                    // <-- AM (DISCORD)
+                    // <-- AM (DISCORD_RPC)
                     // AM (SYNC) -->
                     Preference.PreferenceItem.ConnectionPreference(
                         title = connectionManager.syncmiru.name,
@@ -62,9 +62,9 @@ object SettingsConnectionScreen : SearchableSettings {
                         openSettings = { navigator.push(SettingsSyncmiruScreen) },
                     ),
                     // <-- AM (SYNC)
-                    // AM (DISCORD) -->
+                    // AM (DISCORD_RPC) -->
                     Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connection_discord_info)),
-                    // <-- AM (DISCORD)
+                    // <-- AM (DISCORD_RPC)
                 ),
             ),
         )

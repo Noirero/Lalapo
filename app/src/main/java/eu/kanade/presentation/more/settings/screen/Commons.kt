@@ -51,7 +51,7 @@ fun getCategoriesLabel(
         stringResource(MR.strings.exclude, excludedItemsText)
 }
 
-// AM (DISCORD) -->
+// AM (DISCORD_RPC) -->
 /**
  * Returns a string of categories name for settings subtitle
  */
@@ -83,4 +83,4 @@ fun getCategoriesLabel(
 
     return stringResource(MR.strings.include, includedItemsText)
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

@@ -327,11 +327,11 @@ object AnimeLibraryTab : Tab() {
         }
 
         LaunchedEffect(Unit) {
-            // AM (DISCORD) -->
+            // AM (DISCORD_RPC) -->
             with(DiscordRPCService) {
                 discordScope.launchIO { setScreen(context.applicationContext, DiscordScreen.LIBRARY) }
             }
-            // <-- AM (DISCORD)
+            // <-- AM (DISCORD_RPC)
             launch { queryEvent.receiveAsFlow().collect(screenModel::search) }
             launch { requestSettingsSheetEvent.receiveAsFlow().collectLatest { screenModel.showSettingsDialog() } }
         }

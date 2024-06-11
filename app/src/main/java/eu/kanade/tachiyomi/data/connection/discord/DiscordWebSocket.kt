@@ -1,7 +1,4 @@
-// AM (DISCORD) -->
-
-// Original library from https://github.com/dead8309/KizzyRPC (Thank you)
-// Thank you to the 最高 man for the refactored and simplified code
+// AM (DISCORD_RPC) -->
 package eu.kanade.tachiyomi.data.connection.discord
 
 import android.util.Log
@@ -161,4 +158,4 @@ open class DiscordWebSocketImpl(
         Log.i("discord_rpc_animiru", message)
     }
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

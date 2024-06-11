@@ -1,6 +1,4 @@
-// AM (DISCORD) -->
-// Original library from https://github.com/dead8309/KizzyRPC (Thank you)
-// Thank you to the 最高 man for the refactored and simplified code
+// AM (DISCORD_RPC) -->
 package eu.kanade.tachiyomi.data.connection.discord
 
 /**
@@ -37,4 +35,4 @@ class DiscordRPC(val token: String, val status: String) {
         rpc?.let { discordWebSocket.sendActivity(it) }
     }
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

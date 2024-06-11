@@ -288,9 +288,9 @@ object Migrations {
                     libraryPreferences.filterEpisodeBySeen(),
                     libraryPreferences.filterEpisodeByDownloaded(),
                     libraryPreferences.filterEpisodeByBookmarked(),
-                    // AM (FILLER) -->
+                    // AM (FILLERMARK) -->
                     libraryPreferences.filterEpisodeByFillermarked(),
-                    // <-- AM (FILLER)
+                    // <-- AM (FILLERMARK)
                     libraryPreferences.sortEpisodeBySourceOrNumber(),
                     libraryPreferences.displayEpisodeByNameOrNumber(),
                     libraryPreferences.sortEpisodeByAscendingOrDescending(),
@@ -314,7 +314,7 @@ object Migrations {
                     }
                 }
 
-                // AM (DISCORD) -->
+                // AM (DISCORD_RPC) -->
                 if (connectionPreferences.discordRPCStatus().isSet()) {
                     prefs.edit {
                         val oldString = try {
@@ -334,7 +334,7 @@ object Migrations {
                 if (connectionPreferences.connectionToken(connectionManager.discord).get().isNotBlank()) {
                     connectionPreferences.setConnectionCredentials(connectionManager.discord, "Discord", "Logged In")
                 }
-                // <-- AM (DISCORD)
+                // <-- AM (DISCORD_RPC)
             }
             if (oldVersion < 92) {
                 if (playerPreferences.progressPreference().isSet()) {

@@ -1,4 +1,4 @@
-// AM (CUSTOM) -->
+// AM (CUSTOM_INFORMATION) -->
 package tachiyomi.domain.entries.anime.model
 
 data class CustomAnimeInfo(
@@ -10,4 +10,4 @@ data class CustomAnimeInfo(
     val genre: List<String>? = null,
     val status: Long? = null,
 )
-// <-- AM (CUSTOM)
+// <-- AM (CUSTOM_INFORMATION)

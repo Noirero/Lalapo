@@ -131,9 +131,9 @@ class BackupRestorer(
                 ensureActive()
 
                 try {
-                    // AM (CUSTOM) -->
+                    // AM (CUSTOM_INFORMATION) -->
                     val customInfo = it.getCustomAnimeInfo()
-                    // <-- AM (CUSTOM)
+                    // <-- AM (CUSTOM_INFORMATION)
                     animeRestorer.restoreAnime(it, backupAnimeCategories, customInfo)
                 } catch (e: Exception) {
                     val sourceName = animeSourceMapping[it.source] ?: it.source.toString()

@@ -21,14 +21,14 @@ data class Anime(
     val episodeFlags: Long,
     val coverLastModified: Long,
     val url: String,
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     val ogTitle: String,
     val ogArtist: String?,
     val ogAuthor: String?,
     val ogDescription: String?,
     val ogGenre: List<String>?,
     val ogStatus: Long,
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
     val thumbnailUrl: String?,
     val updateStrategy: AnimeUpdateStrategy,
     val initialized: Boolean,
@@ -39,7 +39,7 @@ data class Anime(
     // <-- AM (SYNC)
 ) : Serializable {
 
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     private val customAnimeInfo = if (favorite) {
         getCustomAnimeInfo.get(id)
     } else {
@@ -63,7 +63,7 @@ data class Anime(
 
     val status: Long
         get() = customAnimeInfo?.status ?: ogStatus
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 
     val expectedNextUpdate: Instant?
         get() = nextUpdate
@@ -85,10 +85,10 @@ data class Anime(
     val bookmarkedFilterRaw: Long
         get() = episodeFlags and EPISODE_BOOKMARKED_MASK
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     val fillermarkedFilterRaw: Long
         get() = episodeFlags and EPISODE_FILLERMARKED_MASK
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     val skipIntroLength: Int
         get() = (viewerFlags and ANIME_INTRO_MASK).toInt()
@@ -113,14 +113,14 @@ data class Anime(
             else -> TriState.DISABLED
         }
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     val fillermarkedFilter: TriState
         get() = when (fillermarkedFilterRaw) {
             EPISODE_SHOW_FILLERMARKED -> TriState.ENABLED_IS
             EPISODE_SHOW_NOT_FILLERMARKED -> TriState.ENABLED_NOT
             else -> TriState.DISABLED
         }
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     fun sortDescending(): Boolean {
         return episodeFlags and EPISODE_SORT_DIR_MASK == EPISODE_SORT_DESC
@@ -151,7 +151,7 @@ data class Anime(
         const val EPISODE_SHOW_NOT_BOOKMARKED = 0x00000040L
         const val EPISODE_BOOKMARKED_MASK = 0x00000060L
 
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         const val EPISODE_SHOW_FILLERMARKED = 0x00000080L
         const val EPISODE_SHOW_NOT_FILLERMARKED = 0x00000100L
         const val EPISODE_FILLERMARKED_MASK = 0x00000180L
@@ -161,7 +161,7 @@ data class Anime(
         const val EPISODE_SORTING_UPLOAD_DATE = 0x00000400L
         const val EPISODE_SORTING_ALPHABET = 0x00000600L
         const val EPISODE_SORTING_MASK = 0x00000600L
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
 
         const val EPISODE_DISPLAY_NAME = 0x00000000L
         const val EPISODE_DISPLAY_NUMBER = 0x00100000L
@@ -174,9 +174,9 @@ data class Anime(
         fun create() = Anime(
             id = -1L,
             url = "",
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             ogTitle = "",
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
             source = -1L,
             favorite = false,
             lastUpdate = 0L,
@@ -186,13 +186,13 @@ data class Anime(
             viewerFlags = 0L,
             episodeFlags = 0L,
             coverLastModified = 0L,
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             ogArtist = null,
             ogAuthor = null,
             ogDescription = null,
             ogGenre = null,
             ogStatus = 0L,
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
             thumbnailUrl = null,
             updateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE,
             initialized = false,
@@ -203,8 +203,8 @@ data class Anime(
             // <-- AM (SYNC)
         )
 
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         private val getCustomAnimeInfo: GetCustomAnimeInfo by injectLazy()
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
     }
 }

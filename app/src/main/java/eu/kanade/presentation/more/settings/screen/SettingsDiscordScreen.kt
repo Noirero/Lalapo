@@ -1,4 +1,4 @@
-// AM (DISCORD) -->
+// AM (DISCORD_RPC) -->
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.foundation.layout.RowScope
@@ -175,4 +175,4 @@ object SettingsDiscordScreen : SearchableSettings {
         )
     }
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)

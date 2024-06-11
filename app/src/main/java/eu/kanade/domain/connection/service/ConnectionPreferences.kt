@@ -24,7 +24,7 @@ class ConnectionPreferences(
 
     fun connectionToken(connection: Connection) = preferenceStore.getString(connectionToken(connection.id), "")
 
-    // AM (DISCORD) -->
+    // AM (DISCORD_RPC) -->
     fun enableDiscordRPC() = preferenceStore.getBoolean("pref_enable_discord_rpc", false)
 
     fun discordRPCStatus() = preferenceStore.getInt("pref_discord_rpc_status", 1)
@@ -32,7 +32,7 @@ class ConnectionPreferences(
     fun discordRPCIncognito() = preferenceStore.getBoolean("pref_discord_rpc_incognito", false)
 
     fun discordRPCIncognitoCategories() = preferenceStore.getStringSet("discord_rpc_incognito_categories", emptySet())
-    // <-- AM (DISCORD)
+    // <-- AM (DISCORD_RPC)
 
     companion object {
 

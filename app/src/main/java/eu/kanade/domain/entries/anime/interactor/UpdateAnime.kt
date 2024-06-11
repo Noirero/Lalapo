@@ -39,13 +39,13 @@ class UpdateAnime(
         }
 
         // if the anime isn't a favorite, set its title from source and update in db
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         val title = if (remoteTitle.isNotBlank() && localAnime.ogTitle != remoteTitle) {
             remoteTitle
         } else {
             null
         }
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
 
         val coverLastModified =
             when {

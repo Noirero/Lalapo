@@ -7,8 +7,6 @@ import tachiyomi.core.preference.Preference
 import tachiyomi.core.preference.PreferenceStore
 import java.util.UUID
 
-/** Made by @kaiserbh. Huge thx for making this feature. **/
-
 class SyncPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
@@ -59,9 +57,9 @@ class SyncPreferences(
             appSettings = preferenceStore.getBoolean("sync_app_settings", true).get(),
             sourceSettings = preferenceStore.getBoolean("sync_source_settings", true).get(),
             privateSettings = preferenceStore.getBoolean("sync_private_settings", true).get(),
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             customInfo = preferenceStore.getBoolean("sync_custom_information", true).get(),
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
         )
     }
 
@@ -73,9 +71,9 @@ class SyncPreferences(
         preferenceStore.getBoolean("sync_app_settings", true).set(syncSettings.appSettings)
         preferenceStore.getBoolean("sync_source_settings", true).set(syncSettings.sourceSettings)
         preferenceStore.getBoolean("sync_private_settings", true).set(syncSettings.privateSettings)
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         preferenceStore.getBoolean("sync_custom_information", true).set(syncSettings.customInfo)
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
     }
 
     fun getSyncTriggerOptions(): SyncTriggerOptions {

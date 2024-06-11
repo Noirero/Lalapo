@@ -34,9 +34,9 @@ fun Episode.toDbEpisode(): DbEpisode = EpisodeImpl().also {
     it.scanlator = scanlator
     it.seen = seen
     it.bookmark = bookmark
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     it.fillermark = fillermark
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
     it.last_second_seen = lastSecondSeen
     it.total_seconds = totalSeconds
     it.date_fetch = dateFetch

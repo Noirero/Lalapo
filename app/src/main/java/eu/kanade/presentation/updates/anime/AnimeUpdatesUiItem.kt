@@ -262,9 +262,9 @@ private fun AnimeUpdatesUiItem(
                         update.episodeName,
                         null,
                         update.scanlator,
-                        // AM (CUSTOM) -->
+                        // AM (CUSTOM_INFORMATION) -->
                         update.ogAnimeTitle,
-                        // <-- AM (CUSTOM)
+                        // <-- AM (CUSTOM_INFORMATION)
                         animeSourceManager.getOrStub(update.sourceId),
                     )
                 }

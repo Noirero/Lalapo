@@ -100,10 +100,10 @@ class LibraryPreferences(
     fun filterBookmarkedAnime() =
         preferenceStore.getEnum("pref_filter_animelib_bookmarked_v2", TriState.DISABLED)
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     fun filterFillermarkedAnime() =
         preferenceStore.getEnum("pref_filter_animelib_fillermarked_v2", TriState.DISABLED)
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     fun filterCompletedAnime() =
         preferenceStore.getEnum("pref_filter_animelib_completed_v2", TriState.DISABLED)
@@ -138,10 +138,10 @@ class LibraryPreferences(
     fun filterEpisodeByBookmarked() =
         preferenceStore.getLong("default_episode_filter_by_bookmarked", Anime.SHOW_ALL)
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     fun filterEpisodeByFillermarked() =
         preferenceStore.getLong("default_episode_filter_by_fillermarked", Anime.SHOW_ALL)
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     // and upload date
     fun sortEpisodeBySourceOrNumber() = preferenceStore.getLong(
@@ -163,9 +163,9 @@ class LibraryPreferences(
         filterEpisodeBySeen().set(anime.unseenFilterRaw)
         filterEpisodeByDownloaded().set(anime.downloadedFilterRaw)
         filterEpisodeByBookmarked().set(anime.bookmarkedFilterRaw)
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         filterEpisodeByFillermarked().set(anime.fillermarkedFilterRaw)
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
         sortEpisodeBySourceOrNumber().set(anime.sorting)
         displayEpisodeByNameOrNumber().set(anime.displayMode)
         sortEpisodeByAscendingOrDescending().set(
@@ -189,10 +189,10 @@ class LibraryPreferences(
         ToggleSeen,
         ToggleBookmark,
 
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         ToggleFillermark,
 
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
         Download,
         Disabled,
     }

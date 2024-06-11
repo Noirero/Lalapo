@@ -19,9 +19,9 @@ class AnimeBackupCreator(
     private val handler: AnimeDatabaseHandler = Injekt.get(),
     private val getCategories: GetAnimeCategories = Injekt.get(),
     private val getHistory: GetAnimeHistory = Injekt.get(),
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     private val getCustomAnimeInfo: GetCustomAnimeInfo = Injekt.get(),
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 ) {
 
     suspend fun backupAnimes(animes: List<Anime>, options: BackupOptions): List<BackupAnime> {
@@ -33,9 +33,9 @@ class AnimeBackupCreator(
     private suspend fun backupAnime(anime: Anime, options: BackupOptions): BackupAnime {
         // Entry for this anime
         val animeObject = anime.toBackupAnime(
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             if (options.customInfo) getCustomAnimeInfo.get(anime.id) else null,
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
         )
 
         if (options.episodes) {
@@ -85,14 +85,14 @@ class AnimeBackupCreator(
 private fun Anime.toBackupAnime(customAnimeInfo: CustomAnimeInfo?) =
     BackupAnime(
         url = this.url,
-        // AM (CUSTOM) -->
+        // AM (CUSTOM_INFORMATION) -->
         title = this.ogTitle,
         artist = this.ogArtist,
         author = this.ogAuthor,
         description = this.ogDescription,
         genre = this.ogGenre.orEmpty(),
         status = this.ogStatus.toInt(),
-        // <-- AM (CUSTOM)
+        // <-- AM (CUSTOM_INFORMATION)
         thumbnailUrl = this.thumbnailUrl,
         favorite = this.favorite,
         source = this.source,
@@ -105,7 +105,7 @@ private fun Anime.toBackupAnime(customAnimeInfo: CustomAnimeInfo?) =
         // AM (SYNC) -->
         version = this.version,
         // <-- AM (SYNC)
-    ) // AM (CUSTOM) -->
+    ) // AM (CUSTOM_INFORMATION) -->
         .also { backupAnime ->
             customAnimeInfo?.let {
                 backupAnime.customTitle = it.title
@@ -116,4 +116,4 @@ private fun Anime.toBackupAnime(customAnimeInfo: CustomAnimeInfo?) =
                 backupAnime.customStatus = it.status?.toInt() ?: 0
             }
         }
-// <-- AM (CUSTOM)
+// <-- AM (CUSTOM_INFORMATION)

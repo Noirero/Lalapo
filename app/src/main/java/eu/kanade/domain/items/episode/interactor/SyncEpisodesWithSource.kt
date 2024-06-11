@@ -117,9 +117,9 @@ class SyncEpisodesWithSource(
                         downloadManager.isEpisodeDownloaded(
                             dbEpisode.name,
                             dbEpisode.scanlator,
-                            // AM (CUSTOM) -->
+                            // AM (CUSTOM_INFORMATION) -->
                             anime.ogTitle,
-                            // <-- AM (CUSTOM)
+                            // <-- AM (CUSTOM_INFORMATION)
                             anime.source,
                         )
 

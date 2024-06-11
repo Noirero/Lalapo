@@ -125,9 +125,9 @@ class PlayerActivity : BaseActivity() {
 
     private val storageManager: StorageManager = Injekt.get()
 
-    // AM (DISCORD) -->
+    // AM (DISCORD_RPC) -->
     private val connectionPreferences: ConnectionPreferences = Injekt.get()
-    // <-- AM (DISCORD)
+    // <-- AM (DISCORD_RPC)
 
     companion object {
         fun newIntent(
@@ -969,9 +969,9 @@ class PlayerActivity : BaseActivity() {
         }
         abandonAudioFocus()
         super.onDestroy()
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         updateDiscordRPC(exitingPlayer = true)
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
     }
 
     @Deprecated("Deprecated in Java")
@@ -1623,9 +1623,9 @@ class PlayerActivity : BaseActivity() {
         }
         refreshUi()
 
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         updateDiscordRPC(exitingPlayer = false)
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
     }
 
     private fun parseVideoUrl(videoUrl: String?): String? {
@@ -1971,7 +1971,7 @@ class PlayerActivity : BaseActivity() {
         }
     }
 
-    // AM (DISCORD) -->
+    // AM (DISCORD_RPC) -->
     private fun updateDiscordRPC(exitingPlayer: Boolean) {
         DiscordRPCService.discordScope.launchIO {
             if (connectionPreferences.enableDiscordRPC().get()) {
@@ -1981,9 +1981,9 @@ class PlayerActivity : BaseActivity() {
                         PlayerData(
                             incognitoMode = viewModel.currentSource.isNsfw() || viewModel.incognitoMode,
                             animeId = viewModel.currentAnime?.id,
-                            // AM (CUSTOM) -->
+                            // AM (CUSTOM_INFORMATION) -->
                             animeTitle = viewModel.currentAnime?.ogTitle,
-                            // <-- AM (CUSTOM)
+                            // <-- AM (CUSTOM_INFORMATION)
                             episodeNumber = viewModel.currentEpisode?.episode_number?.toString(),
                             thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
                         ),
@@ -1996,5 +1996,5 @@ class PlayerActivity : BaseActivity() {
             }
         }
     }
-    // <-- AM (DISCORD)
+    // <-- AM (DISCORD_RPC)
 }

@@ -79,7 +79,7 @@ fun Context.openInBrowser(uri: Uri, forceDefaultBrowser: Boolean = false) {
     }
 }
 
-// AM (DISCORD) -->
+// AM (DISCORD_RPC) -->
 fun Context.openDiscordLoginActivity() {
     try {
         val intent = Intent(this, DiscordLoginActivity::class.java)
@@ -88,7 +88,7 @@ fun Context.openDiscordLoginActivity() {
         toast(e.message)
     }
 }
-// <-- AM (DISCORD)
+// <-- AM (DISCORD_RPC)
 
 private fun Context.defaultBrowserPackageName(): String? {
     val browserIntent = Intent(Intent.ACTION_VIEW, "http://".toUri())

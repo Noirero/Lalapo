@@ -1,4 +1,4 @@
-// AM (CUSTOM) -->
+// AM (CUSTOM_INFORMATION) -->
 package eu.kanade.tachiyomi.util
 
 import android.content.Context
@@ -38,4 +38,4 @@ fun Context.getResourceColor(@AttrRes resource: Int, alphaFactor: Float = 1f): I
 
     return color
 }
-// <-- AM (CUSTOM)
+// <-- AM (CUSTOM_INFORMATION)

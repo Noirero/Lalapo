@@ -18,9 +18,9 @@ interface EpisodeRepository {
 
     suspend fun getBookmarkedEpisodesByAnimeId(animeId: Long): List<Episode>
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     suspend fun getFillermarkedEpisodesByAnimeId(animeId: Long): List<Episode>
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     suspend fun getEpisodeById(id: Long): Episode?
 

@@ -70,11 +70,11 @@ data class RecentsTab(
         )
 
         LaunchedEffect(Unit) {
-            // AM (DISCORD) -->
+            // AM (DISCORD_RPC) -->
             with(DiscordRPCService) {
                 discordScope.launchIO { setScreen(context.applicationContext, DiscordScreen.RECENTS) }
             }
-            // <-- AM (DISCORD)
+            // <-- AM (DISCORD_RPC)
             (context as? MainActivity)?.ready = true
         }
     }

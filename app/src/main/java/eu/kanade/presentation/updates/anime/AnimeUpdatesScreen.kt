@@ -44,9 +44,9 @@ fun AnimeUpdateScreen(
     onUpdateLibrary: () -> Boolean,
     onDownloadEpisode: (List<AnimeUpdatesItem>, EpisodeDownloadAction) -> Unit,
     onMultiBookmarkClicked: (List<AnimeUpdatesItem>, bookmark: Boolean) -> Unit,
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     onMultiFillermarkClicked: (List<AnimeUpdatesItem>, fillermark: Boolean) -> Unit,
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
     onMultiMarkAsSeenClicked: (List<AnimeUpdatesItem>, seen: Boolean) -> Unit,
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onUpdateSelected: (AnimeUpdatesItem, Boolean, Boolean, Boolean) -> Unit,
@@ -60,9 +60,9 @@ fun AnimeUpdateScreen(
                 selected = state.selected,
                 onDownloadEpisode = onDownloadEpisode,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
-                // AM (FILLER) -->
+                // AM (FILLERMARK) -->
                 onMultiFillermarkClicked = onMultiFillermarkClicked,
-                // <-- AM (FILLER)
+                // <-- AM (FILLERMARK)
                 onMultiMarkAsSeenClicked = onMultiMarkAsSeenClicked,
                 onMultiDeleteClicked = onMultiDeleteClicked,
                 onOpenEpisode = onOpenEpisode,
@@ -120,9 +120,9 @@ private fun AnimeUpdatesBottomBar(
     selected: List<AnimeUpdatesItem>,
     onDownloadEpisode: (List<AnimeUpdatesItem>, EpisodeDownloadAction) -> Unit,
     onMultiBookmarkClicked: (List<AnimeUpdatesItem>, bookmark: Boolean) -> Unit,
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     onMultiFillermarkClicked: (List<AnimeUpdatesItem>, fillermark: Boolean) -> Unit,
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
     onMultiMarkAsSeenClicked: (List<AnimeUpdatesItem>, seen: Boolean) -> Unit,
     onMultiDeleteClicked: (List<AnimeUpdatesItem>) -> Unit,
     onOpenEpisode: (AnimeUpdatesItem, altPlayer: Boolean) -> Unit,
@@ -137,14 +137,14 @@ private fun AnimeUpdatesBottomBar(
         onRemoveBookmarkClicked = {
             onMultiBookmarkClicked.invoke(selected, false)
         }.takeIf { selected.fastAll { it.update.bookmark } },
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         onFillermarkClicked = {
             onMultiFillermarkClicked.invoke(selected, true)
         }.takeIf { selected.fastAny { !it.update.fillermark } },
         onRemoveFillermarkClicked = {
             onMultiFillermarkClicked.invoke(selected, false)
         }.takeIf { selected.fastAll { it.update.fillermark } },
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
         onMarkAsViewedClicked = {
             onMultiMarkAsSeenClicked(selected, true)
         }.takeIf { selected.fastAny { !it.update.seen } },

@@ -205,7 +205,7 @@
         </activity>
         <!--AM (SYNC_DRIVE) -->
 
-        <!--AM (DISCORD) -->
+        <!--AM (DISCORD_RPC) -->
         <activity android:label="Discord Login"
             android:name=".ui.setting.connection.DiscordLoginActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -235,7 +235,7 @@
                     android:path="/accounts/oauth/callback"/>
             </intent-filter>
         </service>
-        <!--AM (DISCORD) -->
+        <!--AM (DISCORD_RPC) -->
 
         <receiver
             android:name=".data.notification.NotificationReceiver"

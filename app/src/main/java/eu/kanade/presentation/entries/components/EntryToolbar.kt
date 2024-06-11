@@ -45,9 +45,9 @@ fun EntryToolbar(
     onClickRefresh: () -> Unit,
     onClickMigrate: (() -> Unit)?,
     onClickSettings: (() -> Unit)?,
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     onClickEditInfo: (() -> Unit)?,
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
     // Anime only
     changeAnimeSkipIntro: (() -> Unit)?,
     // For action mode
@@ -163,7 +163,7 @@ fun EntryToolbar(
                                         ),
                                     )
                                 }
-                                // AM (CUSTOM) -->
+                                // AM (CUSTOM_INFORMATION) -->
                                 if (onClickEditInfo != null) {
                                     add(
                                         AppBar.OverflowAction(
@@ -172,7 +172,7 @@ fun EntryToolbar(
                                         ),
                                     )
                                 }
-                                // <-- AM (CUSTOM)
+                                // <-- AM (CUSTOM_INFORMATION)
                                 if (onClickSettings != null) {
                                     add(
                                         AppBar.OverflowAction(

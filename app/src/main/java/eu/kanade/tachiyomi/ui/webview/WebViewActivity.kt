@@ -71,23 +71,21 @@ class WebViewActivity : BaseActivity() {
             )
         }
 
-        // AM (DISCORD) -->
+        // AM (DISCORD_RPC) -->
         with(DiscordRPCService) {
             discordScope.launchIO { setScreen(this@WebViewActivity.applicationContext, DiscordScreen.WEBVIEW) }
         }
-        // <-- AM (DISCORD)
+        // <-- AM (DISCORD_RPC)
     }
 
-    // AM (DISCORD) -->
+    // AM (DISCORD_RPC) -->
     override fun onDestroy() {
         super.onDestroy()
-        // AM (DISCORD) -->
         with(DiscordRPCService) {
             discordScope.launchIO { setScreen(this@WebViewActivity.applicationContext, lastUsedScreen) }
         }
-        // <-- AM (DISCORD)
     }
-    // <-- AM (DISCORD)
+    // <-- AM (DISCORD_RPC)
 
     override fun onProvideAssistContent(outContent: AssistContent) {
         super.onProvideAssistContent(outContent)

@@ -166,9 +166,9 @@ class AppModule(val app: Application) : InjektModule {
 
             get<AnimeDownloadManager>()
 
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             get<GetCustomAnimeInfo>()
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
         }
     }
 }

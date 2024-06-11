@@ -42,7 +42,7 @@ data class BackupAnime(
     @ProtoNumber(108) var version: Long = 0,
     // <-- AM (SYNC)
 
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     // Bump values by 200
     @ProtoNumber(200) var customStatus: Int = 0,
     @ProtoNumber(201) var customTitle: String? = null,
@@ -50,19 +50,19 @@ data class BackupAnime(
     @ProtoNumber(203) var customAuthor: String? = null,
     @ProtoNumber(204) var customDescription: String? = null,
     @ProtoNumber(205) var customGenre: List<String>? = null,
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 ) {
     fun getAnimeImpl(): Anime {
         return Anime.create().copy(
             url = this@BackupAnime.url,
-            // AM (CUSTOM) -->
+            // AM (CUSTOM_INFORMATION) -->
             ogTitle = this@BackupAnime.title,
             ogArtist = this@BackupAnime.artist,
             ogAuthor = this@BackupAnime.author,
             ogDescription = this@BackupAnime.description,
             ogGenre = this@BackupAnime.genre,
             ogStatus = this@BackupAnime.status.toLong(),
-            // <-- AM (CUSTOM)
+            // <-- AM (CUSTOM_INFORMATION)
             thumbnailUrl = this@BackupAnime.thumbnailUrl,
             favorite = this@BackupAnime.favorite,
             source = this@BackupAnime.source,
@@ -78,7 +78,7 @@ data class BackupAnime(
         )
     }
 
-    // AM (CUSTOM) -->
+    // AM (CUSTOM_INFORMATION) -->
     fun getCustomAnimeInfo(): CustomAnimeInfo? {
         if (customTitle != null ||
             customArtist != null ||
@@ -99,5 +99,5 @@ data class BackupAnime(
         }
         return null
     }
-    // <-- AM (CUSTOM)
+    // <-- AM (CUSTOM_INFORMATION)
 }

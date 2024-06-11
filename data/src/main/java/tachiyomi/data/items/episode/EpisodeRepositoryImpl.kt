@@ -23,9 +23,9 @@ class EpisodeRepositoryImpl(
                         episode.scanlator,
                         episode.seen,
                         episode.bookmark,
-                        // AM (FILLER) -->
+                        // AM (FILLERMARK) -->
                         episode.fillermark,
-                        // <-- AM (FILLER)
+                        // <-- AM (FILLERMARK)
                         episode.lastSecondSeen,
                         episode.totalSeconds,
                         episode.episodeNumber,
@@ -64,9 +64,9 @@ class EpisodeRepositoryImpl(
                     scanlator = episodeUpdate.scanlator,
                     seen = episodeUpdate.seen,
                     bookmark = episodeUpdate.bookmark,
-                    // AM (FILLER) -->
+                    // AM (FILLERMARK) -->
                     fillermark = episodeUpdate.fillermark,
-                    // <-- AM (FILLER)
+                    // <-- AM (FILLERMARK)
                     lastSecondSeen = episodeUpdate.lastSecondSeen,
                     totalSeconds = episodeUpdate.totalSeconds,
                     episodeNumber = episodeUpdate.episodeNumber,
@@ -104,11 +104,11 @@ class EpisodeRepositoryImpl(
         }
     }
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     override suspend fun getFillermarkedEpisodesByAnimeId(animeId: Long): List<Episode> {
         return handler.awaitList { episodesQueries.getFillermarkedEpisodesByAnimeId(animeId, ::mapEpisode) }
     }
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     override suspend fun getEpisodeById(id: Long): Episode? {
         return handler.awaitOneOrNull { episodesQueries.getEpisodeById(id, ::mapEpisode) }
@@ -141,9 +141,9 @@ class EpisodeRepositoryImpl(
         scanlator: String?,
         seen: Boolean,
         bookmark: Boolean,
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         fillermark: Boolean,
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
         lastSecondSeen: Long,
         totalSeconds: Long,
         episodeNumber: Double,
@@ -160,9 +160,9 @@ class EpisodeRepositoryImpl(
         animeId = animeId,
         seen = seen,
         bookmark = bookmark,
-        // AM (FILLER) -->
+        // AM (FILLERMARK) -->
         fillermark = fillermark,
-        // <-- AM (FILLER)
+        // <-- AM (FILLERMARK)
         lastSecondSeen = lastSecondSeen,
         totalSeconds = totalSeconds,
         dateFetch = dateFetch,

@@ -112,9 +112,9 @@ class AnimeUpdatesScreenModel(
                 val downloaded = downloadManager.isEpisodeDownloaded(
                     update.episodeName,
                     update.scanlator,
-                    // AM (CUSTOM) -->
+                    // AM (CUSTOM_INFORMATION) -->
                     update.ogAnimeTitle,
-                    // <-- AM (CUSTOM)
+                    // <-- AM (CUSTOM_INFORMATION)
                     update.sourceId,
                 )
                 val downloadState = when {
@@ -235,7 +235,7 @@ class AnimeUpdatesScreenModel(
         toggleAllSelection(false)
     }
 
-    // AM (FILLER) -->
+    // AM (FILLERMARK) -->
     /**
      * Fillermarks the given list of episodes.
      * @param updates the list of episodes to fillermark.
@@ -249,7 +249,7 @@ class AnimeUpdatesScreenModel(
         }
         toggleAllSelection(false)
     }
-    // <-- AM (FILLER)
+    // <-- AM (FILLERMARK)
 
     /**
      * Downloads the given list of episodes with the manager.
