@@ -4,60 +4,32 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import tachiyomi.domain.items.chapter.model.Chapter
-import tachiyomi.domain.items.chapter.service.calculateChapterGap
-import tachiyomi.domain.items.chapter.service.missingChaptersCount
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.service.calculateEpisodeGap
+import tachiyomi.domain.items.episode.service.missingEpisodesCount
 
 @Execution(ExecutionMode.CONCURRENT)
 class MissingItemsTest {
 
     @Test
-    fun `missingChaptersCount returns 0 when empty list`() {
-        emptyList<Double>().missingChaptersCount() shouldBe 0
+    fun `missingEpisodesCount returns 0 when empty list`() {
+        emptyList<Double>().missingEpisodesCount() shouldBe 0
     }
 
     @Test
-    fun `missingChaptersCount returns 0 when all unknown item numbers`() {
-        listOf(-1.0, -1.0, -1.0).missingChaptersCount() shouldBe 0
+    fun `missingEpisodesCount returns 0 when all unknown item numbers`() {
+        listOf(-1.0, -1.0, -1.0).missingEpisodesCount() shouldBe 0
     }
 
     @Test
-    fun `missingChaptersCount handles repeated base item numbers`() {
-        listOf(1.0, 1.0, 1.1, 1.5, 1.6, 1.99).missingChaptersCount() shouldBe 0
+    fun `missingEpisodesCount handles repeated base item numbers`() {
+        listOf(1.0, 1.0, 1.1, 1.5, 1.6, 1.99).missingEpisodesCount() shouldBe 0
     }
 
     @Test
-    fun `missingChaptersCount returns number of missing items`() {
-        listOf(-1.0, 1.0, 2.0, 2.2, 4.0, 6.0, 10.0, 10.0).missingChaptersCount() shouldBe 5
+    fun `missingEpisodesCount returns number of missing items`() {
+        listOf(-1.0, 1.0, 2.0, 2.2, 4.0, 6.0, 10.0, 10.0).missingEpisodesCount() shouldBe 5
     }
-
-    @Test
-    fun `calculateChapterGap returns difference`() {
-        calculateChapterGap(chapter(10.0), chapter(9.0)) shouldBe 0f
-        calculateChapterGap(chapter(10.0), chapter(8.0)) shouldBe 1f
-        calculateChapterGap(chapter(10.0), chapter(8.5)) shouldBe 1f
-        calculateChapterGap(chapter(10.0), chapter(1.1)) shouldBe 8f
-
-        calculateChapterGap(10.0, 9.0) shouldBe 0f
-        calculateChapterGap(10.0, 8.0) shouldBe 1f
-        calculateChapterGap(10.0, 8.5) shouldBe 1f
-        calculateChapterGap(10.0, 1.1) shouldBe 8f
-    }
-
-    @Test
-    fun `calculateChapterGap returns 0 if either are not valid chapter numbers`() {
-        calculateChapterGap(chapter(-1.0), chapter(10.0)) shouldBe 0
-        calculateChapterGap(chapter(99.0), chapter(-1.0)) shouldBe 0
-
-        calculateChapterGap(-1.0, 10.0) shouldBe 0
-        calculateChapterGap(99.0, -1.0) shouldBe 0
-    }
-
-    private fun chapter(number: Double) = Chapter.create().copy(
-        chapterNumber = number,
-    )
 
     @Test
     fun `calculateEpisodeGap returns difference`() {

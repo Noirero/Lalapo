@@ -13,7 +13,7 @@ fun List<Double>.missingEpisodesCount(): Int {
         .filter { it != -1.0 }
         // Convert to integers, as we cannot check if 16.5 is missing
         .map(Double::toInt)
-        // Only keep unique chapters so that -1 or 16 are not counted multiple times
+        // Only keep unique episodes so that -1 or 16 are not counted multiple times
         .distinct()
         .sorted()
 
@@ -22,13 +22,13 @@ fun List<Double>.missingEpisodesCount(): Int {
     }
 
     var missingEpisodesCount = 0
-    var previousEpisode = 0 // The actual chapter number, not the array index
+    var previousEpisode = 0 // The actual episode number, not the array index
 
-    // We go from 0 to lastChapter - Make sure to use the current index instead of the value
+    // We go from 0 to lastEpisode - Make sure to use the current index instead of the value
     for (i in items.indices) {
         val currentEpisode = items[i]
         if (currentEpisode > previousEpisode + 1) {
-            // Add the amount of missing chapters
+            // Add the amount of missing episodes
             missingEpisodesCount += currentEpisode - previousEpisode - 1
         }
         previousEpisode = currentEpisode

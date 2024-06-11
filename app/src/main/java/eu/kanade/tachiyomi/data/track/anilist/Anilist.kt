@@ -14,7 +14,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
 
@@ -190,7 +189,7 @@ class Anilist(id: Long) :
         api.deleteLibAnime(track)
     }
 
-    override suspend fun bind(track: AnimeTrack, hasReadChapters: Boolean): AnimeTrack {
+    override suspend fun bind(track: AnimeTrack, hasSeenEpisodes: Boolean): AnimeTrack {
         val remoteTrack = api.findLibAnime(track, getUsername().toInt())
         return if (remoteTrack != null) {
             track.copyPersonalFrom(remoteTrack)
@@ -198,13 +197,13 @@ class Anilist(id: Long) :
 
             if (track.status != COMPLETED) {
                 val isRereading = track.status == REPEATING_ANIME
-                track.status = if (!isRereading && hasReadChapters) WATCHING else track.status
+                track.status = if (!isRereading && hasSeenEpisodes) WATCHING else track.status
             }
 
             update(track)
         } else {
             // Set default fields if it's not found in the list
-            track.status = if (hasReadChapters) WATCHING else PLANNING_ANIME
+            track.status = if (hasSeenEpisodes) WATCHING else PLANNING_ANIME
             track.score = 0.0
             add(track)
         }

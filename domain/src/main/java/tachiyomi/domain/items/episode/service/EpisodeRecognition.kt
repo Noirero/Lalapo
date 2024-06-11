@@ -36,7 +36,7 @@ object EpisodeRecognition {
             return episodeNumber
         }
 
-        // Get chapter title with lower case
+        // Get episode title with lower case
         var name = episodeName.lowercase()
 
         // Remove anime title from episode title.
@@ -63,14 +63,14 @@ object EpisodeRecognition {
     /**
      * Check if episode number is found and return it
      * @param match result of regex
-     * @return chapter number if found else null
+     * @return episode number if found else null
      */
     private fun getEpisodeNumberFromMatch(match: MatchResult): Double {
         return match.let {
             val initial = it.groups[1]?.value?.toDouble()!!
-            val subChapterDecimal = it.groups[2]?.value
-            val subChapterAlpha = it.groups[3]?.value
-            val addition = checkForDecimal(subChapterDecimal, subChapterAlpha)
+            val subEpisodeDecimal = it.groups[2]?.value
+            val subEpisodeAlpha = it.groups[3]?.value
+            val addition = checkForDecimal(subEpisodeDecimal, subEpisodeAlpha)
             initial.plus(addition)
         }
     }

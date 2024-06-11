@@ -251,7 +251,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * Normally it's not needed to override this method.
      *
      * @param anime the anime to update.
-     * @return the chapters for the manga.
+     * @return the episodes for the anime.
      * @throws LicensedEntryItemsException if a anime is licensed and therefore no episodes are available.
      */
     @Suppress("DEPRECATION")
@@ -368,7 +368,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * Returns the request for getting the url to the source image. Override only if it's needed to
      * override the url, send different headers or request method like POST.
      *
-     * @param video the chapter whose page list has to be fetched
+     * @param video the episode whose video list has to be fetched
      */
     protected open fun videoUrlRequest(video: Video): Request {
         return GET(video.url, headers)
