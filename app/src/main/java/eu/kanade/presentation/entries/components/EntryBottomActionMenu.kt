@@ -102,8 +102,9 @@ fun EntryBottomActionMenu(
         ) {
             val haptic = LocalHapticFeedback.current
             // AM (FILLERMARK) -->
-            val confirm =
-                remember { mutableStateListOf(false, false, false, false, false, false, false, false, false, false, false) }
+            val confirm = remember {
+                mutableStateListOf(false, false, false, false, false, false, false, false, false, false, false)
+            }
             val confirmRange = 0..<11
             // <-- AM (FILLERMARK)
             var resetJob: Job? = remember { null }
