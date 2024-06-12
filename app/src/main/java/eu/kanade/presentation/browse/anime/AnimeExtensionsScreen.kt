@@ -42,7 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
@@ -78,10 +79,6 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 fun AnimeExtensionScreen(
     state: AnimeExtensionsScreenModel.State,
     searchQuery: String?,
-    // AM (BROWSE) -->
-    navigator: Navigator,
-    onChangeSearchQuery: (String?) -> Unit,
-    // <-- AM (BROWSE)
     onLongClickItem: (AnimeExtension) -> Unit,
     onClickItemCancel: (AnimeExtension) -> Unit,
     onOpenWebView: (AnimeExtension.Available) -> Unit,
@@ -92,9 +89,14 @@ fun AnimeExtensionScreen(
     onOpenExtension: (AnimeExtension.Installed) -> Unit,
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
-) {
     // AM (BROWSE) -->
+    toSourcesScreen: () -> Unit,
+    onChangeSearchQuery: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val navigator = LocalNavigator.currentOrThrow
     Scaffold(
+        modifier = modifier,
         topBar = { scrollBehavior ->
             SearchToolbar(
                 titleContent = { AppBarTitle(stringResource(MR.strings.label_extensions)) },
@@ -115,14 +117,15 @@ fun AnimeExtensionScreen(
                     }
                 },
                 scrollBehavior = scrollBehavior,
-                navigateUp = navigator::pop,
+                navigateUp = { toSourcesScreen() },
             )
         },
     ) { contentPadding ->
-        // <-- AM (BROWSE)
         PullRefresh(
             refreshing = state.isRefreshing,
             onRefresh = onRefresh,
+            indicatorPadding = contentPadding,
+            // <-- AM (BROWSE)
             enabled = { !state.isLoading },
         ) {
             when {

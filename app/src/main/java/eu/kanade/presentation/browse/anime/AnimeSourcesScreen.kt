@@ -28,12 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.anime.model.installedExtension
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
-import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreen
 import eu.kanade.tachiyomi.ui.browse.anime.extension.details.AnimeExtensionDetailsScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesFilterScreen
@@ -61,16 +62,17 @@ import tachiyomi.source.local.entries.anime.LocalAnimeSource
 @Composable
 fun AnimeSourcesScreen(
     state: AnimeSourcesScreenModel.State,
-    // AM (BROWSE) -->
-    navigator: Navigator,
-    updateCount: Int,
-    // <-- AM (BROWSE)
     onClickItem: (AnimeSource, Listing) -> Unit,
     onClickPin: (AnimeSource) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
-) {
     // AM (BROWSE) -->
+    toExtensionsScreen: () -> Unit,
+    updateCount: Int,
+    modifier: Modifier = Modifier,
+) {
+    val navigator = LocalNavigator.currentOrThrow
     Scaffold(
+        modifier = modifier,
         topBar = { scrollBehavior ->
             AppBar(
                 titleContent = { AppBarTitle(stringResource(MR.strings.browse)) },
@@ -115,7 +117,7 @@ fun AnimeSourcesScreen(
                         ExtendedFloatingActionButton(
                             text = { Text(text = stringResource(buttonText)) },
                             icon = { Icon(imageVector = buttonIcon, contentDescription = null) },
-                            onClick = { navigator.push(AnimeExtensionsScreen()) },
+                            onClick = { toExtensionsScreen() },
                             expanded = !(extensionsListState.isScrollingDown()) || updateCount != 0,
                         )
                     },
