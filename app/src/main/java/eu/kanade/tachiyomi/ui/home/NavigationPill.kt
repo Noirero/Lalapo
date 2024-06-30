@@ -117,14 +117,14 @@ fun NavigationPill(
                         },
                         onDragEnd = {
                             val newIndex = when {
-                                (flickOffsetX < 0F) -> currentTabIndex - 1
-                                (flickOffsetX > 0F) -> currentTabIndex + 1
-                                else -> currentTabIndex
+                                (flickOffsetX < 0F) -> oldIndex - 1
+                                (flickOffsetX > 0F) -> oldIndex + 1
+                                else -> oldIndex
                             }
 
                             flickOffsetX = 0F
 
-                            updateTab(minOf(maxOf(newIndex, 0), 4))
+                            updateTab(minOf(maxOf(newIndex, 0), tabs.size - 1))
                         },
                     )
                 },
