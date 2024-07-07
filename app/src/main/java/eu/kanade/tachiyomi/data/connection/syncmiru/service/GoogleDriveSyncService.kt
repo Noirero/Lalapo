@@ -20,11 +20,6 @@ import com.google.api.services.drive.model.File
 import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupSerializer
-import java.io.IOException
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
-import java.util.zip.GZIPInputStream
-import java.util.zip.GZIPOutputStream
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -35,6 +30,11 @@ import tachiyomi.core.util.system.logcat
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.IOException
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 import logcat.logcat as log
 
 class GoogleDriveSyncService(context: Context, json: Json, syncPreferences: SyncPreferences) : SyncService(
