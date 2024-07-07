@@ -133,10 +133,10 @@ object SettingsSyncmiruScreen : SearchableSettings {
     private fun getGoogleDrivePurge(googleDriveRefreshToken: String): Preference.PreferenceItem.TextPreference {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
-        val googleDriveSync = remember { GoogleDriveSyncService(context) }
         var showPurgeDialog by remember { mutableStateOf(false) }
 
         if (showPurgeDialog) {
+            val googleDriveSync = remember { GoogleDriveSyncService(context) }
             PurgeConfirmationDialog(
                 onConfirm = {
                     showPurgeDialog = false
