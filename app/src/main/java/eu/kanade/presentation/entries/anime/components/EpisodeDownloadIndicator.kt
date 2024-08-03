@@ -33,6 +33,8 @@ import eu.kanade.presentation.components.IndicatorStrokeWidth
 import eu.kanade.presentation.components.commonClickable
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
+import java.math.BigDecimal
+import java.math.RoundingMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 import tachiyomi.presentation.core.i18n.stringResource
@@ -200,7 +202,7 @@ private fun DownloadedIndicator(
     // AM (FILE_SIZE) -->
     if (fileSize != null) {
         Text(
-            text = "${fileSize / 1024 / 1024}MB",
+            text = formatFileSize(fileSize),
             maxLines = 1,
             style = MaterialTheme.typography.bodyMedium
                 .copy(color = MaterialTheme.colorScheme.primary, fontSize = 12.sp),
@@ -236,6 +238,18 @@ private fun DownloadedIndicator(
         }
     }
 }
+
+// AM (FILE_SIZE) -->
+private fun formatFileSize(fileSize: Long): String {
+    val megaByteSize = fileSize / 1000.0 / 1000.0
+    return if (megaByteSize > 900){
+        val gigaByteSize = megaByteSize / 1000.0
+        "${BigDecimal(gigaByteSize).setScale(2, RoundingMode.HALF_EVEN)} GB"
+    } else {
+        "${BigDecimal(megaByteSize).setScale(0, RoundingMode.HALF_EVEN)} MB"
+    }
+}
+// <-- AM (FILE_SIZE)
 
 @Composable
 private fun ErrorIndicator(
