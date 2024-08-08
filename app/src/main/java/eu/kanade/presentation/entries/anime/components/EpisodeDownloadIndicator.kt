@@ -33,12 +33,12 @@ import eu.kanade.presentation.components.IndicatorStrokeWidth
 import eu.kanade.presentation.components.commonClickable
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
-import java.math.BigDecimal
-import java.math.RoundingMode
-import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import java.math.BigDecimal
+import java.math.RoundingMode
+import tachiyomi.i18n.MR
 
 enum class EpisodeDownloadAction {
     START,
@@ -242,7 +242,7 @@ private fun DownloadedIndicator(
 // AM (FILE_SIZE) -->
 private fun formatFileSize(fileSize: Long): String {
     val megaByteSize = fileSize / 1000.0 / 1000.0
-    return if (megaByteSize > 900){
+    return if (megaByteSize > 900) {
         val gigaByteSize = megaByteSize / 1000.0
         "${BigDecimal(gigaByteSize).setScale(2, RoundingMode.HALF_EVEN)} GB"
     } else {
