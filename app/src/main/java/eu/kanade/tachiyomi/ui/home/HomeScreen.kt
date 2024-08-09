@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -33,8 +32,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import soup.compose.material.motion.animation.materialFadeThroughIn
-import soup.compose.material.motion.animation.materialFadeThroughOut
+import soup.compose.material.motion.animation.materialSharedAxisX
 import tachiyomi.presentation.core.components.material.Scaffold
 import uy.kohesive.injekt.injectLazy
 
@@ -44,7 +42,7 @@ object HomeScreen : Screen() {
     private val openTabEvent = Channel<Tab>()
     private val showBottomNavEvent = Channel<Boolean>()
 
-    private const val TabFadeDuration = 500
+    private const val TabFadeDuration = 300
     private const val TabNavigatorKey = "HomeTabs"
 
     private val uiPreferences: UiPreferences by injectLazy()
@@ -69,11 +67,18 @@ object HomeScreen : Screen() {
             key = TabNavigatorKey,
         ) { tabNavigator ->
             // AM (NAVIGATION_PILL) -->
-            val currTabIndex = tabNavigator.current.options.index.toInt()
-            var currentTabIndex by remember { mutableIntStateOf(currTabIndex) }
-            val setCurrentTabIndex: (Int) -> Unit = { currentTabIndex = it }
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
+                val currTabIndex = tabNavigator.current.options.index.toInt()
+                var currentTabIndex by remember { mutableIntStateOf(currTabIndex) }
+                var oldIndex by remember { mutableIntStateOf(currTabIndex) }
+
+                val isForward = remember(currentTabIndex) {
+                    val forward = oldIndex < currentTabIndex
+                    oldIndex = currentTabIndex
+                    forward
+                }
+                val setCurrentTabIndex: (Int) -> Unit = { currentTabIndex = it }
                 Scaffold(
                     bottomBar = {
                         val bottomNavVisible by produceState(initialValue = true) {
@@ -103,11 +108,11 @@ object HomeScreen : Screen() {
                         AnimatedContent(
                             targetState = tabNavigator.current,
                             transitionSpec = {
-                                materialFadeThroughIn(
-                                    initialScale = 1f,
+                                materialSharedAxisX(
+                                    forward = !isForward,
+                                    slideDistance = 500,
                                     durationMillis = TabFadeDuration,
-                                ) togetherWith
-                                    materialFadeThroughOut(durationMillis = TabFadeDuration)
+                                )
                             },
                             label = "tabContent",
                         ) {
@@ -116,6 +121,21 @@ object HomeScreen : Screen() {
                             }
                         }
                     }
+                    // AM (NAVIGATION_PILL) -->
+                    LaunchedEffect(tabNavigator.current) {
+                        launch {
+                            currentTabIndex = when (tabNavigator.current) {
+                                is AnimeLibraryTab -> 0
+                                // AM (RECENTS) -->
+                                is RecentsTab -> 1
+                                // <-- AM (RECENTS)
+                                is BrowseTab -> 2
+                                is MoreTab -> 3
+                                else -> 0
+                            }
+                        }
+                    }
+                    // <-- AM (NAVIGATION_PILL)
                 }
             }
 
@@ -124,7 +144,6 @@ object HomeScreen : Screen() {
                     librarySearchEvent.receiveAsFlow().collectLatest {
                         when (defaultTab) {
                             AnimeLibraryTab -> AnimeLibraryTab.search(it)
-                            else -> {}
                         }
                     }
                 }
@@ -140,17 +159,6 @@ object HomeScreen : Screen() {
                             // <-- AM (BROWSE)
                             is Tab.More -> MoreTab
                         }
-
-                        // AM (NAVIGATION_PILL) -->
-                        currentTabIndex = when (it) {
-                            is Tab.AnimeLib -> 0
-                            // AM (RECENTS) -->
-                            is Tab.Recents -> 1
-                            // <-- AM (RECENTS)
-                            is Tab.Browse -> 2
-                            is Tab.More -> 3
-                        }
-                        // <-- AM (NAVIGATION_PILL)
 
                         if (it is Tab.AnimeLib && it.animeIdToOpen != null) {
                             navigator.push(AnimeScreen(it.animeIdToOpen))

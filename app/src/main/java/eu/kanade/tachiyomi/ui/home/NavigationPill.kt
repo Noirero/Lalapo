@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -18,7 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.ZeroCornerSize
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -128,21 +129,31 @@ fun NavigationPill(
                         },
                     )
                 },
-            shape = MaterialTheme.shapes.extraLarge.copy(
-                bottomEnd = ZeroCornerSize,
-                bottomStart = ZeroCornerSize,
-            ),
             tonalElevation = 1.4.dp,
         ) {
-            NavigationBarItemBackground(navigationOffsetX, pillItemWidth, pillItemHeight)
+            val topStartCornerSize = remember { Animatable(0f) }
+            val topEndCornerSize = remember { Animatable(28f) }
+            val bottomStartCornerSize = remember { Animatable(0f) }
+            val bottomEndCornerSize = remember { Animatable(28f) }
+
+            NavigationPillItemBackground(
+                pillItemWidth = pillItemWidth,
+                pillItemHeight = pillItemHeight,
+                pillOffsetX = navigationOffsetX,
+                topStartCornerSize = topStartCornerSize.value.dp,
+                topEndCornerSize = topEndCornerSize.value.dp,
+                bottomStartCornerSize = bottomStartCornerSize.value.dp,
+                bottomEndCornerSize = bottomEndCornerSize.value.dp,
+            )
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Row {
                     tabs.fastForEach {
-                        NavigationBarItem(it, updateTab, pillItemWidth, pillItemHeight)
+                        NavigationPillItem(it, updateTab, pillItemWidth, pillItemHeight)
                     }
                 }
 
                 val alpha = remember { Animatable(-1f) }
+                val cornerAnimationSpec: AnimationSpec<Float> = tween(durationMillis = labelFade * 2)
 
                 LaunchedEffect(currentTabIndex) {
                     scope.launchUI {
@@ -152,6 +163,27 @@ fun NavigationPill(
                             alpha.animateTo(0.5f, animationSpec = tween(durationMillis = labelFade))
                         } else {
                             alpha.animateTo(-0.5f, animationSpec = tween(durationMillis = labelFade))
+                        }
+                    }
+
+                    when (currentTabIndex) {
+                        0 -> {
+                            scope.launch { topStartCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { topEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { bottomStartCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { bottomEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
+                        }
+                        tabs.size - 1 -> {
+                            scope.launch { topStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { topEndCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { bottomStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { bottomEndCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
+                        }
+                        else -> {
+                            scope.launch { topStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { topEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { bottomStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
+                            scope.launch { bottomEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
                         }
                     }
                 }
@@ -178,8 +210,6 @@ fun NavigationPill(
                                     alpha.animateTo(0f, animationSpec = tween(durationMillis = labelFade))
                                 }
                             }
-
-                            else -> {}
                         }
                     }
                 }
@@ -203,16 +233,26 @@ fun NavigationPill(
 }
 
 @Composable
-private fun NavigationBarItemBackground(
-    pillOffsetX: Dp,
+private fun NavigationPillItemBackground(
     pillItemWidth: Dp,
     pillItemHeight: Dp,
+    pillOffsetX: Dp,
+    topStartCornerSize: Dp,
+    topEndCornerSize: Dp,
+    bottomStartCornerSize: Dp,
+    bottomEndCornerSize: Dp,
 ) {
     Surface(
         modifier = Modifier
             .offset(x = pillOffsetX)
             .requiredWidthIn(max = pillItemWidth),
-        shape = MaterialTheme.shapes.extraLarge,
+
+        shape = MaterialTheme.shapes.extraLarge.copy(
+            topStart = CornerSize(topStartCornerSize),
+            topEnd = CornerSize(topEndCornerSize),
+            bottomStart = CornerSize(bottomStartCornerSize),
+            bottomEnd = CornerSize(bottomEndCornerSize),
+        ),
     ) {
         Box(
             modifier = Modifier
@@ -223,7 +263,7 @@ private fun NavigationBarItemBackground(
 }
 
 @Composable
-private fun NavigationBarItem(
+private fun NavigationPillItem(
     tab: Tab,
     updateTab: (Int) -> Unit,
     pillItemWidth: Dp,
