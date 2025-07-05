@@ -234,7 +234,7 @@ object SettingsSyncmiruScreen : SearchableSettings {
             title = stringResource(MR.strings.pref_sync_automatic_category),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.ListPreference(
-                    pref = syncIntervalPref,
+                    preference = syncIntervalPref,
                     title = stringResource(MR.strings.pref_sync_interval),
                     entries = persistentMapOf(
                         0 to stringResource(MR.strings.off),

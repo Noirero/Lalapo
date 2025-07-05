@@ -315,8 +315,8 @@ dependencies {
     implementation(aniyomilibs.truetypeparser)
 
     // AM (SYNC_DRIVE) -->
-    implementation(libs.google.api.services.drive)
-    implementation(libs.google.api.client.oauth)
+    implementation(aniyomilibs.google.api.services.drive)
+    implementation(aniyomilibs.google.api.client.oauth)
     // <-- AM (SYNC_DRIVE)
 }
 

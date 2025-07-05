@@ -32,7 +32,6 @@ import mihon.feature.upcoming.anime.UpcomingAnimeScreen
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
-import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.injectLazy
 

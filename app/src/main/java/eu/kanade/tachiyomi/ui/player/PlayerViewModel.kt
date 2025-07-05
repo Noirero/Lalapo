@@ -60,7 +60,6 @@ import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
 import eu.kanade.tachiyomi.data.database.models.anime.Episode
 import eu.kanade.tachiyomi.data.database.models.anime.isRecognizedNumber
 import eu.kanade.tachiyomi.data.database.models.anime.toDomainEpisode
-import eu.kanade.tachiyomi.data.database.models.manga.isRecognizedNumber
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.saver.Image
@@ -79,7 +78,6 @@ import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.utils.AniSkipApi
 import eu.kanade.tachiyomi.ui.player.utils.ChapterUtils.Companion.getStringRes
 import eu.kanade.tachiyomi.ui.player.utils.TrackSelect
-import eu.kanade.tachiyomi.ui.reader.SaveImageNotifier
 import eu.kanade.tachiyomi.util.editCover
 import eu.kanade.tachiyomi.util.episode.filterDownloadedEpisodes
 import eu.kanade.tachiyomi.util.lang.byteSize

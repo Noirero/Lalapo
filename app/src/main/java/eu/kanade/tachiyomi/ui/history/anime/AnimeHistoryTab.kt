@@ -21,7 +21,7 @@ import eu.kanade.presentation.history.HistoryDeleteDialog
 import eu.kanade.presentation.history.anime.AnimeHistoryScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogScreenModel
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
@@ -29,9 +29,11 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.injectLazy
 
 val resumeLastEpisodeSeenEvent = Channel<Unit>()
 
@@ -58,25 +60,12 @@ fun Screen.animeHistoryTab(
         }
     }
 
-    val scope = rememberCoroutineScope()
-    val navigateUp: (() -> Unit)? = if (fromMore) {
-        {
-            if (navigator.lastItem == HomeScreen) {
-                scope.launch { HomeScreen.openTab(HomeScreen.Tab.AnimeLib()) }
-            } else {
-                navigator.pop()
-            }
-        }
-    } else {
-        null
-    }
-
     return TabContent(
         // AM (RECENTS) -->
         titleRes = MR.strings.label_recent_manga,
         // <-- AM (RECENTS)
         searchEnabled = true,
-        content = { contentPadding, _ ->
+        content = { _, _ ->
             AnimeHistoryScreen(
                 state = state,
                 searchQuery = searchQuery,
@@ -124,7 +113,7 @@ fun Screen.animeHistoryTab(
                     ChangeCategoryDialog(
                         initialSelection = dialog.initialSelection,
                         onDismissRequest = onDismissRequest,
-                        onEditCategories = { navigator.push(CategoriesTab) },
+                        onEditCategories = { navigator.push(CategoryScreen()) },
                         onConfirm = { include, _ ->
                             screenModel.moveAnimeToCategoriesAndAddToLibrary(dialog.anime, include)
                         },

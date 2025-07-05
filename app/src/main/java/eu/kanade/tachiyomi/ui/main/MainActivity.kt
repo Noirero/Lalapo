@@ -110,7 +110,6 @@ import mihon.core.migration.Migrator
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -121,7 +120,6 @@ import uy.kohesive.injekt.injectLazy
 
 class MainActivity : BaseActivity() {
 
-    private val libraryPreferences: LibraryPreferences by injectLazy()
     private val preferences: BasePreferences by injectLazy()
 
     // AM (CONNECTION) -->
@@ -131,7 +129,6 @@ class MainActivity : BaseActivity() {
     private val animeDownloadCache: AnimeDownloadCache by injectLazy()
 
     private val getAnimeIncognitoState: GetAnimeIncognitoState by injectLazy()
-    private val getMangaIncognitoState: GetMangaIncognitoState by injectLazy()
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false

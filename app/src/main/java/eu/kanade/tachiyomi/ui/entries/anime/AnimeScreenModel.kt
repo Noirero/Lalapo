@@ -90,8 +90,8 @@ import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.i18n.MR
-import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

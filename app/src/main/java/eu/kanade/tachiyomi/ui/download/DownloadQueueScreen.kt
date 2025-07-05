@@ -60,6 +60,7 @@ import eu.kanade.tachiyomi.ui.download.anime.AnimeDownloadQueueScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -263,7 +264,7 @@ object DownloadQueueScreen : Screen() {
                 NestedMenuItem(
                     text = {
                         Text(
-                            text = stringResource(MR.strings.action_order_by_episode_number),
+                            text = stringResource(AYMR.strings.action_order_by_episode_number),
                         )
                     },
                     children = { closeMenu ->

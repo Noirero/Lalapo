@@ -95,7 +95,7 @@ open class ReaderPageImageView @JvmOverloads constructor(
 
         pageView = SubsamplingScaleImageView(context)
             .apply {
-                setMaxTileSize(GLUtil.maxTextureSize)
+                setMaxTileSize(GLUtil.DEVICE_TEXTURE_LIMIT)
                 setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER)
                 setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_INSIDE)
                 setMinimumTileDpi(180)

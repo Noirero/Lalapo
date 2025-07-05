@@ -106,7 +106,12 @@ class BackupRestorer(
                 )
             }
             if (options.appSettings) {
-                restoreAppPreferences(backup.backupPreferences, backup.backupCategories.takeIf { options.categories })
+                restoreAppPreferences(
+                    backup.backupPreferences,
+                    backup.backupAnimeCategories.takeIf {
+                        options.categories
+                    },
+                )
             }
             if (options.sourceSettings) {
                 restoreSourcePreferences(backup.backupSourcePreferences)

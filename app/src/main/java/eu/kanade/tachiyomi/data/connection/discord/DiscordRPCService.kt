@@ -18,7 +18,6 @@ import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.ui.player.viewer.PipState
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -130,7 +129,7 @@ class DiscordRPCService : Service() {
             playerData: PlayerData = PlayerData(),
         ) {
             handler.removeCallbacksAndMessages(null)
-            if (PipState.mode == PipState.ON && discordScreen != DiscordScreen.VIDEO) return
+            // if (PipState.mode == PipState.ON && discordScreen != DiscordScreen.VIDEO) return
             lastUsedScreen = discordScreen
 
             if (rpc == null) return

@@ -23,11 +23,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -324,10 +323,12 @@ private fun TrackInfoItemEmpty(
 }
 
 @Composable
-private fun TrackInfoItemMenu(
+fun TrackInfoItemMenu(
     onOpenInBrowser: () -> Unit,
     onRemoved: () -> Unit,
     onCopyLink: () -> Unit,
+    private: Boolean,
+    onTogglePrivate: (() -> Unit)?,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
@@ -355,6 +356,25 @@ private fun TrackInfoItemMenu(
                     expanded = false
                 },
             )
+            if (onTogglePrivate != null) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            stringResource(
+                                if (private) {
+                                    MR.strings.action_toggle_private_off
+                                } else {
+                                    MR.strings.action_toggle_private_on
+                                },
+                            ),
+                        )
+                    },
+                    onClick = {
+                        onTogglePrivate()
+                        expanded = false
+                    },
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(MR.strings.action_remove)) },
                 onClick = {

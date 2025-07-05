@@ -62,7 +62,7 @@ fun MigrateAnimeSourceScreen(
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
-                title = stringResource(MR.strings.label_migration_anime),
+                title = stringResource(MR.strings.label_migration),
                 actions = {
                     IconButton(onClick = { uriHandler.openUri("https://aniyomi.org/help/guides/source-migration/") }) {
                         Icon(

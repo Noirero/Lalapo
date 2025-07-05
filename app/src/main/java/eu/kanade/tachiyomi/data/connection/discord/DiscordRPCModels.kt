@@ -6,6 +6,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 
 // Constant for logging tag
 const val RICH_PRESENCE_TAG = "discord_rpc"
@@ -167,7 +168,7 @@ enum class DiscordScreen(val text: StringResource, val details: StringResource, 
     BROWSE(MR.strings.label_sources, MR.strings.browsing, BROWSE_IMAGE_URL),
     MORE(MR.strings.label_settings, MR.strings.messing, MORE_IMAGE_URL),
     WEBVIEW(MR.strings.action_web_view, MR.strings.browsing, WEBVIEW_IMAGE_URL),
-    VIDEO(MR.strings.video, MR.strings.watching, VIDEO_IMAGE_URL),
+    VIDEO(MR.strings.video, AYMR.strings.watching, VIDEO_IMAGE_URL),
 }
 
 // Constants for standard Rich Presence image urls

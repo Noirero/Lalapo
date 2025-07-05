@@ -132,14 +132,8 @@ class LibraryPreferences(
     fun animeUpdateCategories() =
         preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY, emptySet())
 
-    fun mangaUpdateCategories() =
-        preferenceStore.getStringSet(LIBRARY_UPDATE_MANGA_CATEGORIES_PREF_KEY, emptySet())
-
     fun animeUpdateCategoriesExclude() =
         preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_EXCLUDE_PREF_KEY, emptySet())
-
-    fun mangaUpdateCategoriesExclude() =
-        preferenceStore.getStringSet(LIBRARY_UPDATE_MANGA_CATEGORIES_EXCLUDE_PREF_KEY, emptySet())
 
     // Mixture Item
 
@@ -184,17 +178,6 @@ class LibraryPreferences(
         displayEpisodeByNameOrNumber().set(anime.displayMode)
         sortEpisodeByAscendingOrDescending().set(
             if (anime.sortDescending()) Anime.EPISODE_SORT_DESC else Anime.EPISODE_SORT_ASC,
-        )
-    }
-
-    fun setChapterSettingsDefault(manga: Manga) {
-        filterChapterByRead().set(manga.unreadFilterRaw)
-        filterChapterByDownloaded().set(manga.downloadedFilterRaw)
-        filterChapterByBookmarked().set(manga.bookmarkedFilterRaw)
-        sortChapterBySourceOrNumber().set(manga.sorting)
-        displayChapterByNameOrNumber().set(manga.displayMode)
-        sortChapterByAscendingOrDescending().set(
-            if (manga.sortDescending()) Manga.CHAPTER_SORT_DESC else Manga.CHAPTER_SORT_ASC,
         )
     }
 

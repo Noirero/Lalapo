@@ -37,6 +37,7 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.injectLazy
 
@@ -113,7 +114,7 @@ internal suspend fun openEpisode(context: Context, episode: Episode?) {
     if (episode != null) {
         MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
     } else {
-        snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_episode))
+        snackbarHostState.showSnackbar(context.stringResource(AYMR.strings.no_next_episode))
     }
 }
 // <-- AM (TAB_HOLD)

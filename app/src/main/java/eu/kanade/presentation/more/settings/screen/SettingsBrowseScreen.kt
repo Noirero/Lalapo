@@ -17,7 +17,6 @@ import kotlinx.collections.immutable.persistentListOf
 import mihon.domain.extensionrepo.anime.interactor.GetAnimeExtensionRepoCount
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
-import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -45,10 +44,10 @@ object SettingsBrowseScreen : SearchableSettings {
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.SwitchPreference(
                         preference = sourcePreferences.hideInAnimeLibraryItems(),
-                        title = stringResource(AYMR.strings.pref_hide_in_anime_library_items),
+                        title = stringResource(MR.strings.pref_hide_in_library_items),
                     ),
                     Preference.PreferenceItem.TextPreference(
-                        title = stringResource(AYMR.strings.label_extension_repos),
+                        title = stringResource(MR.strings.label_extension_repos),
                         subtitle = pluralStringResource(
                             MR.plurals.num_repos,
                             animeReposCount,

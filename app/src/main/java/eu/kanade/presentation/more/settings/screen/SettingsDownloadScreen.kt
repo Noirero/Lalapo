@@ -130,10 +130,10 @@ object SettingsDownloadScreen : SearchableSettings {
                         3 to stringResource(MR.strings.fourth_to_last_episode),
                         4 to stringResource(MR.strings.fifth_to_last_episode),
                     ),
-                    title = stringResource(AYMR.strings.pref_remove_after_seen),
+                    title = stringResource(MR.strings.pref_remove_after_seen),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = downloadPreferences.removeBookmarkedChapters(),
+                    preference = downloadPreferences.removeBookmarkedEpisodes(),
                     title = stringResource(MR.strings.pref_remove_bookmarked_episodes),
                 ),
                 getExcludedAnimeCategoriesPreference(
@@ -241,7 +241,7 @@ object SettingsDownloadScreen : SearchableSettings {
                     title = stringResource(AYMR.strings.auto_download_while_watching),
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = downloadPreferences.autoDownloadWhileReading(),
+                    preference = downloadPreferences.autoDownloadWhileWatching(),
                     entries = listOf(0, 2, 3, 5, 10)
                         .associateWith {
                             if (it == 0) {
@@ -251,7 +251,7 @@ object SettingsDownloadScreen : SearchableSettings {
                             }
                         }
                         .toImmutableMap(),
-                    title = stringResource(MR.strings.auto_download_while_reading),
+                    title = stringResource(AYMR.strings.auto_download_while_watching),
                 ),
                 Preference.PreferenceItem.InfoPreference(
                     stringResource(AYMR.strings.download_ahead_info),

@@ -30,7 +30,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,22 +51,20 @@ import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
-import eu.kanade.tachiyomi.data.cache.ChapterCache
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.export.ExportEntry
 import eu.kanade.tachiyomi.data.export.ExportEntry.Companion.toExportEntry
 import eu.kanade.tachiyomi.data.export.LibraryExporter
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
-import eu.kanade.tachiyomi.ui.storage.StorageTab
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.ui.storage.StorageScreen
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
@@ -287,6 +284,7 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     private fun getDataGroup(storagePreferences: StoragePreferences): Preference.PreferenceGroup {
         val navigator = LocalNavigator.currentOrThrow
+        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
 
         // AM (FILE_SIZE) -->
         LaunchedEffect(Unit) {
@@ -317,7 +315,7 @@ object SettingsDataScreen : SearchableSettings {
 
                 // AM (FILE_SIZE) -->
                 Preference.PreferenceItem.SwitchPreference(
-                    pref = storagePreferences.showEpisodeFileSize(),
+                    preference = storagePreferences.showEpisodeFileSize(),
                     title = stringResource(MR.strings.pref_show_downloaded_episode_file_size),
                 ),
                 // <-- AM (FILE_SIZE)
@@ -357,12 +355,10 @@ object SettingsDataScreen : SearchableSettings {
         val scope = rememberCoroutineScope()
 
         val getAnimeFavorites = remember { Injekt.get<GetAnimeFavorites>() }
-        val getMangaFavorites = remember { Injekt.get<GetMangaFavorites>() }
 
         var favorites by remember { mutableStateOf<List<ExportEntry>>(emptyList()) }
         LaunchedEffect(Unit) {
-            favorites = getAnimeFavorites.await().map { it.toExportEntry() } +
-                getMangaFavorites.await().map { it.toExportEntry() }
+            favorites = getAnimeFavorites.await().map { it.toExportEntry() }
         }
 
         val saveFileLauncher = rememberLauncherForActivityResult(

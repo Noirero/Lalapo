@@ -16,6 +16,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.category.components.CategoryListItem
+import eu.kanade.presentation.components.AppBar
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -23,7 +24,10 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.components.material.topSmallPaddingValues
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun AnimeCategoryScreen(
@@ -33,9 +37,19 @@ fun AnimeCategoryScreen(
     onClickHide: (Category) -> Unit,
     onClickDelete: (Category) -> Unit,
     onChangeOrder: (Category, Int) -> Unit,
+    navigateUp: () -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
     Scaffold(
+        // AM (REMOVE_TABBED_SCREENS) -->
+        topBar = { scrollBehavior ->
+            AppBar(
+                title = stringResource(MR.strings.action_edit_categories),
+                navigateUp = navigateUp,
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        // <-- AM (REMOVE_TABBED_SCREENS)
         floatingActionButton = {
             CategoryFloatingActionButton(
                 lazyListState = lazyListState,
@@ -54,7 +68,9 @@ fun AnimeCategoryScreen(
         CategoryContent(
             categories = state.categories,
             lazyListState = lazyListState,
-            paddingValues = paddingValues,
+            paddingValues = paddingValues + topSmallPaddingValues + PaddingValues(
+                horizontal = MaterialTheme.padding.medium,
+            ),
             onClickRename = onClickRename,
             onClickHide = onClickHide,
             onClickDelete = onClickDelete,
@@ -111,5 +127,3 @@ private fun CategoryContent(
 }
 
 private val Category.key inline get() = "category-$id"
-
-// TODO: Update here

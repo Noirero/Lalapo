@@ -11,7 +11,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.storage.StorageScreenContent
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.storage.anime.AnimeStorageScreenModel
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -27,7 +27,7 @@ class StorageScreen : Screen() {
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
-                    title = stringResource(MR.strings.label_storage),
+                    title = stringResource(AYMR.strings.label_storage),
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                 )

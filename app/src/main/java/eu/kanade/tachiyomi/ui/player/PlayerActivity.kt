@@ -58,14 +58,13 @@ import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
 import com.hippo.unifile.UniFile
+import eu.kanade.domain.connection.service.ConnectionPreferences
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.animesource.model.ChapterType
 import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.SerializableHoster.Companion.serialize
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
-import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
-import eu.kanade.tachiyomi.data.connection.discord.PlayerData
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.PlayerLayoutBinding
@@ -1317,29 +1316,31 @@ class PlayerActivity : BaseActivity() {
     }
 
     // AM (DISCORD_RPC) -->
-    private fun updateDiscordRPC(exitingPlayer: Boolean) {
-        DiscordRPCService.discordScope.launchIO {
-            if (connectionPreferences.enableDiscordRPC().get()) {
-                if (!exitingPlayer) {
-                    DiscordRPCService.setPlayerActivity(
-                        context = applicationContext,
-                        PlayerData(
-                            incognitoMode = viewModel.currentSource.isNsfw() || viewModel.incognitoMode,
-                            animeId = viewModel.currentAnime?.id,
-                            // AM (CUSTOM_INFORMATION) -->
-                            animeTitle = viewModel.currentAnime?.ogTitle,
-                            // <-- AM (CUSTOM_INFORMATION)
-                            episodeNumber = viewModel.currentEpisode?.episode_number?.toString(),
-                            thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
-                        ),
-                    )
-                } else {
-                    with(DiscordRPCService) {
-                        setScreen(this@PlayerActivity.applicationContext, lastUsedScreen)
-                    }
-                }
-            }
-        }
-    }
-    // <-- AM (DISCORD_RPC)
+    /**
+     private fun updateDiscordRPC(exitingPlayer: Boolean) {
+     DiscordRPCService.discordScope.launchIO {
+     if (connectionPreferences.enableDiscordRPC().get()) {
+     if (!exitingPlayer) {
+     DiscordRPCService.setPlayerActivity(
+     context = applicationContext,
+     PlayerData(
+     incognitoMode = viewModel.currentSource.isNsfw() || viewModel.incognitoMode,
+     animeId = viewModel.currentAnime?.id,
+     // AM (CUSTOM_INFORMATION) -->
+     animeTitle = viewModel.currentAnime?.ogTitle,
+     // <-- AM (CUSTOM_INFORMATION)
+     episodeNumber = viewModel.currentEpisode?.episode_number?.toString(),
+     thumbnailUrl = viewModel.currentAnime?.thumbnailUrl,
+     ),
+     )
+     } else {
+     with(DiscordRPCService) {
+     setScreen(this@PlayerActivity.applicationContext, lastUsedScreen)
+     }
+     }
+     }
+     }
+     }
+     // <-- AM (DISCORD_RPC)
+     **/
 }

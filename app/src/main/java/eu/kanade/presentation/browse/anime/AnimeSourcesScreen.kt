@@ -275,7 +275,7 @@ private fun AnimeSourceSettingsButton(
         Icon(
             imageVector = Icons.Outlined.Settings,
             tint = MaterialTheme.colorScheme.primary,
-            contentDescription = stringResource(MR.strings.settings),
+            contentDescription = stringResource(MR.strings.label_settings),
         )
     }
 }

@@ -36,8 +36,6 @@ import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_HAS_U
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_COMPLETED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_VIEWED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_OUTSIDE_RELEASE_PERIOD
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_EXISTING
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_NEW
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_EPISODE_SEEN_EXISTING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_EPISODE_SEEN_NEW
 import tachiyomi.i18n.MR
@@ -104,7 +102,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.defaultAnimeCategory(),
                     entries = animeIds.zip(animeLabels).toMap().toImmutableMap(),
-                    title = stringResource(AYMR.strings.default_category),
+                    title = stringResource(MR.strings.default_category),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.categorizedDisplaySettings(),
@@ -211,7 +209,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 ),
                 // AM (GROUPING) -->
                 Preference.PreferenceItem.ListPreference(
-                    pref = libraryPreferences.groupLibraryUpdateType(),
+                    preference = libraryPreferences.groupLibraryUpdateType(),
                     title = stringResource(MR.strings.library_group_updates),
                     entries = persistentMapOf(
                         GroupAnimeLibraryMode.GLOBAL to stringResource(MR.strings.library_group_updates_global),

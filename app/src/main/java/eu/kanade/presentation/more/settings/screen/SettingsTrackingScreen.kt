@@ -130,7 +130,7 @@ object SettingsTrackingScreen : SearchableSettings {
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 preference = trackPreferences.autoUpdateTrack(),
-                title = stringResource(AYMR.strings.pref_auto_update_anime_sync),
+                title = stringResource(MR.strings.pref_auto_update_anime_sync),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = trackPreferences.trackOnAddingToLibrary(),
@@ -211,14 +211,14 @@ object SettingsTrackingScreen : SearchableSettings {
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.enhanced_services),
                 preferenceItems = (
-                        enhancedAnimeTrackers.first
-                            .map { service ->
-                                Preference.PreferenceItem.TrackerPreference(
-                                    tracker = service,
-                                    login = { (service as EnhancedAnimeTracker).loginNoop() },
-                                    logout = service::logout,
-                                )
-                            } + listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
+                    enhancedAnimeTrackers.first
+                        .map { service ->
+                            Preference.PreferenceItem.TrackerPreference(
+                                tracker = service,
+                                login = { (service as EnhancedAnimeTracker).loginNoop() },
+                                logout = service::logout,
+                            )
+                        } + listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
                     ).toImmutableList(),
             ),
         )

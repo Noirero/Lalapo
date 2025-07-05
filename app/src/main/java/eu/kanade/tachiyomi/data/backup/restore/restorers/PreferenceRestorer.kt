@@ -18,7 +18,6 @@ import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.category.manga.interactor.GetMangaCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -27,7 +26,6 @@ import uy.kohesive.injekt.api.get
 
 class PreferenceRestorer(
     private val context: Context,
-    private val getMangaCategories: GetMangaCategories = Injekt.get(),
     private val getAnimeCategories: GetAnimeCategories = Injekt.get(),
     private val preferenceStore: PreferenceStore = Injekt.get(),
 ) {
@@ -68,10 +66,7 @@ class PreferenceRestorer(
                 when (value) {
                     is IntPreferenceValue -> {
                         if (prefs[key] is Int?) {
-                            val newValue = if (key == LibraryPreferences.DEFAULT_MANGA_CATEGORY_PREF_KEY) {
-                                backupCategoriesById[value.value.toString()]
-                                    ?.let { mangaCategoriesByName[it.name]?.id?.toInt() }
-                            } else if (key == LibraryPreferences.DEFAULT_ANIME_CATEGORY_PREF_KEY) {
+                            val newValue = if (key == LibraryPreferences.DEFAULT_ANIME_CATEGORY_PREF_KEY) {
                                 backupCategoriesById[value.value.toString()]
                                     ?.let { animeCategoriesByName[it.name]?.id?.toInt() }
                             } else {
