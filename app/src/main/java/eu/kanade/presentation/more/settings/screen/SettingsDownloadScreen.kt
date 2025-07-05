@@ -56,35 +56,10 @@ object SettingsDownloadScreen : SearchableSettings {
         val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(initial = emptyList())
         val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
         val basePreferences = remember { Injekt.get<BasePreferences>() }
-        val speedLimit by downloadPreferences.downloadSpeedLimit().collectAsState()
-        var currentSpeedLimit by remember { mutableIntStateOf(speedLimit) }
-        var showDownloadLimitDialog by rememberSaveable { mutableStateOf(false) }
-        if (showDownloadLimitDialog) {
-            DownloadLimitDialog(
-                initialValue = currentSpeedLimit,
-                onDismissRequest = { showDownloadLimitDialog = false },
-                onValueChanged = {
-                    currentSpeedLimit = it
-                },
-                onConfirm = {
-                    downloadPreferences.downloadSpeedLimit().set(currentSpeedLimit)
-                    showDownloadLimitDialog = false
-                },
-            )
-        }
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.downloadOnlyOverWifi(),
                 title = stringResource(MR.strings.connected_to_wifi),
-            ),
-            Preference.PreferenceItem.TextPreference(
-                title = stringResource(AYMR.strings.download_speed_limit),
-                subtitle = if (speedLimit == 0) {
-                    stringResource(MR.strings.off)
-                } else {
-                    "$speedLimit KiB/s"
-                },
-                onClick = { showDownloadLimitDialog = true },
             ),
             Preference.PreferenceItem.ListPreference(
                 preference = downloadPreferences.numberOfDownloads(),
@@ -240,21 +215,8 @@ object SettingsDownloadScreen : SearchableSettings {
                         .toImmutableMap(),
                     title = stringResource(AYMR.strings.auto_download_while_watching),
                 ),
-                Preference.PreferenceItem.ListPreference(
-                    preference = downloadPreferences.autoDownloadWhileWatching(),
-                    entries = listOf(0, 2, 3, 5, 10)
-                        .associateWith {
-                            if (it == 0) {
-                                stringResource(MR.strings.disabled)
-                            } else {
-                                pluralStringResource(MR.plurals.next_unread_chapters, count = it, it)
-                            }
-                        }
-                        .toImmutableMap(),
-                    title = stringResource(AYMR.strings.auto_download_while_watching),
-                ),
                 Preference.PreferenceItem.InfoPreference(
-                    stringResource(AYMR.strings.download_ahead_info),
+                    stringResource(MR.strings.download_episode_ahead_info),
                 ),
             ),
         )

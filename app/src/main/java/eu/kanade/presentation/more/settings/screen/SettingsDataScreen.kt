@@ -108,7 +108,7 @@ object SettingsDataScreen : SearchableSettings {
 
         return persistentListOf(
             getStorageLocationPref(storagePreferences = storagePreferences),
-            Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
+            Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_episode_info)),
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
             // AM (FILE_SIZE) -->
             getDataGroup(storagePreferences = storagePreferences),
@@ -331,7 +331,7 @@ object SettingsDataScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.autoClearItemCache(),
-                    title = stringResource(AYMR.strings.pref_auto_clear_chapter_cache),
+                    title = stringResource(MR.strings.pref_auto_clear_episode_cache),
                 ),
             ),
         )

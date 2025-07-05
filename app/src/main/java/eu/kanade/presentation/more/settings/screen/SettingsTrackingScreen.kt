@@ -145,7 +145,7 @@ object SettingsTrackingScreen : SearchableSettings {
                 entries = AutoTrackState.entries
                     .associateWith { stringResource(it.titleRes) }
                     .toPersistentMap(),
-                title = stringResource(AYMR.strings.pref_auto_update_manga_on_mark_read),
+                title = stringResource(MR.strings.pref_auto_update_anime_on_mark_seen),
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),

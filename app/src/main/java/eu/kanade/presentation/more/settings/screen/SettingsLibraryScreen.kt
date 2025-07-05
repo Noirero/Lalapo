@@ -89,7 +89,7 @@ object SettingsLibraryScreen : SearchableSettings {
             title = stringResource(AYMR.strings.general_categories),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(AYMR.strings.action_edit_anime_categories),
+                    title = stringResource(MR.strings.action_edit_categories),
                     subtitle = pluralStringResource(
                         MR.plurals.num_categories,
                         count = userAnimeCategoriesCount,
