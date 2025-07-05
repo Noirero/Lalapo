@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
 import eu.kanade.tachiyomi.ui.recents.RecentsTab
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 
 enum class StartScreen(val titleRes: StringResource, val tab: Tab) {
     ANIME(MR.strings.label_library, AnimeLibraryTab),

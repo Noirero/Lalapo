@@ -429,6 +429,7 @@ class AnimeRestorer(
                         track.remoteUrl,
                         track.startDate,
                         track.finishDate,
+                        track.private,
                         track.id,
                     )
                 }

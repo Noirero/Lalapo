@@ -24,14 +24,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -57,6 +59,7 @@ import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.i18n.MR
@@ -67,7 +70,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
 data class BrowseAnimeSourceScreen(
-    private val sourceId: Long,
+    val sourceId: Long,
     private val listingQuery: String?,
 ) : Screen(), AssistContentScreen {
 
@@ -124,9 +127,16 @@ data class BrowseAnimeSourceScreen(
             assistUrl = (screenModel.source as? AnimeHttpSource)?.baseUrl
         }
 
+        var topBarHeight by remember { mutableIntStateOf(0) }
         Scaffold(
             topBar = {
-                Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+                Column(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .onGloballyPositioned { layoutCoordinates ->
+                            topBarHeight = layoutCoordinates.size.height
+                        },
+                ) {
                     BrowseAnimeSourceToolbar(
                         searchQuery = state.toolbarQuery,
                         onSearchQueryChange = screenModel::setToolbarQuery,
@@ -208,12 +218,12 @@ data class BrowseAnimeSourceScreen(
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         ) { paddingValues ->
-            val pagingFlow by screenModel.animePagerFlowFlow.collectAsState()
-
             BrowseAnimeSourceContent(
                 source = screenModel.source,
-                animeList = pagingFlow.collectAsLazyPagingItems(),
+                animeList = screenModel.animePagerFlowFlow.collectAsLazyPagingItems(),
                 columns = screenModel.getColumnsPreference(LocalConfiguration.current.orientation),
+                entries = screenModel.getColumnsPreferenceForCurrentOrientation(LocalConfiguration.current.orientation),
+                topBarHeight = topBarHeight,
                 displayMode = screenModel.displayMode,
                 snackbarHostState = snackbarHostState,
                 contentPadding = paddingValues,

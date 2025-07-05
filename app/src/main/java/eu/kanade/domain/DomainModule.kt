@@ -10,9 +10,11 @@ import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionsByType
 import eu.kanade.domain.extension.anime.interactor.TrustAnimeExtension
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithSource
+import eu.kanade.domain.source.anime.interactor.GetAnimeIncognitoState
 import eu.kanade.domain.source.anime.interactor.GetAnimeSourcesWithFavoriteCount
 import eu.kanade.domain.source.anime.interactor.GetEnabledAnimeSources
 import eu.kanade.domain.source.anime.interactor.GetLanguagesWithAnimeSources
+import eu.kanade.domain.source.anime.interactor.ToggleAnimeIncognito
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSourcePin
 import eu.kanade.domain.source.interactor.SetMigrateSorting
@@ -21,6 +23,7 @@ import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
 import eu.kanade.domain.track.anime.interactor.RefreshAnimeTracks
 import eu.kanade.domain.track.anime.interactor.SyncEpisodeProgressWithTrack
 import eu.kanade.domain.track.anime.interactor.TrackEpisode
+import eu.kanade.tachiyomi.ui.player.utils.TrackSelect
 import mihon.data.repository.anime.AnimeExtensionRepoRepositoryImpl
 import mihon.domain.extensionrepo.anime.interactor.CreateAnimeExtensionRepo
 import mihon.domain.extensionrepo.anime.interactor.DeleteAnimeExtensionRepo
@@ -33,6 +36,7 @@ import mihon.domain.extensionrepo.service.ExtensionRepoService
 import mihon.domain.items.episode.interactor.FilterEpisodesForDownload
 import mihon.domain.upcoming.anime.interactor.GetUpcomingAnime
 import tachiyomi.data.category.anime.AnimeCategoryRepositoryImpl
+import tachiyomi.data.custombutton.CustomButtonRepositoryImpl
 import tachiyomi.data.entries.anime.AnimeRepositoryImpl
 import tachiyomi.data.entries.anime.CustomAnimeRepositoryImpl
 import tachiyomi.data.history.anime.AnimeHistoryRepositoryImpl
@@ -55,6 +59,13 @@ import tachiyomi.domain.category.anime.interactor.SetAnimeDisplayMode
 import tachiyomi.domain.category.anime.interactor.SetSortModeForAnimeCategory
 import tachiyomi.domain.category.anime.interactor.UpdateAnimeCategory
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
+import tachiyomi.domain.custombuttons.interactor.CreateCustomButton
+import tachiyomi.domain.custombuttons.interactor.DeleteCustomButton
+import tachiyomi.domain.custombuttons.interactor.GetCustomButtons
+import tachiyomi.domain.custombuttons.interactor.ReorderCustomButton
+import tachiyomi.domain.custombuttons.interactor.ToggleFavoriteCustomButton
+import tachiyomi.domain.custombuttons.interactor.UpdateCustomButton
+import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetAnimeByUrlAndSourceId
@@ -114,7 +125,7 @@ class DomainModule : InjektModule {
         addFactory { ReorderAnimeCategory(get()) }
         addFactory { UpdateAnimeCategory(get()) }
         addFactory { HideAnimeCategory(get()) }
-        addFactory { DeleteAnimeCategory(get()) }
+        addFactory { DeleteAnimeCategory(get(), get(), get()) }
 
         addSingletonFactory<AnimeRepository> { AnimeRepositoryImpl(get()) }
         addFactory { GetDuplicateLibraryAnime(get()) }
@@ -154,7 +165,7 @@ class DomainModule : InjektModule {
         addFactory { UpdateEpisode(get()) }
         addFactory { SetSeenStatus(get(), get(), get(), get()) }
         addFactory { ShouldUpdateDbEpisode() }
-        addFactory { SyncEpisodesWithSource(get(), get(), get(), get(), get(), get(), get()) }
+        addFactory { SyncEpisodesWithSource(get(), get(), get(), get(), get(), get(), get(), get()) }
         addFactory { FilterEpisodesForDownload(get(), get(), get()) }
 
         addSingletonFactory<AnimeHistoryRepository> { AnimeHistoryRepositoryImpl(get()) }
@@ -194,7 +205,18 @@ class DomainModule : InjektModule {
         addFactory { DeleteAnimeExtensionRepo(get()) }
         addFactory { ReplaceAnimeExtensionRepo(get()) }
         addFactory { UpdateAnimeExtensionRepo(get(), get()) }
+        addFactory { ToggleAnimeIncognito(get()) }
+        addFactory { GetAnimeIncognitoState(get(), get(), get()) }
 
+        addSingletonFactory<CustomButtonRepository> { CustomButtonRepositoryImpl(get()) }
+        addFactory { CreateCustomButton(get()) }
+        addFactory { DeleteCustomButton(get()) }
+        addFactory { GetCustomButtons(get()) }
+        addFactory { UpdateCustomButton(get()) }
+        addFactory { ReorderCustomButton(get()) }
+        addFactory { ToggleFavoriteCustomButton(get()) }
+
+        addFactory { TrackSelect(get(), get()) }
         // AM (CUSTOM_INFORMATION) -->
         addSingletonFactory<CustomAnimeRepository> { CustomAnimeRepositoryImpl(get<Application>()) }
         addFactory { GetCustomAnimeInfo(get()) }

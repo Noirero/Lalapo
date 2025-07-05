@@ -14,6 +14,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.injectLazy
 import java.text.DecimalFormat
 import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
@@ -38,6 +39,8 @@ class Kitsu(id: Long) :
 
     override val supportsReadingDates: Boolean = true
 
+    override val supportsPrivateTracking: Boolean = true
+
     private val json: Json by injectLazy()
 
     private val interceptor by lazy { KitsuInterceptor(this) }
@@ -53,8 +56,8 @@ class Kitsu(id: Long) :
     }
 
     override fun getStatusForAnime(status: Long): StringResource? = when (status) {
-        WATCHING -> MR.strings.currently_watching
-        PLAN_TO_WATCH -> MR.strings.want_to_watch
+        WATCHING -> AYMR.strings.currently_watching
+        PLAN_TO_WATCH -> AYMR.strings.want_to_watch
         COMPLETED -> MR.strings.completed
         ON_HOLD -> MR.strings.on_hold
         DROPPED -> MR.strings.dropped
@@ -110,7 +113,7 @@ class Kitsu(id: Long) :
     override suspend fun bind(track: AnimeTrack, hasSeenEpisodes: Boolean): AnimeTrack {
         val remoteTrack = api.findLibAnime(track, getUserId())
         return if (remoteTrack != null) {
-            track.copyPersonalFrom(remoteTrack)
+            track.copyPersonalFrom(remoteTrack, copyRemotePrivate = false)
             track.remote_id = remoteTrack.remote_id
 
             if (track.status != COMPLETED) {
@@ -159,7 +162,7 @@ class Kitsu(id: Long) :
     fun restoreToken(): KitsuOAuth? {
         return try {
             json.decodeFromString<KitsuOAuth>(trackPreferences.trackToken(this).get())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

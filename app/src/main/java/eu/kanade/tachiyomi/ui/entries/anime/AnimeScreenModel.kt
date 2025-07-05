@@ -18,6 +18,7 @@ import eu.kanade.domain.entries.anime.model.toSAnime
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithSource
 import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
+import eu.kanade.domain.track.anime.interactor.RefreshAnimeTracks
 import eu.kanade.domain.track.anime.interactor.TrackEpisode
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
@@ -33,6 +34,7 @@ import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
+import eu.kanade.tachiyomi.ui.player.settings.GesturePreferences
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.AniChartApi
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
@@ -89,10 +91,13 @@ import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.i18n.MR
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Calendar
+import kotlin.collections.filter
+import kotlin.collections.forEach
 import kotlin.math.floor
 
 class AnimeScreenModel(
@@ -104,6 +109,7 @@ class AnimeScreenModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
+    internal val gesturePreferences: GesturePreferences = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
     private val trackEpisode: TrackEpisode = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
@@ -350,7 +356,7 @@ class AnimeScreenModel(
                 screenModelScope.launch {
                     if (!hasDownloads()) return@launch
                     val result = snackbarHostState.showSnackbar(
-                        message = context.stringResource(MR.strings.delete_downloads_for_anime),
+                        message = context.stringResource(AYMR.strings.delete_downloads_for_anime),
                         actionLabel = context.stringResource(MR.strings.action_delete),
                         withDismissAction = true,
                     )
@@ -640,7 +646,7 @@ class AnimeScreenModel(
             }
         } catch (e: Throwable) {
             val message = if (e is NoEpisodesException) {
-                context.stringResource(MR.strings.no_episodes_error)
+                context.stringResource(AYMR.strings.no_episodes_error)
             } else {
                 logcat(LogPriority.ERROR, e)
                 with(context) { e.formattedMessage }
@@ -743,7 +749,7 @@ class AnimeScreenModel(
                     state.copy(hasPromptedToAddBefore = true)
                 }
                 val result = snackbarHostState.showSnackbar(
-                    message = context.stringResource(MR.strings.snack_add_to_anime_library),
+                    message = context.stringResource(AYMR.strings.snack_add_to_anime_library),
                     actionLabel = context.stringResource(MR.strings.action_add),
                     withDismissAction = true,
                 )
@@ -818,6 +824,7 @@ class AnimeScreenModel(
      */
     fun markEpisodesSeen(episodes: List<Episode>, seen: Boolean) {
         toggleAllSelection(false)
+        if (episodes.isEmpty()) return
         screenModelScope.launchIO {
             setSeenStatus.await(
                 seen = seen,
@@ -827,6 +834,8 @@ class AnimeScreenModel(
             if (!seen || successState?.hasLoggedInTrackers == false || autoTrackState == AutoTrackState.NEVER) {
                 return@launchIO
             }
+
+            refreshTrackers()
 
             val tracks = getTracks.await(animeId)
             val maxEpisodeNumber = episodes.maxOf { it.episodeNumber }
@@ -838,14 +847,14 @@ class AnimeScreenModel(
                 trackEpisode.await(context, animeId, maxEpisodeNumber)
                 withUIContext {
                     context.toast(
-                        context.stringResource(MR.strings.trackers_updated_summary_anime, maxEpisodeNumber.toInt()),
+                        context.stringResource(AYMR.strings.trackers_updated_summary_anime, maxEpisodeNumber.toInt()),
                     )
                 }
                 return@launchIO
             }
 
             val result = snackbarHostState.showSnackbar(
-                message = context.stringResource(MR.strings.confirm_tracker_update_anime, maxEpisodeNumber.toInt()),
+                message = context.stringResource(AYMR.strings.confirm_tracker_update_anime, maxEpisodeNumber.toInt()),
                 actionLabel = context.stringResource(MR.strings.action_ok),
                 duration = SnackbarDuration.Short,
                 withDismissAction = true,
@@ -855,6 +864,27 @@ class AnimeScreenModel(
                 trackEpisode.await(context, animeId, maxEpisodeNumber)
             }
         }
+    }
+
+    private suspend fun refreshTrackers(
+        refreshTracks: RefreshAnimeTracks = Injekt.get(),
+    ) {
+        refreshTracks.await(animeId)
+            .filter { it.first != null }
+            .forEach { (track, e) ->
+                logcat(LogPriority.ERROR, e) {
+                    "Failed to refresh track data animeId=$animeId for service ${track!!.id}"
+                }
+                withUIContext {
+                    context.toast(
+                        context.stringResource(
+                            MR.strings.track_error,
+                            track!!.name,
+                            e.message ?: "",
+                        ),
+                    )
+                }
+            }
     }
 
     /**
@@ -1038,7 +1068,7 @@ class AnimeScreenModel(
                 setAnimeDefaultEpisodeFlags.awaitAll()
             }
             snackbarHostState.showSnackbar(
-                message = context.stringResource(MR.strings.episode_settings_updated),
+                message = context.stringResource(AYMR.strings.episode_settings_updated),
             )
         }
     }

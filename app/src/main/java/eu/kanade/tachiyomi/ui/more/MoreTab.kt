@@ -80,7 +80,6 @@ data object MoreTab : Tab {
             onDownloadedOnlyChange = { screenModel.downloadedOnly = it },
             incognitoMode = screenModel.incognitoMode,
             onIncognitoModeChange = { screenModel.incognitoMode = it },
-            isFDroid = context.isInstalledFromFDroid(),
             // AM (REMOVE_TABBED_SCREENS) -->
             onClickDownloadQueue = { navigator.push(DownloadQueueScreen) },
             onClickCategories = { navigator.push(CategoryScreen()) },
@@ -88,6 +87,7 @@ data object MoreTab : Tab {
             onClickStorage = { navigator.push(StorageScreen()) },
             // <-- AM (REMOVE_TABBED_SCREENS)
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
+            onClickPlayerSettings = { navigator.push(PlayerSettingsScreen) },
             onClickSettings = { navigator.push(SettingsScreen()) },
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
         )

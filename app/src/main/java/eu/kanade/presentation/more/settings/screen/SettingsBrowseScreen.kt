@@ -17,6 +17,7 @@ import kotlinx.collections.immutable.persistentListOf
 import mihon.domain.extensionrepo.anime.interactor.GetAnimeExtensionRepoCount
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -43,11 +44,11 @@ object SettingsBrowseScreen : SearchableSettings {
                 title = stringResource(MR.strings.label_sources),
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.SwitchPreference(
-                        pref = sourcePreferences.hideInAnimeLibraryItems(),
-                        title = stringResource(MR.strings.pref_hide_in_library_items),
+                        preference = sourcePreferences.hideInAnimeLibraryItems(),
+                        title = stringResource(AYMR.strings.pref_hide_in_anime_library_items),
                     ),
                     Preference.PreferenceItem.TextPreference(
-                        title = stringResource(MR.strings.label_extension_repos),
+                        title = stringResource(AYMR.strings.label_extension_repos),
                         subtitle = pluralStringResource(
                             MR.plurals.num_repos,
                             animeReposCount,
@@ -63,7 +64,7 @@ object SettingsBrowseScreen : SearchableSettings {
                 title = stringResource(MR.strings.pref_category_nsfw_content),
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.SwitchPreference(
-                        pref = sourcePreferences.showNsfwSource(),
+                        preference = sourcePreferences.showNsfwSource(),
                         title = stringResource(MR.strings.pref_show_nsfw_source),
                         subtitle = stringResource(MR.strings.requires_app_restart),
                         onValueChanged = {

@@ -9,12 +9,14 @@ import eu.kanade.tachiyomi.data.backup.create.creators.AnimeBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.AnimeCategoriesBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.AnimeExtensionRepoBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.AnimeSourcesBackupCreator
+import eu.kanade.tachiyomi.data.backup.create.creators.CustomButtonBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.ExtensionsBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.PreferenceBackupCreator
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCustomButtons
 import eu.kanade.tachiyomi.data.backup.models.BackupExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionRepos
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
@@ -52,6 +54,7 @@ class BackupCreator(
     private val animeBackupCreator: AnimeBackupCreator = AnimeBackupCreator(),
     private val preferenceBackupCreator: PreferenceBackupCreator = PreferenceBackupCreator(),
     private val animeExtensionRepoBackupCreator: AnimeExtensionRepoBackupCreator = AnimeExtensionRepoBackupCreator(),
+    private val customButtonBackupCreator: CustomButtonBackupCreator = CustomButtonBackupCreator(),
     private val animeSourcesBackupCreator: AnimeSourcesBackupCreator = AnimeSourcesBackupCreator(),
     private val extensionsBackupCreator: ExtensionsBackupCreator = ExtensionsBackupCreator(context),
 ) {
@@ -91,6 +94,7 @@ class BackupCreator(
                 backupAnimeSources = backupAnimeSources(backupAnime),
                 backupPreferences = backupAppPreferences(options),
                 backupAnimeExtensionRepo = backupAnimeExtensionRepos(options),
+                backupCustomButton = backupCustomButtons(options),
                 backupSourcePreferences = backupSourcePreferences(options),
                 backupExtensions = backupExtensions(options),
             )
@@ -153,7 +157,13 @@ class BackupCreator(
         return animeExtensionRepoBackupCreator()
     }
 
-    internal fun backupSourcePreferences(options: BackupOptions): List<BackupSourcePreferences> {
+    private suspend fun backupCustomButtons(options: BackupOptions): List<BackupCustomButtons> {
+        if (!options.customButton) return emptyList()
+
+        return customButtonBackupCreator()
+    }
+
+    private fun backupSourcePreferences(options: BackupOptions): List<BackupSourcePreferences> {
         if (!options.sourceSettings) return emptyList()
 
         return preferenceBackupCreator.createSource(includePrivatePreferences = options.privateSettings)

@@ -31,7 +31,7 @@ Surround the new code with:
 
 `AM (<Title of code>) --> <-- AM (<Title of code>)`
 
-### Credits
+### Credits (Added / Edited code from upstream)
 
 - **AM (REMOVE_TABBED_SCREENS)** --> Refactoring from Aniyomi code to Animiru!
 - **AM (REMOVE_ACRA_FIREBASE)** --> Refactoring from Aniyomi code to Animiru!
@@ -43,9 +43,9 @@ Surround the new code with:
 - **AM (TAB_HOLD)** --> Thank you Quickdesh!
 - **AM (FILE_SIZE)** --> Thank you Khaled0!
 - **AM (DISCORD_RPC)** --> Original library from dead8309/Kizzy, refactored code by 最高 man/Shivam. Thank you, both of you!
-- **AM (CUSTOM_INFORMATION)** --> Copied from TachiyomiSY, Thank you jobobby4/syer!
-- **AM (GROUPING)** --> Copied from TachiyomiSY, Thank you jobobby4/syer!
-- **AM (RECENTS)** --> Idea inspired from TachiyomiJ2K, Thank you Jays2Kings!
+- **AM (CUSTOM_INFORMATION)** --> Copied from SY, Thank you jobobby4/syer!
+- **AM (GROUPING)** --> Copied from SY, Thank you jobobby4/syer!
+- **AM (RECENTS)** --> Idea inspired from J2K, Thank you Jays2Kings!
 - **AM (SYNC, SYNC_DRIVE, SYNC_YOMI)** --> Original code in SyncYomi, copied from Kuukiyomi. Thank you Kaiserbh and Luftverbot!
 
 
@@ -64,7 +64,7 @@ Translations are done externally via Weblate. See [our website](https://aniyomi.
 
 # Forks
 
-Forks are allowed so long as they abide by [the project's LICENSE](https://github.com/tachiyomiorg/tachiyomi/blob/master/LICENSE).
+Forks are allowed so long as they abide by [the project's LICENSE](https://github.com/aniyomiorg/aniyomi/blob/main/LICENSE).
 
 When creating a fork, remember to:
 

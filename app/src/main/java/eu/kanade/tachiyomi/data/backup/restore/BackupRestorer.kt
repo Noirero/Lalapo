@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.data.backup.BackupDecoder
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCustomButtons
 import eu.kanade.tachiyomi.data.backup.models.BackupExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionRepos
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
@@ -13,6 +14,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.restore.restorers.AnimeCategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.AnimeExtensionRepoRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.AnimeRestorer
+import eu.kanade.tachiyomi.data.backup.restore.restorers.CustomButtonRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionsRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -22,6 +24,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -35,6 +38,7 @@ class BackupRestorer(
     private val animeCategoriesRestorer: AnimeCategoriesRestorer = AnimeCategoriesRestorer(),
     private val preferenceRestorer: PreferenceRestorer = PreferenceRestorer(context),
     private val animeExtensionRepoRestorer: AnimeExtensionRepoRestorer = AnimeExtensionRepoRestorer(),
+    private val customButtonRestorer: CustomButtonRestorer = CustomButtonRestorer(),
     private val animeRestorer: AnimeRestorer = AnimeRestorer(),
     private val extensionsRestorer: ExtensionsRestorer = ExtensionsRestorer(context),
 ) {
@@ -85,6 +89,9 @@ class BackupRestorer(
         if (options.extensionRepoSettings) {
             restoreAmount += backup.backupAnimeExtensionRepo.size
         }
+        if (options.customButtons) {
+            restoreAmount += 1
+        }
         if (options.sourceSettings) {
             restoreAmount += 1
         }
@@ -99,7 +106,7 @@ class BackupRestorer(
                 )
             }
             if (options.appSettings) {
-                restoreAppPreferences(backup.backupPreferences)
+                restoreAppPreferences(backup.backupPreferences, backup.backupCategories.takeIf { options.categories })
             }
             if (options.sourceSettings) {
                 restoreSourcePreferences(backup.backupSourcePreferences)
@@ -109,6 +116,9 @@ class BackupRestorer(
             }
             if (options.extensionRepoSettings) {
                 restoreExtensionRepos(backup.backupAnimeExtensionRepo)
+            }
+            if (options.customButtons) {
+                restoreCustomButtons(backup.backupCustomButton)
             }
             if (options.extensions) {
                 restoreExtensions(backup.backupExtensions)
@@ -156,9 +166,15 @@ class BackupRestorer(
             }
     }
 
-    private fun CoroutineScope.restoreAppPreferences(preferences: List<BackupPreference>) = launch {
+    private fun CoroutineScope.restoreAppPreferences(
+        preferences: List<BackupPreference>,
+        categories: List<BackupCategory>?,
+    ) = launch {
         ensureActive()
-        preferenceRestorer.restoreApp(preferences)
+        preferenceRestorer.restoreApp(
+            preferences,
+            categories,
+        )
 
         restoreProgress += 1
         notifier.showRestoreProgress(
@@ -203,6 +219,19 @@ class BackupRestorer(
                     isSync,
                 )
             }
+    }
+
+    private fun CoroutineScope.restoreCustomButtons(customButtons: List<BackupCustomButtons>) = launch {
+        ensureActive()
+        customButtonRestorer(customButtons)
+
+        restoreProgress += 1
+        notifier.showRestoreProgress(
+            context.stringResource(AYMR.strings.custom_button_settings),
+            restoreProgress,
+            restoreAmount,
+            isSync,
+        )
     }
 
     private fun CoroutineScope.restoreExtensions(extensions: List<BackupExtension>) = launch {

@@ -72,6 +72,8 @@ class LibraryPreferences(
 
     fun downloadBadge() = preferenceStore.getBoolean("display_download_badge", false)
 
+    fun unreadBadge() = preferenceStore.getBoolean("display_unread_badge", true)
+
     fun localBadge() = preferenceStore.getBoolean("display_local_badge", true)
 
     fun languageBadge() = preferenceStore.getBoolean("display_language_badge", false)
@@ -123,15 +125,21 @@ class LibraryPreferences(
 
     // Mixture Category
 
-    fun defaultAnimeCategory() = preferenceStore.getInt("default_anime_category", -1)
+    fun defaultAnimeCategory() = preferenceStore.getInt(DEFAULT_ANIME_CATEGORY_PREF_KEY, -1)
 
     fun lastUsedAnimeCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_anime_category"), 0)
 
     fun animeUpdateCategories() =
-        preferenceStore.getStringSet("animelib_update_categories", emptySet())
+        preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY, emptySet())
+
+    fun mangaUpdateCategories() =
+        preferenceStore.getStringSet(LIBRARY_UPDATE_MANGA_CATEGORIES_PREF_KEY, emptySet())
 
     fun animeUpdateCategoriesExclude() =
-        preferenceStore.getStringSet("animelib_update_categories_exclude", emptySet())
+        preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_EXCLUDE_PREF_KEY, emptySet())
+
+    fun mangaUpdateCategoriesExclude() =
+        preferenceStore.getStringSet(LIBRARY_UPDATE_MANGA_CATEGORIES_EXCLUDE_PREF_KEY, emptySet())
 
     // Mixture Item
 
@@ -179,6 +187,18 @@ class LibraryPreferences(
         )
     }
 
+    fun setChapterSettingsDefault(manga: Manga) {
+        filterChapterByRead().set(manga.unreadFilterRaw)
+        filterChapterByDownloaded().set(manga.downloadedFilterRaw)
+        filterChapterByBookmarked().set(manga.bookmarkedFilterRaw)
+        sortChapterBySourceOrNumber().set(manga.sorting)
+        displayChapterByNameOrNumber().set(manga.displayMode)
+        sortChapterByAscendingOrDescending().set(
+            if (manga.sortDescending()) Manga.CHAPTER_SORT_DESC else Manga.CHAPTER_SORT_ASC,
+        )
+    }
+
+    // region Item behavior
     // region Swipe Actions
 
     fun swipeEpisodeStartAction() =
@@ -188,6 +208,8 @@ class LibraryPreferences(
         "pref_episode_swipe_start_action",
         EpisodeSwipeAction.ToggleBookmark,
     )
+
+    fun markDuplicateSeenEpisodeAsSeen() = preferenceStore.getStringSet("mark_duplicate_seen_episode_seen", emptySet())
 
     // endregion
 
@@ -218,5 +240,17 @@ class LibraryPreferences(
         const val ENTRY_HAS_UNVIEWED = "anime_fully_seen"
         const val ENTRY_NON_VIEWED = "anime_started"
         const val ENTRY_OUTSIDE_RELEASE_PERIOD = "anime_outside_release_period"
+
+        const val MARK_DUPLICATE_EPISODE_SEEN_NEW = "new_episode"
+        const val MARK_DUPLICATE_EPISODE_SEEN_EXISTING = "existing_episode"
+
+        const val DEFAULT_ANIME_CATEGORY_PREF_KEY = "default_anime_category"
+        private const val LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY = "animelib_update_categories"
+        private const val LIBRARY_UPDATE_ANIME_CATEGORIES_EXCLUDE_PREF_KEY = "animelib_update_categories_exclude"
+        val categoryPreferenceKeys = setOf(
+            DEFAULT_ANIME_CATEGORY_PREF_KEY,
+            LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY,
+            LIBRARY_UPDATE_ANIME_CATEGORIES_EXCLUDE_PREF_KEY,
+        )
     }
 }

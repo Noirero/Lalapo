@@ -61,6 +61,7 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -128,29 +129,28 @@ object SettingsTrackingScreen : SearchableSettings {
 
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
-                pref = trackPreferences.autoUpdateTrack(),
-                title = stringResource(MR.strings.pref_auto_update_anime_sync),
+                preference = trackPreferences.autoUpdateTrack(),
+                title = stringResource(AYMR.strings.pref_auto_update_anime_sync),
             ),
             Preference.PreferenceItem.SwitchPreference(
-                pref = trackPreferences.trackOnAddingToLibrary(),
-                title = stringResource(MR.strings.pref_track_on_add_library),
+                preference = trackPreferences.trackOnAddingToLibrary(),
+                title = stringResource(AYMR.strings.pref_track_on_add_library),
             ),
             Preference.PreferenceItem.SwitchPreference(
-                pref = trackPreferences.showNextEpisodeAiringTime(),
-                title = stringResource(MR.strings.pref_show_next_episode_airing_time),
+                preference = trackPreferences.showNextEpisodeAiringTime(),
+                title = stringResource(AYMR.strings.pref_show_next_episode_airing_time),
             ),
             Preference.PreferenceItem.ListPreference(
-                pref = trackPreferences.autoUpdateTrackOnMarkRead(),
-                title = stringResource(MR.strings.pref_auto_update_manga_on_mark_read),
+                preference = trackPreferences.autoUpdateTrackOnMarkRead(),
                 entries = AutoTrackState.entries
                     .associateWith { stringResource(it.titleRes) }
                     .toPersistentMap(),
+                title = stringResource(AYMR.strings.pref_auto_update_manga_on_mark_read),
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.TrackerPreference(
-                        title = trackerManager.myAnimeList.name,
                         tracker = trackerManager.myAnimeList,
                         login = {
                             context.openInBrowser(
@@ -161,7 +161,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         logout = { dialog = LogoutDialog(trackerManager.myAnimeList) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
-                        title = trackerManager.aniList.name,
                         tracker = trackerManager.aniList,
                         login = {
                             context.openInBrowser(
@@ -172,13 +171,11 @@ object SettingsTrackingScreen : SearchableSettings {
                         logout = { dialog = LogoutDialog(trackerManager.aniList) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
-                        title = trackerManager.kitsu.name,
                         tracker = trackerManager.kitsu,
                         login = { dialog = LoginDialog(trackerManager.kitsu, MR.strings.email) },
                         logout = { dialog = LogoutDialog(trackerManager.kitsu) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
-                        title = trackerManager.shikimori.name,
                         tracker = trackerManager.shikimori,
                         login = {
                             context.openInBrowser(
@@ -189,7 +186,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         logout = { dialog = LogoutDialog(trackerManager.shikimori) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
-                        title = trackerManager.simkl.name,
                         tracker = trackerManager.simkl,
                         login = {
                             context.openInBrowser(
@@ -200,7 +196,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         logout = { dialog = LogoutDialog(trackerManager.simkl) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
-                        title = trackerManager.bangumi.name,
                         tracker = trackerManager.bangumi,
                         login = {
                             context.openInBrowser(
@@ -216,15 +211,14 @@ object SettingsTrackingScreen : SearchableSettings {
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.enhanced_services),
                 preferenceItems = (
-                    enhancedAnimeTrackers.first
-                        .map { service ->
-                            Preference.PreferenceItem.TrackerPreference(
-                                title = service.name,
-                                tracker = service,
-                                login = { (service as EnhancedAnimeTracker).loginNoop() },
-                                logout = service::logout,
-                            )
-                        } + listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
+                        enhancedAnimeTrackers.first
+                            .map { service ->
+                                Preference.PreferenceItem.TrackerPreference(
+                                    tracker = service,
+                                    login = { (service as EnhancedAnimeTracker).loginNoop() },
+                                    logout = service::logout,
+                                )
+                            } + listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
                     ).toImmutableList(),
             ),
         )

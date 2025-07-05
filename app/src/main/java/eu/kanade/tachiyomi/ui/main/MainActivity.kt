@@ -60,6 +60,7 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.connection.service.ConnectionPreferences
+import eu.kanade.domain.source.anime.interactor.GetAnimeIncognitoState
 import eu.kanade.presentation.components.AppStateBanners
 import eu.kanade.presentation.components.DownloadedOnlyBannerBackgroundColor
 import eu.kanade.presentation.components.IncognitoModeBannerBackgroundColor
@@ -69,6 +70,7 @@ import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.core.common.Constants
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
@@ -92,6 +94,7 @@ import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.system.updaterEnabled
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -101,6 +104,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import mihon.core.migration.Migrator
 import tachiyomi.core.common.i18n.stringResource
@@ -125,6 +129,9 @@ class MainActivity : BaseActivity() {
     // <-- AM (CONNECTION)
 
     private val animeDownloadCache: AnimeDownloadCache by injectLazy()
+
+    private val getAnimeIncognitoState: GetAnimeIncognitoState by injectLazy()
+    private val getMangaIncognitoState: GetMangaIncognitoState by injectLazy()
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false
@@ -154,7 +161,7 @@ class MainActivity : BaseActivity() {
         setComposeContent {
             val context = LocalContext.current
 
-            val incognito by preferences.incognitoMode().collectAsState()
+            var incognitoAnime by remember { mutableStateOf(getAnimeIncognitoState.await(null)) }
             val downloadOnly by preferences.downloadedOnly().collectAsState()
             val indexingAnime by animeDownloadCache.isInitializing.collectAsState()
 
@@ -162,7 +169,7 @@ class MainActivity : BaseActivity() {
             val statusBarBackgroundColor = when {
                 indexingAnime -> IndexingBannerBackgroundColor
                 downloadOnly -> DownloadedOnlyBannerBackgroundColor
-                incognito -> IncognitoModeBannerBackgroundColor
+                incognitoAnime -> IncognitoModeBannerBackgroundColor
                 else -> MaterialTheme.colorScheme.surface
             }
             LaunchedEffect(isSystemInDarkTheme, statusBarBackgroundColor) {
@@ -195,12 +202,18 @@ class MainActivity : BaseActivity() {
                     }
                 }
 
+                LaunchedEffect(navigator.lastItem) {
+                    (navigator.lastItem as? BrowseAnimeSourceScreen)?.sourceId
+                        .let(getAnimeIncognitoState::subscribe)
+                        .collectLatest { incognitoAnime = it }
+                }
+
                 val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
                 Scaffold(
                     topBar = {
                         AppStateBanners(
                             downloadedOnlyMode = downloadOnly,
-                            incognitoMode = incognito,
+                            incognitoMode = incognitoAnime,
                             indexing = indexingAnime,
                             modifier = Modifier.windowInsetsPadding(scaffoldInsets),
                         )
@@ -300,6 +313,15 @@ class MainActivity : BaseActivity() {
             ActivityResultContracts.StartActivityForResult(),
         ) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
+                val animeId = savedInstanceState?.getLong(SAVED_STATE_ANIME_KEY)
+                val episodeId = savedInstanceState?.getLong(SAVED_STATE_EPISODE_KEY)
+
+                if (animeId != null && episodeId != null) {
+                    runBlocking {
+                        ExternalIntents.externalIntents.initAnime(animeId, episodeId)
+                    }
+                }
+
                 // AM (DISCORD_RPC) -->
                 ExternalIntents.externalIntents.onActivityResult(this.applicationContext, result.data)
                 // <-- AM (DISCORD_RPC)
@@ -336,7 +358,7 @@ class MainActivity : BaseActivity() {
 
         // App updates
         LaunchedEffect(Unit) {
-            if (BuildConfig.INCLUDE_UPDATER) {
+            if (updaterEnabled) {
                 try {
                     val result = AppUpdateChecker().checkForUpdate(context)
                     if (result is GetApplicationRelease.Result.NewUpdate) {
@@ -344,7 +366,7 @@ class MainActivity : BaseActivity() {
                             versionName = result.release.version,
                             changelogInfo = result.release.info,
                             releaseLink = result.release.releaseLink,
-                            downloadLink = result.release.getDownloadLink(),
+                            downloadLink = result.release.downloadLink,
                         )
                         navigator.push(updateScreen)
                     }
@@ -504,11 +526,25 @@ class MainActivity : BaseActivity() {
         return true
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        ExternalIntents.externalIntents.animeId?.let {
+            outState.putLong(SAVED_STATE_ANIME_KEY, it)
+        }
+        ExternalIntents.externalIntents.episodeId?.let {
+            outState.putLong(SAVED_STATE_EPISODE_KEY, it)
+        }
+    }
+
     companion object {
         const val INTENT_ANIMESEARCH = "eu.kanade.tachiyomi.ANIMESEARCH"
         const val INTENT_SEARCH_QUERY = "query"
         const val INTENT_SEARCH_FILTER = "filter"
         const val INTENT_SEARCH_TYPE = "type"
+
+        const val SAVED_STATE_ANIME_KEY = "saved_state_anime_key"
+        const val SAVED_STATE_EPISODE_KEY = "saved_state_episode_key"
 
         private var externalPlayerResult: ActivityResultLauncher<Intent>? = null
 
@@ -518,7 +554,9 @@ class MainActivity : BaseActivity() {
             episodeId: Long,
             extPlayer: Boolean,
             video: Video? = null,
-            videoList: List<Video>? = null,
+            hosterIndex: Int = -1,
+            videoIndex: Int = -1,
+            hosterList: List<Hoster>? = null,
         ) {
             if (extPlayer) {
                 val intent = try {
@@ -531,7 +569,14 @@ class MainActivity : BaseActivity() {
                 externalPlayerResult?.launch(intent) ?: return
             } else {
                 context.startActivity(
-                    PlayerActivity.newIntent(context, animeId, episodeId, videoList, videoList?.indexOf(video)),
+                    PlayerActivity.newIntent(
+                        context,
+                        animeId,
+                        episodeId,
+                        hosterList,
+                        hosterIndex,
+                        videoIndex,
+                    ),
                 )
             }
         }

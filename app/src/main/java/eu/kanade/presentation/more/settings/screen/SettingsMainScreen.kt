@@ -15,7 +15,6 @@ import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
@@ -47,6 +46,7 @@ import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
@@ -182,15 +182,9 @@ object SettingsMainScreen : Screen() {
         ),
         Item(
             titleRes = MR.strings.pref_category_library,
-            subtitleRes = MR.strings.pref_library_summary,
+            subtitleRes = AYMR.strings.pref_library_summary,
             icon = Icons.Outlined.CollectionsBookmark,
             screen = SettingsLibraryScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_player,
-            subtitleRes = MR.strings.pref_player_summary,
-            icon = Icons.Outlined.PlayCircleOutline,
-            screen = SettingsPlayerScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_downloads,

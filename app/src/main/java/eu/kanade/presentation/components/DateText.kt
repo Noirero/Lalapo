@@ -26,6 +26,20 @@ fun relativeDateText(
     )
 }
 
+// For use in chapter/episode release time
+@Composable
+fun relativeDateTimeText(
+    dateEpochMillis: Long,
+): String {
+    return relativeDateTimeText(
+        localDateTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(dateEpochMillis),
+            ZoneId.systemDefault(),
+        )
+            .takeIf { dateEpochMillis > 0L },
+    )
+}
+
 @Composable
 fun relativeDateText(
     localDate: LocalDate?,
@@ -37,6 +51,25 @@ fun relativeDateText(
     val dateFormat = remember { UiPreferences.dateFormat(preferences.dateFormat().get()) }
 
     return localDate?.toRelativeString(
+        context = context,
+        relative = relativeTime,
+        dateFormat = dateFormat,
+    )
+        ?: stringResource(MR.strings.not_applicable)
+}
+
+// For use in chapter/episode release time
+@Composable
+fun relativeDateTimeText(
+    localDateTime: LocalDateTime?,
+): String {
+    val context = LocalContext.current
+
+    val preferences = remember { Injekt.get<UiPreferences>() }
+    val relativeTime = remember { preferences.relativeTime().get() }
+    val dateFormat = remember { UiPreferences.dateFormat(preferences.dateFormat().get()) }
+
+    return localDateTime?.toRelativeString(
         context = context,
         relative = relativeTime,
         dateFormat = dateFormat,

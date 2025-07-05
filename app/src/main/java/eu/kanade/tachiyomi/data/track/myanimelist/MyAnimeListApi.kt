@@ -111,7 +111,7 @@ class MyAnimeListApi(
                             summary = it.synopsis
                             total_episodes = it.numEpisodes
                             score = it.mean
-                            cover_url = it.covers.large
+                            cover_url = it.covers?.large.orEmpty()
                             tracking_url = "https://myanimelist.net/anime/$remote_id"
                             publishing_status = it.status.replace("_", " ")
                             publishing_type = it.mediaType.replace("_", " ")

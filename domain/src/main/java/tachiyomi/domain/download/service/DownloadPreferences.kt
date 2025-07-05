@@ -34,26 +34,36 @@ class DownloadPreferences(
     // <-- AM (FILLERMARK)
 
     fun removeExcludeAnimeCategories() = preferenceStore.getStringSet(
-        "remove_exclude_anime_categories",
+        REMOVE_EXCLUDE_ANIME_CATEGORIES_PREF_KEY,
         emptySet(),
     )
 
     fun downloadNewEpisodes() = preferenceStore.getBoolean("download_new_episode", false)
 
     fun downloadNewEpisodeCategories() = preferenceStore.getStringSet(
-        "download_new_anime_categories",
+        DOWNLOAD_NEW_ANIME_CATEGORIES_PREF_KEY,
         emptySet(),
     )
 
     fun downloadNewEpisodeCategoriesExclude() = preferenceStore.getStringSet(
-        "download_new_anime_categories_exclude",
+        DOWNLOAD_NEW_ANIME_CATEGORIES_EXCLUDE_PREF_KEY,
         emptySet(),
     )
 
     fun numberOfDownloads() = preferenceStore.getInt("download_slots", 1)
-    fun safeDownload() = preferenceStore.getBoolean("safe_download", true)
-    fun numberOfThreads() = preferenceStore.getInt("download_threads", 1)
     fun downloadSpeedLimit() = preferenceStore.getInt("download_speed_limit", 0)
 
     fun downloadNewUnseenEpisodesOnly() = preferenceStore.getBoolean("download_new_unread_episodes_only", false)
+
+    companion object {
+        private const val REMOVE_EXCLUDE_ANIME_CATEGORIES_PREF_KEY = "remove_exclude_anime_categories"
+        private const val DOWNLOAD_NEW_ANIME_CATEGORIES_PREF_KEY = "download_new_anime_categories"
+        private const val DOWNLOAD_NEW_ANIME_CATEGORIES_EXCLUDE_PREF_KEY = "download_new_anime_categories_exclude"
+
+        val categoryPreferenceKeys = setOf(
+            REMOVE_EXCLUDE_ANIME_CATEGORIES_PREF_KEY,
+            DOWNLOAD_NEW_ANIME_CATEGORIES_PREF_KEY,
+            DOWNLOAD_NEW_ANIME_CATEGORIES_EXCLUDE_PREF_KEY,
+        )
+    }
 }

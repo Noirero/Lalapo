@@ -53,6 +53,9 @@ class SourcePreferences(
 
     fun disabledAnimeSources() = preferenceStore.getStringSet("hidden_anime_catalogues", emptySet())
 
+    fun incognitoAnimeExtensions() = preferenceStore.getStringSet("incognito_anime_extensions", emptySet())
+    fun incognitoMangaExtensions() = preferenceStore.getStringSet("incognito_manga_extensions", emptySet())
+
     fun pinnedAnimeSources() = preferenceStore.getStringSet("pinned_anime_catalogues", emptySet())
 
     fun lastUsedAnimeSource() = preferenceStore.getLong(
