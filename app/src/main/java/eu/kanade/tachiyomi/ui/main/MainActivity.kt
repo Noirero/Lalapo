@@ -459,7 +459,7 @@ class MainActivity : BaseActivity() {
             Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Recents(toHistory = false)
             Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.Recents(toHistory = true)
             // <-- AM (RECENTS)
-            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
+            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(toExtensions = false)
             Constants.SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 HomeScreen.Tab.More(toDownloads = true)

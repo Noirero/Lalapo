@@ -61,7 +61,7 @@ import kotlin.math.abs
 
 internal var goToExtensions = false
 
-class BrowseTab : Tab {
+data object BrowseTab : Tab {
 
     override val options: TabOptions
         @Composable

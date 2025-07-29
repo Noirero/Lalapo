@@ -16,6 +16,6 @@ enum class StartScreen(val titleRes: StringResource, val tab: Tab) {
 
     // <-- AM (RECENTS)
     // AM (BROWSE) -->
-    BROWSE(MR.strings.browse, BrowseTab()),
+    BROWSE(MR.strings.browse, BrowseTab),
     // <-- AM (BROWSE)
 }

@@ -3,9 +3,13 @@ package eu.kanade.tachiyomi.ui.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector4D
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateValue
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -14,12 +18,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.requiredWidthIn
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -29,6 +33,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,8 +44,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
@@ -67,11 +73,11 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.math.abs
 
+private fun getOffsetX(numOfTabs: Int): Float = (0.5f * numOfTabs) - 0.5f
+
 @Composable
 fun NavigationPill(
     tabs: List<Tab>,
-    currentTabIndex: Int,
-    setCurrentTabIndex: (Int) -> Unit,
     labelFade: Int,
     modifier: Modifier = Modifier,
 ) {
@@ -82,19 +88,22 @@ fun NavigationPill(
     val pillItemWidth = (configuration.screenWidthDp / tabs.size).dp
     val pillItemHeight = 48.dp
 
-    val tabMap = tabs.associateBy { it.options.index.toInt() }
+    val currentTabIndex by remember {
+        derivedStateOf { tabs.indexOf(tabNavigator.current) }
+    }
+    val indexedTabs = tabs.mapIndexed { index, tab -> index to tab }
     var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
 
-    val updateTab: (Int) -> Unit = {
-        if (tabMap[it] != null) {
-            tabNavigator.current = tabMap[it]!!
-            setCurrentTabIndex(it)
+    val updateTab: (Int) -> Unit = { index ->
+        val tab = indexedTabs.getOrNull(index)?.second ?: tabs[0]
+        if (tab != tabNavigator.current) {
+            tabNavigator.current = tab
         }
     }
 
-    val navigationOffsetX: Dp by animateDpAsState(
+    val navigationOffsetX = animateDpAsState(
         targetValue = pillItemWidth * (currentTabIndex - getOffsetX(tabs.size)),
-        animationSpec = tween(labelFade * 2),
+        animationSpec = tween(durationMillis = labelFade * 2),
     )
 
     BackHandler(
@@ -117,33 +126,45 @@ fun NavigationPill(
                             flickOffsetX += dragAmount.x
                         },
                         onDragEnd = {
-                            val newIndex = when {
-                                (flickOffsetX < 0F) -> oldIndex - 1
-                                (flickOffsetX > 0F) -> oldIndex + 1
-                                else -> oldIndex
+                            val newIndex = oldIndex + when {
+                                flickOffsetX < 0F -> -1
+                                flickOffsetX > 0F -> 1
+                                else -> 0
                             }
-
                             flickOffsetX = 0F
-
-                            updateTab(minOf(maxOf(newIndex, 0), tabs.size - 1))
+                            updateTab(newIndex.coerceIn(0, tabs.size - 1))
                         },
                     )
                 },
             tonalElevation = 1.4.dp,
         ) {
-            val topStartCornerSize = remember { Animatable(0f) }
-            val topEndCornerSize = remember { Animatable(28f) }
-            val bottomStartCornerSize = remember { Animatable(0f) }
-            val bottomEndCornerSize = remember { Animatable(28f) }
+            val cornerAnimationSpec: FiniteAnimationSpec<CornerSizes> = tween(durationMillis = labelFade * 2)
+            val transition = updateTransition(targetState = currentTabIndex, label = "CornerTransition")
+
+            val cornerSizeConverter = TwoWayConverter<CornerSizes, AnimationVector4D>(
+                convertToVector = {
+                    AnimationVector4D(it.topStart.value, it.topEnd.value, it.bottomStart.value, it.bottomEnd.value)
+                },
+                convertFromVector = { CornerSizes(it.v1.dp, it.v2.dp, it.v3.dp, it.v4.dp) },
+            )
+
+            val cornerSizes = transition.animateValue(
+                transitionSpec = { cornerAnimationSpec },
+                typeConverter = cornerSizeConverter,
+                label = "CornerSizes",
+            ) { state ->
+                when (state) {
+                    0 -> CornerSizes(0.dp, 28.dp, 0.dp, 28.dp) // First tab
+                    tabs.size - 1 -> CornerSizes(28.dp, 0.dp, 28.dp, 0.dp) // Last tab
+                    else -> CornerSizes(28.dp, 28.dp, 28.dp, 28.dp) // Middle tabs
+                }
+            }
 
             NavigationPillItemBackground(
                 pillItemWidth = pillItemWidth,
                 pillItemHeight = pillItemHeight,
                 pillOffsetX = navigationOffsetX,
-                topStartCornerSize = topStartCornerSize.value.dp,
-                topEndCornerSize = topEndCornerSize.value.dp,
-                bottomStartCornerSize = bottomStartCornerSize.value.dp,
-                bottomEndCornerSize = bottomEndCornerSize.value.dp,
+                cornerSizes = cornerSizes,
             )
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Row {
@@ -153,7 +174,6 @@ fun NavigationPill(
                 }
 
                 val alpha = remember { Animatable(-1f) }
-                val cornerAnimationSpec: AnimationSpec<Float> = tween(durationMillis = labelFade * 2)
 
                 LaunchedEffect(currentTabIndex) {
                     scope.launchUI {
@@ -163,27 +183,6 @@ fun NavigationPill(
                             alpha.animateTo(0.5f, animationSpec = tween(durationMillis = labelFade))
                         } else {
                             alpha.animateTo(-0.5f, animationSpec = tween(durationMillis = labelFade))
-                        }
-                    }
-
-                    when (currentTabIndex) {
-                        0 -> {
-                            scope.launch { topStartCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { topEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { bottomStartCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { bottomEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
-                        }
-                        tabs.size - 1 -> {
-                            scope.launch { topStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { topEndCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { bottomStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { bottomEndCornerSize.animateTo(0f, animationSpec = cornerAnimationSpec) }
-                        }
-                        else -> {
-                            scope.launch { topStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { topEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { bottomStartCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
-                            scope.launch { bottomEndCornerSize.animateTo(28f, animationSpec = cornerAnimationSpec) }
                         }
                     }
                 }
@@ -217,48 +216,22 @@ fun NavigationPill(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .alpha(1 - abs(alpha.value * 2)),
+                        .graphicsLayer {
+                            this.alpha = 1 - abs(alpha.value * 2)
+                        },
                 ) {
                     Text(
                         text = tabs[oldIndex].options.title,
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .offset(x = navigationOffsetX),
+                            .graphicsLayer {
+                                translationX = navigationOffsetX.value.toPx()
+                            },
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun NavigationPillItemBackground(
-    pillItemWidth: Dp,
-    pillItemHeight: Dp,
-    pillOffsetX: Dp,
-    topStartCornerSize: Dp,
-    topEndCornerSize: Dp,
-    bottomStartCornerSize: Dp,
-    bottomEndCornerSize: Dp,
-) {
-    Surface(
-        modifier = Modifier
-            .offset(x = pillOffsetX)
-            .requiredWidthIn(max = pillItemWidth),
-
-        shape = MaterialTheme.shapes.extraLarge.copy(
-            topStart = CornerSize(topStartCornerSize),
-            topEnd = CornerSize(topEndCornerSize),
-            bottomStart = CornerSize(bottomStartCornerSize),
-            bottomEnd = CornerSize(bottomEndCornerSize),
-        ),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = pillItemWidth, height = pillItemHeight)
-                .background(MaterialTheme.colorScheme.secondaryContainer),
-        )
     }
 }
 
@@ -372,6 +345,36 @@ private fun NavigationIconItem(tab: Tab) {
     }
 }
 
-private fun getOffsetX(numOfTabs: Int): Float = (0.5f * numOfTabs) - 0.5f
+@Composable
+private fun NavigationPillItemBackground(
+    pillItemWidth: Dp,
+    pillItemHeight: Dp,
+    pillOffsetX: State<Dp>,
+    cornerSizes: State<CornerSizes>,
+) {
+    Box(
+        modifier = Modifier
+            .requiredWidth(pillItemWidth)
+            .height(pillItemHeight)
+            .graphicsLayer {
+                translationX = pillOffsetX.value.toPx()
+                shape = RoundedCornerShape(
+                    topStart = cornerSizes.value.topStart,
+                    topEnd = cornerSizes.value.topEnd,
+                    bottomStart = cornerSizes.value.bottomStart,
+                    bottomEnd = cornerSizes.value.bottomEnd,
+                )
+                clip = true
+            }
+            .background(MaterialTheme.colorScheme.secondaryContainer),
+    )
+}
 
+// Data class for corners
+data class CornerSizes(
+    val topStart: Dp,
+    val topEnd: Dp,
+    val bottomStart: Dp,
+    val bottomEnd: Dp,
+)
 // <-- AM (NAVIGATION_PILL)

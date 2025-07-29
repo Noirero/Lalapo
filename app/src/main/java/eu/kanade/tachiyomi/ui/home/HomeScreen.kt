@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
@@ -22,7 +23,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
@@ -55,7 +55,7 @@ object HomeScreen : Screen() {
         RecentsTab,
         // <-- AM (RECENTS)
         // AM (BROWSE) -->
-        BrowseTab(),
+        BrowseTab,
         // <-- AM (BROWSE)
         MoreTab,
     )
@@ -70,16 +70,16 @@ object HomeScreen : Screen() {
             // AM (NAVIGATION_PILL) -->
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
-                val currTabIndex = tabNavigator.current.options.index.toInt()
-                var currentTabIndex by remember { mutableIntStateOf(currTabIndex) }
-                var oldIndex by remember { mutableIntStateOf(currTabIndex) }
-
-                val isForward = remember(currentTabIndex) {
-                    val forward = oldIndex < currentTabIndex
-                    oldIndex = currentTabIndex
-                    forward
+                val currentTabIndex by remember {
+                    derivedStateOf { tabs.indexOf(tabNavigator.current) }
                 }
-                val setCurrentTabIndex: (Int) -> Unit = { currentTabIndex = it }
+
+                var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
+
+                LaunchedEffect(currentTabIndex) {
+                    oldIndex = currentTabIndex
+                }
+
                 Scaffold(
                     bottomBar = {
                         val bottomNavVisible by produceState(initialValue = true) {
@@ -92,8 +92,6 @@ object HomeScreen : Screen() {
                         ) {
                             NavigationPill(
                                 tabs = tabs,
-                                currentTabIndex,
-                                setCurrentTabIndex,
                                 labelFade = TAB_FADE_DURATION / 2,
                             )
                         }
@@ -110,7 +108,7 @@ object HomeScreen : Screen() {
                             targetState = tabNavigator.current,
                             transitionSpec = {
                                 materialSharedAxisX(
-                                    forward = isForward,
+                                    forward = oldIndex < currentTabIndex,
                                     slideDistance = 500,
                                     durationMillis = TAB_FADE_DURATION,
                                 )
@@ -123,19 +121,6 @@ object HomeScreen : Screen() {
                         }
                     }
                     // AM (NAVIGATION_PILL) -->
-                    LaunchedEffect(tabNavigator.current) {
-                        launch {
-                            currentTabIndex = when (tabNavigator.current) {
-                                is AnimeLibraryTab -> 0
-                                // AM (RECENTS) -->
-                                is RecentsTab -> 1
-                                // <-- AM (RECENTS)
-                                is BrowseTab -> 2
-                                is MoreTab -> 3
-                                else -> 0
-                            }
-                        }
-                    }
                     // <-- AM (NAVIGATION_PILL)
                 }
             }
@@ -161,7 +146,7 @@ object HomeScreen : Screen() {
                             }
                             // <-- AM (RECENTS)
                             // AM (BROWSE) -->
-                            is Tab.Browse -> BrowseTab()
+                            is Tab.Browse -> BrowseTab
                             // <-- AM (BROWSE)
                             is Tab.More -> MoreTab
                         }
