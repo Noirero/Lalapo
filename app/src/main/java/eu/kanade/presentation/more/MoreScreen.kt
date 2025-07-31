@@ -20,7 +20,7 @@ import androidx.compose.ui.res.vectorResource
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.core.common.Constants
+import eu.kanade.tachiyomi.core.Constants
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR

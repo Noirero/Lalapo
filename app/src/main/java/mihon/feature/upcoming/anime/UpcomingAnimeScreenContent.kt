@@ -25,7 +25,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.util.isTabletUi
-import eu.kanade.tachiyomi.core.common.Constants
+import eu.kanade.tachiyomi.core.Constants
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.coroutines.launch

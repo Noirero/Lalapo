@@ -48,7 +48,7 @@ import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
-import eu.kanade.tachiyomi.core.common.Constants
+import eu.kanade.tachiyomi.core.Constants
 import eu.kanade.tachiyomi.ui.browse.anime.extension.details.AnimeSourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogScreenModel

@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.core.common.Constants
+import eu.kanade.tachiyomi.core.Constants
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
