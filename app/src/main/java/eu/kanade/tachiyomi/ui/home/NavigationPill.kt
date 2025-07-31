@@ -89,7 +89,7 @@ fun NavigationPill(
     val pillItemHeight = 48.dp
 
     val currentTabIndex by remember {
-        derivedStateOf { tabs.indexOf(tabNavigator.current) }
+        derivedStateOf { tabs.indexOfFirst { it::class == tabNavigator.current::class } }
     }
     val indexedTabs = tabs.mapIndexed { index, tab -> index to tab }
     var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
@@ -154,9 +154,9 @@ fun NavigationPill(
                 label = "CornerSizes",
             ) { state ->
                 when (state) {
-                    0 -> CornerSizes(0.dp, 28.dp, 0.dp, 28.dp) // First tab
-                    tabs.size - 1 -> CornerSizes(28.dp, 0.dp, 28.dp, 0.dp) // Last tab
-                    else -> CornerSizes(28.dp, 28.dp, 28.dp, 28.dp) // Middle tabs
+                    0 -> CornerSizes(0.dp, 28.dp, 0.dp, 28.dp)
+                    tabs.size - 1 -> CornerSizes(28.dp, 0.dp, 28.dp, 0.dp)
+                    else -> CornerSizes(28.dp, 28.dp, 28.dp, 28.dp)
                 }
             }
 
@@ -370,7 +370,6 @@ private fun NavigationPillItemBackground(
     )
 }
 
-// Data class for corners
 data class CornerSizes(
     val topStart: Dp,
     val topEnd: Dp,

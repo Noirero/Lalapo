@@ -71,7 +71,7 @@ object HomeScreen : Screen() {
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 val currentTabIndex by remember {
-                    derivedStateOf { tabs.indexOf(tabNavigator.current) }
+                    derivedStateOf { tabs.indexOfFirst { it::class == tabNavigator.current::class } }
                 }
 
                 var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
