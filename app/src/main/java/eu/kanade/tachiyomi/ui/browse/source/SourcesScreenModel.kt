@@ -80,7 +80,12 @@ class SourcesScreenModel(
                         listOf(
                             SourceUiModel.Header(it.key),
                             *it.value.map { source ->
-                                SourceUiModel.Item(source)
+                                SourceUiModel.Item(
+                                    source,
+                                    // AM (BROWSE) -->
+                                    extensionManager.getInstalledExtension(source.id),
+                                    // <-- AM (BROWSE)
+                                )
                             }.toTypedArray(),
                         )
                     }
@@ -98,7 +103,16 @@ class SourcesScreenModel(
     }
 
     fun showSourceDialog(source: Source) {
-        mutableState.update { it.copy(dialog = Dialog(source)) }
+        mutableState.update {
+            it.copy(
+                dialog = Dialog(
+                    source,
+                    // AM (BROWSE) -->
+                    extensionManager.getInstalledExtension(source.id),
+                    // <-- AM (BROWSE)
+                ),
+            )
+        }
     }
 
     fun closeDialog() {
@@ -117,7 +131,12 @@ class SourcesScreenModel(
         data object FailedFetchingSources : Event
     }
 
-    data class Dialog(val source: Source)
+    data class Dialog(
+        val source: Source,
+        // AM (BROWSE) -->
+        val extension: Extension.Installed?,
+        // <-- AM (BROWSE)
+    )
 
     @Immutable
     data class State(
