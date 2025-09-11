@@ -96,7 +96,7 @@ import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButton
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR

@@ -13,12 +13,12 @@ import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class PreferenceBackupCreator(
-    private val animeSourceManager: AnimeSourceManager = Injekt.get(),
+    private val sourceManager: SourceManager = Injekt.get(),
     private val preferenceStore: PreferenceStore = Injekt.get(),
 ) {
 
@@ -28,7 +28,7 @@ class PreferenceBackupCreator(
     }
 
     fun createSource(includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
-        val animePreferences = animeSourceManager.getCatalogueSources()
+        return sourceManager.getCatalogueSources()
             .filterIsInstance<ConfigurableAnimeSource>()
             .map {
                 BackupSourcePreferences(
@@ -38,7 +38,6 @@ class PreferenceBackupCreator(
                 )
             }
             .filter { it.prefs.isNotEmpty() }
-        return animePreferences
     }
 
     @Suppress("UNCHECKED_CAST")

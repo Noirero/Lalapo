@@ -19,7 +19,7 @@ class MigrateToTriStateMigration : Migration {
 
         prefs.edit {
             putInt(
-                libraryPreferences.filterDownloadedAnime().key(),
+                libraryPreferences.filterDownloaded().key(),
                 convertBooleanPrefToTriState(prefs, "pref_filter_downloaded_key"),
             )
             remove("pref_filter_downloaded_key")
@@ -31,7 +31,7 @@ class MigrateToTriStateMigration : Migration {
             remove("pref_filter_unread_key")
 
             putInt(
-                libraryPreferences.filterCompletedAnime().key(),
+                libraryPreferences.filterDownloaded().key(),
                 convertBooleanPrefToTriState(prefs, "pref_filter_completed_key"),
             )
             remove("pref_filter_completed_key")

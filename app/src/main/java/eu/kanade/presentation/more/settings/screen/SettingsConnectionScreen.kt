@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.util.system.openDiscordLoginActivity
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -34,7 +35,7 @@ object SettingsConnectionScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_connection
+    override fun getTitleRes() = AMMR.strings.pref_category_connection
 
     @Composable
     override fun getPreferences(): List<Preference> {
@@ -44,7 +45,7 @@ object SettingsConnectionScreen : SearchableSettings {
 
         return listOf(
             Preference.PreferenceGroup(
-                title = stringResource(MR.strings.special_services),
+                title = stringResource(AMMR.strings.special_services),
                 preferenceItems = persistentListOf(
                     // AM (DISCORD_RPC) -->
                     Preference.PreferenceItem.ConnectionPreference(
@@ -63,7 +64,7 @@ object SettingsConnectionScreen : SearchableSettings {
                     ),
                     // <-- AM (SYNC)
                     // AM (DISCORD_RPC) -->
-                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.connection_discord_info)),
+                    Preference.PreferenceItem.InfoPreference(stringResource(AMMR.strings.connection_discord_info)),
                     // <-- AM (DISCORD_RPC)
                 ),
             ),

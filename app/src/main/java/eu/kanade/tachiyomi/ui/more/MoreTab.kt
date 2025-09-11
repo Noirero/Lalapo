@@ -24,7 +24,7 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
+import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.setting.PlayerSettingsScreen
@@ -80,14 +80,13 @@ data object MoreTab : Tab {
             onDownloadedOnlyChange = { screenModel.downloadedOnly = it },
             incognitoMode = screenModel.incognitoMode,
             onIncognitoModeChange = { screenModel.incognitoMode = it },
-            // AM (REMOVE_TABBED_SCREENS) -->
             onClickDownloadQueue = { navigator.push(DownloadQueueScreen) },
             onClickCategories = { navigator.push(CategoryScreen()) },
             onClickStats = { navigator.push(StatsScreen()) },
-            onClickStorage = { navigator.push(StorageScreen()) },
-            // <-- AM (REMOVE_TABBED_SCREENS)
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
-            onClickPlayerSettings = { navigator.push(PlayerSettingsScreen) },
+            // AY -->
+            onClickPlayerSettings = { navigator.push(PlayerSettingsScreen(mainSettings = false)) },
+            // <-- AY
             onClickSettings = { navigator.push(SettingsScreen()) },
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
         )
@@ -103,34 +102,31 @@ data object MoreTab : Tab {
 }
 
 private class MoreScreenModel(
-    private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
+    private val downloadManager: DownloadManager = Injekt.get(),
     preferences: BasePreferences = Injekt.get(),
 ) : ScreenModel {
 
     var downloadedOnly by preferences.downloadedOnly().asState(screenModelScope)
     var incognitoMode by preferences.incognitoMode().asState(screenModelScope)
 
-    private var _downloadQueueState: MutableStateFlow<DownloadQueueState> = MutableStateFlow(
-        DownloadQueueState.Stopped,
-    )
+    private var _downloadQueueState: MutableStateFlow<DownloadQueueState> = MutableStateFlow(DownloadQueueState.Stopped)
     val downloadQueueState: StateFlow<DownloadQueueState> = _downloadQueueState.asStateFlow()
 
     init {
         // Handle running/paused status change and queue progress updating
         screenModelScope.launchIO {
             combine(
-                animeDownloadManager.isDownloaderRunning,
-                animeDownloadManager.queueState,
-            ) { isRunningAnime, animeDownloadQueue ->
-                Pair(isRunningAnime, animeDownloadQueue.size)
-            }.collectLatest { (isDownloadingAnime, animeDownloadQueueSize) ->
-                val pendingDownloadExists = animeDownloadQueueSize != 0
-                _downloadQueueState.value = when {
-                    !pendingDownloadExists -> DownloadQueueState.Stopped
-                    !isDownloadingAnime -> DownloadQueueState.Paused(animeDownloadQueueSize)
-                    else -> DownloadQueueState.Downloading(animeDownloadQueueSize)
+                downloadManager.isDownloaderRunning,
+                downloadManager.queueState,
+            ) { isRunning, downloadQueue -> Pair(isRunning, downloadQueue.size) }
+                .collectLatest { (isDownloading, downloadQueueSize) ->
+                    val pendingDownloadExists = downloadQueueSize != 0
+                    _downloadQueueState.value = when {
+                        !pendingDownloadExists -> DownloadQueueState.Stopped
+                        !isDownloading -> DownloadQueueState.Paused(downloadQueueSize)
+                        else -> DownloadQueueState.Downloading(downloadQueueSize)
+                    }
                 }
-            }
         }
     }
 }

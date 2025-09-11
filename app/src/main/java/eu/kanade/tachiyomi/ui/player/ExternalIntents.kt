@@ -11,19 +11,18 @@ import android.os.Bundle
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.track.anime.model.toDbTrack
-import eu.kanade.domain.track.anime.service.DelayedAnimeTrackingUpdateJob
-import eu.kanade.domain.track.anime.store.DelayedAnimeTrackingStore
+import eu.kanade.domain.track.model.toDbTrack
+import eu.kanade.domain.track.service.DelayedTrackingUpdateJob
 import eu.kanade.domain.track.service.TrackPreferences
+import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.PlayerData
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.track.AnimeTracker
+import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.source.anime.isNsfw
+import eu.kanade.tachiyomi.source.isNsfw
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
@@ -38,24 +37,26 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.anime.interactor.GetAnime
+import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.entries.anime.interactor.GetAnime
-import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.history.anime.interactor.UpsertAnimeHistory
-import tachiyomi.domain.history.anime.model.AnimeHistoryUpdate
-import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
-import tachiyomi.domain.items.episode.interactor.UpdateEpisode
-import tachiyomi.domain.items.episode.model.Episode
-import tachiyomi.domain.items.episode.model.EpisodeUpdate
-import tachiyomi.domain.source.anime.service.AnimeSourceManager
-import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
-import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
-import tachiyomi.source.local.entries.anime.LocalAnimeSource
+import tachiyomi.domain.episode.interactor.GetEpisodesByAnimeId
+import tachiyomi.domain.episode.interactor.UpdateEpisode
+import tachiyomi.domain.episode.model.Episode
+import tachiyomi.domain.episode.model.EpisodeUpdate
+import tachiyomi.domain.history.interactor.UpsertHistory
+import tachiyomi.domain.history.model.HistoryUpdate
+import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.track.interactor.GetTracks
+import tachiyomi.domain.track.interactor.InsertTrack
+import tachiyomi.source.local.LocalSource
+import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.util.Date
+import kotlin.getValue
 
 class ExternalIntents {
 
@@ -150,7 +151,7 @@ class ExternalIntents {
         } else {
             val uri = resolvedVideo.videoUrl.toUri()
 
-            val isOnDevice = if (anime.source == LocalAnimeSource.ID) {
+            val isOnDevice = if (anime.isLocal()) {
                 true
             } else {
                 downloadManager.isEpisodeDownloaded(
@@ -436,15 +437,15 @@ class ExternalIntents {
     }
 
     // List of all the required Injectable classes
-    private val upsertHistory: UpsertAnimeHistory = Injekt.get()
+    private val upsertHistory: UpsertHistory = Injekt.get()
     private val updateEpisode: UpdateEpisode = Injekt.get()
     private val getAnime: GetAnime = Injekt.get()
-    private val sourceManager: AnimeSourceManager = Injekt.get()
+    private val sourceManager: SourceManager = Injekt.get()
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId = Injekt.get()
-    private val getTracks: GetAnimeTracks = Injekt.get()
-    private val insertTrack: InsertAnimeTrack = Injekt.get()
-    private val downloadManager: AnimeDownloadManager by injectLazy()
-    private val delayedTrackingStore: DelayedAnimeTrackingStore = Injekt.get()
+    private val getTracks: GetTracks = Injekt.get()
+    private val insertTrack: InsertTrack = Injekt.get()
+    private val downloadManager: DownloadManager by injectLazy()
+    private val delayedTrackingStore: DelayedTrackingStore = Injekt.get()
     private val playerPreferences: PlayerPreferences = Injekt.get()
     private val downloadPreferences: DownloadPreferences = Injekt.get()
     private val trackPreferences: TrackPreferences = Injekt.get()
@@ -458,7 +459,7 @@ class ExternalIntents {
     private suspend fun saveEpisodeHistory(currentEpisode: Episode) {
         if (basePreferences.incognitoMode().get()) return
         upsertHistory.await(
-            AnimeHistoryUpdate(currentEpisode.id, Date()),
+            HistoryUpdate(currentEpisode.id, Date()),
         )
     }
 
@@ -552,7 +553,6 @@ class ExternalIntents {
                     val tracker = trackerManager.get(track.trackerId)
                     if (tracker != null &&
                         tracker.isLoggedIn &&
-                        tracker is AnimeTracker &&
                         episodeNumber > track.lastEpisodeSeen
                     ) {
                         val updatedTrack = track.copy(lastEpisodeSeen = episodeNumber)
@@ -562,11 +562,11 @@ class ExternalIntents {
                         async {
                             runCatching {
                                 if (context.isOnline()) {
-                                    tracker.animeService.update(updatedTrack.toDbTrack(), true)
+                                    tracker.update(updatedTrack.toDbTrack(), true)
                                     insertTrack.await(updatedTrack)
                                 } else {
-                                    delayedTrackingStore.addAnime(track.animeId, lastEpisodeSeen = episodeNumber)
-                                    DelayedAnimeTrackingUpdateJob.setupTask(context)
+                                    delayedTrackingStore.add(track.animeId, lastEpisodeSeen = episodeNumber)
+                                    DelayedTrackingUpdateJob.setupTask(context)
                                 }
                             }
                         }

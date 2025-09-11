@@ -1,14 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
@@ -17,26 +8,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastMap
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentMap
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
-import tachiyomi.presentation.core.components.OutlinedNumericChooser
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -51,91 +37,90 @@ object SettingsDownloadScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
-        val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(initial = emptyList())
+        val getCategories = remember { Injekt.get<GetCategories>() }
+        val allCategories by getCategories.subscribe().collectAsState(initial = emptyList())
+
         val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
+        // AY -->
         val basePreferences = remember { Injekt.get<BasePreferences>() }
+        // <-- AY
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.downloadOnlyOverWifi(),
                 title = stringResource(MR.strings.connected_to_wifi),
             ),
-            Preference.PreferenceItem.ListPreference(
-                preference = downloadPreferences.numberOfDownloads(),
-                entries = (1..5).associateWith { it.toString() }.toImmutableMap(),
-                title = stringResource(AYMR.strings.pref_download_slots),
-            ),
-            Preference.PreferenceItem.InfoPreference(stringResource(AYMR.strings.download_slots_info)),
             getDeleteEpisodesGroup(
                 downloadPreferences = downloadPreferences,
-                animeCategories = allAnimeCategories.toImmutableList(),
+                categories = allCategories,
             ),
             getAutoDownloadGroup(
                 downloadPreferences = downloadPreferences,
-                allAnimeCategories = allAnimeCategories.toImmutableList(),
+                allCategories = allCategories,
             ),
             getDownloadAheadGroup(downloadPreferences = downloadPreferences),
+            // AY -->
             getExternalDownloaderGroup(
                 downloadPreferences = downloadPreferences,
                 basePreferences = basePreferences,
             ),
+            // <-- AY
         )
     }
 
     @Composable
     private fun getDeleteEpisodesGroup(
         downloadPreferences: DownloadPreferences,
-        animeCategories: ImmutableList<Category>,
+        categories: List<Category>,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_category_delete_episodes),
+            title = stringResource(AMMR.strings.am_pref_category_delete_episodes),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = downloadPreferences.removeAfterMarkedAsSeen(),
-                    title = stringResource(MR.strings.pref_remove_after_marked_as_seen),
+                    title = stringResource(AMMR.strings.am_pref_remove_after_marked_as_seen),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = downloadPreferences.removeAfterSeenSlots(),
                     entries = persistentMapOf(
                         -1 to stringResource(MR.strings.disabled),
-                        0 to stringResource(MR.strings.last_seen_episode),
-                        1 to stringResource(MR.strings.second_to_last_episode),
-                        2 to stringResource(MR.strings.third_to_last_episode),
-                        3 to stringResource(MR.strings.fourth_to_last_episode),
-                        4 to stringResource(MR.strings.fifth_to_last_episode),
+                        0 to stringResource(AMMR.strings.am_last_seen_episode),
+                        1 to stringResource(AMMR.strings.am_second_to_last),
+                        2 to stringResource(AMMR.strings.am_third_to_last),
+                        3 to stringResource(AMMR.strings.am_fourth_to_last),
+                        4 to stringResource(AMMR.strings.am_fifth_to_last),
                     ),
-                    title = stringResource(MR.strings.pref_remove_after_seen),
+                    title = stringResource(AMMR.strings.am_pref_remove_after_seen),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = downloadPreferences.removeBookmarkedEpisodes(),
-                    title = stringResource(MR.strings.pref_remove_bookmarked_episodes),
+                    title = stringResource(AMMR.strings.am_pref_remove_bookmarked_episodes),
                 ),
-                getExcludedAnimeCategoriesPreference(
+                getExcludedCategoriesPreference(
                     downloadPreferences = downloadPreferences,
-                    categories = { animeCategories },
+                    categories = { categories },
                 ),
             ),
         )
     }
 
     @Composable
-    private fun getExcludedAnimeCategoriesPreference(
+    private fun getExcludedCategoriesPreference(
         downloadPreferences: DownloadPreferences,
         categories: () -> List<Category>,
     ): Preference.PreferenceItem.MultiSelectListPreference {
         return Preference.PreferenceItem.MultiSelectListPreference(
-            preference = downloadPreferences.removeExcludeAnimeCategories(),
+            preference = downloadPreferences.removeExcludeCategories(),
             entries = categories()
                 .associate { it.id.toString() to it.visualName }
                 .toImmutableMap(),
-            title = stringResource(AYMR.strings.pref_remove_exclude_categories_anime),
+            title = stringResource(MR.strings.pref_remove_exclude_categories),
         )
     }
 
     @Composable
     private fun getAutoDownloadGroup(
         downloadPreferences: DownloadPreferences,
-        allAnimeCategories: ImmutableList<Category>,
+        allCategories: List<Category>,
     ): Preference.PreferenceGroup {
         val downloadNewEpisodesPref = downloadPreferences.downloadNewEpisodes()
         val downloadNewUnseenEpisodesOnlyPref = downloadPreferences.downloadNewUnseenEpisodesOnly()
@@ -144,26 +129,22 @@ object SettingsDownloadScreen : SearchableSettings {
 
         val downloadNewEpisodes by downloadNewEpisodesPref.collectAsState()
 
-        val includedAnime by downloadNewEpisodeCategoriesPref.collectAsState()
-        val excludedAnime by downloadNewEpisodeCategoriesExcludePref.collectAsState()
-        var showAnimeDialog by rememberSaveable { mutableStateOf(false) }
-        if (showAnimeDialog) {
+        val included by downloadNewEpisodeCategoriesPref.collectAsState()
+        val excluded by downloadNewEpisodeCategoriesExcludePref.collectAsState()
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        if (showDialog) {
             TriStateListDialog(
-                title = stringResource(AYMR.strings.anime_categories),
+                title = stringResource(MR.strings.categories),
                 message = stringResource(MR.strings.pref_download_new_categories_details),
-                items = allAnimeCategories,
-                initialChecked = includedAnime.mapNotNull { id -> allAnimeCategories.find { it.id.toString() == id } },
-                initialInversed = excludedAnime.mapNotNull { id -> allAnimeCategories.find { it.id.toString() == id } },
+                items = allCategories,
+                initialChecked = included.mapNotNull { id -> allCategories.find { it.id.toString() == id } },
+                initialInversed = excluded.mapNotNull { id -> allCategories.find { it.id.toString() == id } },
                 itemLabel = { it.visualName },
-                onDismissRequest = { showAnimeDialog = false },
+                onDismissRequest = { showDialog = false },
                 onValueChanged = { newIncluded, newExcluded ->
-                    downloadNewEpisodeCategoriesPref.set(
-                        newIncluded.fastMap { it.id.toString() }.toSet(),
-                    )
-                    downloadNewEpisodeCategoriesExcludePref.set(
-                        newExcluded.fastMap { it.id.toString() }.toSet(),
-                    )
-                    showAnimeDialog = false
+                    downloadNewEpisodeCategoriesPref.set(newIncluded.fastMap { it.id.toString() }.toSet())
+                    downloadNewEpisodeCategoriesExcludePref.set(newExcluded.fastMap { it.id.toString() }.toSet())
+                    showDialog = false
                 },
             )
         }
@@ -181,14 +162,14 @@ object SettingsDownloadScreen : SearchableSettings {
                     enabled = downloadNewEpisodes,
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(AYMR.strings.anime_categories),
+                    title = stringResource(MR.strings.categories),
                     subtitle = getCategoriesLabel(
-                        allCategories = allAnimeCategories,
-                        included = includedAnime,
-                        excluded = excludedAnime,
+                        allCategories = allCategories,
+                        included = included,
+                        excluded = excluded,
                     ),
                     enabled = downloadNewEpisodes,
-                    onClick = { showAnimeDialog = true },
+                    onClick = { showDialog = true },
                 ),
             ),
         )
@@ -214,13 +195,12 @@ object SettingsDownloadScreen : SearchableSettings {
                         .toImmutableMap(),
                     title = stringResource(AYMR.strings.auto_download_while_watching),
                 ),
-                Preference.PreferenceItem.InfoPreference(
-                    stringResource(MR.strings.download_episode_ahead_info),
-                ),
+                Preference.PreferenceItem.InfoPreference(stringResource(AMMR.strings.am_download_ahead_info)),
             ),
         )
     }
 
+    // AY -->
     @Composable
     private fun getExternalDownloaderGroup(
         downloadPreferences: DownloadPreferences,
@@ -262,53 +242,5 @@ object SettingsDownloadScreen : SearchableSettings {
             ),
         )
     }
-
-    @Composable
-    private fun DownloadLimitDialog(
-        initialValue: Int,
-        onDismissRequest: () -> Unit,
-        onValueChanged: (newValue: Int) -> Unit,
-        onConfirm: () -> Unit,
-    ) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = { Text(stringResource(AYMR.strings.download_speed_limit)) },
-            text = {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .padding(bottom = MaterialTheme.padding.medium)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                    ) {
-                        OutlinedNumericChooser(
-                            label = stringResource(AYMR.strings.download_speed_limit),
-                            placeholder = "0",
-                            suffix = "KiB/s",
-                            value = initialValue,
-                            step = 100,
-                            min = 0,
-                            onValueChanged = onValueChanged,
-                        )
-                    }
-                    Text(text = stringResource(AYMR.strings.download_speed_limit_hint))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onConfirm()
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_ok))
-                }
-            },
-        )
-    }
+    // <-- AY
 }

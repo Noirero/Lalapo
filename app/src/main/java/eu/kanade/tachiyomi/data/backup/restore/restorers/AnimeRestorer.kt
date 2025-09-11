@@ -1,24 +1,24 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
-import eu.kanade.domain.entries.anime.interactor.UpdateAnime
+import eu.kanade.domain.anime.interactor.UpdateAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
-import eu.kanade.tachiyomi.data.backup.models.BackupAnimeHistory
-import eu.kanade.tachiyomi.data.backup.models.BackupAnimeTracking
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupEpisode
-import tachiyomi.data.AnimeUpdateStrategyColumnAdapter
-import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
-import tachiyomi.domain.entries.anime.interactor.GetAnimeByUrlAndSourceId
-import tachiyomi.domain.entries.anime.interactor.SetCustomAnimeInfo
-import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
-import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
-import tachiyomi.domain.items.episode.model.Episode
-import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
-import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
-import tachiyomi.domain.track.anime.model.AnimeTrack
+import eu.kanade.tachiyomi.data.backup.models.BackupHistory
+import eu.kanade.tachiyomi.data.backup.models.BackupTracking
+import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.UpdateStrategyColumnAdapter
+import tachiyomi.domain.anime.interactor.FetchInterval
+import tachiyomi.domain.anime.interactor.GetAnimeByUrlAndSourceId
+import tachiyomi.domain.anime.interactor.SetCustomAnimeInfo
+import tachiyomi.domain.anime.model.Anime
+import tachiyomi.domain.anime.model.CustomAnimeInfo
+import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.episode.interactor.GetEpisodesByAnimeId
+import tachiyomi.domain.episode.model.Episode
+import tachiyomi.domain.track.interactor.GetTracks
+import tachiyomi.domain.track.interactor.InsertTrack
+import tachiyomi.domain.track.model.Track
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.ZonedDateTime
@@ -26,17 +26,17 @@ import java.util.Date
 import kotlin.math.max
 
 class AnimeRestorer(
-    private val handler: AnimeDatabaseHandler = Injekt.get(),
-    private val getCategories: GetAnimeCategories = Injekt.get(),
+    private val handler: DatabaseHandler = Injekt.get(),
+    private val getCategories: GetCategories = Injekt.get(),
     private val getAnimeByUrlAndSourceId: GetAnimeByUrlAndSourceId = Injekt.get(),
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId = Injekt.get(),
     private val updateAnime: UpdateAnime = Injekt.get(),
-    private val getTracks: GetAnimeTracks = Injekt.get(),
-    private val insertTrack: InsertAnimeTrack = Injekt.get(),
+    private val getTracks: GetTracks = Injekt.get(),
+    private val insertTrack: InsertTrack = Injekt.get(),
     // AM (CUSTOM_INFORMATION) -->
     private val setCustomAnimeInfo: SetCustomAnimeInfo = Injekt.get(),
     // <-- AM (CUSTOM_INFORMATION)
-    fetchInterval: AnimeFetchInterval = Injekt.get(),
+    fetchInterval: FetchInterval = Injekt.get(),
 ) {
 
     private var now = ZonedDateTime.now()
@@ -81,6 +81,7 @@ class AnimeRestorer(
                 backupCategories = backupCategories,
                 history = backupAnime.history,
                 tracks = backupAnime.tracking,
+                excludedScanlators = backupAnime.excludedScanlators,
                 // AM (CUSTOM_INFORMATION) -->
                 customInfo = customInfo,
                 // <-- AM (CUSTOM_INFORMATION)
@@ -138,9 +139,10 @@ class AnimeRestorer(
                 coverLastModified = anime.coverLastModified,
                 dateAdded = anime.dateAdded,
                 animeId = anime.id,
-                updateStrategy = anime.updateStrategy.let(AnimeUpdateStrategyColumnAdapter::encode),
+                updateStrategy = anime.updateStrategy.let(UpdateStrategyColumnAdapter::encode),
                 version = anime.version,
                 isSyncing = 1,
+                notes = anime.notes,
             )
         }
         return anime
@@ -150,9 +152,7 @@ class AnimeRestorer(
         anime: Anime,
     ): Anime {
         return anime.copy(
-            initialized = anime.description != null,
             id = insertAnime(anime),
-            version = anime.version,
         )
     }
 
@@ -218,7 +218,9 @@ class AnimeRestorer(
                     episode.fillermark,
                     // <-- AM (FILLERMARK)
                     episode.lastSecondSeen,
+                    // AY -->
                     episode.totalSeconds,
+                    // <-- AY
                     episode.episodeNumber,
                     episode.sourceOrder,
                     episode.dateFetch,
@@ -243,7 +245,9 @@ class AnimeRestorer(
                     fillermark = episode.fillermark,
                     // <-- AM (FILLERMARK)
                     lastSecondSeen = episode.lastSecondSeen,
+                    // AY -->
                     totalSeconds = episode.totalSeconds,
+                    // <-- AY
                     episodeNumber = null,
                     sourceOrder = null,
                     dateFetch = null,
@@ -284,6 +288,7 @@ class AnimeRestorer(
                 dateAdded = anime.dateAdded,
                 updateStrategy = anime.updateStrategy,
                 version = anime.version,
+                notes = anime.notes,
             )
             animesQueries.selectLastInsertedRowId()
         }
@@ -294,8 +299,9 @@ class AnimeRestorer(
         episodes: List<BackupEpisode>,
         categories: List<Long>,
         backupCategories: List<BackupCategory>,
-        history: List<BackupAnimeHistory>,
-        tracks: List<BackupAnimeTracking>,
+        history: List<BackupHistory>,
+        tracks: List<BackupTracking>,
+        excludedScanlators: List<String>,
         // AM (CUSTOM_INFORMATION) -->
         customInfo: CustomAnimeInfo?,
         // <-- AM (CUSTOM_INFORMATION)
@@ -304,6 +310,7 @@ class AnimeRestorer(
         restoreEpisodes(anime, episodes)
         restoreTracking(anime, tracks)
         restoreHistory(history)
+        restoreExcludedScanlators(anime, excludedScanlators)
         // AM (CUSTOM_INFORMATION) -->
         restoreEditedInfo(customInfo?.copy(id = anime.id))
         // <-- AM (CUSTOM_INFORMATION)
@@ -312,7 +319,7 @@ class AnimeRestorer(
     }
 
     /**
-     * Restores the categories a anime is in.
+     * Restores the categories an anime is in.
      *
      * @param anime the anime whose categories have to be restored.
      * @param categories the categories to restore.
@@ -345,9 +352,9 @@ class AnimeRestorer(
         }
     }
 
-    private suspend fun restoreHistory(backupHistory: List<BackupAnimeHistory>) {
+    private suspend fun restoreHistory(backupHistory: List<BackupHistory>) {
         val toUpdate = backupHistory.mapNotNull { history ->
-            val dbHistory = handler.awaitOneOrNull { animehistoryQueries.getHistoryByEpisodeUrl(history.url) }
+            val dbHistory = handler.awaitOneOrNull { historyQueries.getHistoryByEpisodeUrl(history.url) }
             val item = history.getHistoryImpl()
 
             if (dbHistory == null) {
@@ -374,7 +381,7 @@ class AnimeRestorer(
         if (toUpdate.isNotEmpty()) {
             handler.await(true) {
                 toUpdate.forEach {
-                    animehistoryQueries.upsert(
+                    historyQueries.upsert(
                         it.episodeId,
                         it.seenAt,
                     )
@@ -383,7 +390,7 @@ class AnimeRestorer(
         }
     }
 
-    private suspend fun restoreTracking(anime: Anime, backupTracks: List<BackupAnimeTracking>) {
+    private suspend fun restoreTracking(anime: Anime, backupTracks: List<BackupTracking>) {
         val dbTrackByTrackerId = getTracks.await(anime.id).associateBy { it.trackerId }
 
         val (existingTracks, newTracks) = backupTracks
@@ -437,12 +444,33 @@ class AnimeRestorer(
         }
     }
 
+    private fun Track.forComparison() = this.copy(id = 0L, animeId = 0L)
+
+    /**
+     * Restores the excluded scanlators for the anime.
+     *
+     * @param anime the anime whose excluded scanlators have to be restored.
+     * @param excludedScanlators the excluded scanlators to restore.
+     */
+    private suspend fun restoreExcludedScanlators(anime: Anime, excludedScanlators: List<String>) {
+        if (excludedScanlators.isEmpty()) return
+        val existingExcludedScanlators = handler.awaitList {
+            excluded_scanlatorsQueries.getExcludedScanlatorsByAnimeId(anime.id)
+        }
+        val toInsert = excludedScanlators.filter { it !in existingExcludedScanlators }
+        if (toInsert.isNotEmpty()) {
+            handler.await {
+                toInsert.forEach {
+                    excluded_scanlatorsQueries.insert(anime.id, it)
+                }
+            }
+        }
+    }
+
     // AM (CUSTOM_INFORMATION) -->
     private fun restoreEditedInfo(animeJson: CustomAnimeInfo?) {
         animeJson ?: return
         setCustomAnimeInfo.set(animeJson)
     }
     // <-- AM (CUSTOM_INFORMATION)
-
-    private fun AnimeTrack.forComparison() = this.copy(id = 0L, animeId = 0L)
 }

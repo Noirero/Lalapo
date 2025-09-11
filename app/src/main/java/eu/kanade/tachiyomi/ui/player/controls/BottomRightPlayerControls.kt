@@ -27,7 +27,7 @@ import eu.kanade.tachiyomi.ui.player.controls.components.ControlsButton
 import eu.kanade.tachiyomi.ui.player.controls.components.FilledControlsButton
 import eu.kanade.tachiyomi.ui.player.execute
 import eu.kanade.tachiyomi.ui.player.executeLongPress
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButton
 
 @Composable
 fun BottomRightPlayerControls(

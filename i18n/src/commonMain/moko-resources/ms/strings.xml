@@ -149,7 +149,6 @@
     <string name="cookies_cleared">Cookies dihapuskan</string>
     <string name="pref_clear_database">Hapus pangkalan data</string>
     <string name="pref_clear_database_summary">Hapus sejarah entri yang tidak disimpan di dalam pustaka</string>
-    <string name="clear_database_confirmation">Adakah anda pasti? Bab dibaca dan kemajuan entri bukan-pustaka akan hilang</string>
     <string name="clear_database_completed">Entri dihapuskan</string>
     <string name="version">Versi</string>
     <string name="pref_enable_acra">Hantar laporan ranap</string>
@@ -543,7 +542,7 @@
     <string name="notification_size_warning">Kemas kini yang besar membahayakan sumber dan mengakibatkan sumber menjadi perlahan dan juga peningkatan penggunaan bateri. Ketik untuk ketahui selebihnya.</string>
     <string name="connected_to_wifi">Hanya menggunakan Wi-Fi</string>
     <string name="update_72hour">Setiap 3 hari</string>
-    <string name="download_queue_size_warning">Amaran: muat turun secara pukal besar boleh menyebabkan sumber menjadi lebih perlahan dan/atau menyekat Animiru. Ketik untuk ketahui selebihnya.</string>
+    <string name="download_queue_size_warning">Amaran: muat turun secara pukal besar boleh menyebabkan sumber menjadi lebih perlahan dan/atau menyekat Mihon. Ketik untuk ketahui selebihnya.</string>
     <string name="ext_update_all">Kemas kini semua</string>
     <string name="channel_app_updates">Kemas kini aplikasi</string>
     <string name="pref_auto_clear_chapter_cache">Hapus cache bab apabila membuka aplikasi</string>
@@ -679,9 +678,6 @@
     <string name="enhanced_services_not_installed">Tersedia tetapi sumber tidak dipasang: %s</string>
     <string name="copied_to_clipboard_plain">Disalin ke papan keratan</string>
     <string name="track_error">%1$s ralat: %2$s</string>
-    <string name="confirm_add_duplicate_manga">Entri di dalam pustaka anda mempunyai nama yang sama.
-\n
-\nAdakah anda ingin meneruskan?</string>
     <string name="information_required_plain">*diperlukan</string>
     <string name="pref_hide_in_library_items">Sembunyikan entri yang sudah ada di dalam pustaka</string>
     <string name="action_copy_to_clipboard">Salin ke papan keratan</string>
@@ -774,7 +770,7 @@
     <string name="action_sort_tracker_score">Skor penjejak</string>
     <string name="ext_revoke_trust">Batalkan sambungan dipercayakan yang tidak diketahui</string>
     <string name="information_empty_repos">Anda tidak menetapkan repositori.</string>
-    <string name="action_add_repo_message">Tambah repositori tambahan pada Animiru. Ini mestilah URL yang berakhir dengan \"index.min.json\".</string>
+    <string name="action_add_repo_message">Tambah repositori tambahan pada Mihon. Ini mestilah URL yang berakhir dengan \"index.min.json\".</string>
     <string name="action_open_repo">Buka sumber repositori</string>
     <string name="manga_interval_expected_update_soon">Tidak lama lagi</string>
     <string name="scanlator">Scanlator</string>

@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.theme.colorscheme.BaseColorScheme
+import eu.kanade.presentation.theme.colorscheme.CatppuccinColorScheme
 import eu.kanade.presentation.theme.colorscheme.CloudflareColorScheme
 import eu.kanade.presentation.theme.colorscheme.CottoncandyColorScheme
 import eu.kanade.presentation.theme.colorscheme.DoomColorScheme
@@ -72,7 +73,6 @@ private fun getThemeColorScheme(
     appTheme: AppTheme,
     isAmoled: Boolean,
 ): ColorScheme {
-    val uiPreferences = Injekt.get<UiPreferences>()
     val colorScheme = if (appTheme == AppTheme.MONET) {
         MonetColorScheme(LocalContext.current)
     } else {
@@ -84,6 +84,7 @@ private fun getThemeColorScheme(
     )
 }
 
+// AY -->
 private const val RIPPLE_DRAGGED_ALPHA = .5f
 private const val RIPPLE_FOCUSED_ALPHA = .6f
 private const val RIPPLE_HOVERED_ALPHA = .4f
@@ -99,20 +100,30 @@ val playerRippleConfiguration
             pressedAlpha = RIPPLE_PRESSED_ALPHA,
         ),
     )
+// <-- AY
 
 private val colorSchemes: Map<AppTheme, BaseColorScheme> = mapOf(
     AppTheme.DEFAULT to TachiyomiColorScheme,
+    AppTheme.CATPPUCCIN to CatppuccinColorScheme,
+    // AY -->
     AppTheme.CLOUDFLARE to CloudflareColorScheme,
     AppTheme.COTTONCANDY to CottoncandyColorScheme,
     AppTheme.DOOM to DoomColorScheme,
+    // <-- AY
     AppTheme.GREEN_APPLE to GreenAppleColorScheme,
     AppTheme.LAVENDER to LavenderColorScheme,
+    // AY -->
     AppTheme.MATRIX to MatrixColorScheme,
+    // <-- AY
     AppTheme.MIDNIGHT_DUSK to MidnightDuskColorScheme,
-    AppTheme.MONOCHROME to MonochromeColorScheme,
+    // AY -->
     AppTheme.MOCHA to MochaColorScheme,
-    AppTheme.SAPPHIRE to SapphireColorScheme,
+    // <-- AY
+    AppTheme.MONOCHROME to MonochromeColorScheme,
     AppTheme.NORD to NordColorScheme,
+    // AY -->
+    AppTheme.SAPPHIRE to SapphireColorScheme,
+    // <-- AY
     AppTheme.STRAWBERRY_DAIQUIRI to StrawberryColorScheme,
     AppTheme.TAKO to TakoColorScheme,
     AppTheme.TEALTURQUOISE to TealTurqoiseColorScheme,

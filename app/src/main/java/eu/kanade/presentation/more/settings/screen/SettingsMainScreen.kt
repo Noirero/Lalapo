@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.VideoSettings
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
@@ -44,13 +45,17 @@ import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.setting.PlayerSettingsScreen
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 object SettingsMainScreen : Screen() {
+
     @Composable
     override fun Content() {
         Content(twoPane = false)
@@ -134,9 +139,7 @@ object SettingsMainScreen : Screen() {
                                 .clip(RoundedCornerShape(24.dp))
                                 .then(
                                     if (selected) {
-                                        Modifier.background(
-                                            MaterialTheme.colorScheme.surfaceVariant,
-                                        )
+                                        Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
                                     } else {
                                         Modifier
                                     },
@@ -163,81 +166,85 @@ object SettingsMainScreen : Screen() {
     private fun Navigator.navigate(screen: VoyagerScreen, twoPane: Boolean) {
         if (twoPane) replaceAll(screen) else push(screen)
     }
-
-    private data class Item(
-        val titleRes: StringResource,
-        val subtitleRes: StringResource? = null,
-        val formatSubtitle: @Composable () -> String? = { subtitleRes?.let { stringResource(it) } },
-        val icon: ImageVector,
-        val screen: VoyagerScreen,
-    )
-
-    private val items = listOf(
-        Item(
-            titleRes = MR.strings.pref_category_appearance,
-            subtitleRes = MR.strings.pref_appearance_summary,
-            icon = Icons.Outlined.Palette,
-            screen = SettingsAppearanceScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_library,
-            subtitleRes = MR.strings.pref_anilib_summary,
-            icon = Icons.Outlined.CollectionsBookmark,
-            screen = SettingsLibraryScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_downloads,
-            subtitleRes = MR.strings.pref_downloads_summary,
-            icon = Icons.Outlined.GetApp,
-            screen = SettingsDownloadScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_tracking,
-            subtitleRes = MR.strings.pref_tracking_summary,
-            icon = Icons.Outlined.Sync,
-            screen = SettingsTrackingScreen,
-        ),
-        // AM (CONNECTION) -->
-        Item(
-            titleRes = MR.strings.pref_category_connection,
-            subtitleRes = MR.strings.pref_connection_summary,
-            icon = Icons.Outlined.Link,
-            screen = SettingsConnectionScreen,
-        ),
-        // <-- AM (CONNECTION)
-        Item(
-            titleRes = MR.strings.browse,
-            subtitleRes = MR.strings.pref_browse_summary,
-            icon = Icons.Outlined.Explore,
-            screen = SettingsBrowseScreen,
-        ),
-        Item(
-            titleRes = MR.strings.label_data_storage,
-            subtitleRes = MR.strings.pref_backup_summary,
-            icon = Icons.Outlined.Storage,
-            screen = SettingsDataScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_security,
-            subtitleRes = MR.strings.pref_security_summary,
-            icon = Icons.Outlined.Security,
-            screen = SettingsSecurityScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_advanced,
-            subtitleRes = MR.strings.pref_advanced_summary,
-            icon = Icons.Outlined.Code,
-            screen = SettingsAdvancedScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_about,
-            formatSubtitle = {
-                "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName(
-                    withBuildDate = false,
-                )}"
-            },
-            icon = Icons.Outlined.Info,
-            screen = AboutScreen,
-        ),
-    )
 }
+
+private data class Item(
+    val titleRes: StringResource,
+    val subtitleRes: StringResource? = null,
+    val formatSubtitle: @Composable () -> String? = { subtitleRes?.let { stringResource(it) } },
+    val icon: ImageVector,
+    val screen: VoyagerScreen,
+)
+
+private val items = listOf(
+    Item(
+        titleRes = MR.strings.pref_category_appearance,
+        subtitleRes = MR.strings.pref_appearance_summary,
+        icon = Icons.Outlined.Palette,
+        screen = SettingsAppearanceScreen,
+    ),
+    Item(
+        titleRes = MR.strings.pref_category_library,
+        subtitleRes = AMMR.strings.am_pref_library_summary,
+        icon = Icons.Outlined.CollectionsBookmark,
+        screen = SettingsLibraryScreen,
+    ),
+    Item(
+        titleRes = AYMR.strings.label_player,
+        subtitleRes = AYMR.strings.pref_player_settings_summary,
+        icon = Icons.Outlined.VideoSettings,
+        screen = PlayerSettingsScreen(mainSettings = true),
+    ),
+    Item(
+        titleRes = MR.strings.pref_category_downloads,
+        subtitleRes = MR.strings.pref_downloads_summary,
+        icon = Icons.Outlined.GetApp,
+        screen = SettingsDownloadScreen,
+    ),
+    Item(
+        titleRes = MR.strings.pref_category_tracking,
+        subtitleRes = MR.strings.pref_tracking_summary,
+        icon = Icons.Outlined.Sync,
+        screen = SettingsTrackingScreen,
+    ),
+    // AM (CONNECTION) -->
+    Item(
+        titleRes = AMMR.strings.pref_category_connection,
+        subtitleRes = AMMR.strings.pref_connection_summary,
+        icon = Icons.Outlined.Link,
+        screen = SettingsConnectionScreen,
+    ),
+    // <-- AM (CONNECTION)
+    Item(
+        titleRes = MR.strings.browse,
+        subtitleRes = MR.strings.pref_browse_summary,
+        icon = Icons.Outlined.Explore,
+        screen = SettingsBrowseScreen,
+    ),
+    Item(
+        titleRes = MR.strings.label_data_storage,
+        subtitleRes = MR.strings.pref_backup_summary,
+        icon = Icons.Outlined.Storage,
+        screen = SettingsDataScreen,
+    ),
+    Item(
+        titleRes = MR.strings.pref_category_security,
+        subtitleRes = MR.strings.pref_security_summary,
+        icon = Icons.Outlined.Security,
+        screen = SettingsSecurityScreen,
+    ),
+    Item(
+        titleRes = MR.strings.pref_category_advanced,
+        subtitleRes = MR.strings.pref_advanced_summary,
+        icon = Icons.Outlined.Code,
+        screen = SettingsAdvancedScreen,
+    ),
+    Item(
+        titleRes = MR.strings.pref_category_about,
+        formatSubtitle = {
+            "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName(withBuildDate = false)}"
+        },
+        icon = Icons.Outlined.Info,
+        screen = AboutScreen,
+    ),
+)

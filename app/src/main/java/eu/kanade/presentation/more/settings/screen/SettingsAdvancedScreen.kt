@@ -23,13 +23,12 @@ import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.extension.anime.interactor.TrustAnimeExtension
+import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.presentation.more.settings.screen.advanced.ClearAnimeDatabaseScreen
+import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
-import eu.kanade.tachiyomi.data.library.anime.AnimeMetadataUpdateJob
+import eu.kanade.tachiyomi.data.download.DownloadCache
+import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
@@ -58,7 +57,9 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.Headers
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -79,6 +80,7 @@ object SettingsAdvancedScreen : SearchableSettings {
 
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val networkPreferences = remember { Injekt.get<NetworkPreferences>() }
+        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
 
         return listOf(
             Preference.PreferenceItem.TextPreference(
@@ -119,7 +121,7 @@ object SettingsAdvancedScreen : SearchableSettings {
             getBackgroundActivityGroup(),
             getDataGroup(),
             getNetworkGroup(networkPreferences = networkPreferences),
-            getLibraryGroup(),
+            getLibraryGroup(libraryPreferences = libraryPreferences),
             getExtensionsGroup(basePreferences = basePreferences),
         )
     }
@@ -173,16 +175,16 @@ object SettingsAdvancedScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_invalidate_download_cache),
-                    subtitle = stringResource(MR.strings.pref_invalidate_episode_download_cache_summary),
+                    subtitle = stringResource(AMMR.strings.am_pref_invalidate_download_cache_summary),
                     onClick = {
-                        Injekt.get<AnimeDownloadCache>().invalidateCache()
+                        Injekt.get<DownloadCache>().invalidateCache()
                         context.toast(MR.strings.download_cache_invalidated)
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_clear_database),
                     subtitle = stringResource(MR.strings.pref_clear_database_summary),
-                    onClick = { navigator.push(ClearAnimeDatabaseScreen()) },
+                    onClick = { navigator.push(ClearDatabaseScreen()) },
                 ),
             ),
         )
@@ -244,7 +246,9 @@ object SettingsAdvancedScreen : SearchableSettings {
                         PREF_DOH_CONTROLD to "Control D",
                         PREF_DOH_NJALLA to "Njalla",
                         PREF_DOH_SHECAN to "Shecan",
+                        // AY -->
                         PREF_DOH_LIBREDNS to "LibreDNS",
+                        // <-- AY
                     ),
                     title = stringResource(MR.strings.pref_dns_over_https),
                     onValueChanged = {
@@ -280,7 +284,10 @@ object SettingsAdvancedScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getLibraryGroup(): Preference.PreferenceGroup {
+    private fun getLibraryGroup(
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup {
+        val scope = rememberCoroutineScope()
         val context = LocalContext.current
 
         return Preference.PreferenceGroup(
@@ -288,10 +295,12 @@ object SettingsAdvancedScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_refresh_library_covers),
-                    onClick = {
-                        AnimeLibraryUpdateJob.startNow(context)
-                        AnimeMetadataUpdateJob.startNow(context)
-                    },
+                    onClick = { MetadataUpdateJob.startNow(context) },
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.updateAnimeTitles(),
+                    title = stringResource(AMMR.strings.am_pref_update_library_anime_titles),
+                    subtitle = stringResource(AMMR.strings.am_pref_update_library_anime_titles_summary),
                 ),
             ),
         )
@@ -305,18 +314,14 @@ object SettingsAdvancedScreen : SearchableSettings {
         val uriHandler = LocalUriHandler.current
         val extensionInstallerPref = basePreferences.extensionInstaller()
         var shizukuMissing by rememberSaveable { mutableStateOf(false) }
-        val trustAnimeExtension = remember { Injekt.get<TrustAnimeExtension>() }
+        val trustExtension = remember { Injekt.get<TrustExtension>() }
 
         if (shizukuMissing) {
             val dismiss = { shizukuMissing = false }
             AlertDialog(
                 onDismissRequest = dismiss,
                 title = { Text(text = stringResource(MR.strings.ext_installer_shizuku)) },
-                text = {
-                    Text(
-                        text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog),
-                    )
-                },
+                text = { Text(text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog)) },
                 dismissButton = {
                     TextButton(onClick = dismiss) {
                         Text(text = stringResource(MR.strings.action_cancel))
@@ -357,7 +362,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.ext_revoke_trust),
                     onClick = {
-                        trustAnimeExtension.revokeAll()
+                        trustExtension.revokeAll()
                         context.toast(MR.strings.requires_app_restart)
                     },
                 ),

@@ -1,4 +1,4 @@
-Looking to report an issue/bug or make a feature request? Please refer to the [README file](https://github.com/aniyomiorg/aniyomi#issues-feature-requests-and-contributing).
+Looking to report an issue/bug or make a feature request? Please refer to the [README file](https://github.com/quickdesh/Animiru#issues-feature-requests-and-contributing).
 
 ---
 
@@ -9,7 +9,7 @@ Thanks for your interest in contributing to Animiru!
 
 Pull requests are welcome!
 
-If you're interested in taking on [an open issue](https://github.com/Quickdesh/Animiru/issues), please comment on it so others are aware.
+If you're interested in taking on [an open issue](https://github.com/quickdesh/Animiru/issues), please comment on it so others are aware.
 You do not need to ask for permission nor an assignment.
 
 ## Prerequisites
@@ -47,15 +47,16 @@ Surround the new code with:
 - **AM (GROUPING)** --> Copied from SY, Thank you jobobby4/syer!
 - **AM (RECENTS)** --> Idea inspired from J2K, Thank you Jays2Kings!
 - **AM (SYNC, SYNC_DRIVE, SYNC_YOMI)** --> Original code in SyncYomi, copied from Kuukiyomi. Thank you Kaiserbh and Luftverbot!
-
+- **AM (STORAGE_SCREEN)** --> Taken from Aniyomi and refactored to fit Animiru's codebase!
+- **AM (RECENTS_FILTER_CHIP)** --> Thank you Quickdesh!
 
 ## Linting
 
-To auto-fix some linting errors, run the `ktlintFormat` Gradle task.
+To auto-fix some linting errors, run the `spotlessApply` Gradle task.
 
 ## Getting help
 
-- Join [the Discord server](https://discord.gg/F32UjdJZrR) for online help and to ask questions while developing.
+- Join [the Discord server](https://discord.gg/yDuHDMwxhv) for online help and to ask questions while developing.
 
 # Translations
 
@@ -69,11 +70,8 @@ Forks are allowed so long as they abide by [the project's LICENSE](https://githu
 When creating a fork, remember to:
 
 - To avoid confusion with the main app:
-  - Change the app name
-  - Change the app icon
-  - Change or disable the [app update checker](https://github.com/Quickdesh/Animiru/blob/master/app/src/main/java/eu/kanade/tachiyomi/data/updater/AppUpdateChecker.kt)
+    - Change the app name
+    - Change the app icon
+    - Change or disable the [app update checker](https://github.com/quickdesh/Animiru/blob/main/app/src/main/java/eu/kanade/tachiyomi/data/updater/AppUpdateChecker.kt)
 - To avoid installation conflicts:
-  - Change the `applicationId` in [`build.gradle.kts`](https://github.com/Quickdesh/Animiru/blob/master/app/build.gradle.kts)
-- To avoid having your data polluting the main app's analytics and crash report services:
-  - If you want to use Firebase analytics, replace [`google-services.json`](https://github.com/aniyomiorg/aniyomi/blob/master/app/src/standard/google-services.json) with your own
-  - If you want to use ACRA crash reporting, replace the `ACRA_URI` endpoint in [`build.gradle.kts`](https://github.com/aniyomiorg/aniyomi/blob/master/app/build.gradle.kts) with your own
+    - Change the `applicationId` in [`build.gradle.kts`](https://github.com/quickdesh/Animiru/blob/main/app/build.gradle.kts)

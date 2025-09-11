@@ -1,10 +1,11 @@
+// AY -->
 package eu.kanade.tachiyomi.data.track.simkl
 
 import android.net.Uri
 import android.util.Log
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
+import eu.kanade.tachiyomi.data.database.models.Track
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.simkl.dto.SimklOAuth
 import eu.kanade.tachiyomi.data.track.simkl.dto.SimklSearchResult
 import eu.kanade.tachiyomi.data.track.simkl.dto.SimklSyncResult
@@ -34,7 +35,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
 
     private val authClient = client.newBuilder().addInterceptor(interceptor).build()
 
-    suspend fun addLibAnime(track: AnimeTrack): AnimeTrack {
+    suspend fun addLibAnime(track: Track): Track {
         return withIOContext {
             val type = track.tracking_url
                 .substringAfter("/")
@@ -46,7 +47,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
         }
     }
 
-    private suspend fun addToList(track: AnimeTrack, mediaType: String) {
+    private suspend fun addToList(track: Track, mediaType: String) {
         val payload = buildJsonObject {
             putJsonArray(mediaType) {
                 addJsonObject {
@@ -62,7 +63,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
         ).awaitSuccess()
     }
 
-    private suspend fun updateRating(track: AnimeTrack, mediaType: String) {
+    private suspend fun updateRating(track: Track, mediaType: String) {
         val payload = buildJsonObject {
             putJsonArray(mediaType) {
                 addJsonObject {
@@ -85,7 +86,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
         }
     }
 
-    private suspend fun updateProgress(track: AnimeTrack) {
+    private suspend fun updateProgress(track: Track) {
         // first remove
         authClient.newCall(
             POST("$API_URL/sync/history/remove", body = buildProgressObject(track, false)),
@@ -96,7 +97,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
         ).awaitSuccess()
     }
 
-    private fun buildProgressObject(track: AnimeTrack, add: Boolean = true) = buildJsonObject {
+    private fun buildProgressObject(track: Track, add: Boolean = true) = buildJsonObject {
         putJsonArray("shows") {
             addJsonObject {
                 putJsonObject("ids") {
@@ -120,7 +121,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
         }
     }.toString().toRequestBody(jsonMime)
 
-    suspend fun updateLibAnime(track: AnimeTrack): AnimeTrack {
+    suspend fun updateLibAnime(track: Track): Track {
         return withIOContext {
             // determine media type
             val type = track.tracking_url
@@ -140,7 +141,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
         }
     }
 
-    suspend fun searchAnime(search: String, type: String): List<AnimeTrackSearch> {
+    suspend fun searchAnime(search: String, type: String): List<TrackSearch> {
         return withIOContext {
             val searchUrl = "$API_URL/search/$type".toUri().buildUpon()
                 .appendQueryParameter("q", search)
@@ -160,7 +161,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
      * Checks if the given [track] exists in the user's list and
      * returns all info about it or null if it isn't found.
      */
-    suspend fun findLibAnime(track: AnimeTrack): AnimeTrack? {
+    suspend fun findLibAnime(track: Track): Track? {
         return withIOContext {
             val payload = buildJsonArray {
                 addJsonObject {
@@ -175,8 +176,6 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
                     .parseAs<List<SimklSyncWatched>>()
                     .firstOrNull() ?: return@withIOContext null
             }
-
-            Log.i("SOMETHING-IDK", foundAnime.toString())
 
             if (foundAnime.result != true) return@withIOContext null
             val lastWatched = foundAnime.lastWatched ?: return@withIOContext null
@@ -200,7 +199,7 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
                     } ?: return@withIOContext null
             }
 
-            listAnime.toAnimeTrack(typeName, type, status)
+            listAnime.toTrack(typeName, type, status)
         }
     }
 
@@ -256,3 +255,4 @@ class SimklApi(private val client: OkHttpClient, interceptor: SimklInterceptor) 
                 .build()
     }
 }
+// <-- AY

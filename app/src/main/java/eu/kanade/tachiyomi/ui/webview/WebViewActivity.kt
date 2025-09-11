@@ -24,13 +24,13 @@ import logcat.LogPriority
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {
 
-    private val animeSourceManager: AnimeSourceManager by injectLazy()
+    private val sourceManager: SourceManager by injectLazy()
     private val network: NetworkHelper by injectLazy()
 
     private var assistUrl: String? = null
@@ -60,10 +60,11 @@ class WebViewActivity : BaseActivity() {
 
         val url = intent.extras?.getString(URL_KEY) ?: return
         assistUrl = url
+
         var headers = emptyMap<String, String>()
-        (animeSourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? AnimeHttpSource)?.let { animeSource ->
+        (sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? AnimeHttpSource)?.let { source ->
             try {
-                headers = animeSource.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
+                headers = source.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Failed to build headers" }
             }
@@ -138,21 +139,13 @@ class WebViewActivity : BaseActivity() {
         private const val URL_KEY = "url_key"
         private const val SOURCE_KEY = "source_key"
         private const val TITLE_KEY = "title_key"
-        private const val ANIME_KEY = "anime_key"
 
-        fun newIntent(
-            context: Context,
-            url: String,
-            sourceId: Long? = null,
-            title: String? = null,
-            isAnime: Boolean = false,
-        ): Intent {
+        fun newIntent(context: Context, url: String, sourceId: Long? = null, title: String? = null): Intent {
             return Intent(context, WebViewActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 putExtra(URL_KEY, url)
                 putExtra(SOURCE_KEY, sourceId)
                 putExtra(TITLE_KEY, title)
-                putExtra(ANIME_KEY, isAnime)
             }
         }
     }

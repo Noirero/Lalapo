@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.update
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.LazyColumnWithAction
 import tachiyomi.presentation.core.components.SectionCard
@@ -40,7 +41,7 @@ class SyncSettingsSelector : Screen() {
         Scaffold(
             topBar = {
                 AppBar(
-                    title = stringResource(MR.strings.pref_choose_what_to_sync),
+                    title = stringResource(AMMR.strings.pref_choose_what_to_sync),
                     navigateUp = navigator::pop,
                     scrollBehavior = it,
                 )
@@ -48,14 +49,14 @@ class SyncSettingsSelector : Screen() {
         ) { contentPadding ->
             LazyColumnWithAction(
                 contentPadding = contentPadding,
-                actionLabel = stringResource(MR.strings.label_sync),
+                actionLabel = stringResource(AMMR.strings.label_sync),
                 actionEnabled = true,
                 onClickAction = {
                     if (!SyncDataJob.isRunning(context)) {
                         model.syncNow(context)
                         navigator.pop()
                     } else {
-                        context.toast(MR.strings.sync_in_progress)
+                        context.toast(AMMR.strings.sync_in_progress)
                     }
                 },
             ) {

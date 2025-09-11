@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -21,21 +23,20 @@ import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
-import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
+import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.recents.RecentsTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import soup.compose.material.motion.animation.materialSharedAxisX
+import soup.compose.material.motion.animation.materialFadeThroughIn
+import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.presentation.core.components.material.Scaffold
-import uy.kohesive.injekt.injectLazy
 
 object HomeScreen : Screen() {
 
@@ -43,14 +44,14 @@ object HomeScreen : Screen() {
     private val openTabEvent = Channel<Tab>()
     private val showBottomNavEvent = Channel<Boolean>()
 
-    private const val TAB_FADE_DURATION = 300
-    private const val TAB_NAVIGATOR_KEY = "HomeTabs"
+    @Suppress("ConstPropertyName")
+    private const val TabFadeDuration = 200
 
-    private val uiPreferences: UiPreferences by injectLazy()
-    private val defaultTab = uiPreferences.startScreen().get().tab
+    @Suppress("ConstPropertyName")
+    private const val TabNavigatorKey = "HomeTabs"
 
-    private val tabs = listOf(
-        AnimeLibraryTab,
+    private val TABS = listOf(
+        LibraryTab,
         // AM (RECENTS) -->
         RecentsTab,
         // <-- AM (RECENTS)
@@ -64,14 +65,16 @@ object HomeScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         TabNavigator(
-            tab = defaultTab,
-            key = TAB_NAVIGATOR_KEY,
+            tab = LibraryTab,
+            key = TabNavigatorKey,
         ) { tabNavigator ->
             // AM (NAVIGATION_PILL) -->
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 val currentTabIndex by remember {
-                    derivedStateOf { tabs.indexOfFirst { it::class == tabNavigator.current::class } }
+                    // AM (RECENTS_FILTER_CHIP) -->
+                    derivedStateOf { TABS.indexOfFirst { it::class == tabNavigator.current::class } }
+                    // <-- AM (RECENTS_FILTER_CHIP)
                 }
 
                 var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
@@ -91,12 +94,11 @@ object HomeScreen : Screen() {
                             exit = shrinkVertically(),
                         ) {
                             NavigationPill(
-                                tabs = tabs,
-                                labelFade = TAB_FADE_DURATION / 2,
+                                tabs = TABS,
+                                labelFade = TabFadeDuration / 2,
                             )
                         }
                     },
-                    // <-- AM (NAVIGATION_PILL)
                     contentWindowInsets = WindowInsets(0),
                 ) { contentPadding ->
                     Box(
@@ -107,11 +109,8 @@ object HomeScreen : Screen() {
                         AnimatedContent(
                             targetState = tabNavigator.current,
                             transitionSpec = {
-                                materialSharedAxisX(
-                                    forward = oldIndex < currentTabIndex,
-                                    slideDistance = 500,
-                                    durationMillis = TAB_FADE_DURATION,
-                                )
+                                materialFadeThroughIn(initialScale = 1f, durationMillis = TabFadeDuration) togetherWith
+                                    materialFadeThroughOut(durationMillis = TabFadeDuration)
                             },
                             label = "tabContent",
                         ) {
@@ -120,23 +119,24 @@ object HomeScreen : Screen() {
                             }
                         }
                     }
-                    // AM (NAVIGATION_PILL) -->
-                    // <-- AM (NAVIGATION_PILL)
                 }
             }
+
+            val goToLibraryTab = { tabNavigator.current = LibraryTab }
+
+            BackHandler(enabled = tabNavigator.current != LibraryTab, onBack = goToLibraryTab)
 
             LaunchedEffect(Unit) {
                 launch {
                     librarySearchEvent.receiveAsFlow().collectLatest {
-                        when (defaultTab) {
-                            AnimeLibraryTab -> AnimeLibraryTab.search(it)
-                        }
+                        goToLibraryTab()
+                        LibraryTab.search(it)
                     }
                 }
                 launch {
                     openTabEvent.receiveAsFlow().collectLatest {
                         tabNavigator.current = when (it) {
-                            is Tab.AnimeLib -> AnimeLibraryTab
+                            is Tab.Library -> LibraryTab
                             // AM (RECENTS) -->
                             is Tab.Recents -> {
                                 if (it.toHistory) {
@@ -151,13 +151,11 @@ object HomeScreen : Screen() {
                             is Tab.More -> MoreTab
                         }
 
-                        if (it is Tab.AnimeLib && it.animeIdToOpen != null) {
+                        if (it is Tab.Library && it.animeIdToOpen != null) {
                             navigator.push(AnimeScreen(it.animeIdToOpen))
                         }
                         if (it is Tab.More && it.toDownloads) {
-                            // AM (REMOVE_TABBED_SCREENS) -->
                             navigator.push(DownloadQueueScreen)
-                            // <-- AM (REMOVE_TABBED_SCREENS)
                         }
                     }
                 }
@@ -178,7 +176,7 @@ object HomeScreen : Screen() {
     }
 
     sealed interface Tab {
-        data class AnimeLib(val animeIdToOpen: Long? = null) : Tab
+        data class Library(val animeIdToOpen: Long? = null) : Tab
 
         // AM (RECENTS) -->
         data class Recents(val toHistory: Boolean) : Tab

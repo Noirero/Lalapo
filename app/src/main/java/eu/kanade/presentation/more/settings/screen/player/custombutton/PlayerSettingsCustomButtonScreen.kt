@@ -18,7 +18,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
-import tachiyomi.domain.custombuttons.model.CustomButtonUpdate
+import tachiyomi.domain.custombutton.model.CustomButtonUpdate
 import tachiyomi.presentation.core.screens.LoadingScreen
 
 object PlayerSettingsCustomButtonScreen : Screen() {

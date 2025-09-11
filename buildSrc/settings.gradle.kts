@@ -12,10 +12,12 @@ dependencyResolutionManagement {
         create("kotlinx") {
             from(files("../gradle/kotlinx.versions.toml"))
         }
+        // AY -->
         create("aniyomilibs") {
             from(files("../gradle/aniyomi.versions.toml"))
         }
+        // <-- AY
     }
 }
 
-rootProject.name = "Animiru"
+rootProject.name = "mihon-buildSrc"

@@ -29,6 +29,7 @@ import java.security.MessageDigest
  */
 @Suppress("unused")
 abstract class AnimeHttpSource : AnimeCatalogueSource {
+
     /**
      * Network service.
      */
@@ -109,10 +110,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      *
      * @param page the page number to retrieve.
      */
-    @Deprecated(
-        "Use the non-RxJava API instead",
-        ReplaceWith("getPopularAnime"),
-    )
+    @Deprecated("Use the non-RxJava API instead", replaceWith = ReplaceWith("getPopularAnime"))
     override fun fetchPopularAnime(page: Int): Observable<AnimesPage> {
         return client.newCall(popularAnimeRequest(page))
             .asObservableSuccess()
@@ -143,11 +141,12 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * @param query the search query.
      * @param filters the list of filters to apply.
      */
-    @Deprecated(
-        "Use the non-RxJava API instead",
-        ReplaceWith("getSearchAnime"),
-    )
-    override fun fetchSearchAnime(page: Int, query: String, filters: AnimeFilterList): Observable<AnimesPage> {
+    @Deprecated("Use the non-RxJava API instead", replaceWith = ReplaceWith("getSearchAnime"))
+    override fun fetchSearchAnime(
+        page: Int,
+        query: String,
+        filters: AnimeFilterList,
+    ): Observable<AnimesPage> {
         return Observable.defer {
             try {
                 client.newCall(searchAnimeRequest(page, query, filters)).asObservableSuccess()
@@ -169,7 +168,11 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * @param query the search query.
      * @param filters the list of filters to apply.
      */
-    protected abstract fun searchAnimeRequest(page: Int, query: String, filters: AnimeFilterList): Request
+    protected abstract fun searchAnimeRequest(
+        page: Int,
+        query: String,
+        filters: AnimeFilterList,
+    ): Request
 
     /**
      * Parses the response from the site and returns a [AnimesPage] object.
@@ -183,10 +186,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      *
      * @param page the page number to retrieve.
      */
-    @Deprecated(
-        "Use the non-RxJava API instead",
-        ReplaceWith("getLatestUpdates"),
-    )
+    @Deprecated("Use the non-RxJava API instead", replaceWith = ReplaceWith("getLatestUpdates"))
     override fun fetchLatestUpdates(page: Int): Observable<AnimesPage> {
         return client.newCall(latestUpdatesRequest(page))
             .asObservableSuccess()
@@ -210,10 +210,10 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
     protected abstract fun latestUpdatesParse(response: Response): AnimesPage
 
     /**
-     * Get the updated details for a anime.
+     * Get the updated details for an anime.
      * Normally it's not needed to override this method.
      *
-     * @param anime the anime to be updated.
+     * @param anime the anime to update.
      * @return the updated anime.
      */
     @Suppress("DEPRECATION")
@@ -385,8 +385,8 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * @param episode the episode.
      * @return the videos for the episode.
      */
+    @Suppress("DEPRECATION")
     override suspend fun getVideoList(episode: SEpisode): List<Video> {
-        @Suppress("DEPRECATION")
         return fetchVideoList(episode).awaitSingle()
     }
 
@@ -410,7 +410,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
     }
 
     /**
-     * Parses the response from the site and returns a list of pages.
+     * Parses the response from the site and returns a list of videos.
      *
      * @param response the response from the site.
      */
@@ -444,7 +444,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
     }
 
     /**
-     * Returns an observable with the page containing the source url of the image. If there's any
+     * Returns an observable with the page containing the source url of the video. If there's any
      * error, it will return null instead of throwing an exception.
      *
      * @since extensions-lib 1.5
@@ -487,10 +487,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * @param request the http request for the video that has to be downloaded.
      * @param listener the progress listener that has to be attached to the http request
      */
-    suspend fun getVideo(
-        request: Request,
-        listener: ProgressListener,
-    ): Response {
+    suspend fun getVideo(request: Request, listener: ProgressListener): Response {
         return client.newCachelessCallWithProgress(request, listener)
             .awaitSuccess()
     }
@@ -524,11 +521,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      * @param start starting byte of chunk
      * @param end   ending byte of chunk
      */
-    fun videoRequest(
-        video: Video,
-        start: Long,
-        end: Long,
-    ): Request {
+    fun videoRequest(video: Video, start: Long, end: Long): Request {
         val headers = video.headers ?: headers
         val newHeaders =
             if (end - start > 0L) {
@@ -600,7 +593,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
     /**
      * Returns the url of the provided anime
      *
-     * @since extensions-lib 14
+     * @since extensions-lib 1.4
      * @param anime the anime
      * @return url of the anime
      */
@@ -611,7 +604,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
     /**
      * Returns the url of the provided episode
      *
-     * @since extensions-lib 14
+     * @since extensions-lib 1.4
      * @param episode the episode
      * @return url of the episode
      */

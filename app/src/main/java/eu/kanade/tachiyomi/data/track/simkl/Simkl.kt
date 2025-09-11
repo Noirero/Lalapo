@@ -1,23 +1,23 @@
+// AY -->
 package eu.kanade.tachiyomi.data.track.simkl
 
 import android.graphics.Color
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.track.AnimeTracker
+import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
+import eu.kanade.tachiyomi.data.track.Tracker
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.simkl.dto.SimklOAuth
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
+import tachiyomi.domain.track.model.Track as DomainTrack
 
-class Simkl(id: Long) : BaseTracker(id, "Simkl"), AnimeTracker {
+class Simkl(id: Long) : BaseTracker(id, "Simkl"), Tracker {
 
     companion object {
         const val WATCHING = 1L
@@ -39,15 +39,15 @@ class Simkl(id: Long) : BaseTracker(id, "Simkl"), AnimeTracker {
 
     override fun getScoreList(): ImmutableList<String> = SCORE_LIST
 
-    override fun displayScore(track: DomainAnimeTrack): String {
+    override fun displayScore(track: DomainTrack): String {
         return track.score.toInt().toString()
     }
 
-    private suspend fun add(track: AnimeTrack): AnimeTrack {
+    private suspend fun add(track: Track): Track {
         return api.addLibAnime(track)
     }
 
-    override suspend fun update(track: AnimeTrack, didWatchEpisode: Boolean): AnimeTrack {
+    override suspend fun update(track: Track, didWatchEpisode: Boolean): Track {
         if (track.status != COMPLETED) {
             if (didWatchEpisode) {
                 if (track.last_episode_seen.toLong() == track.total_episodes && track.total_episodes > 0) {
@@ -61,7 +61,7 @@ class Simkl(id: Long) : BaseTracker(id, "Simkl"), AnimeTracker {
         return api.updateLibAnime(track)
     }
 
-    override suspend fun bind(track: AnimeTrack, hasSeenEpisodes: Boolean): AnimeTrack {
+    override suspend fun bind(track: Track, hasSeenEpisodes: Boolean): Track {
         val remoteTrack = api.findLibAnime(track)
         return if (remoteTrack != null) {
             track.copyPersonalFrom(remoteTrack)
@@ -80,13 +80,13 @@ class Simkl(id: Long) : BaseTracker(id, "Simkl"), AnimeTracker {
         }
     }
 
-    override suspend fun searchAnime(query: String): List<AnimeTrackSearch> {
+    override suspend fun search(query: String): List<TrackSearch> {
         return api.searchAnime(query, "anime") +
             api.searchAnime(query, "tv") +
             api.searchAnime(query, "movie")
     }
 
-    override suspend fun refresh(track: AnimeTrack): AnimeTrack {
+    override suspend fun refresh(track: Track): Track {
         api.findLibAnime(track)?.let { remoteTrack ->
             track.copyPersonalFrom(remoteTrack)
             track.total_episodes = remoteTrack.total_episodes
@@ -98,11 +98,11 @@ class Simkl(id: Long) : BaseTracker(id, "Simkl"), AnimeTracker {
 
     override fun getLogoColor() = Color.rgb(0, 0, 0)
 
-    override fun getStatusListAnime(): List<Long> {
+    override fun getStatusList(): List<Long> {
         return listOf(WATCHING, COMPLETED, ON_HOLD, NOT_INTERESTING, PLAN_TO_WATCH)
     }
 
-    override fun getStatusForAnime(status: Long): StringResource? = when (status) {
+    override fun getStatus(status: Long): StringResource? = when (status) {
         WATCHING -> AYMR.strings.watching
         PLAN_TO_WATCH -> AYMR.strings.plan_to_watch
         COMPLETED -> MR.strings.completed
@@ -148,3 +148,4 @@ class Simkl(id: Long) : BaseTracker(id, "Simkl"), AnimeTracker {
         interceptor.newAuth(null)
     }
 }
+// <-- AY

@@ -3,6 +3,7 @@ package eu.kanade.domain.base
 import android.content.Context
 import android.content.pm.PackageManager
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.util.system.GLUtil
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.i18n.MR
@@ -21,9 +22,11 @@ class BasePreferences(
 
     fun extensionInstaller() = ExtensionInstallerPreference(context, preferenceStore)
 
+    // AY -->
     fun deviceHasPip() = context.packageManager.hasSystemFeature(
         PackageManager.FEATURE_PICTURE_IN_PICTURE,
     )
+    // <-- AY
 
     fun shownOnboardingFlow() = preferenceStore.getBoolean(Preference.appStateKey("onboarding_complete"), false)
 

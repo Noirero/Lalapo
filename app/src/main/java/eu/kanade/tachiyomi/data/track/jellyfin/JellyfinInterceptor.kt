@@ -1,3 +1,4 @@
+// AY -->
 package eu.kanade.tachiyomi.data.track.jellyfin
 
 import eu.kanade.tachiyomi.BuildConfig
@@ -5,14 +6,14 @@ import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.sourcePreferences
 import okhttp3.Interceptor
 import okhttp3.Response
-import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.injectLazy
 import java.io.IOException
 import java.security.MessageDigest
 
 class JellyfinInterceptor : Interceptor {
 
-    private val sourceManager: AnimeSourceManager by injectLazy()
+    private val sourceManager: SourceManager by injectLazy()
 
     private val apiKeys = mutableMapOf<String, String>()
 
@@ -71,3 +72,4 @@ class JellyfinInterceptor : Interceptor {
         private const val MAX_JELLYFIN_SOURCES = 10
     }
 }
+// <-- AY

@@ -11,18 +11,17 @@ object DateColumnAdapter : ColumnAdapter<Date, Long> {
 
 private const val LIST_OF_STRINGS_SEPARATOR = ", "
 object StringListColumnAdapter : ColumnAdapter<List<String>, String> {
-    override fun decode(databaseValue: String) =
-        if (databaseValue.isEmpty()) {
-            emptyList()
-        } else {
-            databaseValue.split(LIST_OF_STRINGS_SEPARATOR)
-        }
+    override fun decode(databaseValue: String) = if (databaseValue.isEmpty()) {
+        emptyList()
+    } else {
+        databaseValue.split(LIST_OF_STRINGS_SEPARATOR)
+    }
     override fun encode(value: List<String>) = value.joinToString(
         separator = LIST_OF_STRINGS_SEPARATOR,
     )
 }
 
-object AnimeUpdateStrategyColumnAdapter : ColumnAdapter<AnimeUpdateStrategy, Long> {
+object UpdateStrategyColumnAdapter : ColumnAdapter<AnimeUpdateStrategy, Long> {
     override fun decode(databaseValue: Long): AnimeUpdateStrategy =
         AnimeUpdateStrategy.entries.getOrElse(databaseValue.toInt()) { AnimeUpdateStrategy.ALWAYS_UPDATE }
 

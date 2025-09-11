@@ -4,7 +4,7 @@ import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.kitsu.Kitsu
 import eu.kanade.tachiyomi.data.track.kitsu.KitsuApi
 import eu.kanade.tachiyomi.data.track.kitsu.KitsuDateHelper
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -12,16 +12,15 @@ data class KitsuListSearchResult(
     val data: List<KitsuListSearchItemData>,
     val included: List<KitsuListSearchItemIncluded> = emptyList(),
 ) {
-
-    fun firstToAnimeTrack(): AnimeTrackSearch {
+    fun firstToTrack(): TrackSearch {
         require(data.isNotEmpty()) { "Missing User data from Kitsu" }
-        require(included.isNotEmpty()) { "Missing Manga data from Kitsu" }
+        require(included.isNotEmpty()) { "Missing Anime data from Kitsu" }
 
         val userData = data[0]
         val userDataAttrs = userData.attributes
         val anime = included[0].attributes
 
-        return AnimeTrackSearch.create(TrackerManager.KITSU).apply {
+        return TrackSearch.create(TrackerManager.KITSU).apply {
             remote_id = userData.id
             title = anime.canonicalTitle
             total_episodes = anime.episodeCount ?: 0
@@ -73,9 +72,7 @@ data class KitsuListSearchItemIncluded(
 @Serializable
 data class KitsuListSearchItemIncludedAttributes(
     val canonicalTitle: String,
-    val chapterCount: Long?,
     val episodeCount: Long?,
-    val mangaType: String?,
     val showType: String?,
     val posterImage: KitsuSearchItemCover?,
     val synopsis: String?,

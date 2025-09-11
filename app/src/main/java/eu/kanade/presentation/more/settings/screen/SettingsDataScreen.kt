@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -30,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,9 +51,7 @@ import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
-import eu.kanade.tachiyomi.data.export.ExportEntry
-import eu.kanade.tachiyomi.data.export.ExportEntry.Companion.toExportEntry
+import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.export.LibraryExporter
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
 import eu.kanade.tachiyomi.ui.storage.StorageScreen
@@ -68,13 +66,16 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
+import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.anime.interactor.GetFavorites
+import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.backup.service.BackupPreferences
-import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.MR
-import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -108,7 +109,8 @@ object SettingsDataScreen : SearchableSettings {
 
         return persistentListOf(
             getStorageLocationPref(storagePreferences = storagePreferences),
-            Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_episode_info)),
+            Preference.PreferenceItem.InfoPreference(stringResource(AMMR.strings.am_pref_storage_location_info)),
+
             getBackupAndRestoreGroup(backupPreferences = backupPreferences),
             // AM (FILE_SIZE) -->
             getDataGroup(storagePreferences = storagePreferences),
@@ -156,7 +158,7 @@ object SettingsDataScreen : SearchableSettings {
         val context = LocalContext.current
         val storageDir by storageDirPref.collectAsState()
 
-        if (!storageDirPref.isSet()) {
+        if (storageDir == storageDirPref.defaultValue()) {
             return stringResource(MR.strings.no_location_set)
         }
 
@@ -283,8 +285,9 @@ object SettingsDataScreen : SearchableSettings {
 
     @Composable
     private fun getDataGroup(storagePreferences: StoragePreferences): Preference.PreferenceGroup {
+        // AM (STORAGE_SCREEN) -->
         val navigator = LocalNavigator.currentOrThrow
-        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
+        // <-- AM (STORAGE_SCREEN)
 
         // AM (FILE_SIZE) -->
         LaunchedEffect(Unit) {
@@ -292,7 +295,7 @@ object SettingsDataScreen : SearchableSettings {
                 .drop(1)
                 .collectLatest { value ->
                     if (value) {
-                        Injekt.get<AnimeDownloadCache>().invalidateCache()
+                        Injekt.get<DownloadCache>().invalidateCache()
                     }
                 }
         }
@@ -312,27 +315,18 @@ object SettingsDataScreen : SearchableSettings {
                         },
                     )
                 },
-
+                // AM (STORAGE_SCREEN) -->
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(AMMR.strings.pref_storage_overview),
+                    onClick = { navigator.push(StorageScreen()) },
+                ),
+                // <-- AM (STORAGE_SCREEN)
                 // AM (FILE_SIZE) -->
                 Preference.PreferenceItem.SwitchPreference(
                     preference = storagePreferences.showEpisodeFileSize(),
-                    title = stringResource(MR.strings.pref_show_downloaded_episode_file_size),
+                    title = stringResource(AMMR.strings.pref_show_downloaded_episode_file_size),
                 ),
                 // <-- AM (FILE_SIZE)
-
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(AYMR.strings.label_storage),
-                    icon = Icons.Outlined.Storage,
-                    onClick = {
-                        // AM (REMOVE_TABBED_SCREENS) -->
-                        navigator.push(StorageScreen())
-                        // <-- AM (REMOVE_TABBED_SCREENS)
-                    },
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.autoClearItemCache(),
-                    title = stringResource(MR.strings.pref_auto_clear_episode_cache),
-                ),
             ),
         )
     }
@@ -344,7 +338,6 @@ object SettingsDataScreen : SearchableSettings {
             mutableStateOf(
                 ExportOptions(
                     includeTitle = true,
-                    includeType = true,
                     includeAuthor = true,
                     includeArtist = true,
                 ),
@@ -353,12 +346,10 @@ object SettingsDataScreen : SearchableSettings {
 
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-
-        val getAnimeFavorites = remember { Injekt.get<GetAnimeFavorites>() }
-
-        var favorites by remember { mutableStateOf<List<ExportEntry>>(emptyList()) }
+        val getFavorites = remember { Injekt.get<GetFavorites>() }
+        var favorites by remember { mutableStateOf<List<Anime>>(emptyList()) }
         LaunchedEffect(Unit) {
-            favorites = getAnimeFavorites.await().map { it.toExportEntry() }
+            favorites = getFavorites.await()
         }
 
         val saveFileLauncher = rememberLauncherForActivityResult(
@@ -386,7 +377,7 @@ object SettingsDataScreen : SearchableSettings {
                 options = exportOptions,
                 onConfirm = { options ->
                     exportOptions = options
-                    saveFileLauncher.launch("aniyomi_library.csv")
+                    saveFileLauncher.launch("animiru_library.csv")
                 },
                 onDismissRequest = { showDialog = false },
             )
@@ -410,7 +401,6 @@ object SettingsDataScreen : SearchableSettings {
         onDismissRequest: () -> Unit,
     ) {
         var titleSelected by remember { mutableStateOf(options.includeTitle) }
-        var typeSelected by remember { mutableStateOf(options.includeType) }
         var authorSelected by remember { mutableStateOf(options.includeAuthor) }
         var artistSelected by remember { mutableStateOf(options.includeArtist) }
 
@@ -429,20 +419,10 @@ object SettingsDataScreen : SearchableSettings {
                                 if (!checked) {
                                     authorSelected = false
                                     artistSelected = false
-                                    typeSelected = false
                                 }
                             },
                         )
                         Text(text = stringResource(MR.strings.title))
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = typeSelected,
-                            onCheckedChange = { typeSelected = it },
-                            enabled = titleSelected,
-                        )
-                        Text(text = stringResource(AYMR.strings.type))
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -470,7 +450,6 @@ object SettingsDataScreen : SearchableSettings {
                         onConfirm(
                             ExportOptions(
                                 includeTitle = titleSelected,
-                                includeType = typeSelected,
                                 includeAuthor = authorSelected,
                                 includeArtist = artistSelected,
                             ),

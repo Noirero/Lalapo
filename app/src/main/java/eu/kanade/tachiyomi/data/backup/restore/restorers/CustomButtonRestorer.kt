@@ -1,13 +1,14 @@
+// AY -->
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import eu.kanade.tachiyomi.data.backup.models.BackupCustomButtons
-import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.domain.custombuttons.interactor.GetCustomButtons
+import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.custombutton.interactor.GetCustomButtons
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class CustomButtonRestorer(
-    private val handler: AnimeDatabaseHandler = Injekt.get(),
+    private val handler: DatabaseHandler = Injekt.get(),
     private val getCustomButtons: GetCustomButtons = Injekt.get(),
 ) {
     suspend operator fun invoke(
@@ -41,3 +42,4 @@ class CustomButtonRestorer(
         }
     }
 }
+// <-- AY

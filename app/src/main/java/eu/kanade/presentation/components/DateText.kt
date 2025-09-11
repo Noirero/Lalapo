@@ -27,20 +27,6 @@ fun relativeDateText(
     )
 }
 
-// For use in chapter/episode release time
-@Composable
-fun relativeDateTimeText(
-    dateEpochMillis: Long,
-): String {
-    return relativeDateTimeText(
-        localDateTime = LocalDateTime.ofInstant(
-            Instant.ofEpochMilli(dateEpochMillis),
-            ZoneId.systemDefault(),
-        )
-            .takeIf { dateEpochMillis > 0L },
-    )
-}
-
 @Composable
 fun relativeDateText(
     localDate: LocalDate?,
@@ -59,7 +45,22 @@ fun relativeDateText(
         ?: stringResource(MR.strings.not_applicable)
 }
 
-// For use in chapter/episode release time
+// AY -->
+// For use in episode release time
+@Composable
+fun relativeDateTimeText(
+    dateEpochMillis: Long,
+): String {
+    return relativeDateTimeText(
+        localDateTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(dateEpochMillis),
+            ZoneId.systemDefault(),
+        )
+            .takeIf { dateEpochMillis > 0L },
+    )
+}
+
+// For use in episode release time
 @Composable
 fun relativeDateTimeText(
     localDateTime: LocalDateTime?,
@@ -77,3 +78,4 @@ fun relativeDateTimeText(
     )
         ?: stringResource(MR.strings.not_applicable)
 }
+// <-- AY

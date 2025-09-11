@@ -21,7 +21,7 @@ interface ResolvableAnimeSource : AnimeSource {
 
     /**
      * Called if [getUriType] is [UriType.Anime].
-     * Returns the corresponding SManga, if possible.
+     * Returns the corresponding SAnime, if possible.
      *
      * @since extensions-lib 1.5
      */

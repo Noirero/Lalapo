@@ -3,39 +3,28 @@ package eu.kanade.tachiyomi.data.track.myanimelist
 import android.graphics.Color
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.track.AnimeTracker
+import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
-import eu.kanade.tachiyomi.data.track.DeletableAnimeTracker
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
+import eu.kanade.tachiyomi.data.track.DeletableTracker
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.myanimelist.dto.MALOAuth
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
+import tachiyomi.domain.track.model.Track as DomainTrack
 
-class MyAnimeList(id: Long) :
-    BaseTracker(
-        id,
-        "MyAnimeList",
-    ),
-    AnimeTracker,
-    DeletableAnimeTracker {
+class MyAnimeList(id: Long) : BaseTracker(id, "MyAnimeList"), DeletableTracker {
 
     companion object {
-        const val READING = 1L
-        const val WATCHING = 11L
+        const val WATCHING = 1L
         const val COMPLETED = 2L
         const val ON_HOLD = 3L
         const val DROPPED = 4L
-        const val PLAN_TO_READ = 6L
-        const val PLAN_TO_WATCH = 16L
-        const val REREADING = 7L
-        const val REWATCHING = 17L
+        const val PLAN_TO_WATCH = 6L
+        const val REWATCHING = 7L
 
         private const val SEARCH_ID_PREFIX = "id:"
         private const val SEARCH_LIST_PREFIX = "my:"
@@ -56,16 +45,16 @@ class MyAnimeList(id: Long) :
 
     override fun getLogoColor() = Color.rgb(46, 81, 162)
 
-    override fun getStatusListAnime(): List<Long> {
+    override fun getStatusList(): List<Long> {
         return listOf(WATCHING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_WATCH, REWATCHING)
     }
 
-    override fun getStatusForAnime(status: Long): StringResource? = when (status) {
+    override fun getStatus(status: Long): StringResource? = when (status) {
         WATCHING -> AYMR.strings.watching
+        PLAN_TO_WATCH -> AYMR.strings.plan_to_watch
         COMPLETED -> MR.strings.completed
         ON_HOLD -> MR.strings.on_hold
         DROPPED -> MR.strings.dropped
-        PLAN_TO_WATCH -> AYMR.strings.plan_to_watch
         REWATCHING -> AYMR.strings.repeating_anime
         else -> null
     }
@@ -78,21 +67,15 @@ class MyAnimeList(id: Long) :
 
     override fun getScoreList(): ImmutableList<String> = SCORE_LIST
 
-    override fun indexToScore(index: Int): Double {
-        return index.toDouble()
-    }
-
-    override fun displayScore(track: DomainAnimeTrack): String {
+    override fun displayScore(track: DomainTrack): String {
         return track.score.toInt().toString()
     }
 
-    private suspend fun add(track: AnimeTrack): AnimeTrack {
-        track.status = WATCHING
-        track.score = 0.0
+    private suspend fun add(track: Track): Track {
         return api.updateItem(track)
     }
 
-    override suspend fun update(track: AnimeTrack, didWatchEpisode: Boolean): AnimeTrack {
+    override suspend fun update(track: Track, didWatchEpisode: Boolean): Track {
         if (track.status != COMPLETED) {
             if (didWatchEpisode) {
                 if (track.last_episode_seen.toLong() == track.total_episodes && track.total_episodes > 0) {
@@ -110,11 +93,11 @@ class MyAnimeList(id: Long) :
         return api.updateItem(track)
     }
 
-    override suspend fun delete(track: DomainAnimeTrack) {
-        api.deleteAnimeItem(track)
+    override suspend fun delete(track: DomainTrack) {
+        api.deleteItem(track)
     }
 
-    override suspend fun bind(track: AnimeTrack, hasSeenEpisodes: Boolean): AnimeTrack {
+    override suspend fun bind(track: Track, hasSeenEpisodes: Boolean): Track {
         val remoteTrack = api.findListItem(track)
         return if (remoteTrack != null) {
             track.copyPersonalFrom(remoteTrack)
@@ -134,7 +117,7 @@ class MyAnimeList(id: Long) :
         }
     }
 
-    override suspend fun searchAnime(query: String): List<AnimeTrackSearch> {
+    override suspend fun search(query: String): List<TrackSearch> {
         if (query.startsWith(SEARCH_ID_PREFIX)) {
             query.substringAfter(SEARCH_ID_PREFIX).toIntOrNull()?.let { id ->
                 return listOf(api.getAnimeDetails(id))
@@ -143,14 +126,14 @@ class MyAnimeList(id: Long) :
 
         if (query.startsWith(SEARCH_LIST_PREFIX)) {
             query.substringAfter(SEARCH_LIST_PREFIX).let { title ->
-                return api.findListItemsAnime(title)
+                return api.findListItems(title)
             }
         }
 
-        return api.searchAnime(query)
+        return api.search(query)
     }
 
-    override suspend fun refresh(track: AnimeTrack): AnimeTrack {
+    override suspend fun refresh(track: Track): Track {
         return api.findListItem(track) ?: add(track)
     }
 

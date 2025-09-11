@@ -31,7 +31,7 @@ dependencies {
     api(libs.okio)
 
     // AM (REMOVE_LIBRARIES) -->
-    // implementation(libs.image.decoder)
+    implementation(libs.image.decoder)
     // <-- AM (REMOVE_LIBRARIES)
 
     implementation(libs.unifile)
@@ -51,9 +51,11 @@ dependencies {
     // JavaScript engine
     implementation(libs.bundles.js.engine)
 
+    // AY -->
     // FFmpeg-kit
     implementation(aniyomilibs.ffmpeg.kit)
+    // <-- AY
 
-    // Tests
     testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

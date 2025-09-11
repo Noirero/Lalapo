@@ -1,7 +1,8 @@
+// AY -->
 package eu.kanade.tachiyomi.data.track.simkl.dto
 
 import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.simkl.SimklApi.Companion.POSTERS_URL
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -22,8 +23,8 @@ data class SimklSearchResult(
     val type: String?,
     val year: Int?,
 ) {
-    fun toTrackSearch(fallbackType: String): AnimeTrackSearch {
-        return AnimeTrackSearch.create(TrackerManager.SIMKL).apply {
+    fun toTrackSearch(fallbackType: String): TrackSearch {
+        return TrackSearch.create(TrackerManager.SIMKL).apply {
             remote_id = ids.simklId
             title = titleRomaji ?: this@SimklSearchResult.title!!
             total_episodes = epCount ?: 1
@@ -42,3 +43,4 @@ data class SimlkSearchResultIds(
     @SerialName("simkl_id")
     val simklId: Long,
 )
+// <-- AY

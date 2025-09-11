@@ -11,10 +11,10 @@ import eu.kanade.tachiyomi.data.backup.models.BackupExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionRepos
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
-import eu.kanade.tachiyomi.data.backup.restore.restorers.AnimeCategoriesRestorer
-import eu.kanade.tachiyomi.data.backup.restore.restorers.AnimeExtensionRepoRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.AnimeRestorer
+import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CustomButtonRestorer
+import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionRepoRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionsRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -35,12 +35,14 @@ class BackupRestorer(
     private val notifier: BackupNotifier,
     private val isSync: Boolean,
 
-    private val animeCategoriesRestorer: AnimeCategoriesRestorer = AnimeCategoriesRestorer(),
+    private val categoriesRestorer: CategoriesRestorer = CategoriesRestorer(),
     private val preferenceRestorer: PreferenceRestorer = PreferenceRestorer(context),
-    private val animeExtensionRepoRestorer: AnimeExtensionRepoRestorer = AnimeExtensionRepoRestorer(),
-    private val customButtonRestorer: CustomButtonRestorer = CustomButtonRestorer(),
+    private val extensionRepoRestorer: ExtensionRepoRestorer = ExtensionRepoRestorer(),
     private val animeRestorer: AnimeRestorer = AnimeRestorer(),
+    // AY -->
+    private val customButtonRestorer: CustomButtonRestorer = CustomButtonRestorer(),
     private val extensionsRestorer: ExtensionsRestorer = ExtensionsRestorer(context),
+    // <-- AY
 ) {
 
     private var restoreAmount = 0
@@ -50,7 +52,7 @@ class BackupRestorer(
     /**
      * Mapping of source ID to source name from backup data
      */
-    private var animeSourceMapping: Map<Long, String> = emptyMap()
+    private var sourceMapping: Map<Long, String> = emptyMap()
 
     suspend fun restore(uri: Uri, options: RestoreOptions) {
         val startTime = System.currentTimeMillis()
@@ -74,70 +76,65 @@ class BackupRestorer(
         val backup = BackupDecoder(context).decode(uri)
 
         // Store source mapping for error messages
-        val backupAnimeMaps = backup.backupAnimeSources
-        animeSourceMapping = backupAnimeMaps.associate { it.sourceId to it.name }
+        val backupMaps = backup.backupSources
+        sourceMapping = backupMaps.associate { it.sourceId to it.name }
 
         if (options.libraryEntries) {
             restoreAmount += backup.backupAnime.size
         }
         if (options.categories) {
-            restoreAmount += 1 // +2 for anime categories
+            restoreAmount += 1
         }
         if (options.appSettings) {
             restoreAmount += 1
         }
         if (options.extensionRepoSettings) {
-            restoreAmount += backup.backupAnimeExtensionRepo.size
-        }
-        if (options.customButtons) {
-            restoreAmount += 1
+            restoreAmount += backup.backupExtensionRepo.size
         }
         if (options.sourceSettings) {
+            restoreAmount += 1
+        }
+        // AY -->
+        if (options.customButtons) {
             restoreAmount += 1
         }
         if (options.extensions) {
             restoreAmount += 1
         }
+        // <-- AY
 
         coroutineScope {
             if (options.categories) {
-                restoreCategories(
-                    backupAnimeCategories = backup.backupAnimeCategories,
-                )
+                restoreCategories(backup.backupCategories)
             }
             if (options.appSettings) {
-                restoreAppPreferences(
-                    backup.backupPreferences,
-                    backup.backupAnimeCategories.takeIf {
-                        options.categories
-                    },
-                )
+                restoreAppPreferences(backup.backupPreferences, backup.backupCategories.takeIf { options.categories })
             }
             if (options.sourceSettings) {
                 restoreSourcePreferences(backup.backupSourcePreferences)
             }
             if (options.libraryEntries) {
-                restoreAnime(backup.backupAnime, if (options.categories) backup.backupAnimeCategories else emptyList())
+                restoreAnime(backup.backupAnime, if (options.categories) backup.backupCategories else emptyList())
             }
             if (options.extensionRepoSettings) {
-                restoreExtensionRepos(backup.backupAnimeExtensionRepo)
+                restoreExtensionRepos(backup.backupExtensionRepo)
             }
+            // AY -->
             if (options.customButtons) {
                 restoreCustomButtons(backup.backupCustomButton)
             }
             if (options.extensions) {
                 restoreExtensions(backup.backupExtensions)
             }
+            // <-- AY
 
             // TODO: optionally trigger online library + tracker update
         }
     }
 
-    private fun CoroutineScope.restoreCategories(
-        backupAnimeCategories: List<BackupCategory>,
-    ) = launch {
+    private fun CoroutineScope.restoreCategories(backupCategories: List<BackupCategory>) = launch {
         ensureActive()
-        animeCategoriesRestorer(backupAnimeCategories)
+        categoriesRestorer(backupCategories)
 
         restoreProgress += 1
         notifier.showRestoreProgress(
@@ -150,7 +147,7 @@ class BackupRestorer(
 
     private fun CoroutineScope.restoreAnime(
         backupAnimes: List<BackupAnime>,
-        backupAnimeCategories: List<BackupCategory>,
+        backupCategories: List<BackupCategory>,
     ) = launch {
         animeRestorer.sortByNew(backupAnimes)
             .forEach {
@@ -160,9 +157,9 @@ class BackupRestorer(
                     // AM (CUSTOM_INFORMATION) -->
                     val customInfo = it.getCustomAnimeInfo()
                     // <-- AM (CUSTOM_INFORMATION)
-                    animeRestorer.restore(it, backupAnimeCategories, customInfo)
+                    animeRestorer.restore(it, backupCategories, customInfo)
                 } catch (e: Exception) {
-                    val sourceName = animeSourceMapping[it.source] ?: it.source.toString()
+                    val sourceName = sourceMapping[it.source] ?: it.source.toString()
                     errors.add(Date() to "${it.title} [$sourceName]: ${e.message}")
                 }
 
@@ -204,16 +201,16 @@ class BackupRestorer(
     }
 
     private fun CoroutineScope.restoreExtensionRepos(
-        backupAnimeExtensionRepo: List<BackupExtensionRepos>,
+        backupExtensionRepo: List<BackupExtensionRepos>,
     ) = launch {
-        backupAnimeExtensionRepo
+        backupExtensionRepo
             .forEach {
                 ensureActive()
 
                 try {
-                    animeExtensionRepoRestorer(it)
+                    extensionRepoRestorer(it)
                 } catch (e: Exception) {
-                    errors.add(Date() to "Error Adding Anime Repo: ${it.name} : ${e.message}")
+                    errors.add(Date() to "Error Adding Repo: ${it.name} : ${e.message}")
                 }
 
                 restoreProgress += 1
@@ -226,6 +223,7 @@ class BackupRestorer(
             }
     }
 
+    // AY -->
     private fun CoroutineScope.restoreCustomButtons(customButtons: List<BackupCustomButtons>) = launch {
         ensureActive()
         customButtonRestorer(customButtons)
@@ -251,11 +249,12 @@ class BackupRestorer(
             isSync,
         )
     }
+    // <-- AY
 
     private fun writeErrorLog(): File {
         try {
             if (errors.isNotEmpty()) {
-                val file = context.createFileInCacheDir("animiru_restore.txt")
+                val file = context.createFileInCacheDir("animiru_restore_error.txt")
                 val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
 
                 file.bufferedWriter().use { out ->

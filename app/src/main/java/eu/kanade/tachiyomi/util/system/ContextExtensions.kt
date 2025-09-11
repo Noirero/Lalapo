@@ -9,7 +9,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
-import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
@@ -46,17 +45,6 @@ fun Context.copyToClipboard(label: String, content: String) {
     }
 }
 
-/**
- * Checks if the give permission is granted.
- *
- * @param permission the permission to check.
- * @return true if it has permissions.
- */
-fun Context.hasPermission(permission: String) = PermissionChecker.checkSelfPermission(
-    this,
-    permission,
-) == PermissionChecker.PERMISSION_GRANTED
-
 val Context.powerManager: PowerManager
     get() = getSystemService()!!
 
@@ -67,7 +55,7 @@ fun Context.openInBrowser(url: String, forceDefaultBrowser: Boolean = false) {
 fun Context.openInBrowser(uri: Uri, forceDefaultBrowser: Boolean = false) {
     try {
         val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-            // Force default browser so that verified extensions don't re-open Tachiyomi
+            // Force default browser so that verified extensions don't re-open Animiru
             if (forceDefaultBrowser) {
                 defaultBrowserPackageName()?.let { setPackage(it) }
             }

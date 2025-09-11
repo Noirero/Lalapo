@@ -29,26 +29,28 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.domain.source.anime.model.installedExtension
-import eu.kanade.domain.source.anime.model.updateSourceIdToExtensionMap
-import eu.kanade.presentation.browse.anime.AnimeExtensionScreen
-import eu.kanade.presentation.browse.anime.AnimeSourceOptionsDialog
-import eu.kanade.presentation.browse.anime.AnimeSourcesScreen
+import eu.kanade.domain.source.model.installedExtension
+import eu.kanade.domain.source.model.updateSourceIdToExtensionMap
+import eu.kanade.presentation.browse.ExtensionScreen
+import eu.kanade.presentation.browse.SourceOptionsDialog
+import eu.kanade.presentation.browse.SourcesScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
-import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
-import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
-import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreenModel
-import eu.kanade.tachiyomi.ui.browse.anime.extension.details.AnimeExtensionDetailsScreen
-import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceScreen
-import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesScreenModel
-import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
-import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsScreenModel
+import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
+import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreen
+import eu.kanade.tachiyomi.ui.browse.source.SourcesScreenModel
+import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.launchIO
@@ -59,43 +61,54 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.math.abs
 
+// AM (BROWSE)  -->
 internal var goToExtensions = false
+// <-- AM (BROWSE)
 
 data object BrowseTab : Tab {
 
     override val options: TabOptions
         @Composable
         get() {
-            val isSelected = LocalTabNavigator.current.current is BrowseTab
+            val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_browse_enter)
             return TabOptions(
+                // AM (BROWSE)  -->
                 index = 2u,
+                // <-- AM (BROWSE)
                 title = stringResource(MR.strings.browse),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
 
     override suspend fun onReselect(navigator: Navigator) {
-        navigator.push(GlobalAnimeSearchScreen())
+        navigator.push(GlobalSearchScreen())
     }
 
     // AM (TAB_HOLD) -->
     override suspend fun onReselectHold(navigator: Navigator) {
-        navigator.push(MigrateAnimeSourceScreen())
+        navigator.push(MigrateSourceScreen())
     }
     // <-- AM (TAB_HOLD)
+
+    private val switchToExtensionTabChannel = Channel<Unit>(1, BufferOverflow.DROP_OLDEST)
+
+    fun showExtension() {
+        switchToExtensionTabChannel.trySend(Unit)
+    }
 
     @Composable
     override fun Content() {
         val context = LocalContext.current
+
         // AM (BROWSE) -->
         val snackbarHostState = SnackbarHostState()
         val navigator = LocalNavigator.currentOrThrow
-        val sourcesScreenModel = rememberScreenModel { AnimeSourcesScreenModel() }
+        val sourcesScreenModel = rememberScreenModel { SourcesScreenModel() }
         val sourcesState by sourcesScreenModel.state.collectAsState()
-        val updateCount by sourcesScreenModel.sourcePreferences.animeExtensionUpdatesCount().collectAsState()
+        val updateCount by sourcesScreenModel.sourcePreferences.extensionUpdatesCount().collectAsState()
 
-        val extensionScreenModel = rememberScreenModel { AnimeExtensionsScreenModel() }
+        val extensionScreenModel = rememberScreenModel { ExtensionsScreenModel() }
         val extensionsState by extensionScreenModel.state.collectAsState()
 
         var inExtensionsScreen by remember { mutableStateOf(goToExtensions) }
@@ -123,10 +136,10 @@ data object BrowseTab : Tab {
                 ),
             ) {
                 goToExtensions = false
-                AnimeSourcesScreen(
+                SourcesScreen(
                     state = sourcesState,
                     onClickItem = { source, listing ->
-                        navigator.push(BrowseAnimeSourceScreen(source.id, listing.query))
+                        navigator.push(BrowseSourceScreen(source.id, listing.query))
                     },
                     onClickPin = sourcesScreenModel::togglePin,
                     onLongClickItem = sourcesScreenModel::showSourceDialog,
@@ -149,13 +162,13 @@ data object BrowseTab : Tab {
                 ),
             ) {
                 goToExtensions = true
-                AnimeExtensionScreen(
+                ExtensionScreen(
                     state = extensionsState,
                     searchQuery = extensionsState.searchQuery,
 
                     onLongClickItem = { extension ->
                         when (extension) {
-                            is AnimeExtension.Available -> extensionScreenModel.installExtension(extension)
+                            is Extension.Available -> extensionScreenModel.installExtension(extension)
                             else -> extensionScreenModel.uninstallExtension(extension)
                         }
                     },
@@ -167,7 +180,7 @@ data object BrowseTab : Tab {
                         }
                     },
                     onInstallExtension = extensionScreenModel::installExtension,
-                    onOpenExtension = { navigator.push(AnimeExtensionDetailsScreen(it.pkgName)) },
+                    onOpenExtension = { navigator.push(ExtensionDetailsScreen(it.pkgName)) },
                     onTrustExtension = extensionScreenModel::trustExtension,
                     onUninstallExtension = extensionScreenModel::uninstallExtension,
                     onUpdateExtension = extensionScreenModel::updateExtension,
@@ -181,7 +194,7 @@ data object BrowseTab : Tab {
 
         sourcesState.dialog?.let { dialog ->
             val source = dialog.source
-            AnimeSourceOptionsDialog(
+            SourceOptionsDialog(
                 source = source,
                 onClickPin = {
                     sourcesScreenModel.togglePin(source)
@@ -192,7 +205,7 @@ data object BrowseTab : Tab {
                     sourcesScreenModel.closeDialog()
                 },
                 onClickUninstall = {
-                    val ext = source.installedExtension ?: return@AnimeSourceOptionsDialog
+                    val ext = source.installedExtension ?: return@SourceOptionsDialog
                     sourcesScreenModel.uninstallExtension(ext)
                     sourcesScreenModel.closeDialog()
                 },
@@ -209,11 +222,11 @@ data object BrowseTab : Tab {
             // <-- AM (DISCORD_RPC)
             (context as? MainActivity)?.ready = true
             launchIO {
-                Injekt.get<AnimeExtensionManager>().findAvailableExtensions()
+                Injekt.get<ExtensionManager>().findAvailableExtensions()
                 updateSourceIdToExtensionMap()
                 sourcesScreenModel.events.collectLatest { event ->
                     when (event) {
-                        AnimeSourcesScreenModel.Event.FailedFetchingSources -> {
+                        SourcesScreenModel.Event.FailedFetchingSources -> {
                             launch { snackbarHostState.showSnackbar(internalErrString) }
                         }
                     }

@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.data.connection.syncmiru.models.SyncTriggerOptions
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.update
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.LazyColumnWithAction
 import tachiyomi.presentation.core.components.SectionCard
@@ -35,7 +36,7 @@ class SyncTriggerOptionsScreen : Screen() {
         Scaffold(
             topBar = {
                 AppBar(
-                    title = stringResource(MR.strings.pref_sync_options),
+                    title = stringResource(AMMR.strings.pref_sync_options),
                     navigateUp = navigator::pop,
                     scrollBehavior = it,
                 )
@@ -50,7 +51,7 @@ class SyncTriggerOptionsScreen : Screen() {
                 },
             ) {
                 item {
-                    SectionCard(MR.strings.label_triggers) {
+                    SectionCard(AMMR.strings.label_triggers) {
                         Options(SyncTriggerOptions.mainOptions, state, model)
                     }
                 }

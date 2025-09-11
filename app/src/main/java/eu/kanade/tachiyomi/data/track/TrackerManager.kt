@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.data.track
 
-import android.content.Context
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.bangumi.Bangumi
 import eu.kanade.tachiyomi.data.track.jellyfin.Jellyfin
@@ -10,13 +9,16 @@ import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
 import eu.kanade.tachiyomi.data.track.simkl.Simkl
 import kotlinx.coroutines.flow.combine
 
-class TrackerManager(context: Context) {
+class TrackerManager {
 
     companion object {
         const val ANILIST = 2L
         const val KITSU = 3L
+
+        // AY -->
         const val SIMKL = 101L
         const val JELLYFIN = 102L
+        // <-- AY
     }
 
     val myAnimeList = MyAnimeList(1L)
@@ -24,8 +26,11 @@ class TrackerManager(context: Context) {
     val kitsu = Kitsu(KITSU)
     val shikimori = Shikimori(4L)
     val bangumi = Bangumi(5L)
+
+    // AY -->
     val simkl = Simkl(SIMKL)
     val jellyfin = Jellyfin(JELLYFIN)
+    // <-- AY
 
     val trackers = listOf<BaseTracker>(
         myAnimeList,
@@ -33,8 +38,10 @@ class TrackerManager(context: Context) {
         kitsu,
         shikimori,
         bangumi,
+        // AY -->
         simkl,
         jellyfin,
+        // <-- AY
     )
 
     fun loggedInTrackers() = trackers.filter { it.isLoggedIn }

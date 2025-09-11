@@ -5,10 +5,10 @@ import android.content.Context
 import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
-import eu.kanade.tachiyomi.data.backup.models.BackupAnimeSource
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupEpisode
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
+import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -38,20 +38,20 @@ abstract class SyncService(
     protected fun mergeSyncData(localSyncData: SyncData, remoteSyncData: SyncData): SyncData {
         val mergedAnimeCategoriesList =
             mergeCategoriesLists(
-                localSyncData.backup?.backupAnimeCategories,
-                remoteSyncData.backup?.backupAnimeCategories,
+                localSyncData.backup?.backupCategories,
+                remoteSyncData.backup?.backupCategories,
             )
 
         val mergedAnimeList = mergeAnimeLists(
             localSyncData.backup?.backupAnime,
             remoteSyncData.backup?.backupAnime,
-            localSyncData.backup?.backupAnimeCategories ?: emptyList(),
-            remoteSyncData.backup?.backupAnimeCategories ?: emptyList(),
+            localSyncData.backup?.backupCategories ?: emptyList(),
+            remoteSyncData.backup?.backupCategories ?: emptyList(),
             mergedAnimeCategoriesList,
         )
 
         val mergedAnimeSourcesList =
-            mergeAnimeSourcesLists(localSyncData.backup?.backupAnimeSources, remoteSyncData.backup?.backupAnimeSources)
+            mergeAnimeSourcesLists(localSyncData.backup?.backupSources, remoteSyncData.backup?.backupSources)
         val mergedPreferencesList =
             mergePreferencesLists(localSyncData.backup?.backupPreferences, remoteSyncData.backup?.backupPreferences)
         val mergedSourcePreferencesList = mergeSourcePreferencesLists(
@@ -62,8 +62,8 @@ abstract class SyncService(
         // Create the merged Backup object
         val mergedBackup = Backup(
             backupAnime = mergedAnimeList,
-            backupAnimeCategories = mergedAnimeCategoriesList,
-            backupAnimeSources = mergedAnimeSourcesList,
+            backupCategories = mergedAnimeCategoriesList,
+            backupSources = mergedAnimeSourcesList,
             backupPreferences = mergedPreferencesList,
             backupSourcePreferences = mergedSourcePreferencesList,
         )
@@ -126,7 +126,7 @@ abstract class SyncService(
                 local != null && remote == null -> updateCategories(local, localCategoriesMapByOrder)
                 local == null && remote != null -> updateCategories(remote, remoteCategoriesMapByOrder)
                 local != null && remote != null -> {
-                    // Compare versions to decide which manga to keep
+                    // Compare versions to decide which anime to keep
                     if (local.version >= remote.version) {
                         logcat(
                             LogPriority.DEBUG,
@@ -147,7 +147,7 @@ abstract class SyncService(
                         )
                     }
                 }
-                else -> null // No manga found for key
+                else -> null // No anime found for key
             }
         }
 
@@ -268,9 +268,9 @@ abstract class SyncService(
     }
 
     private fun mergeAnimeSourcesLists(
-        localSources: List<BackupAnimeSource>?,
-        remoteSources: List<BackupAnimeSource>?,
-    ): List<BackupAnimeSource> {
+        localSources: List<BackupSource>?,
+        remoteSources: List<BackupSource>?,
+    ): List<BackupSource> {
         val logTag = "MergeSources"
 
         // Create maps using sourceId as key

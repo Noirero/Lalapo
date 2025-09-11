@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.data.connection.syncmiru
 
 import android.content.Context
 import android.net.Uri
-import dataanime.Episodes
 import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.tachiyomi.data.backup.create.BackupCreator
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
@@ -20,10 +19,11 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.entries.anime.AnimeMapper.mapAnime
-import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.Episodes
+import tachiyomi.data.anime.AnimeMapper.mapAnime
+import tachiyomi.domain.anime.model.Anime
+import tachiyomi.domain.category.interactor.GetCategories
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -40,13 +40,13 @@ import logcat.logcat as log
  */
 class SyncManager(
     private val context: Context,
-    private val animeHandler: AnimeDatabaseHandler = Injekt.get(),
+    private val handler: DatabaseHandler = Injekt.get(),
     private val syncPreferences: SyncPreferences = Injekt.get(),
     private var json: Json = Json {
         encodeDefaults = true
         ignoreUnknownKeys = true
     },
-    private val getAnimeCategories: GetAnimeCategories = Injekt.get(),
+    private val getCategories: GetCategories = Injekt.get(),
 ) {
     private val backupCreator: BackupCreator = BackupCreator(context, false)
     private val notifier: SyncNotifier = SyncNotifier(context)
@@ -55,13 +55,13 @@ class SyncManager(
     /**
      * Syncs data with a sync service.
      *
-     * This function retrieves local data (favorites, manga, extensions, and categories)
+     * This function retrieves local data (favorites, anime, extensions, and categories)
      * from the database using the BackupManager, then synchronizes the data with a sync service.
      */
     suspend fun syncData() {
         // Reset isSyncing in case it was left over or failed syncing during restore.
 
-        animeHandler.await(inTransaction = true) {
+        handler.await(inTransaction = true) {
             animesQueries.resetIsSyncing()
             episodesQueries.resetIsSyncing()
         }
@@ -87,8 +87,8 @@ class SyncManager(
         val backupAnime = backupCreator.backupAnimes(databaseAnime, backupOptions)
         val backup = Backup(
             backupAnime = backupAnime,
-            backupAnimeCategories = backupCreator.backupAnimeCategories(backupOptions),
-            backupAnimeSources = backupCreator.backupAnimeSources(backupAnime),
+            backupCategories = backupCreator.backupCategories(backupOptions),
+            backupSources = backupCreator.backupSources(backupAnime),
             backupPreferences = backupCreator.backupAppPreferences(backupOptions),
             backupSourcePreferences = backupCreator.backupSourcePreferences(backupOptions),
         )
@@ -153,8 +153,8 @@ class SyncManager(
 
         val newSyncData = backup.copy(
             backupAnime = animeFilteredFavorites,
-            backupAnimeCategories = remoteBackup.backupAnimeCategories,
-            backupAnimeSources = remoteBackup.backupAnimeSources,
+            backupCategories = remoteBackup.backupCategories,
+            backupSources = remoteBackup.backupSources,
             backupPreferences = remoteBackup.backupPreferences,
             backupSourcePreferences = remoteBackup.backupSourcePreferences,
         )
@@ -203,21 +203,21 @@ class SyncManager(
     }
 
     /**
-     * Retrieves all manga from the local database.
+     * Retrieves all anime from the local database.
      *
      * @return a list of all anime stored in the database
      */
     private suspend fun getAllAnimeFromDB(): List<Anime> {
-        return animeHandler.awaitList { animesQueries.getAllAnime(::mapAnime) }
+        return handler.awaitList { animesQueries.getAllAnime(::mapAnime) }
     }
 
     private suspend fun getAllAnimeThatNeedsSync(): List<Anime> {
-        return animeHandler.awaitList { animesQueries.getAnimesWithFavoriteTimestamp(::mapAnime) }
+        return handler.awaitList { animesQueries.getAnimesWithFavoriteTimestamp(::mapAnime) }
     }
 
     private suspend fun isAnimeDifferent(localAnime: Anime, remoteAnime: BackupAnime): Boolean {
-        val localEpisodes = animeHandler.await { episodesQueries.getEpisodesByAnimeId(localAnime.id).executeAsList() }
-        val localCategories = getAnimeCategories.await(localAnime.id).map { it.order }
+        val localEpisodes = handler.await { episodesQueries.getEpisodesByAnimeId(localAnime.id, 0).executeAsList() }
+        val localCategories = getCategories.await(localAnime.id).map { it.order }
 
         if (areEpisodesDifferent(localEpisodes, remoteAnime.episodes)) {
             return true
@@ -300,8 +300,8 @@ class SyncManager(
     }
 
     /**
-     * Updates the non-favorite manga in the local database with their favorite status from the backup.
-     * @param nonFavorites the list of non-favorite BackupManga objects from the backup.
+     * Updates the non-favorite anime in the local database with their favorite status from the backup.
+     * @param nonFavorites the list of non-favorite BackupAnime objects from the backup.
      */
     private suspend fun animeUpdateNonFavorites(nonFavorites: List<BackupAnime>) {
         val localAnimeList = getAllAnimeFromDB()

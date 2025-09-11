@@ -71,7 +71,8 @@ fun LocalDate.toRelativeString(
     }
 }
 
-// For use in chapter/episode release time
+// AY -->
+// For use in episode release time
 fun LocalDateTime.toRelativeString(
     context: Context,
     relative: Boolean = true,
@@ -129,3 +130,4 @@ fun LocalDateTime.toRelativeString(
         else -> dateFormat.format(this)
     }
 }
+// <-- AY

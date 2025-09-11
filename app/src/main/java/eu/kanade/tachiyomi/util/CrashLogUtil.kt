@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.util
 import android.content.Context
 import android.os.Build
 import eu.kanade.tachiyomi.BuildConfig
-import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -18,7 +18,7 @@ import java.time.ZoneId
 
 class CrashLogUtil(
     private val context: Context,
-    private val animeExtensionManager: AnimeExtensionManager = Injekt.get(),
+    private val extensionManager: ExtensionManager = Injekt.get(),
 ) {
 
     suspend fun dumpLogs(exception: Throwable? = null) = withNonCancellableContext {
@@ -26,7 +26,7 @@ class CrashLogUtil(
             val file = context.createFileInCacheDir("animiru_crash_logs.txt")
 
             file.appendText(getDebugInfo() + "\n\n")
-            getAnimeExtensionsInfo()?.let { file.appendText("$it\n\n") }
+            getExtensionsInfo()?.let { file.appendText("$it\n\n") }
             exception?.let { file.appendText("$it\n\n") }
 
             Runtime.getRuntime().exec("logcat *:E -d -v year -v zone -f ${file.absolutePath}").waitFor()
@@ -43,7 +43,6 @@ class CrashLogUtil(
             App ID: ${BuildConfig.APPLICATION_ID}
             App version: ${BuildConfig.VERSION_NAME} (${BuildConfig.COMMIT_SHA}, ${BuildConfig.VERSION_CODE}, ${BuildConfig.BUILD_TIME})
             Android version: ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}; build ${Build.DISPLAY})
-            Android build ID: ${Build.DISPLAY}
             Device brand: ${Build.BRAND}
             Device manufacturer: ${Build.MANUFACTURER}
             Device name: ${Build.DEVICE} (${Build.PRODUCT})
@@ -61,10 +60,10 @@ class CrashLogUtil(
         //    FFmpeg version: ${Utils.VERSIONS.ffmpeg}
     }
 
-    private fun getAnimeExtensionsInfo(): String? {
-        val availableExtensions = animeExtensionManager.availableExtensionsFlow.value.associateBy { it.pkgName }
+    private fun getExtensionsInfo(): String? {
+        val availableExtensions = extensionManager.availableExtensionsFlow.value.associateBy { it.pkgName }
 
-        val extensionInfoList = animeExtensionManager.installedExtensionsFlow.value
+        val extensionInfoList = extensionManager.installedExtensionsFlow.value
             .sortedBy { it.name }
             .mapNotNull {
                 val availableExtension = availableExtensions[it.pkgName]

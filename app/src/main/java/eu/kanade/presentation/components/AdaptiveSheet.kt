@@ -1,6 +1,5 @@
 package eu.kanade.presentation.components
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,6 +12,7 @@ import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.core.lifecycle.DisposableEffectIgnoringConfiguration
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.internal.BackHandler
 import eu.kanade.presentation.util.ScreenTransition
 import eu.kanade.presentation.util.isTabletUi
 import tachiyomi.presentation.core.components.AdaptiveSheet as AdaptiveSheetImpl
@@ -28,8 +28,8 @@ fun NavigatorAdaptiveSheet(
         screen = screen,
         content = { sheetNavigator ->
             AdaptiveSheet(
-                enableSwipeDismiss = enableSwipeDismiss(sheetNavigator),
                 onDismissRequest = onDismissRequest,
+                enableSwipeDismiss = enableSwipeDismiss(sheetNavigator),
             ) {
                 ScreenTransition(
                     navigator = sheetNavigator,
@@ -39,10 +39,12 @@ fun NavigatorAdaptiveSheet(
                     },
                 )
 
+                // AY -->
                 BackHandler(
                     enabled = sheetNavigator.size > 1,
                     onBack = sheetNavigator::pop,
                 )
+                // <-- AY
             }
 
             // Make sure screens are disposed no matter what
@@ -79,10 +81,10 @@ fun AdaptiveSheet(
         properties = dialogProperties,
     ) {
         AdaptiveSheetImpl(
-            modifier = modifier,
             isTabletUi = isTabletUi,
             enableSwipeDismiss = enableSwipeDismiss,
             onDismissRequest = onDismissRequest,
+            modifier = modifier,
         ) {
             content()
         }

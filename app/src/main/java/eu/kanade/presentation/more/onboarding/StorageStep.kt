@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.core.common.storage.AndroidStorageFolderProvider
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Button
 import tachiyomi.presentation.core.components.material.padding
@@ -34,7 +35,10 @@ import uy.kohesive.injekt.api.get
 internal class StorageStep : OnboardingStep {
 
     private val storagePref = Injekt.get<StoragePreferences>().baseStorageDirectory()
+
+    // AY -->
     private val folderProvider = Injekt.get<AndroidStorageFolderProvider>()
+    // <-- AY
 
     private var _isComplete by mutableStateOf(false)
 
@@ -46,7 +50,9 @@ internal class StorageStep : OnboardingStep {
         val context = LocalContext.current
         val handler = LocalUriHandler.current
 
+        // AY -->
         val isTvBox = isTvBox(LocalContext.current)
+        // <-- AY
 
         val pickStorageLocation = SettingsDataScreen.storageLocationPicker(storagePref)
 
@@ -56,13 +62,14 @@ internal class StorageStep : OnboardingStep {
         ) {
             Text(
                 stringResource(
-                    MR.strings.onboarding_storage_info,
+                    AMMR.strings.am_onboarding_storage_info,
                     stringResource(MR.strings.app_name),
                     SettingsDataScreen.storageLocationText(storagePref),
                 ),
             )
 
             if (isTvBox) {
+                // AY -->
                 if (!storagePref.isSet()) {
                     Button(
                         modifier = Modifier.fillMaxWidth(),
@@ -74,9 +81,10 @@ internal class StorageStep : OnboardingStep {
                             storagePref.set(storagePref.get())
                         },
                     ) {
-                        Text(stringResource(AYMR.strings.onboarding_storage_action_create_folder))
+                        Text(stringResource(resource = AYMR.strings.onboarding_storage_action_create_folder))
                     }
                 }
+                // <-- AY
             } else {
                 Button(
                     modifier = Modifier.fillMaxWidth(),

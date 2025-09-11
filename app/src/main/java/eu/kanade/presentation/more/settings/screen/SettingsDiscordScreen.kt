@@ -28,8 +28,9 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.runBlocking
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -39,12 +40,12 @@ object SettingsDiscordScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_connection
+    override fun getTitleRes() = AMMR.strings.pref_category_connection
 
     @Composable
     override fun RowScope.AppBarAction() {
         val uriHandler = LocalUriHandler.current
-        IconButton(onClick = { uriHandler.openUri("https://tachiyomi.org/help/guides/tracking/") }) {
+        IconButton(onClick = { uriHandler.openUri("https://aniyomi.org/docs/guides/tracking") }) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
                 contentDescription = stringResource(MR.strings.tracking_guide),
@@ -81,19 +82,19 @@ object SettingsDiscordScreen : SearchableSettings {
 
         return listOf(
             Preference.PreferenceGroup(
-                title = stringResource(MR.strings.connection_discord),
+                title = stringResource(AMMR.strings.connection_discord),
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.SwitchPreference(
                         preference = enableDRPCPref,
-                        title = stringResource(MR.strings.pref_enable_discord_rpc),
+                        title = stringResource(AMMR.strings.pref_enable_discord_rpc),
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = discordRPCStatus,
-                        title = stringResource(MR.strings.pref_discord_status),
+                        title = stringResource(AMMR.strings.pref_discord_status),
                         entries = persistentMapOf(
-                            -1 to stringResource(MR.strings.pref_discord_dnd),
-                            0 to stringResource(MR.strings.pref_discord_idle),
-                            1 to stringResource(MR.strings.pref_discord_online),
+                            -1 to stringResource(AMMR.strings.pref_discord_dnd),
+                            0 to stringResource(AMMR.strings.pref_discord_idle),
+                            1 to stringResource(AMMR.strings.pref_discord_online),
                         ),
                         enabled = enableDRPC,
                         onValueChanged = {
@@ -119,7 +120,7 @@ object SettingsDiscordScreen : SearchableSettings {
         connectionPreferences: ConnectionPreferences,
         enabled: Boolean,
     ): Preference.PreferenceGroup {
-        val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
+        val getAnimeCategories = remember { Injekt.get<GetCategories>() }
         val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(
             initial = runBlocking {
                 getAnimeCategories.await()
@@ -134,7 +135,7 @@ object SettingsDiscordScreen : SearchableSettings {
         if (showAnimeDialog) {
             TriStateListDialog(
                 title = stringResource(MR.strings.categories),
-                message = stringResource(MR.strings.pref_discord_incognito_categories_details),
+                message = stringResource(AMMR.strings.pref_discord_incognito_categories_details),
                 items = allAnimeCategories,
                 initialChecked = includedAnime.mapNotNull { id -> allAnimeCategories.find { it.id.toString() == id } },
                 initialInversed = includedAnime.mapNotNull { allAnimeCategories.find { false } },
@@ -156,8 +157,8 @@ object SettingsDiscordScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = discordRPCIncognitoPref,
-                    title = stringResource(MR.strings.pref_discord_incognito),
-                    subtitle = stringResource(MR.strings.pref_discord_incognito_summary),
+                    title = stringResource(AMMR.strings.pref_discord_incognito),
+                    subtitle = stringResource(AMMR.strings.pref_discord_incognito_summary),
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.categories),
@@ -168,7 +169,7 @@ object SettingsDiscordScreen : SearchableSettings {
                     onClick = { showAnimeDialog = true },
                 ),
                 Preference.PreferenceItem.InfoPreference(
-                    stringResource(MR.strings.pref_discord_incognito_categories_details),
+                    stringResource(AMMR.strings.pref_discord_incognito_categories_details),
                 ),
             ),
             enabled = enabled,

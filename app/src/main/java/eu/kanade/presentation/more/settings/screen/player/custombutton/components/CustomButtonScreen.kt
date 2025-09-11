@@ -23,7 +23,7 @@ import eu.kanade.presentation.components.FloatingActionAddButton
 import eu.kanade.presentation.more.settings.screen.player.custombutton.CustomButtonScreenState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButton
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding

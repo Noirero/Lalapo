@@ -8,26 +8,28 @@ data class ALSearchItem(
     val title: ALItemTitle,
     val coverImage: ItemCover,
     val description: String?,
-    val format: String?,
+    val format: String,
     val status: String?,
     val startDate: ALFuzzyDate,
-    val chapters: Long?,
     val episodes: Long?,
     val averageScore: Int?,
-    val staff: ALStaff?,
+    // AY -->
     val studios: ALStudios?,
+    // <-- AY
 ) {
     fun toALAnime(): ALAnime = ALAnime(
         remoteId = id,
         title = title.userPreferred,
         imageUrl = coverImage.large,
         description = description,
-        format = format?.replace("_", "-") ?: "",
+        format = format.replace("_", "-"),
         publishingStatus = status ?: "",
         startDateFuzzy = startDate.toEpochMilli(),
         totalEpisodes = episodes ?: 0,
         averageScore = averageScore ?: -1,
+        // AY -->
         studios = studios!!,
+        // <-- AY
     )
 }
 
@@ -41,34 +43,7 @@ data class ItemCover(
     val large: String,
 )
 
-@Serializable
-data class ALStaff(
-    val edges: List<ALStaffEdge>,
-)
-
-@Serializable
-data class ALStaffEdge(
-    val role: String,
-    val id: Int,
-    val node: ALStaffNode,
-)
-
-@Serializable
-data class ALStaffNode(
-    val name: ALStaffName,
-)
-
-@Serializable
-data class ALStaffName(
-    val userPreferred: String?,
-    val native: String?,
-    val full: String?,
-) {
-    operator fun invoke(): String? {
-        return userPreferred ?: full ?: native
-    }
-}
-
+// AY -->
 @Serializable
 data class ALStudios(
     val edges: List<ALStudiosEdge>,
@@ -84,3 +59,4 @@ data class ALStudiosEdge(
 data class ALStudiosNode(
     val name: String,
 )
+// <-- AY

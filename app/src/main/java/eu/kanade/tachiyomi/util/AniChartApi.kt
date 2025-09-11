@@ -1,4 +1,6 @@
+// AY -->
 package eu.kanade.tachiyomi.util
+
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
@@ -6,13 +8,13 @@ import eu.kanade.tachiyomi.data.track.simkl.Simkl
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.jsonMime
-import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
+import eu.kanade.tachiyomi.ui.anime.track.TrackItem
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.anime.model.Anime
 import java.time.OffsetDateTime
 import java.util.Calendar
 
@@ -21,7 +23,7 @@ class AniChartApi {
 
     internal suspend fun loadAiringTime(
         anime: Anime,
-        trackItems: List<AnimeTrackItem>,
+        trackItems: List<TrackItem>,
         manualFetch: Boolean,
     ): Pair<Int, Long> {
         var airingEpisodeData = Pair(anime.nextEpisodeToAir, anime.nextEpisodeAiringAt)
@@ -163,3 +165,4 @@ class AniChartApi {
         return instant.epochSecond
     }
 }
+// <-- AY

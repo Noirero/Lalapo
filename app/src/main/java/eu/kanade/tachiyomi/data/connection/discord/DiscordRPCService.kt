@@ -25,9 +25,10 @@ import kotlinx.coroutines.SupervisorJob
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category.Companion.UNCATEGORIZED_ID
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -72,7 +73,7 @@ class DiscordRPCService : Service() {
         val builder = context.notificationBuilder(Notifications.CHANNEL_DISCORD_RPC) {
             setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
             setSmallIcon(R.drawable.ic_discord_24dp)
-            setContentText(context.stringResource(MR.strings.pref_discord_rpc))
+            setContentText(context.stringResource(AMMR.strings.pref_discord_rpc))
             setAutoCancel(false)
             setOngoing(true)
             setUsesChronometer(true)
@@ -162,7 +163,7 @@ class DiscordRPCService : Service() {
         internal suspend fun setPlayerActivity(context: Context, playerData: PlayerData = PlayerData()) {
             if (rpc == null || playerData.thumbnailUrl == null || playerData.animeId == null) return
 
-            val animeCategoryIds = Injekt.get<GetAnimeCategories>()
+            val animeCategoryIds = Injekt.get<GetCategories>()
                 .await(playerData.animeId)
                 .map { it.id.toString() }
                 .run { ifEmpty { plus(UNCATEGORIZED_ID.toString()) } }

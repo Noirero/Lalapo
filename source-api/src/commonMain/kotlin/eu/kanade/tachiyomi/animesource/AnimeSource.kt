@@ -26,7 +26,7 @@ interface AnimeSource {
         get() = ""
 
     /**
-     * Get the updated details for a anime.
+     * Get the updated details for an anime.
      *
      * @since extensions-lib 1.5
      * @param anime the anime to update.

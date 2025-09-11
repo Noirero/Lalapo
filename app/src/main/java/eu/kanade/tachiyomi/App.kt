@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.DeviceUtil
+import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
@@ -58,9 +59,10 @@ import org.conscrypt.Conscrypt
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.widget.entries.anime.AnimeWidgetManager
+import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -103,6 +105,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
+        val scope = ProcessLifecycleOwner.get().lifecycleScope
+
         // Show notification to disable Incognito Mode when it's enabled
         basePreferences.incognitoMode().changes()
             .onEach { enabled ->
@@ -130,14 +134,12 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                     cancelNotification(Notifications.ID_INCOGNITO_MODE)
                 }
             }
-            .launchIn(ProcessLifecycleOwner.get().lifecycleScope)
+            .launchIn(scope)
 
         setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode().get())
 
         // Updates widget update
-        with(AnimeWidgetManager(Injekt.get(), Injekt.get())) {
-            init(ProcessLifecycleOwner.get().lifecycleScope)
-        }
+        WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
 
         // AM (SYNC) -->
         startSyncJob(syncPreferences.getSyncTriggerOptions().syncOnAppStart)
@@ -173,11 +175,11 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(OkHttpNetworkFetcherFactory(callFactoryLazy::value))
                 // Fetcher.Factory
                 add(BufferedSourceFetcher.Factory())
-                add(AnimeCoverFetcher.AnimeFactory(callFactoryLazy))
                 add(AnimeCoverFetcher.AnimeCoverFactory(callFactoryLazy))
+                add(AnimeCoverFetcher.AnimeFactory(callFactoryLazy))
                 // Keyer
-                add(AnimeKeyer())
                 add(AnimeCoverKeyer())
+                add(AnimeKeyer())
             }
 
             crossfade((300 * this@App.animatorDurationScale).toInt())

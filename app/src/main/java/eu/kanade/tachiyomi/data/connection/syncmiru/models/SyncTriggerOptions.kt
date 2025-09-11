@@ -4,6 +4,7 @@ package eu.kanade.tachiyomi.data.connection.syncmiru.models
 import dev.icerock.moko.resources.StringResource
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 
 data class SyncTriggerOptions(
     val syncOnAppStart: Boolean = false,
@@ -27,22 +28,22 @@ data class SyncTriggerOptions(
     companion object {
         val mainOptions = persistentListOf(
             Entry(
-                label = MR.strings.sync_on_app_start,
+                label = AMMR.strings.sync_on_app_start,
                 getter = SyncTriggerOptions::syncOnAppStart,
                 setter = { options, enabled -> options.copy(syncOnAppStart = enabled) },
             ),
             Entry(
-                label = MR.strings.sync_on_app_resume,
+                label = AMMR.strings.sync_on_app_resume,
                 getter = SyncTriggerOptions::syncOnAppResume,
                 setter = { options, enabled -> options.copy(syncOnAppResume = enabled) },
             ),
             Entry(
-                label = MR.strings.sync_on_episode_seen,
+                label = AMMR.strings.sync_on_episode_seen,
                 getter = SyncTriggerOptions::syncOnEpisodeSeen,
                 setter = { options, enabled -> options.copy(syncOnEpisodeSeen = enabled) },
             ),
             Entry(
-                label = MR.strings.sync_on_episode_open,
+                label = AMMR.strings.sync_on_episode_open,
                 getter = SyncTriggerOptions::syncOnEpisodeOpen,
                 setter = { options, enabled -> options.copy(syncOnEpisodeOpen = enabled) },
             ),

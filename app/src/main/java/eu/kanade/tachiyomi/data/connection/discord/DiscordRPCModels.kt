@@ -6,6 +6,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 
 // Constant for logging tag
@@ -160,15 +161,15 @@ data class PlayerData(
 
 // Enum class for standard Rich Presence in-app screens
 enum class DiscordScreen(val text: StringResource, val details: StringResource, val imageUrl: String) {
-    APP(MR.strings.app_name, MR.strings.browsing, ANIMIRU_IMAGE_URL),
-    LIBRARY(MR.strings.label_library, MR.strings.browsing, LIBRARY_IMAGE_URL),
-    UPDATES(MR.strings.label_recent_updates, MR.strings.scrolling, UPDATES_IMAGE_URL),
-    HISTORY(MR.strings.label_recent_manga, MR.strings.scrolling, HISTORY_IMAGE_URL),
-    RECENTS(MR.strings.label_recent_recents, MR.strings.scrolling, RECENTS_IMAGE_URL),
-    BROWSE(MR.strings.label_sources, MR.strings.browsing, BROWSE_IMAGE_URL),
-    MORE(MR.strings.label_settings, MR.strings.messing, MORE_IMAGE_URL),
-    WEBVIEW(MR.strings.action_web_view, MR.strings.browsing, WEBVIEW_IMAGE_URL),
-    VIDEO(MR.strings.video, AYMR.strings.watching, VIDEO_IMAGE_URL),
+    APP(MR.strings.app_name, AMMR.strings.browsing, ANIMIRU_IMAGE_URL),
+    LIBRARY(MR.strings.label_library, AMMR.strings.browsing, LIBRARY_IMAGE_URL),
+    UPDATES(MR.strings.label_recent_updates, AMMR.strings.scrolling, UPDATES_IMAGE_URL),
+    HISTORY(MR.strings.label_recent_manga, AMMR.strings.scrolling, HISTORY_IMAGE_URL),
+    RECENTS(AMMR.strings.label_recent_recents, AMMR.strings.scrolling, RECENTS_IMAGE_URL),
+    BROWSE(MR.strings.label_sources, AMMR.strings.browsing, BROWSE_IMAGE_URL),
+    MORE(MR.strings.label_settings, AMMR.strings.messing, MORE_IMAGE_URL),
+    WEBVIEW(MR.strings.action_web_view, AMMR.strings.browsing, WEBVIEW_IMAGE_URL),
+    VIDEO(AMMR.strings.video, AYMR.strings.watching, VIDEO_IMAGE_URL),
 }
 
 // Constants for standard Rich Presence image urls

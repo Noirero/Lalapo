@@ -2,10 +2,10 @@ package eu.kanade.tachiyomi.data.track.shikimori
 
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.data.track.shikimori.dto.SMAddEntryResponse
-import eu.kanade.tachiyomi.data.track.shikimori.dto.SMEntry
+import eu.kanade.tachiyomi.data.database.models.Track
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
+import eu.kanade.tachiyomi.data.track.shikimori.dto.SMAddAnimeResponse
+import eu.kanade.tachiyomi.data.track.shikimori.dto.SMAnime
 import eu.kanade.tachiyomi.data.track.shikimori.dto.SMOAuth
 import eu.kanade.tachiyomi.data.track.shikimori.dto.SMUser
 import eu.kanade.tachiyomi.data.track.shikimori.dto.SMUserListEntry
@@ -24,7 +24,7 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
+import tachiyomi.domain.track.model.Track as DomainTrack
 
 class ShikimoriApi(
     private val trackId: Long,
@@ -36,7 +36,7 @@ class ShikimoriApi(
 
     private val authClient = client.newBuilder().addInterceptor(interceptor).build()
 
-    suspend fun addLibAnime(track: AnimeTrack, userId: String): AnimeTrack {
+    suspend fun addLibAnime(track: Track, userId: String): Track {
         return withIOContext {
             with(json) {
                 val payload = buildJsonObject {
@@ -55,8 +55,9 @@ class ShikimoriApi(
                         body = payload.toString().toRequestBody(jsonMime),
                     ),
                 ).awaitSuccess()
-                    .parseAs<SMAddEntryResponse>()
+                    .parseAs<SMAddAnimeResponse>()
                     .let {
+                        // save id of the entry for possible future delete request
                         track.library_id = it.id
                     }
                 track
@@ -64,12 +65,9 @@ class ShikimoriApi(
         }
     }
 
-    suspend fun updateLibAnime(track: AnimeTrack, userId: String): AnimeTrack = addLibAnime(
-        track,
-        userId,
-    )
+    suspend fun updateLibAnime(track: Track, userId: String): Track = addLibAnime(track, userId)
 
-    suspend fun deleteLibAnime(track: DomainAnimeTrack) {
+    suspend fun deleteLibAnime(track: DomainTrack) {
         withIOContext {
             authClient
                 .newCall(DELETE("$API_URL/v2/user_rates/${track.libraryId}"))
@@ -77,7 +75,7 @@ class ShikimoriApi(
         }
     }
 
-    suspend fun searchAnime(search: String): List<AnimeTrackSearch> {
+    suspend fun search(search: String): List<TrackSearch> {
         return withIOContext {
             val url = "$API_URL/animes".toUri().buildUpon()
                 .appendQueryParameter("order", "popularity")
@@ -87,13 +85,13 @@ class ShikimoriApi(
             with(json) {
                 authClient.newCall(GET(url.toString()))
                     .awaitSuccess()
-                    .parseAs<List<SMEntry>>()
-                    .map { it.toAnimeTrack(trackId) }
+                    .parseAs<List<SMAnime>>()
+                    .map { it.toTrack(trackId) }
             }
         }
     }
 
-    suspend fun findLibAnime(track: AnimeTrack, user_id: String): AnimeTrack? {
+    suspend fun findLibAnime(track: Track, userId: String): Track? {
         return withIOContext {
             val urlAnimes = "$API_URL/animes".toUri().buildUpon()
                 .appendPath(track.remote_id.toString())
@@ -101,11 +99,11 @@ class ShikimoriApi(
             val anime = with(json) {
                 authClient.newCall(GET(urlAnimes.toString()))
                     .awaitSuccess()
-                    .parseAs<SMEntry>()
+                    .parseAs<SMAnime>()
             }
 
             val url = "$API_URL/v2/user_rates".toUri().buildUpon()
-                .appendQueryParameter("user_id", user_id)
+                .appendQueryParameter("user_id", userId)
                 .appendQueryParameter("target_id", track.remote_id.toString())
                 .appendQueryParameter("target_type", "Anime")
                 .build()
@@ -115,10 +113,10 @@ class ShikimoriApi(
                     .parseAs<List<SMUserListEntry>>()
                     .let { entries ->
                         if (entries.size > 1) {
-                            throw Exception("Too many manga in response")
+                            throw Exception("Too many anime in response")
                         }
                         entries
-                            .map { it.toAnimeTrack(trackId, anime) }
+                            .map { it.toTrack(trackId, anime) }
                             .firstOrNull()
                     }
             }

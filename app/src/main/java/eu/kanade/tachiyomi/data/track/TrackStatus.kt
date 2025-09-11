@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
 import eu.kanade.tachiyomi.data.track.simkl.Simkl
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 
 enum class TrackStatus(val int: Int, val res: StringResource) {
@@ -19,7 +20,7 @@ enum class TrackStatus(val int: Int, val res: StringResource) {
     PAUSED(4, MR.strings.on_hold),
     COMPLETED(5, MR.strings.completed),
     DROPPED(6, MR.strings.dropped),
-    OTHER(7, MR.strings.not_tracked),
+    OTHER(7, AMMR.strings.not_tracked),
     ;
 
     companion object {
@@ -59,21 +60,21 @@ enum class TrackStatus(val int: Int, val res: StringResource) {
                 }
                 trackerManager.shikimori.id -> {
                     when (status) {
-                        Shikimori.READING -> WATCHING
+                        Shikimori.WATCHING -> WATCHING
                         Shikimori.COMPLETED -> COMPLETED
                         Shikimori.ON_HOLD -> PAUSED
-                        Shikimori.PLAN_TO_READ -> PLAN_TO_WATCH
+                        Shikimori.PLAN_TO_WATCH -> PLAN_TO_WATCH
                         Shikimori.DROPPED -> DROPPED
-                        Shikimori.REREADING -> REPEATING
+                        Shikimori.REWATCHING -> REPEATING
                         else -> null
                     }
                 }
                 trackerManager.bangumi.id -> {
                     when (status) {
-                        Bangumi.READING -> WATCHING
+                        Bangumi.WATCHING -> WATCHING
                         Bangumi.COMPLETED -> COMPLETED
                         Bangumi.ON_HOLD -> PAUSED
-                        Bangumi.PLAN_TO_READ -> PLAN_TO_WATCH
+                        Bangumi.PLAN_TO_WATCH -> PLAN_TO_WATCH
                         Bangumi.DROPPED -> DROPPED
                         else -> null
                     }

@@ -2,12 +2,12 @@ package eu.kanade.tachiyomi.data.track.bangumi
 
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.bangumi.dto.BGMCollectionResponse
 import eu.kanade.tachiyomi.data.track.bangumi.dto.BGMOAuth
 import eu.kanade.tachiyomi.data.track.bangumi.dto.BGMSearchResult
 import eu.kanade.tachiyomi.data.track.bangumi.dto.BGMUser
-import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.network.POST
@@ -38,7 +38,7 @@ class BangumiApi(
 
     private val authClient = client.newBuilder().addInterceptor(interceptor).build()
 
-    suspend fun addLibAnime(track: AnimeTrack): AnimeTrack {
+    suspend fun addLibAnime(track: Track): Track {
         return withIOContext {
             val url = "$API_URL/v0/users/-/collections/${track.remote_id}"
             val body = buildJsonObject {
@@ -56,7 +56,7 @@ class BangumiApi(
         }
     }
 
-    suspend fun updateLibAnime(track: AnimeTrack): AnimeTrack {
+    suspend fun updateLibAnime(track: Track): Track {
         return withIOContext {
             val url = "$API_URL/v0/users/-/collections/${track.remote_id}"
             val body = buildJsonObject {
@@ -81,7 +81,7 @@ class BangumiApi(
         }
     }
 
-    suspend fun searchAnime(search: String): List<AnimeTrackSearch> {
+    suspend fun search(search: String): List<TrackSearch> {
         // This API is marked as experimental in the documentation
         // but that has been the case since 2022 with few significant
         // changes to the schema for this endpoint since
@@ -104,12 +104,12 @@ class BangumiApi(
                     .awaitSuccess()
                     .parseAs<BGMSearchResult>()
                     .data
-                    .map { it.toAnimeTrackSearch(trackId) }
+                    .map { it.toTrackSearch(trackId) }
             }
         }
     }
 
-    suspend fun statusLibAnime(track: AnimeTrack, username: String): AnimeTrack? {
+    suspend fun statusLibAnime(track: Track, username: String): Track? {
         return withIOContext {
             val url = "$API_URL/v0/users/$username/collections/${track.remote_id}"
             with(json) {
@@ -144,7 +144,6 @@ class BangumiApi(
                 .add("code", code)
                 .add("redirect_uri", REDIRECT_URL)
                 .build()
-
             with(json) {
                 client.newCall(POST(OAUTH_URL, body = body))
                     .awaitSuccess()

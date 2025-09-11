@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import eu.kanade.core.preference.asState
-import eu.kanade.presentation.more.settings.Preference.PreferenceItem
 import eu.kanade.tachiyomi.data.connection.Connection
 import eu.kanade.tachiyomi.data.track.Tracker
 import kotlinx.collections.immutable.ImmutableList
@@ -38,7 +37,9 @@ sealed class Preference {
         data class TextPreference(
             override val title: String,
             override val subtitle: String? = null,
+            // AY -->
             override val icon: ImageVector? = null,
+            // <-- AY
             override val enabled: Boolean = true,
             val onClick: (() -> Unit)? = null,
         ) : PreferenceItem<String>() {
@@ -120,7 +121,6 @@ sealed class Preference {
             val entries: ImmutableMap<String, String>,
             override val title: String,
             override val subtitle: String? = "%s",
-
             val subtitleProvider: @Composable (value: Set<String>, entries: ImmutableMap<String, String>) -> String? =
                 { v, e ->
                     val combined = remember(v, e) {
@@ -148,6 +148,8 @@ sealed class Preference {
         ) : PreferenceItem<String>() {
             override val icon: ImageVector? = null
         }
+
+        // AY -->
 
         /**
          * A [PreferenceItem] that shows a multi-line EditText in the dialog.
@@ -215,6 +217,7 @@ sealed class Preference {
             override val enabled: Boolean = true,
             override val onValueChanged: suspend (value: String) -> Boolean = { true },
         ) : PreferenceItem<String>()
+        // <-- AY
 
         /**
          * A [PreferenceItem] for individual tracker.
@@ -232,6 +235,7 @@ sealed class Preference {
         }
 
         // AM (CONNECTION) -->
+
         /**
          * A [PreferenceItem] for individual connection service.
          */

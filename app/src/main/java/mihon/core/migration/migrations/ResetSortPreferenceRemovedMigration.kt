@@ -17,13 +17,13 @@ class ResetSortPreferenceRemovedMigration : Migration {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         val oldAnimeSortingMode = prefs.getInt(
-            libraryPreferences.animeSortingMode().key(),
+            libraryPreferences.sortingMode().key(),
             0,
         )
 
         if (oldAnimeSortingMode == 5) { // SOURCE = 5
             prefs.edit {
-                putInt(libraryPreferences.animeSortingMode().key(), 0) // ALPHABETICAL = 0
+                putInt(libraryPreferences.sortingMode().key(), 0) // ALPHABETICAL = 0
             }
         }
 

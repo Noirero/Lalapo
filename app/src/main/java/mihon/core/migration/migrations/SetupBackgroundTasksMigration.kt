@@ -1,7 +1,7 @@
 package mihon.core.migration.migrations
 
 import android.app.Application
-import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 
@@ -12,7 +12,7 @@ class SetupBackgroundTasksMigration : Migration {
     override suspend fun invoke(migrationContext: MigrationContext): Boolean {
         val context = migrationContext.get<Application>() ?: return false
 
-        AnimeLibraryUpdateJob.setupTask(context)
+        LibraryUpdateJob.setupTask(context)
 
         return true
     }

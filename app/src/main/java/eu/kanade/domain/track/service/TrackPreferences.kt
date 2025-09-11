@@ -12,12 +12,12 @@ class TrackPreferences(
 ) {
 
     fun trackUsername(tracker: Tracker) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_username_${tracker.id}"),
+        Preference.privateKey("pref_animesync_username_${tracker.id}"),
         "",
     )
 
     fun trackPassword(tracker: Tracker) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_password_${tracker.id}"),
+        Preference.privateKey("pref_animesync_password_${tracker.id}"),
         "",
     )
 
@@ -36,17 +36,19 @@ class TrackPreferences(
 
     fun anilistScoreType() = preferenceStore.getString("anilist_score_type", Anilist.POINT_10)
 
-    fun autoUpdateTrack() = preferenceStore.getBoolean("pref_auto_update_manga_sync_key", true)
+    fun autoUpdateTrack() = preferenceStore.getBoolean("pref_auto_update_anime_sync_key", true)
 
+    // AY -->
     fun trackOnAddingToLibrary() = preferenceStore.getBoolean("track_on_adding_to_library", true)
 
     fun showNextEpisodeAiringTime() = preferenceStore.getBoolean(
         "show_next_episode_airing_time",
         true,
     )
+    // <-- AY
 
-    fun autoUpdateTrackOnMarkRead() = preferenceStore.getEnum(
-        "pref_auto_update_manga_on_mark_read",
+    fun autoUpdateTrackOnMarkSeen() = preferenceStore.getEnum(
+        "pref_auto_update_anime_on_mark_seen",
         AutoTrackState.ALWAYS,
     )
 }

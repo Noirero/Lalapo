@@ -6,11 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.core.Constants
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.data.download.DownloadManager
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.updater.AppUpdateDownloadJob
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.PlayerActivity
@@ -20,16 +19,17 @@ import eu.kanade.tachiyomi.util.system.notificationManager
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.runBlocking
+import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.anime.interactor.GetAnime
+import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.entries.anime.interactor.GetAnime
-import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.items.episode.interactor.GetEpisode
-import tachiyomi.domain.items.episode.interactor.UpdateEpisode
-import tachiyomi.domain.items.episode.model.Episode
-import tachiyomi.domain.items.episode.model.toEpisodeUpdate
-import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.episode.interactor.GetEpisode
+import tachiyomi.domain.episode.interactor.UpdateEpisode
+import tachiyomi.domain.episode.model.Episode
+import tachiyomi.domain.episode.model.toEpisodeUpdate
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -46,20 +46,18 @@ class NotificationReceiver : BroadcastReceiver() {
     private val getAnime: GetAnime by injectLazy()
     private val getEpisode: GetEpisode by injectLazy()
     private val updateEpisode: UpdateEpisode by injectLazy()
-    private val animeDownloadManager: AnimeDownloadManager by injectLazy()
+    private val downloadManager: DownloadManager by injectLazy()
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             // Dismiss notification
-            ACTION_DISMISS_NOTIFICATION -> dismissNotification(
-                context,
-                intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1),
-            )
-            ACTION_RESUME_ANIME_DOWNLOADS -> animeDownloadManager.startDownloads()
+            ACTION_DISMISS_NOTIFICATION -> dismissNotification(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1))
+            // Resume the download service
+            ACTION_RESUME_DOWNLOADS -> downloadManager.startDownloads()
             // Pause the download service
-            ACTION_PAUSE_ANIME_DOWNLOADS -> animeDownloadManager.pauseDownloads()
+            ACTION_PAUSE_DOWNLOADS -> downloadManager.pauseDownloads()
             // Clear the download queue
-            ACTION_CLEAR_ANIME_DOWNLOADS -> animeDownloadManager.clearQueue()
+            ACTION_CLEAR_DOWNLOADS -> downloadManager.clearQueue()
             // Launch share activity and dismiss notification
             ACTION_SHARE_IMAGE ->
                 shareImage(
@@ -78,7 +76,7 @@ class NotificationReceiver : BroadcastReceiver() {
             ACTION_CANCEL_SYNC -> cancelSync(context)
             // <-- AM (SYNC)
             // Cancel library update and dismiss notification
-            ACTION_CANCEL_ANIMELIB_UPDATE -> cancelAnimelibUpdate(context)
+            ACTION_CANCEL_LIBRARY_UPDATE -> cancelLibraryUpdate(context)
             // Start downloading app update
             ACTION_START_APP_UPDATE -> startDownloadAppUpdate(context, intent)
             // Cancel downloading app update
@@ -87,22 +85,18 @@ class NotificationReceiver : BroadcastReceiver() {
             ACTION_OPEN_EPISODE -> {
                 openEpisode(
                     context,
-                    intent.getLongExtra(EXTRA_MANGA_ID, -1),
-                    intent.getLongExtra(EXTRA_CHAPTER_ID, -1),
+                    intent.getLongExtra(EXTRA_ANIME_ID, -1),
+                    intent.getLongExtra(EXTRA_EPISODE_ID, -1),
                 )
             }
             // Mark updated anime episodes as seen
             ACTION_MARK_AS_SEEN -> {
                 val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
                 if (notificationId > -1) {
-                    dismissNotification(
-                        context,
-                        notificationId,
-                        intent.getIntExtra(EXTRA_GROUP_ID, 0),
-                    )
+                    dismissNotification(context, notificationId, intent.getIntExtra(EXTRA_GROUP_ID, 0))
                 }
-                val urls = intent.getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return
-                val animeId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
+                val urls = intent.getStringArrayExtra(EXTRA_EPISODE_URL) ?: return
+                val animeId = intent.getLongExtra(EXTRA_ANIME_ID, -1)
                 if (animeId > -1) {
                     markAsSeen(urls, animeId)
                 }
@@ -111,14 +105,10 @@ class NotificationReceiver : BroadcastReceiver() {
             ACTION_DOWNLOAD_EPISODE -> {
                 val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
                 if (notificationId > -1) {
-                    dismissNotification(
-                        context,
-                        notificationId,
-                        intent.getIntExtra(EXTRA_GROUP_ID, 0),
-                    )
+                    dismissNotification(context, notificationId, intent.getIntExtra(EXTRA_GROUP_ID, 0))
                 }
-                val urls = intent.getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return
-                val animeId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
+                val urls = intent.getStringArrayExtra(EXTRA_EPISODE_URL) ?: return
+                val animeId = intent.getLongExtra(EXTRA_ANIME_ID, -1)
                 if (animeId > -1) {
                     downloadEpisodes(urls, animeId)
                 }
@@ -133,7 +123,6 @@ class NotificationReceiver : BroadcastReceiver() {
      */
     private fun dismissNotification(context: Context, notificationId: Int) {
         context.cancelNotification(notificationId)
-        context.notificationManager.cancelAll()
     }
 
     /**
@@ -196,8 +185,8 @@ class NotificationReceiver : BroadcastReceiver() {
      *
      * @param context context of application
      */
-    private fun cancelAnimelibUpdate(context: Context) {
-        AnimeLibraryUpdateJob.stop(context)
+    private fun cancelLibraryUpdate(context: Context) {
+        LibraryUpdateJob.stop(context)
     }
 
     private fun startDownloadAppUpdate(context: Context, intent: Intent) {
@@ -212,12 +201,12 @@ class NotificationReceiver : BroadcastReceiver() {
     /**
      * Method called when user wants to mark anime episodes as seen
      *
-     * @param episodeUrls URLs of episodes to mark as seen
+     * @param episodeUrls URLs of episode to mark as seen
      * @param animeId id of anime
      */
     private fun markAsSeen(episodeUrls: Array<String>, animeId: Long) {
         val downloadPreferences: DownloadPreferences = Injekt.get()
-        val sourceManager: AnimeSourceManager = Injekt.get()
+        val sourceManager: SourceManager = Injekt.get()
 
         launchIO {
             val toUpdate = episodeUrls.mapNotNull { getEpisode.await(it, animeId) }
@@ -228,7 +217,7 @@ class NotificationReceiver : BroadcastReceiver() {
                         if (anime != null) {
                             val source = sourceManager.get(anime.source)
                             if (source != null) {
-                                animeDownloadManager.deleteEpisodes(listOf(it), anime, source)
+                                downloadManager.deleteEpisodes(listOf(it), anime, source)
                             }
                         }
                     }
@@ -242,13 +231,13 @@ class NotificationReceiver : BroadcastReceiver() {
      * Method called when user wants to download episodes
      *
      * @param episodeUrls URLs of episode to download
-     * @param animeId id of manga
+     * @param animeId id of anime
      */
     private fun downloadEpisodes(episodeUrls: Array<String>, animeId: Long) {
         launchIO {
             val anime = getAnime.await(animeId) ?: return@launchIO
             val episodes = episodeUrls.mapNotNull { getEpisode.await(it, animeId) }
-            animeDownloadManager.downloadEpisodes(anime, episodes)
+            downloadManager.downloadEpisodes(anime, episodes)
         }
     }
 
@@ -265,7 +254,7 @@ class NotificationReceiver : BroadcastReceiver() {
         private const val ACTION_CANCEL_SYNC = "$ID.$NAME.CANCEL_SYNC"
         // <-- AM (SYNC)
 
-        private const val ACTION_CANCEL_ANIMELIB_UPDATE = "$ID.$NAME.CANCEL_ANIMELIB_UPDATE"
+        private const val ACTION_CANCEL_LIBRARY_UPDATE = "$ID.$NAME.CANCEL_LIBRARY_UPDATE"
 
         private const val ACTION_START_APP_UPDATE = "$ID.$NAME.ACTION_START_APP_UPDATE"
         private const val ACTION_CANCEL_APP_UPDATE_DOWNLOAD = "$ID.$NAME.CANCEL_APP_UPDATE_DOWNLOAD"
@@ -276,28 +265,28 @@ class NotificationReceiver : BroadcastReceiver() {
 
         private const val ACTION_OPEN_ENTRY = "$ID.$NAME.ACTION_OPEN_ENTRY"
 
-        private const val ACTION_RESUME_ANIME_DOWNLOADS = "$ID.$NAME.ACTION_RESUME_ANIME_DOWNLOADS"
-        private const val ACTION_PAUSE_ANIME_DOWNLOADS = "$ID.$NAME.ACTION_PAUSE_ANIME_DOWNLOADS"
-        private const val ACTION_CLEAR_ANIME_DOWNLOADS = "$ID.$NAME.ACTION_CLEAR_ANIME_DOWNLOADS"
+        private const val ACTION_RESUME_DOWNLOADS = "$ID.$NAME.ACTION_RESUME_DOWNLOADS"
+        private const val ACTION_PAUSE_DOWNLOADS = "$ID.$NAME.ACTION_PAUSE_DOWNLOADS"
+        private const val ACTION_CLEAR_DOWNLOADS = "$ID.$NAME.ACTION_CLEAR_DOWNLOADS"
 
         private const val ACTION_DISMISS_NOTIFICATION = "$ID.$NAME.ACTION_DISMISS_NOTIFICATION"
 
         private const val EXTRA_URI = "$ID.$NAME.URI"
         private const val EXTRA_NOTIFICATION_ID = "$ID.$NAME.NOTIFICATION_ID"
         private const val EXTRA_GROUP_ID = "$ID.$NAME.EXTRA_GROUP_ID"
-        private const val EXTRA_MANGA_ID = "$ID.$NAME.EXTRA_MANGA_ID"
-        private const val EXTRA_CHAPTER_ID = "$ID.$NAME.EXTRA_CHAPTER_ID"
-        private const val EXTRA_CHAPTER_URL = "$ID.$NAME.EXTRA_CHAPTER_URL"
+        private const val EXTRA_ANIME_ID = "$ID.$NAME.EXTRA_ANIME_ID"
+        private const val EXTRA_EPISODE_ID = "$ID.$NAME.EXTRA_EPISODE_ID"
+        private const val EXTRA_EPISODE_URL = "$ID.$NAME.EXTRA_EPISODE_URL"
 
         /**
-         * Returns a [PendingIntent] that resumes the download of a chapter
+         * Returns a [PendingIntent] that resumes the download of an episode
          *
          * @param context context of application
          * @return [PendingIntent]
          */
-        internal fun resumeAnimeDownloadsPendingBroadcast(context: Context): PendingIntent {
+        internal fun resumeDownloadsPendingBroadcast(context: Context): PendingIntent {
             val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_RESUME_ANIME_DOWNLOADS
+                action = ACTION_RESUME_DOWNLOADS
             }
             return PendingIntent.getBroadcast(
                 context,
@@ -313,9 +302,9 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @return [PendingIntent]
          */
-        internal fun pauseAnimeDownloadsPendingBroadcast(context: Context): PendingIntent {
+        internal fun pauseDownloadsPendingBroadcast(context: Context): PendingIntent {
             val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_PAUSE_ANIME_DOWNLOADS
+                action = ACTION_PAUSE_DOWNLOADS
             }
             return PendingIntent.getBroadcast(
                 context,
@@ -331,9 +320,9 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @return [PendingIntent]
          */
-        internal fun clearAnimeDownloadsPendingBroadcast(context: Context): PendingIntent {
+        internal fun clearDownloadsPendingBroadcast(context: Context): PendingIntent {
             val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_CLEAR_ANIME_DOWNLOADS
+                action = ACTION_CLEAR_DOWNLOADS
             }
             return PendingIntent.getBroadcast(
                 context,
@@ -370,15 +359,11 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param notificationId id of notification
          * @return [PendingIntent]
          */
-        internal fun dismissNotification(
-            context: Context,
-            notificationId: Int,
-            groupId: Int? = null,
-        ) {
+        internal fun dismissNotification(context: Context, notificationId: Int, groupId: Int? = null) {
             /*
             Group notifications always have at least 2 notifications:
             - Group summary notification
-            - Single manga notification
+            - Single anime notification
 
             If the single notification is dismissed by the system, ie by a user swipe or tapping on the notification,
             it will auto dismiss the group notification if there's no other single updates.
@@ -425,7 +410,7 @@ class NotificationReceiver : BroadcastReceiver() {
         }
 
         /**
-         * Returns [PendingIntent] that starts a watcher activity containing episode.
+         * Returns [PendingIntent] that starts a player activity containing episode.
          *
          * @param context context of application
          * @param anime anime of episode
@@ -468,7 +453,7 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @param anime anime of episode
          */
-        internal fun markAsViewedPendingBroadcast(
+        internal fun markAsSeenPendingBroadcast(
             context: Context,
             anime: Anime,
             episodes: Array<Episode>,
@@ -476,8 +461,8 @@ class NotificationReceiver : BroadcastReceiver() {
         ): PendingIntent {
             val newIntent = Intent(context, NotificationReceiver::class.java).apply {
                 action = ACTION_MARK_AS_SEEN
-                putExtra(EXTRA_CHAPTER_URL, episodes.map { it.url }.toTypedArray())
-                putExtra(EXTRA_MANGA_ID, anime.id)
+                putExtra(EXTRA_EPISODE_URL, episodes.map { it.url }.toTypedArray())
+                putExtra(EXTRA_ANIME_ID, anime.id)
                 putExtra(EXTRA_NOTIFICATION_ID, anime.id.hashCode())
                 putExtra(EXTRA_GROUP_ID, groupId)
             }
@@ -503,8 +488,8 @@ class NotificationReceiver : BroadcastReceiver() {
         ): PendingIntent {
             val newIntent = Intent(context, NotificationReceiver::class.java).apply {
                 action = ACTION_DOWNLOAD_EPISODE
-                putExtra(EXTRA_CHAPTER_URL, episodes.map { it.url }.toTypedArray())
-                putExtra(EXTRA_MANGA_ID, anime.id)
+                putExtra(EXTRA_EPISODE_URL, episodes.map { it.url }.toTypedArray())
+                putExtra(EXTRA_ANIME_ID, anime.id)
                 putExtra(EXTRA_NOTIFICATION_ID, anime.id.hashCode())
                 putExtra(EXTRA_GROUP_ID, groupId)
             }
@@ -522,11 +507,12 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @param animeId id of the entry to open
          */
-        internal fun openAnimeEntryPendingActivity(context: Context, animeId: Long): PendingIntent {
+        internal fun openEntryPendingActivity(context: Context, animeId: Long): PendingIntent {
             val newIntent = Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_ANIME)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 .putExtra(Constants.ANIME_EXTRA, animeId)
                 .putExtra("notificationId", animeId.hashCode())
+
             return PendingIntent.getActivity(
                 context,
                 animeId.hashCode(),
@@ -543,25 +529,7 @@ class NotificationReceiver : BroadcastReceiver() {
          */
         internal fun cancelLibraryUpdatePendingBroadcast(context: Context): PendingIntent {
             val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_CANCEL_ANIMELIB_UPDATE
-            }
-            return PendingIntent.getBroadcast(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        }
-
-        /**
-         * Returns [PendingIntent] that starts a service which stops the library update
-         *
-         * @param context context of application
-         * @return [PendingIntent]
-         */
-        internal fun cancelAnimelibUpdatePendingBroadcast(context: Context): PendingIntent {
-            val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_CANCEL_ANIMELIB_UPDATE
+                action = ACTION_CANCEL_LIBRARY_UPDATE
             }
             return PendingIntent.getBroadcast(
                 context,
@@ -616,9 +584,9 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @return [PendingIntent]
          */
-        internal fun openAnimeExtensionsPendingActivity(context: Context): PendingIntent {
+        internal fun openExtensionsPendingActivity(context: Context): PendingIntent {
             val intent = Intent(context, MainActivity::class.java).apply {
-                action = Constants.SHORTCUT_ANIMEEXTENSIONS
+                action = Constants.SHORTCUT_EXTENSIONS
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
             return PendingIntent.getActivity(
@@ -630,18 +598,17 @@ class NotificationReceiver : BroadcastReceiver() {
         }
 
         /**
-         * Returns [PendingIntent] that starts a share activity for a backup file.
+         * Returns [PendingIntent] that directly launches a share activity for a backup file.
          *
          * @param context context of application
          * @param uri uri of backup file
          * @return [PendingIntent]
          */
-        internal fun shareBackupPendingBroadcast(context: Context, uri: Uri): PendingIntent {
-            val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_SHARE_BACKUP
-                putExtra(EXTRA_URI, uri)
+        internal fun shareBackupPendingActivity(context: Context, uri: Uri): PendingIntent {
+            val intent = uri.toShareIntent(context, "application/x-protobuf+gzip").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            return PendingIntent.getBroadcast(
+            return PendingIntent.getActivity(
                 context,
                 0,
                 intent,

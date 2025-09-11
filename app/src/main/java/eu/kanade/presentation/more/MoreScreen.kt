@@ -20,9 +20,10 @@ import androidx.compose.ui.res.vectorResource
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.core.Constants
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
+import tachiyomi.core.common.Constants
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -39,9 +40,10 @@ fun MoreScreen(
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
-    onClickStorage: () -> Unit,
     onClickDataAndStorage: () -> Unit,
+    // AY -->
     onClickPlayerSettings: () -> Unit,
+    // <-- AY
     onClickSettings: () -> Unit,
     onClickAbout: () -> Unit,
 ) {
@@ -66,7 +68,7 @@ fun MoreScreen(
             item {
                 SwitchPreferenceWidget(
                     title = stringResource(MR.strings.pref_incognito_mode),
-                    subtitle = stringResource(AYMR.strings.pref_incognito_mode_summary),
+                    subtitle = stringResource(AMMR.strings.am_pref_incognito_mode_summary),
                     icon = ImageVector.vectorResource(R.drawable.ic_glasses_24dp),
                     checked = incognitoMode,
                     onCheckedChanged = onIncognitoModeChange,
@@ -95,14 +97,9 @@ fun MoreScreen(
                                 }"
                             }
                         }
-
                         is DownloadQueueState.Downloading -> {
                             val pending = downloadQueueState.pending
-                            pluralStringResource(
-                                MR.plurals.download_queue_summary,
-                                count = pending,
-                                pending,
-                            )
+                            pluralStringResource(MR.plurals.download_queue_summary, count = pending, pending)
                         }
                     },
                     icon = Icons.Outlined.GetApp,
@@ -111,7 +108,7 @@ fun MoreScreen(
             }
             item {
                 TextPreferenceWidget(
-                    title = stringResource(AYMR.strings.general_categories),
+                    title = stringResource(MR.strings.categories),
                     icon = Icons.AutoMirrored.Outlined.Label,
                     onPreferenceClick = onClickCategories,
                 )
@@ -140,6 +137,7 @@ fun MoreScreen(
                     onPreferenceClick = onClickSettings,
                 )
             }
+            // AY -->
             item {
                 TextPreferenceWidget(
                     title = stringResource(AYMR.strings.label_player_settings),
@@ -147,6 +145,7 @@ fun MoreScreen(
                     onPreferenceClick = onClickPlayerSettings,
                 )
             }
+            // <-- AY
             item {
                 TextPreferenceWidget(
                     title = stringResource(MR.strings.pref_category_about),

@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 
 /**
  * Class to manage the basic information of all the notifications used in the app.
@@ -37,15 +38,15 @@ object Notifications {
      */
     private const val GROUP_DOWNLOADER = "group_downloader"
     const val CHANNEL_DOWNLOADER_PROGRESS = "downloader_progress_channel"
-    const val ID_DOWNLOAD_EPISODE_PROGRESS = -203
+    const val ID_DOWNLOAD_EPISODE_PROGRESS = -201
     const val CHANNEL_DOWNLOADER_ERROR = "downloader_error_channel"
-    const val ID_DOWNLOAD_EPISODE_ERROR = -204
+    const val ID_DOWNLOAD_EPISODE_ERROR = -202
 
     /**
      * Notification channel and ids used by the library updater.
      */
-    const val CHANNEL_NEW_CHAPTERS_EPISODES = "new_chapters_episodes_channel"
-    const val ID_NEW_EPISODES = -1301
+    const val CHANNEL_NEW_EPISODES = "new_episodes_channel"
+    const val ID_NEW_EPISODES = -301
     const val GROUP_NEW_EPISODES = "eu.kanade.tachiyomi.NEW_EPISODES"
 
     /**
@@ -66,6 +67,7 @@ object Notifications {
     const val ID_INCOGNITO_MODE = -701
 
     // AM (DISCORD_RPC) -->
+
     /**
      * Notification channel used for Discord RPC
      */
@@ -144,8 +146,8 @@ object Notifications {
                     setGroup(GROUP_LIBRARY)
                     setShowBadge(false)
                 },
-                buildNotificationChannel(CHANNEL_NEW_CHAPTERS_EPISODES, IMPORTANCE_DEFAULT) {
-                    setName(context.stringResource(MR.strings.channel_new_episodes))
+                buildNotificationChannel(CHANNEL_NEW_EPISODES, IMPORTANCE_DEFAULT) {
+                    setName(context.stringResource(AMMR.strings.am_channel_new_episodes))
                 },
                 buildNotificationChannel(CHANNEL_DOWNLOADER_PROGRESS, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_progress))
@@ -173,7 +175,7 @@ object Notifications {
                 },
                 // AM (DISCORD_RPC) -->
                 buildNotificationChannel(CHANNEL_DISCORD_RPC, IMPORTANCE_LOW) {
-                    setName(context.stringResource(MR.strings.pref_discord_rpc))
+                    setName(context.stringResource(AMMR.strings.pref_discord_rpc))
                 },
                 // <-- AM (DISCORD_RPC)
                 buildNotificationChannel(CHANNEL_APP_UPDATE, IMPORTANCE_DEFAULT) {

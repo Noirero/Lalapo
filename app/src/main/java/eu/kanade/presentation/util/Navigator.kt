@@ -1,8 +1,8 @@
 package eu.kanade.presentation.util
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -15,6 +15,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.ScreenTransitionContent
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,9 +82,7 @@ fun ScreenTransition(
     navigator: Navigator,
     transition: AnimatedContentTransitionScope<Screen>.() -> ContentTransform,
     modifier: Modifier = Modifier,
-    // AM (REMOVE_LIBRARIES) -->
-    content: @Composable AnimatedVisibilityScope.(Screen) -> Unit = { it.Content() },
-    // <-- AM (REMOVE_LIBRARIES)
+    content: ScreenTransitionContent = { it.Content() },
 ) {
     AnimatedContent(
         targetState = navigator.lastItem,
@@ -95,4 +94,6 @@ fun ScreenTransition(
             content(screen)
         }
     }
+
+    BackHandler(enabled = navigator.canPop, onBack = navigator::pop)
 }

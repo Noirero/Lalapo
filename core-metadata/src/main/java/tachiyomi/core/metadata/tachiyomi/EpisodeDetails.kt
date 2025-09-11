@@ -1,11 +1,16 @@
+// AY -->
 package tachiyomi.core.metadata.tachiyomi
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 class EpisodeDetails(
-    val episode_number: Float,
+    @SerialName("episode_number")
+    val episodeNumber: Float,
     val name: String? = null,
-    val date_upload: String? = null,
+    @SerialName("date_upload")
+    val dateUpload: String? = null,
     val scanlator: String? = null,
 )
+// <-- AY

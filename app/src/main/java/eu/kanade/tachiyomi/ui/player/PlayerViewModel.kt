@@ -39,12 +39,12 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.domain.anime.interactor.SetAnimeViewerFlags
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.connection.SyncPreferences
-import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
-import eu.kanade.domain.items.episode.model.toDbEpisode
-import eu.kanade.domain.source.anime.interactor.GetAnimeIncognitoState
-import eu.kanade.domain.track.anime.interactor.TrackEpisode
+import eu.kanade.domain.episode.model.toDbEpisode
+import eu.kanade.domain.source.interactor.GetIncognitoState
+import eu.kanade.domain.track.interactor.TrackEpisode
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.settings.screen.player.custombutton.CustomButtonFetchState
@@ -57,11 +57,11 @@ import eu.kanade.tachiyomi.animesource.model.TimeStamp
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
-import eu.kanade.tachiyomi.data.database.models.anime.Episode
-import eu.kanade.tachiyomi.data.database.models.anime.isRecognizedNumber
-import eu.kanade.tachiyomi.data.database.models.anime.toDomainEpisode
-import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
+import eu.kanade.tachiyomi.data.database.models.Episode
+import eu.kanade.tachiyomi.data.database.models.isRecognizedNumber
+import eu.kanade.tachiyomi.data.database.models.toDomainEpisode
+import eu.kanade.tachiyomi.data.download.DownloadManager
+import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.saver.Location
@@ -79,7 +79,7 @@ import eu.kanade.tachiyomi.ui.player.utils.AniSkipApi
 import eu.kanade.tachiyomi.ui.player.utils.ChapterUtils.Companion.getStringRes
 import eu.kanade.tachiyomi.ui.player.utils.TrackSelect
 import eu.kanade.tachiyomi.util.editCover
-import eu.kanade.tachiyomi.util.episode.filterDownloadedEpisodes
+import eu.kanade.tachiyomi.util.episode.filterDownloaded
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.lang.takeBytes
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -105,29 +105,28 @@ import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
-import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.custombuttons.interactor.GetCustomButtons
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.anime.interactor.GetAnime
+import tachiyomi.domain.anime.model.Anime
+import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.custombutton.interactor.GetCustomButtons
+import tachiyomi.domain.custombutton.model.CustomButton
 import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.entries.anime.interactor.GetAnime
-import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.history.anime.interactor.GetNextEpisodes
-import tachiyomi.domain.history.anime.interactor.UpsertAnimeHistory
-import tachiyomi.domain.history.anime.model.AnimeHistoryUpdate
-import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
-import tachiyomi.domain.items.episode.interactor.UpdateEpisode
-import tachiyomi.domain.items.episode.model.EpisodeUpdate
-import tachiyomi.domain.items.episode.service.getEpisodeSort
+import tachiyomi.domain.episode.interactor.GetEpisodesByAnimeId
+import tachiyomi.domain.episode.interactor.UpdateEpisode
+import tachiyomi.domain.episode.model.EpisodeUpdate
+import tachiyomi.domain.episode.service.getEpisodeSort
+import tachiyomi.domain.history.interactor.GetNextEpisodes
+import tachiyomi.domain.history.interactor.UpsertHistory
+import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.source.anime.service.AnimeSourceManager
-import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
+import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
-import tachiyomi.source.local.entries.anime.isLocal
+import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -147,8 +146,8 @@ class PlayerViewModelProviderFactory(
 class PlayerViewModel @JvmOverloads constructor(
     private val activity: PlayerActivity,
     private val savedState: SavedStateHandle,
-    private val sourceManager: AnimeSourceManager = Injekt.get(),
-    private val downloadManager: AnimeDownloadManager = Injekt.get(),
+    private val sourceManager: SourceManager = Injekt.get(),
+    private val downloadManager: DownloadManager = Injekt.get(),
     private val imageSaver: ImageSaver = Injekt.get(),
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
@@ -156,9 +155,9 @@ class PlayerViewModel @JvmOverloads constructor(
     private val getAnime: GetAnime = Injekt.get(),
     private val getNextEpisodes: GetNextEpisodes = Injekt.get(),
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId = Injekt.get(),
-    private val getAnimeCategories: GetAnimeCategories = Injekt.get(),
-    private val getTracks: GetAnimeTracks = Injekt.get(),
-    private val upsertHistory: UpsertAnimeHistory = Injekt.get(),
+    private val getCategories: GetCategories = Injekt.get(),
+    private val getTracks: GetTracks = Injekt.get(),
+    private val upsertHistory: UpsertHistory = Injekt.get(),
     private val updateEpisode: UpdateEpisode = Injekt.get(),
     private val setAnimeViewerFlags: SetAnimeViewerFlags = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
@@ -166,7 +165,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val basePreferences: BasePreferences = Injekt.get(),
     private val getCustomButtons: GetCustomButtons = Injekt.get(),
     private val trackSelect: TrackSelect = Injekt.get(),
-    private val getIncognitoState: GetAnimeIncognitoState = Injekt.get(),
+    private val getIncognitoState: GetIncognitoState = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     // AM (SYNC) -->
     private val syncPreferences: SyncPreferences = Injekt.get(),
@@ -1066,7 +1065,7 @@ class PlayerViewModel @JvmOverloads constructor(
             field = value
         }
 
-    private var episodeToDownload: AnimeDownload? = null
+    private var episodeToDownload: Download? = null
 
     private fun filterEpisodeList(episodes: List<Episode>): List<Episode> {
         val anime = currentAnime.value ?: return episodes
@@ -1101,10 +1100,8 @@ class PlayerViewModel @JvmOverloads constructor(
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED &&
                 it.bookmark
             // AM (FILLERMARK) -->
-            anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED &&
-                !it.fillermark ||
-                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED &&
-                it.fillermark
+            anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
             // <-- AM (FILLERMARK)
         }.toMutableList()
 
@@ -1217,7 +1214,7 @@ class PlayerViewModel @JvmOverloads constructor(
                 MPVLib.setPropertyInt("user-data/current-anime/intro-length", getAnimeSkipIntroLength())
                 MPVLib.setPropertyString(
                     "user-data/current-anime/category",
-                    getAnimeCategories.await(anime.id).joinToString {
+                    getCategories.await(anime.id).joinToString {
                         it.name
                     },
                 )
@@ -1271,7 +1268,7 @@ class PlayerViewModel @JvmOverloads constructor(
             .sortedWith(getEpisodeSort(anime, sortDescending = false))
             .run {
                 if (basePreferences.downloadedOnly().get()) {
-                    filterDownloadedEpisodes(anime)
+                    filterDownloaded(anime)
                 } else {
                     this
                 }
@@ -1693,7 +1690,7 @@ class PlayerViewModel @JvmOverloads constructor(
             val episodeId = episode.id!!
             val seenAt = Date()
             upsertHistory.await(
-                AnimeHistoryUpdate(episodeId, seenAt),
+                HistoryUpdate(episodeId, seenAt),
             )
         }
     }
@@ -1713,6 +1710,7 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     // AM (FILLERMARK) -->
+
     /**
      * Fillermarks the currently active episode.
      */
@@ -1762,7 +1760,7 @@ class PlayerViewModel @JvmOverloads constructor(
         viewModelScope.launchNonCancellable {
             try {
                 val uri = imageSaver.save(
-                    image = Image.Page(
+                    image = Image.Screenshot(
                         inputStream = imageStream,
                         name = filename,
                         location = Location.Pictures(relativePath),
@@ -1797,7 +1795,7 @@ class PlayerViewModel @JvmOverloads constructor(
             viewModelScope.launchIO {
                 destDir.deleteRecursively()
                 val uri = imageSaver.save(
-                    image = Image.Page(
+                    image = Image.Screenshot(
                         inputStream = imageStream,
                         name = filename,
                         location = Location.Cache,

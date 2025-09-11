@@ -196,7 +196,7 @@ abstract class ParsedAnimeHttpSource : AnimeHttpSource() {
     protected abstract fun hosterFromElement(element: Element): Hoster
 
     /**
-     * Parses the response from the site and returns the page list.
+     * Parses the response from the site and returns the video list.
      *
      * @param response the response from the site.
      */

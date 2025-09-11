@@ -36,16 +36,18 @@ class StorageManager(
                 baseDir = getBaseDir(uri)
                 baseDir?.let { parent ->
                     parent.createDirectory(AUTOMATIC_BACKUPS_PATH)
-                    parent.createDirectory(LOCAL_ANIMESOURCE_PATH)
+                    parent.createDirectory(LOCAL_SOURCE_PATH)
                     parent.createDirectory(DOWNLOADS_PATH).also {
                         DiskUtil.createNoMediaFile(it, context)
                     }
+                    // AY -->
                     parent.createDirectory(MPV_CONFIG_PATH)?.let { mpvDir ->
                         mpvDir.createDirectory(FONTS_PATH)
                         mpvDir.createDirectory(SCRIPTS_PATH)
                         mpvDir.createDirectory(SCRIPT_OPTS_PATH)
                         mpvDir.createDirectory(SHADERS_PATH)
                     }
+                    // <-- AY
                 }
                 _changes.send(Unit)
             }
@@ -65,10 +67,11 @@ class StorageManager(
         return baseDir?.createDirectory(DOWNLOADS_PATH)
     }
 
-    fun getLocalAnimeSourceDirectory(): UniFile? {
-        return baseDir?.createDirectory(LOCAL_ANIMESOURCE_PATH)
+    fun getLocalSourceDirectory(): UniFile? {
+        return baseDir?.createDirectory(LOCAL_SOURCE_PATH)
     }
 
+    // AY -->
     fun getFontsDirectory(): UniFile? {
         return getMPVConfigDirectory()?.createDirectory(FONTS_PATH)
     }
@@ -88,13 +91,17 @@ class StorageManager(
     fun getMPVConfigDirectory(): UniFile? {
         return baseDir?.createDirectory(MPV_CONFIG_PATH)
     }
+    // <-- AY
 }
 
 private const val AUTOMATIC_BACKUPS_PATH = "autobackup"
 private const val DOWNLOADS_PATH = "downloads"
-private const val LOCAL_ANIMESOURCE_PATH = "localanime"
+
+// AY -->
+private const val LOCAL_SOURCE_PATH = "localanime"
 private const val MPV_CONFIG_PATH = "mpv-config"
 private const val FONTS_PATH = "fonts"
 const val SCRIPTS_PATH = "scripts"
 const val SCRIPT_OPTS_PATH = "script-opts"
 private const val SHADERS_PATH = "shaders"
+// <-- AY

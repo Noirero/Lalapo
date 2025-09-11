@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.widget
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +37,6 @@ private enum class State {
     UNCHECKED,
 }
 
-@SuppressLint("ComposeParameterOrder")
 @Composable
 fun <T> TriStateListDialog(
     title: String,
@@ -111,8 +109,8 @@ fun <T> TriStateListDialog(
                                     },
                                     contentDescription = stringResource(
                                         when (state) {
-                                            State.UNCHECKED -> MR.strings.disabled
-                                            State.CHECKED -> MR.strings.disabled
+                                            State.UNCHECKED -> MR.strings.not_selected
+                                            State.CHECKED -> MR.strings.selected
                                             State.INVERSED -> MR.strings.disabled
                                         },
                                     ),

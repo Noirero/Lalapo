@@ -22,6 +22,7 @@ class ReleaseServiceImpl(
                 .awaitSuccess()
                 .parseAs<GithubRelease>()
         }
+
         val downloadLink = getDownloadLink(release = release) ?: return null
 
         return Release(

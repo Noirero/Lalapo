@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import sh.calvin.reorderable.ReorderableCollectionItemScope
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButton
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource

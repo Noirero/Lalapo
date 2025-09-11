@@ -28,7 +28,7 @@ import eu.kanade.presentation.more.settings.screen.player.editor.codeeditor.luaH
 import eu.kanade.presentation.more.settings.screen.player.editor.codeeditor.toAnnotatedString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButton
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA

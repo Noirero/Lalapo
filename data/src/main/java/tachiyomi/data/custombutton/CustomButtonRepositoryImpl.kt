@@ -1,16 +1,17 @@
+// AY -->
 package tachiyomi.data.custombutton
 
 import android.database.sqlite.SQLiteException
 import kotlinx.coroutines.flow.Flow
-import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.domain.custombuttons.exception.SaveCustomButtonException
-import tachiyomi.domain.custombuttons.model.CustomButton
-import tachiyomi.domain.custombuttons.model.CustomButtonUpdate
-import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
-import tachiyomi.mi.data.AnimeDatabase
+import tachiyomi.data.Database
+import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.custombutton.exception.SaveCustomButtonException
+import tachiyomi.domain.custombutton.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButtonUpdate
+import tachiyomi.domain.custombutton.repository.CustomButtonRepository
 
 class CustomButtonRepositoryImpl(
-    private val handler: AnimeDatabaseHandler,
+    private val handler: DatabaseHandler,
 ) : CustomButtonRepository {
     override fun subscribeAll(): Flow<List<CustomButton>> {
         return handler.subscribeToList { custom_buttonsQueries.findAll(::mapCustomButton) }
@@ -52,7 +53,7 @@ class CustomButtonRepositoryImpl(
         return handler.await { custom_buttonsQueries.delete(customButtonId) }
     }
 
-    private fun AnimeDatabase.updatePartialBlocking(update: CustomButtonUpdate) {
+    private fun Database.updatePartialBlocking(update: CustomButtonUpdate) {
         custom_buttonsQueries.update(
             name = update.name,
             isFavorite = update.isFavorite,
@@ -82,3 +83,4 @@ class CustomButtonRepositoryImpl(
         onStartup = onStartup,
     )
 }
+// <-- AY

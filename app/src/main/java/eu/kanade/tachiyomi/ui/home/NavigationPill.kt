@@ -61,13 +61,14 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
-import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
+import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.recents.RecentsTab
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -89,7 +90,9 @@ fun NavigationPill(
     val pillItemHeight = 48.dp
 
     val currentTabIndex by remember {
+        // AM (RECENTS_FILTER_CHIP) -->
         derivedStateOf { tabs.indexOfFirst { it::class == tabNavigator.current::class } }
+        // <-- AM (RECENTS_FILTER_CHIP)
     }
     val indexedTabs = tabs.mapIndexed { index, tab -> index to tab }
     var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
@@ -107,7 +110,7 @@ fun NavigationPill(
     )
 
     BackHandler(
-        enabled = tabNavigator.current != AnimeLibraryTab,
+        enabled = tabNavigator.current != LibraryTab,
         onBack = { updateTab(0) },
     )
 
@@ -297,13 +300,13 @@ private fun NavigationIconItem(tab: Tab) {
                     // <-- AM (RECENTS)
                     val count by produceState(initialValue = 0) {
                         val pref = Injekt.get<LibraryPreferences>()
-                        pref.newAnimeUpdatesCount().changes()
+                        pref.newUpdatesCount().changes()
                             .collectLatest { value = if (pref.newShowUpdatesCount().get()) it else 0 }
                     }
                     if (count > 0) {
                         Badge {
                             val desc = pluralStringResource(
-                                MR.plurals.notification_chapters_generic,
+                                AMMR.plurals.notification_episodes_generic,
                                 count = count,
                                 count,
                             )
@@ -317,7 +320,7 @@ private fun NavigationIconItem(tab: Tab) {
                 BrowseTab::class.isInstance(tab) -> {
                     val count by produceState(initialValue = 0) {
                         val pref = Injekt.get<SourcePreferences>()
-                        pref.animeExtensionUpdatesCount().changes().collectLatest { value = it }
+                        pref.extensionUpdatesCount().changes().collectLatest { value = it }
                     }
                     if (count > 0) {
                         Badge {

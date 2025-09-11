@@ -2,23 +2,23 @@ package eu.kanade.tachiyomi.data.backup.create.creators
 
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
-import eu.kanade.tachiyomi.data.backup.models.BackupAnimeHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupEpisode
-import eu.kanade.tachiyomi.data.backup.models.backupAnimeTrackMapper
+import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.backupEpisodeMapper
-import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.entries.anime.interactor.GetCustomAnimeInfo
-import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
-import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
+import eu.kanade.tachiyomi.data.backup.models.backupTrackMapper
+import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.anime.interactor.GetCustomAnimeInfo
+import tachiyomi.domain.anime.model.Anime
+import tachiyomi.domain.anime.model.CustomAnimeInfo
+import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.history.interactor.GetHistory
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class AnimeBackupCreator(
-    private val handler: AnimeDatabaseHandler = Injekt.get(),
-    private val getCategories: GetAnimeCategories = Injekt.get(),
-    private val getHistory: GetAnimeHistory = Injekt.get(),
+    private val handler: DatabaseHandler = Injekt.get(),
+    private val getCategories: GetCategories = Injekt.get(),
+    private val getHistory: GetHistory = Injekt.get(),
     // AM (CUSTOM_INFORMATION) -->
     private val getCustomAnimeInfo: GetCustomAnimeInfo = Injekt.get(),
     // <-- AM (CUSTOM_INFORMATION)
@@ -38,11 +38,16 @@ class AnimeBackupCreator(
             // <-- AM (CUSTOM_INFORMATION)
         )
 
+        animeObject.excludedScanlators = handler.awaitList {
+            excluded_scanlatorsQueries.getExcludedScanlatorsByAnimeId(anime.id)
+        }
+
         if (options.episodes) {
             // Backup all the episodes
             handler.awaitList {
                 episodesQueries.getEpisodesByAnimeId(
                     animeId = anime.id,
+                    applyScanlatorFilter = 0, // false
                     mapper = backupEpisodeMapper,
                 )
             }
@@ -59,7 +64,7 @@ class AnimeBackupCreator(
         }
 
         if (options.tracking) {
-            val tracks = handler.awaitList { anime_syncQueries.getTracksByAnimeId(anime.id, backupAnimeTrackMapper) }
+            val tracks = handler.awaitList { anime_syncQueries.getTracksByAnimeId(anime.id, backupTrackMapper) }
             if (tracks.isNotEmpty()) {
                 animeObject.tracking = tracks
             }
@@ -70,7 +75,7 @@ class AnimeBackupCreator(
             if (historyByAnimeId.isNotEmpty()) {
                 val history = historyByAnimeId.map { history ->
                     val episode = handler.awaitOne { episodesQueries.getEpisodeById(history.episodeId) }
-                    BackupAnimeHistory(episode.url, history.seenAt?.time ?: 0L)
+                    BackupHistory(episode.url, history.seenAt?.time ?: 0L)
                 }
                 if (history.isNotEmpty()) {
                     animeObject.history = history
@@ -82,7 +87,11 @@ class AnimeBackupCreator(
     }
 }
 
-private fun Anime.toBackupAnime(customAnimeInfo: CustomAnimeInfo?) =
+private fun Anime.toBackupAnime(
+    // AM (CUSTOM_INFORMATION) -->
+    customAnimeInfo: CustomAnimeInfo?,
+    // <-- AM (CUSTOM_INFORMATION)
+) =
     BackupAnime(
         url = this.url,
         // AM (CUSTOM_INFORMATION) -->
@@ -103,7 +112,10 @@ private fun Anime.toBackupAnime(customAnimeInfo: CustomAnimeInfo?) =
         lastModifiedAt = this.lastModifiedAt,
         favoriteModifiedAt = this.favoriteModifiedAt,
         version = this.version,
-    ) // AM (CUSTOM_INFORMATION) -->
+        notes = this.notes,
+        initialized = this.initialized,
+    )
+        // AM (CUSTOM_INFORMATION) -->
         .also { backupAnime ->
             customAnimeInfo?.let {
                 backupAnime.customTitle = it.title

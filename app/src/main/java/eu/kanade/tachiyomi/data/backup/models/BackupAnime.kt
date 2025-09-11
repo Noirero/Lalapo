@@ -3,8 +3,8 @@ package eu.kanade.tachiyomi.data.backup.models
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.entries.anime.model.CustomAnimeInfo
+import tachiyomi.domain.anime.model.Anime
+import tachiyomi.domain.anime.model.CustomAnimeInfo
 
 @Suppress("DEPRECATION")
 @Serializable
@@ -28,17 +28,20 @@ data class BackupAnime(
     // @ProtoNumber(15) val flags: Int = 0, 1.x value, not used in 0.x
     @ProtoNumber(16) var episodes: List<BackupEpisode> = emptyList(),
     @ProtoNumber(17) var categories: List<Long> = emptyList(),
-    @ProtoNumber(18) var tracking: List<BackupAnimeTracking> = emptyList(),
+    @ProtoNumber(18) var tracking: List<BackupTracking> = emptyList(),
     // Bump by 100 for values that are not saved/implemented in 1.x but are used in 0.x
     @ProtoNumber(100) var favorite: Boolean = true,
     @ProtoNumber(101) var episodeFlags: Int = 0,
     // @ProtoNumber(102) var brokenHistory, legacy history model with non-compliant proto number
     @ProtoNumber(103) var viewer_flags: Int = 0,
-    @ProtoNumber(104) var history: List<BackupAnimeHistory> = emptyList(),
+    @ProtoNumber(104) var history: List<BackupHistory> = emptyList(),
     @ProtoNumber(105) var updateStrategy: AnimeUpdateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE,
     @ProtoNumber(106) var lastModifiedAt: Long = 0,
     @ProtoNumber(107) var favoriteModifiedAt: Long? = null,
+    // Mihon values start here
     @ProtoNumber(109) var version: Long = 0,
+    @ProtoNumber(110) var notes: String = "",
+    @ProtoNumber(111) var initialized: Boolean = false,
 
     // AM (CUSTOM_INFORMATION) -->
     // Bump values by 200
@@ -49,6 +52,10 @@ data class BackupAnime(
     @ProtoNumber(204) var customDescription: String? = null,
     @ProtoNumber(205) var customGenre: List<String>? = null,
     // <-- AM (CUSTOM_INFORMATION)
+    // Since ProtoNumber 108 was previously used in the past, we cannot reuse it. May cause issues with aniyomi
+    // AM -->
+    @ProtoNumber(206) var excludedScanlators: List<String> = emptyList(),
+    // <-- AM
 ) {
     fun getAnimeImpl(): Anime {
         return Anime.create().copy(
@@ -71,6 +78,8 @@ data class BackupAnime(
             lastModifiedAt = this@BackupAnime.lastModifiedAt,
             favoriteModifiedAt = this@BackupAnime.favoriteModifiedAt,
             version = this@BackupAnime.version,
+            notes = this@BackupAnime.notes,
+            initialized = this@BackupAnime.initialized,
         )
     }
 

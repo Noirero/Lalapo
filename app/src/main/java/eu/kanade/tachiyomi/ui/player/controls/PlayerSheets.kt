@@ -36,7 +36,7 @@ import eu.kanade.tachiyomi.ui.player.controls.components.sheets.ScreenshotSheet
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.SubtitlesSheet
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButton
 import java.io.InputStream
 
 @Composable

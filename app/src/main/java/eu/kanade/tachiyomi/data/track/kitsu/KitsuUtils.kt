@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.data.track.kitsu
 
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.Track
 
-fun AnimeTrack.toApiStatus() = when (status) {
+fun Track.toApiStatus() = when (status) {
     Kitsu.WATCHING -> "current"
     Kitsu.COMPLETED -> "completed"
     Kitsu.ON_HOLD -> "on_hold"
@@ -11,6 +11,6 @@ fun AnimeTrack.toApiStatus() = when (status) {
     else -> throw Exception("Unknown status")
 }
 
-fun AnimeTrack.toApiScore(): String? {
+fun Track.toApiScore(): String? {
     return if (score > 0) (score * 2).toInt().toString() else null
 }

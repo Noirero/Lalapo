@@ -44,6 +44,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -53,7 +54,7 @@ object SettingsSyncmiruScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_connection
+    override fun getTitleRes() = AMMR.strings.pref_category_connection
 
     @Composable
     override fun getPreferences(): List<Preference> {
@@ -102,7 +103,7 @@ object SettingsSyncmiruScreen : SearchableSettings {
         }
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_sync_service_category),
+            title = stringResource(AMMR.strings.pref_sync_service_category),
             preferenceItems = persistentListOf(
                 // AM (SYNC_DRIVE) -->
                 Preference.PreferenceItem.ConnectionPreference(
@@ -144,19 +145,19 @@ object SettingsSyncmiruScreen : SearchableSettings {
                         val result = googleDriveSync.deleteSyncDataFromGoogleDrive()
                         when (result) {
                             GoogleDriveSyncService.DeleteSyncDataStatus.NOT_INITIALIZED -> context.toast(
-                                MR.strings.google_drive_not_signed_in,
+                                AMMR.strings.google_drive_not_signed_in,
                                 duration = 5000,
                             )
                             GoogleDriveSyncService.DeleteSyncDataStatus.NO_FILES -> context.toast(
-                                MR.strings.google_drive_sync_data_not_found,
+                                AMMR.strings.google_drive_sync_data_not_found,
                                 duration = 5000,
                             )
                             GoogleDriveSyncService.DeleteSyncDataStatus.SUCCESS -> context.toast(
-                                MR.strings.google_drive_sync_data_purged,
+                                AMMR.strings.google_drive_sync_data_purged,
                                 duration = 5000,
                             )
                             GoogleDriveSyncService.DeleteSyncDataStatus.ERROR -> context.toast(
-                                MR.strings.google_drive_sync_data_purge_error,
+                                AMMR.strings.google_drive_sync_data_purge_error,
                                 duration = 10000,
                             )
                         }
@@ -167,7 +168,7 @@ object SettingsSyncmiruScreen : SearchableSettings {
         }
 
         return Preference.PreferenceItem.TextPreference(
-            title = stringResource(MR.strings.pref_google_drive_purge_sync_data),
+            title = stringResource(AMMR.strings.pref_google_drive_purge_sync_data),
             onClick = { showPurgeDialog = true },
             enabled = googleDriveRefreshToken.isNotBlank(),
         )
@@ -180,8 +181,8 @@ object SettingsSyncmiruScreen : SearchableSettings {
     ) {
         AlertDialog(
             onDismissRequest = onDismissRequest,
-            title = { Text(text = stringResource(MR.strings.pref_purge_confirmation_title)) },
-            text = { Text(text = stringResource(MR.strings.pref_purge_confirmation_message)) },
+            title = { Text(text = stringResource(AMMR.strings.pref_purge_confirmation_title)) },
+            text = { Text(text = stringResource(AMMR.strings.pref_purge_confirmation_message)) },
             dismissButton = {
                 TextButton(onClick = onDismissRequest) {
                     Text(text = stringResource(MR.strings.action_cancel))
@@ -200,12 +201,12 @@ object SettingsSyncmiruScreen : SearchableSettings {
     private fun getSyncNowPref(): Preference.PreferenceGroup {
         val navigator = LocalNavigator.currentOrThrow
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_sync_now_group_title),
+            title = stringResource(AMMR.strings.pref_sync_now_group_title),
             preferenceItems = persistentListOf(
                 getSyncOptionsPref(),
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.pref_sync_now),
-                    subtitle = stringResource(MR.strings.pref_sync_now_subtitle),
+                    title = stringResource(AMMR.strings.pref_sync_now),
+                    subtitle = stringResource(AMMR.strings.pref_sync_now_subtitle),
                     onClick = {
                         navigator.push(SyncSettingsSelector())
                     },
@@ -218,8 +219,8 @@ object SettingsSyncmiruScreen : SearchableSettings {
     private fun getSyncOptionsPref(): Preference.PreferenceItem.TextPreference {
         val navigator = LocalNavigator.currentOrThrow
         return Preference.PreferenceItem.TextPreference(
-            title = stringResource(MR.strings.pref_sync_options),
-            subtitle = stringResource(MR.strings.pref_sync_options_summ),
+            title = stringResource(AMMR.strings.pref_sync_options),
+            subtitle = stringResource(AMMR.strings.pref_sync_options_summ),
             onClick = { navigator.push(SyncTriggerOptionsScreen()) },
         )
     }
@@ -231,16 +232,16 @@ object SettingsSyncmiruScreen : SearchableSettings {
         val lastSync by syncPreferences.lastSyncTimestamp().collectAsState()
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_sync_automatic_category),
+            title = stringResource(AMMR.strings.pref_sync_automatic_category),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = syncIntervalPref,
-                    title = stringResource(MR.strings.pref_sync_interval),
+                    title = stringResource(AMMR.strings.pref_sync_interval),
                     entries = persistentMapOf(
                         0 to stringResource(MR.strings.off),
-                        30 to stringResource(MR.strings.update_30min),
-                        60 to stringResource(MR.strings.update_1hour),
-                        180 to stringResource(MR.strings.update_3hour),
+                        30 to stringResource(AMMR.strings.update_30min),
+                        60 to stringResource(AMMR.strings.update_1hour),
+                        180 to stringResource(AMMR.strings.update_3hour),
                         360 to stringResource(MR.strings.update_6hour),
                         720 to stringResource(MR.strings.update_12hour),
                         1440 to stringResource(MR.strings.update_24hour),
@@ -253,7 +254,7 @@ object SettingsSyncmiruScreen : SearchableSettings {
                     },
                 ),
                 Preference.PreferenceItem.InfoPreference(
-                    stringResource(MR.strings.last_synchronization, relativeTimeSpanString(lastSync)),
+                    stringResource(AMMR.strings.last_synchronization, relativeTimeSpanString(lastSync)),
                 ),
             ),
         )
@@ -275,7 +276,7 @@ private fun SyncYomiLoginDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = stringResource(MR.strings.pref_syncyomi_connect),
+                    text = stringResource(AMMR.strings.pref_syncyomi_connect),
                     modifier = Modifier.weight(1f),
                 )
                 IconButton(onClick = onDismissRequest) {
@@ -292,7 +293,7 @@ private fun SyncYomiLoginDialog(
                     modifier = Modifier.fillMaxWidth(),
                     value = host,
                     onValueChange = { host = it },
-                    label = { Text(text = stringResource(MR.strings.pref_syncyomi_host)) },
+                    label = { Text(text = stringResource(AMMR.strings.pref_syncyomi_host)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     singleLine = true,
                     isError = inputError && host.text.isEmpty(),
@@ -301,7 +302,7 @@ private fun SyncYomiLoginDialog(
                     modifier = Modifier.fillMaxWidth(),
                     value = apiKey,
                     onValueChange = { apiKey = it },
-                    label = { Text(text = stringResource(MR.strings.pref_syncyomi_api_key)) },
+                    label = { Text(text = stringResource(AMMR.strings.pref_syncyomi_api_key)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     singleLine = true,
                     isError = inputError && apiKey.text.isEmpty(),

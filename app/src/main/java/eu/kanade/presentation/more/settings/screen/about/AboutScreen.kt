@@ -51,7 +51,10 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.icons.CustomIcons
 import tachiyomi.presentation.core.icons.Discord
+import tachiyomi.presentation.core.icons.Facebook
 import tachiyomi.presentation.core.icons.Github
+import tachiyomi.presentation.core.icons.Reddit
+import tachiyomi.presentation.core.icons.X
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
@@ -144,6 +147,7 @@ object AboutScreen : Screen() {
                     }
                 }
 
+                // AY -->
                 item {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.help_translate),
@@ -154,6 +158,7 @@ object AboutScreen : Screen() {
                         },
                     )
                 }
+                // <-- AY
 
                 item {
                     TextPreferenceWidget(
@@ -189,7 +194,7 @@ object AboutScreen : Screen() {
                         LinkIcon(
                             label = "GitHub",
                             icon = CustomIcons.Github,
-                            url = "https://github.com/Quickdesh/Animiru",
+                            url = "https://github.com/quickdesh/Animiru",
                         )
                     }
                 }
@@ -208,14 +213,7 @@ object AboutScreen : Screen() {
         val updateChecker = AppUpdateChecker()
         withUIContext {
             try {
-                when (
-                    val result = withIOContext {
-                        updateChecker.checkForUpdate(
-                            context,
-                            forceCheck = true,
-                        )
-                    }
-                ) {
+                when (val result = withIOContext { updateChecker.checkForUpdate(context, forceCheck = true) }) {
                     is GetApplicationRelease.Result.NewUpdate -> {
                         onAvailableUpdate(result)
                     }

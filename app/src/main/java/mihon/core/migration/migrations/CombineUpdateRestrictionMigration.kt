@@ -6,7 +6,7 @@ import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import tachiyomi.core.common.preference.minusAssign
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_COMPLETED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ANIME_NON_COMPLETED
 
 class CombineUpdateRestrictionMigration : Migration {
     override val version = 72f
@@ -22,7 +22,7 @@ class CombineUpdateRestrictionMigration : Migration {
             true,
         )
         if (!oldUpdateOngoingOnly) {
-            libraryPreferences.autoUpdateItemRestrictions() -= ENTRY_NON_COMPLETED
+            libraryPreferences.autoUpdateAnimeRestrictions() -= ANIME_NON_COMPLETED
         }
 
         return true

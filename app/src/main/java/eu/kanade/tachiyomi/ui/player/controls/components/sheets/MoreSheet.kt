@@ -72,7 +72,7 @@ import eu.kanade.tachiyomi.ui.player.settings.AudioChannels
 import eu.kanade.tachiyomi.ui.player.settings.AudioPreferences
 import `is`.xyz.mpv.MPVLib
 import kotlinx.collections.immutable.ImmutableList
-import tachiyomi.domain.custombuttons.model.CustomButton
+import tachiyomi.domain.custombutton.model.CustomButton
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding

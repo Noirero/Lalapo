@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.backup.models
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import tachiyomi.domain.items.episode.model.Episode
+import tachiyomi.domain.episode.model.Episode
 
 @Serializable
 data class BackupEpisode(
@@ -16,9 +16,11 @@ data class BackupEpisode(
     // AM (FILLERMARK) -->
     @ProtoNumber(15) var fillermark: Boolean = false,
     // <-- AM (FILLERMARK)
-    // lastPageRead is called progress in 1.x
+    // lastSecondSeen is called progress in 1.x
     @ProtoNumber(6) var lastSecondSeen: Long = 0,
+    // AY -->
     @ProtoNumber(16) var totalSeconds: Long = 0,
+    // <-- AY
     @ProtoNumber(7) var dateFetch: Long = 0,
     @ProtoNumber(8) var dateUpload: Long = 0,
     // episodeNumber is called number is 1.x
@@ -39,7 +41,9 @@ data class BackupEpisode(
             fillermark = this@BackupEpisode.fillermark,
             // <-- AM (FILLERMARK)
             lastSecondSeen = this@BackupEpisode.lastSecondSeen,
+            // AY -->
             totalSeconds = this@BackupEpisode.totalSeconds,
+            // <-- AY
             dateFetch = this@BackupEpisode.dateFetch,
             dateUpload = this@BackupEpisode.dateUpload,
             sourceOrder = this@BackupEpisode.sourceOrder,
@@ -61,9 +65,11 @@ val backupEpisodeMapper = {
         fillermark: Boolean,
         // <-- AM (FILLERMARK)
         lastSecondSeen: Long,
+        // AY -->
         totalSeconds: Long,
+        // <-- AY
         episodeNumber: Double,
-        source_order: Long,
+        sourceOrder: Long,
         dateFetch: Long,
         dateUpload: Long,
         lastModifiedAt: Long,
@@ -81,10 +87,12 @@ val backupEpisodeMapper = {
         fillermark = fillermark,
         // <-- AM (FILLERMARK)
         lastSecondSeen = lastSecondSeen,
+        // AY -->
         totalSeconds = totalSeconds,
+        // <-- AY
         dateFetch = dateFetch,
         dateUpload = dateUpload,
-        sourceOrder = source_order,
+        sourceOrder = sourceOrder,
         lastModifiedAt = lastModifiedAt,
         version = version,
     )

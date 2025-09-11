@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,8 +30,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -43,7 +46,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
+import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
@@ -56,11 +59,11 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
-import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -78,7 +81,7 @@ object SettingsTrackingScreen : SearchableSettings {
         val uriHandler = LocalUriHandler.current
         IconButton(onClick = { uriHandler.openUri("https://aniyomi.org/help/guides/tracking/") }) {
             Icon(
-                imageVector = Icons.Outlined.HelpOutline,
+                imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
                 contentDescription = stringResource(MR.strings.tracking_guide),
             )
         }
@@ -89,8 +92,8 @@ object SettingsTrackingScreen : SearchableSettings {
         val context = LocalContext.current
         val trackPreferences = remember { Injekt.get<TrackPreferences>() }
         val trackerManager = remember { Injekt.get<TrackerManager>() }
-        val animeSourceManager = remember { Injekt.get<AnimeSourceManager>() }
-        val autoTrackStatePref = trackPreferences.autoUpdateTrackOnMarkRead()
+        val sourceManager = remember { Injekt.get<SourceManager>() }
+        val autoTrackStatePref = trackPreferences.autoUpdateTrackOnMarkSeen()
 
         var dialog by remember { mutableStateOf<Any?>(null) }
         dialog?.run {
@@ -111,18 +114,17 @@ object SettingsTrackingScreen : SearchableSettings {
             }
         }
 
-        val enhancedAnimeTrackers = trackerManager.trackers
-            .filter { it is EnhancedAnimeTracker }
+        val enhancedTrackers = trackerManager.trackers
+            .filter { it is EnhancedTracker }
             .partition { service ->
-                val acceptedAnimeSources = (service as EnhancedAnimeTracker).getAcceptedSources()
-                animeSourceManager.getCatalogueSources().any { it::class.qualifiedName in acceptedAnimeSources }
+                val acceptedSources = (service as EnhancedTracker).getAcceptedSources()
+                sourceManager.getCatalogueSources().any { it::class.qualifiedName in acceptedSources }
             }
-
         var enhancedTrackerInfo = stringResource(MR.strings.enhanced_tracking_info)
-        if (enhancedAnimeTrackers.second.isNotEmpty()) {
+        if (enhancedTrackers.second.isNotEmpty()) {
             val missingSourcesInfo = stringResource(
                 MR.strings.enhanced_services_not_installed,
-                (enhancedAnimeTrackers.second).joinToString { it.name },
+                enhancedTrackers.second.joinToString { it.name },
             )
             enhancedTrackerInfo += "\n\n$missingSourcesInfo"
         }
@@ -130,8 +132,9 @@ object SettingsTrackingScreen : SearchableSettings {
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 preference = trackPreferences.autoUpdateTrack(),
-                title = stringResource(MR.strings.pref_auto_update_anime_sync),
+                title = stringResource(AMMR.strings.am_pref_auto_update_anime_sync),
             ),
+            // AY -->
             Preference.PreferenceItem.SwitchPreference(
                 preference = trackPreferences.trackOnAddingToLibrary(),
                 title = stringResource(AYMR.strings.pref_track_on_add_library),
@@ -140,34 +143,25 @@ object SettingsTrackingScreen : SearchableSettings {
                 preference = trackPreferences.showNextEpisodeAiringTime(),
                 title = stringResource(AYMR.strings.pref_show_next_episode_airing_time),
             ),
+            // <-- AY
             Preference.PreferenceItem.ListPreference(
-                preference = trackPreferences.autoUpdateTrackOnMarkRead(),
+                preference = trackPreferences.autoUpdateTrackOnMarkSeen(),
                 entries = AutoTrackState.entries
                     .associateWith { stringResource(it.titleRes) }
                     .toPersistentMap(),
-                title = stringResource(MR.strings.pref_auto_update_anime_on_mark_seen),
+                title = stringResource(AMMR.strings.am_pref_auto_update_anime_on_mark_seen),
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.myAnimeList,
-                        login = {
-                            context.openInBrowser(
-                                MyAnimeListApi.authUrl(),
-                                forceDefaultBrowser = true,
-                            )
-                        },
+                        login = { context.openInBrowser(MyAnimeListApi.authUrl(), forceDefaultBrowser = true) },
                         logout = { dialog = LogoutDialog(trackerManager.myAnimeList) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.aniList,
-                        login = {
-                            context.openInBrowser(
-                                AnilistApi.authUrl(),
-                                forceDefaultBrowser = true,
-                            )
-                        },
+                        login = { context.openInBrowser(AnilistApi.authUrl(), forceDefaultBrowser = true) },
                         logout = { dialog = LogoutDialog(trackerManager.aniList) },
                     ),
                     Preference.PreferenceItem.TrackerPreference(
@@ -177,45 +171,32 @@ object SettingsTrackingScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.shikimori,
-                        login = {
-                            context.openInBrowser(
-                                ShikimoriApi.authUrl(),
-                                forceDefaultBrowser = true,
-                            )
-                        },
+                        login = { context.openInBrowser(ShikimoriApi.authUrl(), forceDefaultBrowser = true) },
                         logout = { dialog = LogoutDialog(trackerManager.shikimori) },
                     ),
+                    // AY -->
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.simkl,
-                        login = {
-                            context.openInBrowser(
-                                SimklApi.authUrl(),
-                                forceDefaultBrowser = true,
-                            )
-                        },
+                        login = { context.openInBrowser(SimklApi.authUrl(), forceDefaultBrowser = true) },
                         logout = { dialog = LogoutDialog(trackerManager.simkl) },
                     ),
+                    // <-- AY
                     Preference.PreferenceItem.TrackerPreference(
                         tracker = trackerManager.bangumi,
-                        login = {
-                            context.openInBrowser(
-                                BangumiApi.authUrl(),
-                                forceDefaultBrowser = true,
-                            )
-                        },
+                        login = { context.openInBrowser(BangumiApi.authUrl(), forceDefaultBrowser = true) },
                         logout = { dialog = LogoutDialog(trackerManager.bangumi) },
                     ),
-                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.tracking_info)),
+                    Preference.PreferenceItem.InfoPreference(stringResource(AMMR.strings.am_tracking_info)),
                 ),
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.enhanced_services),
                 preferenceItems = (
-                    enhancedAnimeTrackers.first
+                    enhancedTrackers.first
                         .map { service ->
                             Preference.PreferenceItem.TrackerPreference(
                                 tracker = service,
-                                login = { (service as EnhancedAnimeTracker).loginNoop() },
+                                login = { (service as EnhancedTracker).loginNoop() },
                                 logout = service::logout,
                             )
                         } + listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
@@ -257,7 +238,9 @@ object SettingsTrackingScreen : SearchableSettings {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentType = ContentType.Username + ContentType.EmailAddress },
                         value = username,
                         onValueChange = { username = it },
                         label = { Text(text = stringResource(uNameStringRes)) },
@@ -268,7 +251,9 @@ object SettingsTrackingScreen : SearchableSettings {
 
                     var hidePassword by remember { mutableStateOf(true) }
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentType = ContentType.Password },
                         value = password,
                         onValueChange = { password = it },
                         label = { Text(text = stringResource(MR.strings.password)) },
@@ -317,7 +302,7 @@ object SettingsTrackingScreen : SearchableSettings {
                         }
                     },
                 ) {
-                    val id = if (processing) MR.strings.loading else MR.strings.login
+                    val id = if (processing) MR.strings.logging_in else MR.strings.login
                     Text(text = stringResource(id))
                 }
             },

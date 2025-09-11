@@ -5,7 +5,7 @@ import mihon.core.migration.Migration
 val migrations: List<Migration>
     get() = listOf(
         SetupBackupCreateMigration(),
-        SetupAnimeLibraryUpdateMigration(),
+        SetupLibraryUpdateMigration(),
         InternalChapterCacheDirMigration(),
         CoverToExternalFileMigration(),
         DeleteExternalChapterCacheDirMigration(),
@@ -24,7 +24,7 @@ val migrations: List<Migration>
         RenameEnumMigration(),
         MergeSortTypeDirectionMigration(),
         EnableAutoBackupMigration(),
-        MoveChapterPreferencesMigration(),
+        MoveEpisodePreferencesMigration(),
         SplitPreferencesMigration(),
         PlayerPreferenceMigration(),
         MovePlayerPreferencesMigration(),
@@ -43,4 +43,6 @@ val migrations: List<Migration>
         VideoOrientationMigration(),
         CategoryPreferencesCleanupMigration(),
         PrefLangMigration(),
+        RenameKeysMigration(),
+        MoveCoverCacheMigration(),
     )

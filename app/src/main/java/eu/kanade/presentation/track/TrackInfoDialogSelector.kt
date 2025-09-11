@@ -94,17 +94,15 @@ fun TrackStatusSelector(
 }
 
 @Composable
-fun TrackItemSelector(
+fun TrackEpisodeSelector(
     selection: Int,
     onSelectionChange: (Int) -> Unit,
     range: Iterable<Int>,
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
-    isManga: Boolean,
 ) {
-    val titleText = if (isManga) MR.strings.chapters else AYMR.strings.episodes
     BaseSelector(
-        title = stringResource(titleText),
+        title = stringResource(AYMR.strings.episodes),
         content = {
             WheelNumberPicker(
                 items = range.toImmutableList(),
@@ -165,14 +163,12 @@ fun TrackDateSelector(
                     headline = null,
                     showModeToggle = false,
                 )
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        MaterialTheme.padding.small,
-                        Alignment.End,
-                    ),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small, Alignment.End),
                 ) {
                     if (onRemove != null) {
                         TextButton(onClick = onRemove) {
@@ -193,7 +189,7 @@ fun TrackDateSelector(
 }
 
 @Composable
-fun BaseSelector(
+private fun BaseSelector(
     title: String,
     content: @Composable BoxScope.() -> Unit,
     onConfirm: () -> Unit,
@@ -212,10 +208,7 @@ fun BaseSelector(
         buttons = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(
-                    MaterialTheme.padding.small,
-                    Alignment.End,
-                ),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small, Alignment.End),
             ) {
                 if (thirdButton != null) {
                     thirdButton()
@@ -242,14 +235,12 @@ private fun TrackStatusSelectorPreviews() {
                 onSelectionChange = {},
                 selections = persistentMapOf(
                     // Anilist values
-                    1L to MR.strings.reading,
-                    2L to MR.strings.plan_to_read,
+                    1L to AYMR.strings.watching,
+                    2L to AYMR.strings.plan_to_watch,
                     3L to MR.strings.completed,
                     4L to MR.strings.on_hold,
                     5L to MR.strings.dropped,
-                    6L to MR.strings.repeating,
-                    7L to AYMR.strings.watching,
-                    8L to AYMR.strings.plan_to_watch,
+                    6L to AYMR.strings.repeating_anime,
                 ),
                 onConfirm = {},
                 onDismissRequest = {},

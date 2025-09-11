@@ -57,21 +57,18 @@ interface AnimeCatalogueSource : AnimeSource {
      */
     fun getFilterList(): AnimeFilterList
 
-    // Should be replaced as soon as Anime Extension reach 1.5
     @Deprecated(
         "Use the non-RxJava API instead",
         ReplaceWith("getPopularAnime"),
     )
     fun fetchPopularAnime(page: Int): Observable<AnimesPage>
 
-    // Should be replaced as soon as Anime Extension reach 1.5
     @Deprecated(
         "Use the non-RxJava API instead",
         ReplaceWith("getSearchAnime"),
     )
     fun fetchSearchAnime(page: Int, query: String, filters: AnimeFilterList): Observable<AnimesPage>
 
-    // Should be replaced as soon as Anime Extension reach 1.5
     @Deprecated(
         "Use the non-RxJava API instead",
         ReplaceWith("getLatestUpdates"),

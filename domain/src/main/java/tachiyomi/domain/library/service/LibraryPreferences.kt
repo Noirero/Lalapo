@@ -4,29 +4,35 @@ import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getEnum
-import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.library.anime.model.AnimeLibrarySort
-import tachiyomi.domain.library.model.AnimeLibraryGroup
-import tachiyomi.domain.library.model.GroupAnimeLibraryMode
+import tachiyomi.domain.anime.model.Anime
+import tachiyomi.domain.library.model.GroupLibraryMode
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroup
+import tachiyomi.domain.library.model.LibrarySort
 
 class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
-    fun displayMode() = preferenceStore.getObject(
+    fun displayMode() = preferenceStore.getObjectFromString(
         "pref_display_mode_library",
         LibraryDisplayMode.default,
         LibraryDisplayMode.Serializer::serialize,
         LibraryDisplayMode.Serializer::deserialize,
     )
 
-    fun animeSortingMode() = preferenceStore.getObject(
-        "animelib_sorting_mode",
-        AnimeLibrarySort.default,
-        AnimeLibrarySort.Serializer::serialize,
-        AnimeLibrarySort.Serializer::deserialize,
+    fun sortingMode() = preferenceStore.getObjectFromString(
+        "library_sorting_mode",
+        LibrarySort.default,
+        LibrarySort.Serializer::serialize,
+        LibrarySort.Serializer::deserialize,
     )
+
+    fun randomSortSeed() = preferenceStore.getInt("library_random_sort_seed", 0)
+
+    fun portraitColumns() = preferenceStore.getInt("pref_library_columns_portrait_key", 0)
+
+    fun landscapeColumns() = preferenceStore.getInt("pref_library_columns_landscape_key", 0)
 
     fun lastUpdatedTimestamp() = preferenceStore.getLong(Preference.appStateKey("library_update_last_timestamp"), 0L)
     fun autoUpdateInterval() = preferenceStore.getInt("pref_library_update_interval_key", 0)
@@ -37,23 +43,86 @@ class LibraryPreferences(
             DEVICE_ONLY_ON_WIFI,
         ),
     )
-
-    fun autoUpdateItemRestrictions() = preferenceStore.getStringSet(
-        "library_update_manga_restriction",
+    fun autoUpdateAnimeRestrictions() = preferenceStore.getStringSet(
+        "library_update_anime_restriction",
         setOf(
-            ENTRY_HAS_UNVIEWED,
-            ENTRY_NON_COMPLETED,
-            ENTRY_NON_VIEWED,
-            ENTRY_OUTSIDE_RELEASE_PERIOD,
+            ANIME_HAS_UNSEEN,
+            ANIME_NON_COMPLETED,
+            ANIME_NON_SEEN,
+            ANIME_OUTSIDE_RELEASE_PERIOD,
         ),
     )
 
     fun autoUpdateMetadata() = preferenceStore.getBoolean("auto_update_metadata", false)
 
-    fun showContinueViewingButton() =
-        preferenceStore.getBoolean("display_continue_reading_button", false)
+    fun showContinueWatchingButton() = preferenceStore.getBoolean(
+        "display_continue_watching_button",
+        false,
+    )
 
-    // Common Category
+    fun markDuplicateSeenEpisodeAsSeen() = preferenceStore.getStringSet("mark_duplicate_seen_episode_seen", emptySet())
+
+    // region Filter
+
+    fun filterDownloaded() = preferenceStore.getEnum(
+        "pref_filter_library_downloaded_v2",
+        TriState.DISABLED,
+    )
+
+    fun filterUnseen() = preferenceStore.getEnum("pref_filter_library_unseen_v2", TriState.DISABLED)
+
+    fun filterStarted() = preferenceStore.getEnum(
+        "pref_filter_library_started_v2",
+        TriState.DISABLED,
+    )
+
+    fun filterBookmarked() = preferenceStore.getEnum(
+        "pref_filter_library_bookmarked_v2",
+        TriState.DISABLED,
+    )
+
+    // AM (FILLERMARK) -->
+    fun filterFillermarked() =
+        preferenceStore.getEnum("pref_filter_library_fillermarked_v2", TriState.DISABLED)
+    // <-- AM (FILLERMARK)
+
+    fun filterCompleted() = preferenceStore.getEnum(
+        "pref_filter_library_completed_v2",
+        TriState.DISABLED,
+    )
+
+    fun filterIntervalCustom() = preferenceStore.getEnum(
+        "pref_filter_library_interval_custom",
+        TriState.DISABLED,
+    )
+
+    fun filterTracking(id: Int) = preferenceStore.getEnum(
+        "pref_filter_library_tracked_${id}_v2",
+        TriState.DISABLED,
+    )
+
+    // endregion
+
+    // region Badges
+
+    fun downloadBadge() = preferenceStore.getBoolean("display_download_badge", false)
+
+    fun unseenBadge() = preferenceStore.getBoolean("display_unseen_badge", true)
+
+    fun localBadge() = preferenceStore.getBoolean("display_local_badge", true)
+
+    fun languageBadge() = preferenceStore.getBoolean("display_language_badge", false)
+
+    fun newShowUpdatesCount() = preferenceStore.getBoolean("library_show_updates_count", true)
+    fun newUpdatesCount() = preferenceStore.getInt(Preference.appStateKey("library_unseen_updates_count"), 0)
+
+    // endregion
+
+    // region Category
+
+    fun defaultCategory() = preferenceStore.getInt(DEFAULT_CATEGORY_PREF_KEY, -1)
+
+    fun lastUsedCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_category"), 0)
 
     fun categoryTabs() = preferenceStore.getBoolean("display_category_tabs", true)
 
@@ -61,94 +130,38 @@ class LibraryPreferences(
 
     fun categorizedDisplaySettings() = preferenceStore.getBoolean("categorized_display", false)
 
+    // AY -->
     fun hideHiddenCategoriesSettings() = preferenceStore.getBoolean("hidden_categories", false)
+    // <-- AY
 
-    fun filterIntervalCustom() = preferenceStore.getEnum(
-        "pref_filter_library_interval_custom",
-        TriState.DISABLED,
+    fun updateCategories() = preferenceStore.getStringSet(LIBRARY_UPDATE_CATEGORIES_PREF_KEY, emptySet())
+
+    fun updateCategoriesExclude() = preferenceStore.getStringSet(LIBRARY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY, emptySet())
+
+    // endregion
+
+    // region Episode
+
+    fun filterEpisodeBySeen() = preferenceStore.getLong(
+        "default_episode_filter_by_seen",
+        Anime.SHOW_ALL,
     )
 
-    // Common badges
+    fun filterEpisodeByDownloaded() = preferenceStore.getLong(
+        "default_episode_filter_by_downloaded",
+        Anime.SHOW_ALL,
+    )
 
-    fun downloadBadge() = preferenceStore.getBoolean("display_download_badge", false)
-
-    fun unreadBadge() = preferenceStore.getBoolean("display_unread_badge", true)
-
-    fun localBadge() = preferenceStore.getBoolean("display_local_badge", true)
-
-    fun languageBadge() = preferenceStore.getBoolean("display_language_badge", false)
-
-    fun newShowUpdatesCount() = preferenceStore.getBoolean("library_show_updates_count", true)
-
-    // Common Cache
-
-    fun autoClearItemCache() = preferenceStore.getBoolean("auto_clear_chapter_cache", false)
-
-    // Random Sort Seed
-
-    fun randomAnimeSortSeed() = preferenceStore.getInt("library_random_anime_sort_seed", 0)
-
-    // Mixture Columns
-
-    fun animePortraitColumns() = preferenceStore.getInt("pref_animelib_columns_portrait_key", 0)
-
-    fun animeLandscapeColumns() = preferenceStore.getInt("pref_animelib_columns_landscape_key", 0)
-
-    // Mixture Filter
-
-    fun filterDownloadedAnime() =
-        preferenceStore.getEnum("pref_filter_animelib_downloaded_v2", TriState.DISABLED)
-
-    fun filterUnseen() =
-        preferenceStore.getEnum("pref_filter_animelib_unread_v2", TriState.DISABLED)
-
-    fun filterStartedAnime() =
-        preferenceStore.getEnum("pref_filter_animelib_started_v2", TriState.DISABLED)
-
-    fun filterBookmarkedAnime() =
-        preferenceStore.getEnum("pref_filter_animelib_bookmarked_v2", TriState.DISABLED)
+    fun filterEpisodeByBookmarked() = preferenceStore.getLong(
+        "default_episode_filter_by_bookmarked",
+        Anime.SHOW_ALL,
+    )
 
     // AM (FILLERMARK) -->
-    fun filterFillermarkedAnime() =
-        preferenceStore.getEnum("pref_filter_animelib_fillermarked_v2", TriState.DISABLED)
-    // <-- AM (FILLERMARK)
-
-    fun filterCompletedAnime() =
-        preferenceStore.getEnum("pref_filter_animelib_completed_v2", TriState.DISABLED)
-
-    fun filterTrackedAnime(id: Int) =
-        preferenceStore.getEnum("pref_filter_animelib_tracked_${id}_v2", TriState.DISABLED)
-
-    // Mixture Update Count
-
-    fun newAnimeUpdatesCount() = preferenceStore.getInt("library_unseen_updates_count", 0)
-
-    // Mixture Category
-
-    fun defaultAnimeCategory() = preferenceStore.getInt(DEFAULT_ANIME_CATEGORY_PREF_KEY, -1)
-
-    fun lastUsedAnimeCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_anime_category"), 0)
-
-    fun animeUpdateCategories() =
-        preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY, emptySet())
-
-    fun animeUpdateCategoriesExclude() =
-        preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_EXCLUDE_PREF_KEY, emptySet())
-
-    // Mixture Item
-
-    fun filterEpisodeBySeen() =
-        preferenceStore.getLong("default_episode_filter_by_seen", Anime.SHOW_ALL)
-
-    fun filterEpisodeByDownloaded() =
-        preferenceStore.getLong("default_episode_filter_by_downloaded", Anime.SHOW_ALL)
-
-    fun filterEpisodeByBookmarked() =
-        preferenceStore.getLong("default_episode_filter_by_bookmarked", Anime.SHOW_ALL)
-
-    // AM (FILLERMARK) -->
-    fun filterEpisodeByFillermarked() =
-        preferenceStore.getLong("default_episode_filter_by_fillermarked", Anime.SHOW_ALL)
+    fun filterEpisodeByFillermarked() = preferenceStore.getLong(
+        "default_episode_filter_by_fillermarked",
+        Anime.SHOW_ALL,
+    )
     // <-- AM (FILLERMARK)
 
     // and upload date
@@ -158,12 +171,12 @@ class LibraryPreferences(
     )
 
     fun displayEpisodeByNameOrNumber() = preferenceStore.getLong(
-        "default_chapter_display_by_name_or_number",
+        "default_episode_display_by_name_or_number",
         Anime.EPISODE_DISPLAY_NAME,
     )
 
     fun sortEpisodeByAscendingOrDescending() = preferenceStore.getLong(
-        "default_chapter_sort_by_ascending_or_descending",
+        "default_episode_sort_by_ascending_or_descending",
         Anime.EPISODE_SORT_DESC,
     )
 
@@ -181,18 +194,22 @@ class LibraryPreferences(
         )
     }
 
-    // region Item behavior
+    fun hideMissingEpisodes() = preferenceStore.getBoolean("pref_hide_missing_episode_indicators", false)
+    // endregion
+
     // region Swipe Actions
 
-    fun swipeEpisodeStartAction() =
-        preferenceStore.getEnum("pref_episode_swipe_end_action", EpisodeSwipeAction.ToggleSeen)
-
-    fun swipeEpisodeEndAction() = preferenceStore.getEnum(
-        "pref_episode_swipe_start_action",
+    fun swipeToStartAction() = preferenceStore.getEnum(
+        "pref_episode_swipe_end_action",
         EpisodeSwipeAction.ToggleBookmark,
     )
 
-    fun markDuplicateSeenEpisodeAsSeen() = preferenceStore.getStringSet("mark_duplicate_seen_episode_seen", emptySet())
+    fun swipeToEndAction() = preferenceStore.getEnum(
+        "pref_episode_swipe_start_action",
+        EpisodeSwipeAction.ToggleSeen,
+    )
+
+    fun updateAnimeTitles() = preferenceStore.getBoolean("pref_update_library_anime_titles", false)
 
     // endregion
 
@@ -209,9 +226,9 @@ class LibraryPreferences(
     }
 
     // AM (GROUPING) -->
-    fun groupLibraryUpdateType() = preferenceStore.getEnum("group_library_update_type", GroupAnimeLibraryMode.GLOBAL)
+    fun groupLibraryUpdateType() = preferenceStore.getEnum("group_library_update_type", GroupLibraryMode.GLOBAL)
 
-    fun groupLibraryBy() = preferenceStore.getInt("group_library_by", AnimeLibraryGroup.BY_DEFAULT)
+    fun groupLibraryBy() = preferenceStore.getInt("group_library_by", LibraryGroup.BY_DEFAULT)
     // <-- AM (GROUPING)
 
     companion object {
@@ -219,21 +236,21 @@ class LibraryPreferences(
         const val DEVICE_NETWORK_NOT_METERED = "network_not_metered"
         const val DEVICE_CHARGING = "ac"
 
-        const val ENTRY_NON_COMPLETED = "anime_ongoing"
-        const val ENTRY_HAS_UNVIEWED = "anime_fully_seen"
-        const val ENTRY_NON_VIEWED = "anime_started"
-        const val ENTRY_OUTSIDE_RELEASE_PERIOD = "anime_outside_release_period"
+        const val ANIME_NON_COMPLETED = "anime_ongoing"
+        const val ANIME_HAS_UNSEEN = "anime_fully_seen"
+        const val ANIME_NON_SEEN = "anime_started"
+        const val ANIME_OUTSIDE_RELEASE_PERIOD = "anime_outside_release_period"
 
-        const val MARK_DUPLICATE_EPISODE_SEEN_NEW = "new_episode"
-        const val MARK_DUPLICATE_EPISODE_SEEN_EXISTING = "existing_episode"
+        const val MARK_DUPLICATE_EPISODE_SEEN_NEW = "new"
+        const val MARK_DUPLICATE_EPISODE_SEEN_EXISTING = "existing"
 
-        const val DEFAULT_ANIME_CATEGORY_PREF_KEY = "default_anime_category"
-        private const val LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY = "animelib_update_categories"
-        private const val LIBRARY_UPDATE_ANIME_CATEGORIES_EXCLUDE_PREF_KEY = "animelib_update_categories_exclude"
+        const val DEFAULT_CATEGORY_PREF_KEY = "default_category"
+        private const val LIBRARY_UPDATE_CATEGORIES_PREF_KEY = "library_update_categories"
+        private const val LIBRARY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY = "library_update_categories_exclude"
         val categoryPreferenceKeys = setOf(
-            DEFAULT_ANIME_CATEGORY_PREF_KEY,
-            LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY,
-            LIBRARY_UPDATE_ANIME_CATEGORIES_EXCLUDE_PREF_KEY,
+            DEFAULT_CATEGORY_PREF_KEY,
+            LIBRARY_UPDATE_CATEGORIES_PREF_KEY,
+            LIBRARY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY,
         )
     }
 }

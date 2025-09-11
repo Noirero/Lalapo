@@ -1,8 +1,9 @@
+// AY -->
 package eu.kanade.tachiyomi.data.track.simkl
 
-import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.database.models.Track
 
-fun AnimeTrack.toSimklStatus() = when (status) {
+fun Track.toSimklStatus() = when (status) {
     Simkl.WATCHING -> "watching"
     Simkl.COMPLETED -> "completed"
     Simkl.ON_HOLD -> "hold"
@@ -19,3 +20,4 @@ fun toTrackStatus(status: String) = when (status) {
     "plantowatch" -> Simkl.PLAN_TO_WATCH
     else -> throw NotImplementedError("Unknown status: $status")
 }
+// <-- AY

@@ -3,7 +3,7 @@ package mihon.core.migration.migrations
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
+import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -14,25 +14,24 @@ class CategoryPreferencesCleanupMigration : Migration {
         val libraryPreferences = migrationContext.get<LibraryPreferences>() ?: return@withIOContext false
         val downloadPreferences = migrationContext.get<DownloadPreferences>() ?: return@withIOContext false
 
-        val getAnimeCategories = migrationContext.get<GetAnimeCategories>() ?: return@withIOContext false
-        val allAnimeCategories = getAnimeCategories.await().map { it.id.toString() }.toSet()
+        val getCategories = migrationContext.get<GetCategories>() ?: return@withIOContext false
+        val allCategories = getCategories.await().map { it.id.toString() }.toSet()
 
-        val defaultAnimeCategory = libraryPreferences.defaultAnimeCategory().get()
-        if (defaultAnimeCategory.toString() !in allAnimeCategories) {
-            libraryPreferences.defaultAnimeCategory().delete()
+        val defaultCategory = libraryPreferences.defaultCategory().get()
+        if (defaultCategory.toString() !in allCategories) {
+            libraryPreferences.defaultCategory().delete()
         }
 
         val categoryPreferences = listOf(
-            libraryPreferences.animeUpdateCategories(),
-            libraryPreferences.animeUpdateCategoriesExclude(),
-            downloadPreferences.removeExcludeAnimeCategories(),
+            libraryPreferences.updateCategories(),
+            libraryPreferences.updateCategoriesExclude(),
+            downloadPreferences.removeExcludeCategories(),
             downloadPreferences.downloadNewEpisodeCategories(),
             downloadPreferences.downloadNewEpisodeCategoriesExclude(),
         )
         categoryPreferences.forEach { preference ->
             val ids = preference.get()
-            val garbageIds = ids
-                .minus(allAnimeCategories)
+            val garbageIds = ids.minus(allCategories)
             if (garbageIds.isEmpty()) return@forEach
             preference.set(ids.minus(garbageIds))
         }

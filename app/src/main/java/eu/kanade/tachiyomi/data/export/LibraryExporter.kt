@@ -4,33 +4,12 @@ import android.content.Context
 import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import tachiyomi.domain.entries.anime.model.Anime
-
-enum class ExportEntryType {
-    ANIME,
-}
-
-data class ExportEntry(
-    val type: ExportEntryType,
-    val title: String,
-    val author: String?,
-    val artist: String?,
-) {
-    companion object {
-        fun Anime.toExportEntry(): ExportEntry = ExportEntry(
-            title = this.title,
-            type = ExportEntryType.ANIME,
-            author = this.author,
-            artist = this.artist,
-        )
-    }
-}
+import tachiyomi.domain.anime.model.Anime
 
 object LibraryExporter {
 
     data class ExportOptions(
         val includeTitle: Boolean,
-        val includeType: Boolean,
         val includeAuthor: Boolean,
         val includeArtist: Boolean,
     )
@@ -38,7 +17,7 @@ object LibraryExporter {
     suspend fun exportToCsv(
         context: Context,
         uri: Uri,
-        favorites: List<ExportEntry>,
+        favorites: List<Anime>,
         options: ExportOptions,
         onExportComplete: () -> Unit,
     ) {
@@ -53,22 +32,20 @@ object LibraryExporter {
 
     private val escapeRequired = listOf("\r", "\n", "\"", ",")
 
-    private fun generateCsvData(favorites: List<ExportEntry>, options: ExportOptions): String {
+    private fun generateCsvData(favorites: List<Anime>, options: ExportOptions): String {
         val columnSize = listOf(
             options.includeTitle,
-            options.includeType,
             options.includeAuthor,
             options.includeArtist,
         )
             .count { it }
 
         val rows = buildList(favorites.size) {
-            favorites.forEach { entry ->
+            favorites.forEach { anime ->
                 buildList(columnSize) {
-                    if (options.includeTitle) add(entry.title)
-                    if (options.includeType) add(entry.type.name.lowercase())
-                    if (options.includeAuthor) add(entry.author)
-                    if (options.includeArtist) add(entry.artist)
+                    if (options.includeTitle) add(anime.title)
+                    if (options.includeAuthor) add(anime.author)
+                    if (options.includeArtist) add(anime.artist)
                 }
                     .let(::add)
             }
