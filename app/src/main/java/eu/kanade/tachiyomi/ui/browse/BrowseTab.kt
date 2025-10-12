@@ -29,8 +29,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import eu.kanade.domain.source.model.installedExtension
-import eu.kanade.domain.source.model.updateSourceIdToExtensionMap
 import eu.kanade.presentation.browse.ExtensionScreen
 import eu.kanade.presentation.browse.SourceOptionsDialog
 import eu.kanade.presentation.browse.SourcesScreen
@@ -38,7 +36,6 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
-import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsScreenModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
@@ -51,14 +48,10 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.math.abs
 
 // AM (BROWSE)  -->
@@ -205,7 +198,7 @@ data object BrowseTab : Tab {
                     sourcesScreenModel.closeDialog()
                 },
                 onClickUninstall = {
-                    val ext = source.installedExtension ?: return@SourceOptionsDialog
+                    val ext = dialog.extension ?: return@SourceOptionsDialog
                     sourcesScreenModel.uninstallExtension(ext)
                     sourcesScreenModel.closeDialog()
                 },
@@ -213,7 +206,6 @@ data object BrowseTab : Tab {
             )
         }
 
-        val internalErrString = stringResource(MR.strings.internal_error)
         LaunchedEffect(Unit) {
             // AM (DISCORD_RPC) -->
             with(DiscordRPCService) {
@@ -221,17 +213,6 @@ data object BrowseTab : Tab {
             }
             // <-- AM (DISCORD_RPC)
             (context as? MainActivity)?.ready = true
-            launchIO {
-                Injekt.get<ExtensionManager>().findAvailableExtensions()
-                updateSourceIdToExtensionMap()
-                sourcesScreenModel.events.collectLatest { event ->
-                    when (event) {
-                        SourcesScreenModel.Event.FailedFetchingSources -> {
-                            launch { snackbarHostState.showSnackbar(internalErrString) }
-                        }
-                    }
-                }
-            }
         }
 
         LaunchedEffect(inExtensionsScreen) {

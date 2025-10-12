@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.extension
 import android.content.Context
 import android.graphics.drawable.Drawable
 import eu.kanade.domain.extension.interactor.TrustExtension
-import eu.kanade.domain.source.model.updateSourceIdToExtensionMap
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.api.ExtensionApi
 import eu.kanade.tachiyomi.extension.api.ExtensionUpdateNotifier
@@ -94,6 +93,14 @@ class ExtensionManager(
                 ?.pkgName
         }
     }
+
+    // AM (BROWSE) -->
+    fun getInstalledExtension(sourceId: Long): Extension.Installed? {
+        return installedExtensionsFlow.value.find { extension ->
+            extension.sources.any { it.id == sourceId }
+        }
+    }
+    // <-- AM (BROWSE)
 
     fun getAppIconForSource(sourceId: Long): Drawable? {
         val pkgName = getExtensionPackage(sourceId) ?: return null
@@ -295,9 +302,6 @@ class ExtensionManager(
      */
     private fun registerNewExtension(extension: Extension.Installed) {
         installedExtensionMapFlow.value += extension
-        // AM (BROWSE) -->
-        updateSourceIdToExtensionMap()
-        // <-- AM (BROWSE)
     }
 
     /**
@@ -308,9 +312,6 @@ class ExtensionManager(
      */
     private fun registerUpdatedExtension(extension: Extension.Installed) {
         installedExtensionMapFlow.value += extension
-        // AM (BROWSE) -->
-        updateSourceIdToExtensionMap()
-        // <-- AM (BROWSE)
     }
 
     /**

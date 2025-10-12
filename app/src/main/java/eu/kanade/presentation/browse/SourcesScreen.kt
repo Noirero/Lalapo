@@ -2,7 +2,6 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,12 +30,11 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.domain.source.model.installedExtension
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesFilterScreen
@@ -58,7 +56,6 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.shouldExpandFAB
-import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.isLocal
 
 @Composable
@@ -156,7 +153,8 @@ fun SourcesScreen(
                                 is SourceUiModel.Item -> SourceItem(
                                     modifier = Modifier.animateItem(),
                                     // AM (BROWSE) -->
-                                    navigator = navigator,
+                                    extension = model.extension,
+                                    onClickSettings = { navigator.push(ExtensionDetailsScreen(it.pkgName)) },
                                     // <-- AM (BROWSE)
                                     source = model.source,
                                     onClickItem = onClickItem,
@@ -190,7 +188,8 @@ private fun SourceHeader(
 private fun SourceItem(
     source: Source,
     // AM (BROWSE) -->
-    navigator: Navigator,
+    extension: Extension.Installed?,
+    onClickSettings: (Extension.Installed) -> Unit,
     // <-- AM (BROWSE)
     onClickItem: (Source, Listing) -> Unit,
     onLongClickItem: (Source) -> Unit,
@@ -219,11 +218,8 @@ private fun SourceItem(
                 }
             }
             // AM (BROWSE) -->
-            if (!source.isLocal()) {
-                SourceSettingsButton(
-                    navigator = navigator,
-                    source = source,
-                )
+            if (!source.isLocal() && extension != null) {
+                SourceSettingsButton(onClickSettings = { onClickSettings(extension) })
             }
         },
         pin = {
@@ -267,11 +263,9 @@ private fun SourcePinButton(
 // AM (BROWSE) -->
 @Composable
 private fun SourceSettingsButton(
-    navigator: Navigator,
-    source: Source,
+    onClickSettings: () -> Unit,
 ) {
-    val extension = source.installedExtension ?: return
-    IconButton(onClick = { navigator.push(ExtensionDetailsScreen(extension.pkgName)) }) {
+    IconButton(onClick = onClickSettings) {
         Icon(
             imageVector = Icons.Outlined.Settings,
             tint = MaterialTheme.colorScheme.primary,
@@ -331,6 +325,11 @@ fun SourceOptionsDialog(
 }
 
 sealed interface SourceUiModel {
-    data class Item(val source: Source) : SourceUiModel
+    data class Item(
+        val source: Source,
+        // AM (BROWSE) -->
+        val extension: Extension.Installed?,
+        // <-- AM (BROWSE)
+    ) : SourceUiModel
     data class Header(val language: String) : SourceUiModel
 }
