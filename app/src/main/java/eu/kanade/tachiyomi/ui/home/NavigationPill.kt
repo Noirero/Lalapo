@@ -19,9 +19,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
@@ -29,6 +29,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -121,7 +122,6 @@ fun NavigationPill(
             modifier = Modifier
                 .fillMaxWidth()
                 .selectableGroup()
-                .navigationBarsPadding()
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDrag = { change, dragAmount ->
@@ -169,7 +169,10 @@ fun NavigationPill(
                 pillOffsetX = navigationOffsetX,
                 cornerSizes = cornerSizes,
             )
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(NavigationBarDefaults.windowInsets),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Row {
                     tabs.fastForEach {
                         NavigationPillItem(it, updateTab, pillItemWidth, pillItemHeight)
