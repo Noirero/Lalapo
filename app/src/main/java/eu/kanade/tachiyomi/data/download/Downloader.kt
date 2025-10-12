@@ -10,7 +10,6 @@ import com.arthenica.ffmpegkit.FFmpegKitConfig
 import com.arthenica.ffmpegkit.FFprobeKit
 import com.arthenica.ffmpegkit.Level
 import com.arthenica.ffmpegkit.LogCallback
-import com.arthenica.ffmpegkit.LogRedirectionStrategy
 import com.arthenica.ffmpegkit.StatisticsCallback
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.animesource.UnmeteredSource
@@ -25,6 +24,7 @@ import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.toFFmpegString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +64,7 @@ import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.BufferedReader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -525,16 +526,8 @@ class Downloader(
             "${it.first}: ${it.second}\r\n"
         }
 
-        FFmpegKitConfig.setLogRedirectionStrategy(LogRedirectionStrategy.ALWAYS_PRINT_LOGS)
         val ffmpegOptions = getFFmpegOptions(video, headerOptions, ffmpegFilename())
-        val ffprobeCommand = { file: String, ffprobeHeaders: String? ->
-            FFmpegKitConfig.parseArguments(
-                "${ffprobeHeaders?.plus(" ") ?: ""}-v quiet -show_entries " +
-                    "format=duration -of default=noprint_wrappers=1:nokey=1 \"$file\"",
-            )
-        }
-
-        var duration = 0L
+        val duration = getDuration(video.videoUrl, headerOptions)?.toLong() ?: 0L
 
         val logCallback = LogCallback { log ->
             if (log.level <= Level.AV_LOG_WARNING) {
@@ -551,8 +544,6 @@ class Downloader(
                 download.progress = (100 * outTime / duration).toInt()
             }
         }
-
-        duration = getDuration(ffprobeCommand(video.videoUrl, headerOptions))?.toLong() ?: 0L
 
         suspendCancellableCoroutine { continuation ->
             val session = FFmpegKit.executeWithArgumentsAsync(
@@ -632,8 +623,20 @@ class Downloader(
         return FFmpegKitConfig.parseArguments(command)
     }
 
-    private suspend fun getDuration(ffprobeCommand: Array<String>): Float? {
-        return suspendCancellableCoroutine { continuation ->
+    private suspend fun getDuration(videoUrl: String, headerOptions: String): Float? {
+        val durationFile = context.createFileInCacheDir("ffprobe_duration.txt")
+        val durationFilePath = durationFile.toUri().toFFmpegString(context)
+
+        val ffprobeCommand = FFmpegKitConfig.parseArguments(
+            listOf(
+                headerOptions,
+                "-v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1",
+                "-o \"$durationFilePath\"",
+                "\"$videoUrl\"",
+            ).joinToString(" "),
+        )
+
+        suspendCancellableCoroutine { continuation ->
             val session = FFprobeKit.executeWithArgumentsAsync(ffprobeCommand) {
                 if (it.returnCode.isValueSuccess) {
                     continuation.resume(it)
@@ -642,7 +645,9 @@ class Downloader(
                 }
             }
             continuation.invokeOnCancellation { session.cancel() }
-        }.output.toFloatOrNull()
+        }
+
+        return durationFile.bufferedReader().use(BufferedReader::readText).trim().toFloatOrNull()
     }
 
     /**
