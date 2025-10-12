@@ -33,11 +33,14 @@ import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.episode.service.EpisodeRecognition
 import tachiyomi.i18n.MR
 import tachiyomi.source.local.filter.OrderBy
+import tachiyomi.source.local.image.LocalBackgroundManager
 import tachiyomi.source.local.image.LocalCoverManager
+import tachiyomi.source.local.image.LocalEpisodeThumbnailManager
 import tachiyomi.source.local.io.Format
 import tachiyomi.source.local.io.LocalSourceFileSystem
 import uy.kohesive.injekt.injectLazy
 import java.io.File
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.math.abs
@@ -48,6 +51,11 @@ actual class LocalSource(
     private val context: Context,
     private val fileSystem: LocalSourceFileSystem,
     private val coverManager: LocalCoverManager,
+    // AY -->
+    private val backgroundManager: LocalBackgroundManager,
+    private val thumbnailManager: LocalEpisodeThumbnailManager,
+    private val fetchTypeManager: LocalFetchTypeManager,
+    // <-- AY
 ) : AnimeCatalogueSource, UnmeteredSource {
 
     private val json: Json by injectLazy()
@@ -123,21 +131,30 @@ actual class LocalSource(
         val animes = animeDirs
             .map { animeDir ->
                 async {
-                    SAnime.create().apply {
-                        title = animeDir.name.orEmpty()
-                        url = animeDir.name.orEmpty()
-
-                        // Try to find the cover
-                        coverManager.find(animeDir.name.orEmpty())?.let {
-                            thumbnail_url = it.uri.toString()
-                        }
-                    }
+                    // AY -->
+                    getSAnime(animeDir.name)
+                    // <-- AY
                 }
             }
             .awaitAll()
 
         AnimesPage(animes, false)
     }
+
+    // AY -->
+    private fun getSAnime(animeDir: String?): SAnime {
+        return SAnime.create().apply {
+            title = animeDir.orEmpty().substringAfterLast(File.separator)
+            url = animeDir.orEmpty()
+            fetch_type = fetchTypeManager.find(animeDir.orEmpty())
+
+            // Try to find the cover
+            coverManager.find(animeDir.orEmpty())?.let {
+                thumbnail_url = it.uri.toString()
+            }
+        }
+    }
+    // <-- AY
 
     // Old fetch functions
 
@@ -179,6 +196,12 @@ actual class LocalSource(
             anime.thumbnail_url = it.uri.toString()
         }
 
+        // AY -->
+        backgroundManager.find(anime.url)?.let {
+            anime.background_url = it.uri.toString()
+        }
+        // <-- AY
+
         // Augment anime details based on metadata files
         try {
             val animeDirFiles = fileSystem.getFilesInAnimeDirectory(anime.url)
@@ -202,6 +225,32 @@ actual class LocalSource(
         return@withIOContext anime
     }
 
+    // AY -->
+    // Seasons
+    override suspend fun getSeasonList(anime: SAnime): List<SAnime> = withIOContext {
+        val animeDirs = fileSystem.getFilesInAnimeDirectory(anime.url)
+            // Filter out files that are hidden and is not a folder
+            .filter { it.isDirectory && !it.name.orEmpty().startsWith('.') }
+            .distinctBy { it.name }
+
+        animeDirs
+            .map { animeDir ->
+                async {
+                    val url = animeDir.name?.let { season ->
+                        buildString {
+                            append(anime.url)
+                            append(File.separator)
+                            append(season)
+                        }
+                    }
+                    getSAnime(url)
+                }
+            }
+            .awaitAll()
+            .toList()
+    }
+    // <-- AY
+
     // Episodes
     override suspend fun getEpisodeList(anime: SAnime): List<SEpisode> = withIOContext {
         // AY -->
@@ -209,9 +258,7 @@ actual class LocalSource(
             .firstOrNull {
                 it.extension == "json" && it.nameWithoutExtension == "episodes"
             }?.let { file ->
-                runCatching {
-                    json.decodeFromStream<List<EpisodeDetails>>(file.openInputStream())
-                }.getOrNull()
+                json.decodeFromStream<List<EpisodeDetails>>(file.openInputStream())
             }
         // <-- AY
 
@@ -237,6 +284,18 @@ actual class LocalSource(
                             data.name?.also { name = it }
                             data.dateUpload?.also { date_upload = parseDate(it) }
                             scanlator = data.scanlator
+                            summary = data.summary
+                        }
+                    }
+
+                    // Generate the preview from the episode if not available
+                    if (this.preview_url == null) {
+                        try {
+                            val tempFileSuffix = anime.title + this.name + DEFAULT_THUMBNAIL_NAME
+                            val updateThumbnail: (InputStream) -> Unit = { thumbnailManager.update(anime, this, it) }
+                            updateImageFromVideo(this, anime, tempFileSuffix, updateThumbnail)
+                        } catch (e: Exception) {
+                            logcat(LogPriority.ERROR) { "Couldn't extract thumbnail from video: $e" }
                         }
                     }
                     // <-- AY
@@ -247,15 +306,36 @@ actual class LocalSource(
             }
 
         // Generate the cover from the first episode found if not available
-        if (anime.thumbnail_url.isNullOrBlank()) {
+        // AY -->
+        if (anime.thumbnail_url.isNullOrBlank() || coverManager.find(anime.url) == null) {
+            // <-- AY
             try {
                 episodes.lastOrNull()?.let { episode ->
-                    updateCover(episode, anime)
+                    // AY -->
+                    val tempFileSuffix = anime.title + DEFAULT_COVER_NAME
+                    val updateCover: (InputStream) -> Unit = { coverManager.update(anime, it) }
+                    updateImageFromVideo(episode, anime, tempFileSuffix, updateCover)
+                    // <-- AY
                 }
             } catch (e: Exception) {
-                logcat(LogPriority.ERROR) { "Couldn't extract thumbnail from video: $e" }
+                logcat(LogPriority.ERROR) { "Couldn't extract cover from video: $e" }
             }
         }
+
+        // AY -->
+        // Generate the background from the first episode found if not available
+        if (anime.background_url == null || backgroundManager.find(anime.url) == null) {
+            try {
+                episodes.lastOrNull()?.let { episode ->
+                    val tempFileSuffix = anime.title + DEFAULT_BACKGROUND_NAME
+                    val updateBackground: (InputStream) -> Unit = { backgroundManager.update(anime, it) }
+                    updateImageFromVideo(episode, anime, tempFileSuffix, updateBackground)
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR) { "Couldn't extract background from video: $e" }
+            }
+        }
+        // <-- AY
 
         episodes
     }
@@ -277,10 +357,15 @@ actual class LocalSource(
     override suspend fun getVideoList(episode: SEpisode): List<Video> = throw UnsupportedOperationException("Unused")
 
     // AY -->
-    private fun updateCover(episode: SEpisode, anime: SAnime) {
+    private fun updateImageFromVideo(
+        episode: SEpisode,
+        anime: SAnime,
+        tempFileSuffix: String,
+        updateImage: (InputStream) -> Unit,
+    ) {
         val tempFile = File.createTempFile(
             "tmp_",
-            anime.title + DEFAULT_COVER_NAME,
+            tempFileSuffix,
         )
         val outFile = tempFile.path
 
@@ -300,7 +385,7 @@ actual class LocalSource(
         )
 
         if (tempFile.length() > 0L) {
-            coverManager.update(anime, tempFile.inputStream())
+            updateImage(tempFile.inputStream())
         }
     }
     // <-- AY
@@ -312,8 +397,10 @@ actual class LocalSource(
         // AY -->
         private val dateFormat by lazy { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()) }
         private const val DEFAULT_COVER_NAME = "cover.jpg"
-
+        private const val DEFAULT_BACKGROUND_NAME = "background.jpg"
+        private const val DEFAULT_THUMBNAIL_NAME = "thumbnail.jpg"
         // <-- AY
+
         private val LATEST_THRESHOLD = 7.days.inWholeMilliseconds
     }
 }

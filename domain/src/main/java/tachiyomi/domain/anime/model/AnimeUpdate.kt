@@ -1,6 +1,7 @@
 package tachiyomi.domain.anime.model
 
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
+import eu.kanade.tachiyomi.animesource.model.FetchType
 
 data class AnimeUpdate(
     val id: Long,
@@ -13,6 +14,9 @@ data class AnimeUpdate(
     val viewerFlags: Long? = null,
     val episodeFlags: Long? = null,
     val coverLastModified: Long? = null,
+    // AY -->
+    val backgroundLastModified: Long? = null,
+    // <-- AY
     val url: String? = null,
     val title: String? = null,
     val artist: String? = null,
@@ -21,10 +25,20 @@ data class AnimeUpdate(
     val genre: List<String>? = null,
     val status: Long? = null,
     val thumbnailUrl: String? = null,
+    // AY -->
+    val backgroundUrl: String? = null,
+    // <-- AY
     val updateStrategy: AnimeUpdateStrategy? = null,
     val initialized: Boolean? = null,
     val version: Long? = null,
     val notes: String? = null,
+    // AY -->
+    val fetchType: FetchType? = null,
+    val parentId: Long? = null,
+    val seasonFlags: Long? = null,
+    val seasonNumber: Double? = null,
+    val seasonSourceOrder: Long? = null,
+    // <-- AY
 )
 
 fun Anime.toAnimeUpdate(): AnimeUpdate {
@@ -39,6 +53,9 @@ fun Anime.toAnimeUpdate(): AnimeUpdate {
         viewerFlags = viewerFlags,
         episodeFlags = episodeFlags,
         coverLastModified = coverLastModified,
+        // AY -->
+        backgroundLastModified = backgroundLastModified,
+        // <-- AY
         url = url,
         title = title,
         artist = artist,
@@ -47,9 +64,19 @@ fun Anime.toAnimeUpdate(): AnimeUpdate {
         genre = genre,
         status = status,
         thumbnailUrl = thumbnailUrl,
+        // AY -->
+        backgroundUrl = backgroundUrl,
+        // <-- AY
         updateStrategy = updateStrategy,
         initialized = initialized,
         version = version,
         notes = notes,
+        // AY -->
+        fetchType = fetchType,
+        parentId = parentId,
+        seasonFlags = seasonFlags,
+        seasonNumber = seasonNumber,
+        seasonSourceOrder = seasonSourceOrder,
+        // <-- AY
     )
 }

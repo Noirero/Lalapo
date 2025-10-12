@@ -78,7 +78,9 @@ import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.player.utils.AniSkipApi
 import eu.kanade.tachiyomi.ui.player.utils.ChapterUtils.Companion.getStringRes
 import eu.kanade.tachiyomi.ui.player.utils.TrackSelect
+import eu.kanade.tachiyomi.util.editBackground
 import eu.kanade.tachiyomi.util.editCover
+import eu.kanade.tachiyomi.util.editThumbnail
 import eu.kanade.tachiyomi.util.episode.filterDownloaded
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.lang.takeBytes
@@ -1098,11 +1100,11 @@ class PlayerViewModel @JvmOverloads constructor(
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_BOOKMARKED &&
                 !it.bookmark ||
                 anime.bookmarkedFilterRaw == Anime.EPISODE_SHOW_NOT_BOOKMARKED &&
-                it.bookmark
-            // AM (FILLERMARK) -->
-            anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED && !it.fillermark ||
-                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED && it.fillermark
-            // <-- AM (FILLERMARK)
+                it.bookmark ||
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_FILLERMARKED &&
+                !it.fillermark ||
+                anime.fillermarkedFilterRaw == Anime.EPISODE_SHOW_NOT_FILLERMARKED &&
+                it.fillermark
         }.toMutableList()
 
         if (episodesForPlayer.all { it.id != episodeId }) {
@@ -1303,7 +1305,9 @@ class PlayerViewModel @JvmOverloads constructor(
         getHosterVideoLinksJob = viewModelScope.launchIO {
             _hosterState.update { _ ->
                 hosterList.map { hoster ->
-                    if (hoster.videoList == null) {
+                    if (hoster.lazy) {
+                        HosterState.Idle(hoster.hosterName)
+                    } else if (hoster.videoList == null) {
                         HosterState.Loading(hoster.hosterName)
                     } else {
                         val videoList = hoster.videoList!!
@@ -1478,7 +1482,11 @@ class PlayerViewModel @JvmOverloads constructor(
                 _hosterState.updateAt(index, HosterState.Loading(hosterName))
 
                 viewModelScope.launchIO {
-                    val hosterState = EpisodeLoader.loadHosterVideos(currentSource.value!!, hosterList.value[index])
+                    val hosterState = EpisodeLoader.loadHosterVideos(
+                        source = currentSource.value!!,
+                        hoster = hosterList.value[index],
+                        force = true,
+                    )
                     _hosterState.updateAt(index, hosterState)
                 }
             }
@@ -1668,6 +1676,7 @@ class PlayerViewModel @JvmOverloads constructor(
                     id = episode.id!!,
                     seen = episode.seen,
                     bookmark = episode.bookmark,
+                    fillermark = episode.fillermark,
                     lastSecondSeen = episode.last_second_seen,
                     totalSeconds = episode.total_seconds,
                 ),
@@ -1709,7 +1718,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    // AM (FILLERMARK) -->
+    // AY -->
 
     /**
      * Fillermarks the currently active episode.
@@ -1724,7 +1733,7 @@ class PlayerViewModel @JvmOverloads constructor(
             )
         }
     }
-    // <-- AM (FILLERMARK)
+    // <-- AY
 
     fun takeScreenshot(cachePath: String, showSubtitles: Boolean): InputStream? {
         val filename = cachePath + "/${System.currentTimeMillis()}_mpv_screenshot_tmp.png"
@@ -1809,23 +1818,29 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     /**
-     * Sets the screenshot as cover and notifies the UI of the result.
+     * Sets the screenshot as art and notifies the UI of the result.
      */
-    fun setAsCover(imageStream: () -> InputStream) {
+    fun setAsArt(artType: ArtType, imageStream: () -> InputStream) {
         val anime = currentAnime.value ?: return
+        val episode = currentEpisode.value ?: return
 
         viewModelScope.launchNonCancellable {
             val result = try {
-                anime.editCover(Injekt.get(), imageStream())
+                when (artType) {
+                    ArtType.Cover -> anime.editCover(Injekt.get(), imageStream())
+                    ArtType.Background -> anime.editBackground(Injekt.get(), imageStream())
+                    ArtType.Thumbnail -> episode.editThumbnail(anime, Injekt.get(), imageStream())
+                }
+
                 if (anime.isLocal() || anime.favorite) {
-                    SetAsCover.Success
+                    SetAsArt.Success
                 } else {
-                    SetAsCover.AddToLibraryFirst
+                    SetAsArt.AddToLibraryFirst
                 }
             } catch (e: Exception) {
-                SetAsCover.Error
+                SetAsArt.Error
             }
-            eventChannel.send(Event.SetCoverResult(result))
+            eventChannel.send(Event.SetArtResult(result, artType))
         }
     }
 
@@ -2050,7 +2065,7 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     sealed class Event {
-        data class SetCoverResult(val result: SetAsCover) : Event()
+        data class SetArtResult(val result: SetAsArt, val artType: ArtType) : Event()
         data class SavedImage(val result: SaveImageResult) : Event()
         data class ShareImage(val uri: Uri, val seconds: String) : Event()
     }

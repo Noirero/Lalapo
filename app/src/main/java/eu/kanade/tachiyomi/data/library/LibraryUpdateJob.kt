@@ -23,7 +23,9 @@ import eu.kanade.domain.anime.model.toSAnime
 import eu.kanade.domain.connection.SyncPreferences
 import eu.kanade.domain.episode.interactor.SyncEpisodesWithSource
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
+import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.data.cache.BackgroundCache
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -69,6 +71,7 @@ import tachiyomi.domain.library.service.LibraryPreferences.Companion.ANIME_OUTSI
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
+import tachiyomi.domain.season.interactor.GetAnimeSeasonsByParentId
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
@@ -95,12 +98,21 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private val libraryPreferences: LibraryPreferences = Injekt.get()
     private val downloadManager: DownloadManager = Injekt.get()
     private val coverCache: CoverCache = Injekt.get()
+
+    // AY -->
+    private val backgroundCache: BackgroundCache = Injekt.get()
+
+    // <-- AY
     private val getLibraryAnime: GetLibraryAnime = Injekt.get()
     private val getAnime: GetAnime = Injekt.get()
     private val updateAnime: UpdateAnime = Injekt.get()
     private val syncEpisodesWithSource: SyncEpisodesWithSource = Injekt.get()
     private val fetchInterval: FetchInterval = Injekt.get()
     private val filterEpisodesForDownload: FilterEpisodesForDownload = Injekt.get()
+
+    // AY -->
+    private val getAnimeSeasonsByParentId: GetAnimeSeasonsByParentId = Injekt.get()
+    // <-- AY
 
     // AM (GROUPING) -->
     private val getTracks: GetTracks = Injekt.get()
@@ -235,14 +247,35 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         }
         // <-- AM (GROUPING)
 
+        // AY -->
+        val includeSeasons = libraryPreferences.updateSeasonOnLibraryUpdate().get()
+        val lastToUpdateWithSeasons = listToUpdate.flatMap { libAnime ->
+            when (libAnime.anime.fetchType) {
+                FetchType.Seasons -> {
+                    if (includeSeasons) {
+                        val seasons = getAnimeSeasonsByParentId.await(libAnime.anime.id)
+                        seasons
+                            .filter { s ->
+                                s.anime.fetchType == FetchType.Episodes && !s.anime.favorite
+                            }
+                            .map { it.toLibraryAnime() }
+                    } else {
+                        emptyList()
+                    }
+                }
+                FetchType.Episodes -> listOf(libAnime)
+            }
+        }
+        // <-- AY
+
         val restrictions = libraryPreferences.autoUpdateAnimeRestrictions().get()
         val skippedUpdates = mutableListOf<Pair<Anime, String?>>()
         val (_, fetchWindowUpperBound) = fetchInterval.getWindow(ZonedDateTime.now())
 
-        animeToUpdate = listToUpdate
+        animeToUpdate = lastToUpdateWithSeasons
             .filter {
                 when {
-                    it.anime.updateStrategy == AnimeUpdateStrategy.ONLY_FETCH_ONCE && it.totalEpisodes > 0L -> {
+                    it.anime.updateStrategy == AnimeUpdateStrategy.ONLY_FETCH_ONCE && it.totalCount > 0L -> {
                         skippedUpdates.add(
                             it.anime to context.stringResource(MR.strings.skipped_reason_not_always_update),
                         )
@@ -261,7 +294,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                         false
                     }
 
-                    ANIME_NON_SEEN in restrictions && it.totalEpisodes > 0L && !it.hasStarted -> {
+                    ANIME_NON_SEEN in restrictions && it.totalCount > 0L && !it.hasStarted -> {
                         skippedUpdates.add(
                             it.anime to context.stringResource(AMMR.strings.skipped_reason_not_started_anime),
                         )
@@ -320,7 +353,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                 ensureActive()
 
                                 // Don't continue to update if anime is not in library
-                                if (getAnime.await(anime.id)?.favorite != true) {
+                                // AY -->
+                                if (anime.parentId == null && getAnime.await(anime.id)?.favorite != true) {
+                                    // <-- AY
                                     return@forEach
                                 }
 
@@ -403,14 +438,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         // Update anime metadata if needed
         if (libraryPreferences.autoUpdateMetadata().get()) {
             val networkAnime = source.getAnimeDetails(anime.toSAnime())
-            updateAnime.awaitUpdateFromSource(anime, networkAnime, manualFetch = false, coverCache)
+            // AY -->
+            updateAnime.awaitUpdateFromSource(anime, networkAnime, manualFetch = false, coverCache, backgroundCache)
+            // <-- AY
         }
 
         val episodes = source.getEpisodeList(anime.toSAnime())
 
         // Get anime from database to account for if it was removed during the update and
         // to get latest data so it doesn't get overwritten later on
-        val dbAnime = getAnime.await(anime.id)?.takeIf { it.favorite } ?: return emptyList()
+        // AY -->
+        val dbAnime = getAnime.await(anime.id)?.takeIf { it.parentId != null || it.favorite } ?: return emptyList()
+        // <-- AY
 
         return syncEpisodesWithSource.await(episodes, dbAnime, source, false, fetchWindow)
     }

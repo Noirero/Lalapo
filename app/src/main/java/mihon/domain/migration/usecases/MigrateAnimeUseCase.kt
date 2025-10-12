@@ -1,10 +1,14 @@
 package mihon.domain.migration.usecases
 
+import eu.kanade.domain.anime.interactor.SyncSeasonsWithSource
 import eu.kanade.domain.anime.interactor.UpdateAnime
+import eu.kanade.domain.anime.model.hasCustomBackground
 import eu.kanade.domain.anime.model.hasCustomCover
 import eu.kanade.domain.anime.model.toSAnime
 import eu.kanade.domain.episode.interactor.SyncEpisodesWithSource
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.animesource.model.FetchType
+import eu.kanade.tachiyomi.data.cache.BackgroundCache
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
@@ -31,12 +35,18 @@ class MigrateAnimeUseCase(
     private val updateAnime: UpdateAnime,
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId,
     private val syncEpisodesWithSource: SyncEpisodesWithSource,
+    // AY -->
+    private val syncSeasonsWithSource: SyncSeasonsWithSource,
+    // <-- AY
     private val updateEpisode: UpdateEpisode,
     private val getCategories: GetCategories,
     private val setAnimeCategories: SetAnimeCategories,
     private val getTracks: GetTracks,
     private val insertTrack: InsertTrack,
     private val coverCache: CoverCache,
+    // AY -->
+    private val backgroundCache: BackgroundCache,
+    // <-- AY
 ) {
     private val enhancedServices by lazy { trackerManager.trackers.filterIsInstance<EnhancedTracker>() }
 
@@ -46,16 +56,33 @@ class MigrateAnimeUseCase(
         val flags = sourcePreferences.migrationFlags().get()
 
         try {
-            val episodes = targetSource.getEpisodeList(target.toSAnime())
+            when (target.fetchType) {
+                // AY -->
+                FetchType.Seasons -> {
+                    val seasons = targetSource.getSeasonList(target.toSAnime())
 
-            try {
-                syncEpisodesWithSource.await(episodes, target, targetSource)
-            } catch (_: Exception) {
-                // Worst case, episodes won't be synced
+                    try {
+                        syncSeasonsWithSource.await(seasons, target, targetSource)
+                    } catch (_: Exception) {
+                        // Worst case, seasons won't be synced
+                    }
+                }
+                // <-- AY
+                FetchType.Episodes -> {
+                    val episodes = targetSource.getEpisodeList(target.toSAnime())
+
+                    try {
+                        syncEpisodesWithSource.await(episodes, target, targetSource)
+                    } catch (_: Exception) {
+                        // Worst case, episodes won't be synced
+                    }
+                }
             }
 
             // Update episodes seen, bookmark and dateFetch
-            if (MigrationFlag.EPISODE in flags) {
+            // AY -->
+            if (MigrationFlag.EPISODE in flags && target.fetchType == FetchType.Episodes) {
+                // <-- AY
                 val prevAnimeEpisodes = getEpisodesByAnimeId.await(current.id)
                 val animeEpisodes = getEpisodesByAnimeId.await(target.id)
 
@@ -111,13 +138,25 @@ class MigrateAnimeUseCase(
                 ?.let { insertTrack.awaitAll(it) }
 
             // Delete downloaded
-            if (MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {
+            // AY -->
+            if (MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null &&
+                current.fetchType == FetchType.Episodes
+            ) {
+                // <-- AY
                 downloadManager.deleteAnime(current, currentSource)
             }
 
             // Update custom cover (recheck if custom cover exists)
             if (MigrationFlag.CUSTOM_COVER in flags && current.hasCustomCover()) {
                 coverCache.setCustomCoverToCache(target, coverCache.getCustomCoverFile(current.id).inputStream())
+            }
+
+            // Update custom background (recheck if custom background exists)
+            if (MigrationFlag.CUSTOM_BACKGROUND in flags && current.hasCustomBackground()) {
+                backgroundCache.setCustomBackgroundToCache(
+                    target,
+                    backgroundCache.getCustomBackgroundFile(current.id).inputStream(),
+                )
             }
 
             val currentAnimeUpdate = AnimeUpdate(

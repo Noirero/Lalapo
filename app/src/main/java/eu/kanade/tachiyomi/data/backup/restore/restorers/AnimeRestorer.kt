@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEpisode
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupTracking
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.FetchTypeColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.anime.interactor.FetchInterval
 import tachiyomi.domain.anime.interactor.GetAnimeByUrlAndSourceId
@@ -64,6 +65,9 @@ class AnimeRestorer(
         // AM (CUSTOM_INFORMATION) -->
         customInfo: CustomAnimeInfo?,
         // <-- AM (CUSTOM_INFORMATION)
+        // AY -->
+        backupSeasons: List<BackupAnime>,
+        // <-- AY
     ) {
         handler.await(inTransaction = true) {
             val dbAnime = findExistingAnime(backupAnime)
@@ -73,6 +77,20 @@ class AnimeRestorer(
             } else {
                 restoreExistingAnime(anime, dbAnime)
             }
+
+            // AY -->
+            backupSeasons.forEach { bs ->
+                val dbAnime = findExistingAnime(bs)
+                val anime = bs.getAnimeImpl().copy(
+                    parentId = restoredAnime.id,
+                )
+                if (dbAnime == null) {
+                    restoreNewAnime(anime)
+                } else {
+                    restoreExistingAnime(anime, dbAnime)
+                }
+            }
+            // <-- AY
 
             restoreAnimeDetails(
                 anime = restoredAnime,
@@ -95,9 +113,13 @@ class AnimeRestorer(
 
     private suspend fun restoreExistingAnime(anime: Anime, dbAnime: Anime): Anime {
         return if (anime.version > dbAnime.version) {
-            updateAnime(dbAnime.copyFrom(anime).copy(id = dbAnime.id))
+            updateAnime(
+                dbAnime.copyFrom(anime).copy(id = dbAnime.id, /* AY --> */ parentId = anime.parentId /* <-- AY */),
+            )
         } else {
-            updateAnime(anime.copyFrom(dbAnime).copy(id = dbAnime.id))
+            updateAnime(
+                anime.copyFrom(dbAnime).copy(id = dbAnime.id, /* AY --> */ parentId = anime.parentId /* <-- AY */),
+            )
         }
     }
 
@@ -114,6 +136,10 @@ class AnimeRestorer(
             // <-- AM (CUSTOM_INFORMATION)
             initialized = this.initialized || newer.initialized,
             version = newer.version,
+            // AY -->
+            fetchType = newer.fetchType,
+            parentId = newer.parentId,
+            // <-- AY
         )
     }
 
@@ -143,6 +169,15 @@ class AnimeRestorer(
                 version = anime.version,
                 isSyncing = 1,
                 notes = anime.notes,
+                // AY -->
+                fetchType = anime.fetchType.let(FetchTypeColumnAdapter::encode),
+                parentId = anime.parentId,
+                seasonFlags = anime.seasonFlags,
+                seasonNumber = anime.seasonNumber,
+                seasonSourceOrder = anime.seasonSourceOrder,
+                backgroundUrl = anime.backgroundUrl,
+                backgroundLastModified = anime.backgroundLastModified,
+                // <-- AY
             )
         }
         return anime
@@ -179,9 +214,9 @@ class AnimeRestorer(
                     .copy(
                         id = dbEpisode.id,
                         bookmark = episode.bookmark || dbEpisode.bookmark,
-                        // AM (FILLERMARK) -->
+                        // AY -->
                         fillermark = episode.fillermark || dbEpisode.fillermark,
-                        // <-- AM (FILLERMARK)
+                        // <-- AY
                     )
                 if (dbEpisode.seen && !updatedEpisode.seen) {
                     updatedEpisode = updatedEpisode.copy(
@@ -214,9 +249,9 @@ class AnimeRestorer(
                     episode.scanlator,
                     episode.seen,
                     episode.bookmark,
-                    // AM (FILLERMARK) -->
+                    // AY -->
                     episode.fillermark,
-                    // <-- AM (FILLERMARK)
+                    // <-- AY
                     episode.lastSecondSeen,
                     // AY -->
                     episode.totalSeconds,
@@ -226,6 +261,10 @@ class AnimeRestorer(
                     episode.dateFetch,
                     episode.dateUpload,
                     episode.version,
+                    // AY -->
+                    episode.summary,
+                    episode.previewUrl,
+                    // <-- AY
                 )
             }
         }
@@ -239,11 +278,15 @@ class AnimeRestorer(
                     url = null,
                     name = null,
                     scanlator = null,
+                    // AY -->
+                    summary = null,
+                    previewUrl = null,
+                    // <-- AY
                     seen = episode.seen,
                     bookmark = episode.bookmark,
-                    // AM (FILLERMARK) -->
+                    // AY -->
                     fillermark = episode.fillermark,
-                    // <-- AM (FILLERMARK)
+                    // <-- AY
                     lastSecondSeen = episode.lastSecondSeen,
                     // AY -->
                     totalSeconds = episode.totalSeconds,
@@ -289,6 +332,15 @@ class AnimeRestorer(
                 updateStrategy = anime.updateStrategy,
                 version = anime.version,
                 notes = anime.notes,
+                // AY -->
+                fetchType = anime.fetchType,
+                parentId = anime.parentId,
+                seasonFlags = anime.seasonFlags,
+                seasonNumber = anime.seasonNumber,
+                seasonSourceOrder = anime.seasonSourceOrder,
+                backgroundUrl = anime.backgroundUrl,
+                backgroundLastModified = anime.backgroundLastModified,
+                // <-- AY
             )
             animesQueries.selectLastInsertedRowId()
         }

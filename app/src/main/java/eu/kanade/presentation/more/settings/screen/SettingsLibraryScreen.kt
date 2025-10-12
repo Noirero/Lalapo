@@ -62,6 +62,9 @@ object SettingsLibraryScreen : SearchableSettings {
         return listOf(
             getCategoriesGroup(LocalNavigator.currentOrThrow, allCategories, libraryPreferences),
             getGlobalUpdateGroup(allCategories, libraryPreferences),
+            // AY -->
+            getSeasonBehaviorGroup(libraryPreferences),
+            // <-- AY
             getBehaviorGroup(libraryPreferences),
         )
     }
@@ -233,6 +236,27 @@ object SettingsLibraryScreen : SearchableSettings {
         )
     }
 
+    // AY -->
+    @Composable
+    private fun getSeasonBehaviorGroup(
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(AYMR.strings.pref_library_season),
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.updateSeasonOnRefresh(),
+                    title = stringResource(AYMR.strings.pref_update_seasons_refresh),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.updateSeasonOnLibraryUpdate(),
+                    title = stringResource(AYMR.strings.pref_update_seasons_update),
+                ),
+            ),
+        )
+    }
+    // <-- AY
+
     @Composable
     private fun getBehaviorGroup(
         libraryPreferences: LibraryPreferences,
@@ -247,10 +271,10 @@ object SettingsLibraryScreen : SearchableSettings {
                             stringResource(MR.strings.disabled),
                         LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to
                             stringResource(AYMR.strings.action_bookmark_episode),
-                        // AM (FILLERMARK) -->
+                        // AY -->
                         LibraryPreferences.EpisodeSwipeAction.ToggleFillermark to
-                            stringResource(AMMR.strings.action_fillermark_episode),
-                        // <-- AM (FILLERMARK)
+                            stringResource(AYMR.strings.action_fillermark_episode),
+                        // <-- AY
                         LibraryPreferences.EpisodeSwipeAction.ToggleSeen to
                             stringResource(AMMR.strings.am_action_mark_as_seen),
                         LibraryPreferences.EpisodeSwipeAction.Download to
@@ -265,10 +289,10 @@ object SettingsLibraryScreen : SearchableSettings {
                             stringResource(MR.strings.disabled),
                         LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to
                             stringResource(AYMR.strings.action_bookmark_episode),
-                        // AM (FILLERMARK) -->
+                        // AY -->
                         LibraryPreferences.EpisodeSwipeAction.ToggleFillermark to
-                            stringResource(AMMR.strings.action_fillermark_episode),
-                        // <-- AM (FILLERMARK)
+                            stringResource(AYMR.strings.action_fillermark_episode),
+                        // <-- AY
                         LibraryPreferences.EpisodeSwipeAction.ToggleSeen to
                             stringResource(AMMR.strings.am_action_mark_as_seen),
                         LibraryPreferences.EpisodeSwipeAction.Download to
