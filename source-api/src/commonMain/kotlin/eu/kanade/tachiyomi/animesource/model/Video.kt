@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.animesource.model
 
 import android.net.Uri
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.Headers
 
@@ -43,19 +42,19 @@ data class Video(
     val initialized: Boolean = false,
 ) {
 
-    // TODO(1.6): Remove after ext lib bump
+    // TODO(16): Remove after ext lib bump
     @Deprecated("Use videoTitle instead", ReplaceWith("videoTitle"))
     val quality: String
         get() = videoTitle
 
-    // TODO(1.6): Remove after ext lib bump
+    // TODO(16): Remove after ext lib bump
     val url: String
         get() = videoPageUrl
 
-    // TODO(1.6): Remove after ext lib bump
+    // TODO(16): Remove after ext lib bump
     private var videoPageUrl: String = ""
 
-    // TODO(1.6): Remove after ext lib bump
+    // TODO(16): Remove after ext lib bump
     constructor(
         url: String,
         quality: String,
@@ -70,10 +69,10 @@ data class Video(
         subtitleTracks = subtitleTracks,
         audioTracks = audioTracks,
     ) {
-        this.videoUrl = url
+        this.videoPageUrl = url
     }
 
-    // TODO(1.6): Remove after ext lib bump
+    // TODO(16): Remove after ext lib bump
     @Suppress("UNUSED_PARAMETER")
     constructor(
         url: String,

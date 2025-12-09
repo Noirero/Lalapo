@@ -177,7 +177,7 @@ class DownloadManager(
      */
     fun buildVideo(source: AnimeSource, anime: Anime, episode: Episode): Video {
         // AM (CUSTOM_INFORMATION) -->
-        val episodeDir = provider.findEpisodeDir(episode.name, episode.scanlator, anime.ogTitle, source)
+        val episodeDir = provider.findEpisodeDir(episode.name, episode.scanlator, episode.url, anime.ogTitle, source)
         // <-- AM (CUSTOM_INFORMATION)
         // AY -->
         val file = episodeDir?.listFiles().orEmpty()
@@ -190,10 +190,9 @@ class DownloadManager(
 
         // AY -->
         return Video(
-            file.uri.toString(),
-            "download: " + file.uri.toString(),
-            file.uri.toString(),
-            file.uri,
+            videoUrl = file.uri.toString(),
+            videoTitle = "download: " + file.uri.toString(),
+            initialized = true,
         ).apply { status = Video.State.READY }
         // <-- AY
     }
@@ -210,11 +209,12 @@ class DownloadManager(
     fun isEpisodeDownloaded(
         episodeName: String,
         episodeScanlator: String?,
+        episodeUrl: String,
         animeTitle: String,
         sourceId: Long,
         skipCache: Boolean = false,
     ): Boolean {
-        return cache.isEpisodeDownloaded(episodeName, episodeScanlator, animeTitle, sourceId, skipCache)
+        return cache.isEpisodeDownloaded(episodeName, episodeScanlator, episodeUrl, animeTitle, sourceId, skipCache)
     }
 
     /**
@@ -423,7 +423,7 @@ class DownloadManager(
      * @param newEpisode the target episode with the new name.
      */
     suspend fun renameEpisode(source: AnimeSource, anime: Anime, oldEpisode: Episode, newEpisode: Episode) {
-        val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator)
+        val oldNames = provider.getValidEpisodeDirNames(oldEpisode.name, oldEpisode.scanlator, oldEpisode.url)
         // AM (CUSTOM_INFORMATION) -->
         val animeDir = provider.getAnimeDir(anime.ogTitle, source).getOrElse { e ->
             logcat(LogPriority.ERROR, e) { "Anime download folder doesn't exist. Skipping renaming after source sync" }
@@ -436,7 +436,7 @@ class DownloadManager(
             .mapNotNull { animeDir.findFile(it) }
             .firstOrNull() ?: return
 
-        val newName = provider.getEpisodeDirName(newEpisode.name, newEpisode.scanlator)
+        val newName = provider.getEpisodeDirName(newEpisode.name, newEpisode.scanlator, newEpisode.url)
         if (oldDownload.name == newName) return
 
         if (oldDownload.renameTo(newName)) {
