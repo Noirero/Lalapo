@@ -11,8 +11,14 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.3.0] - 2025-12-25
 ### Fixed
 - Fix navigation pill background disappearing on older devices ([@Secozzi](https://github.com/Secozzi)) ([#114](https://github.com/quickdesh/Animiru/pull/114))
+- Fix anilist format nullability breaking search ([@Secozzi](https://github.com/Secozzi)) ([#116](https://github.com/quickdesh/Animiru/pull/116))
+
+### Other
+- Merged from Aniyomi and Mihon ([@Secozzi](https://github.com/Secozzi)) ([#115](https://github.com/quickdesh/Animiru/pull/115))
 
 ## [v0.19.0.0] - 2025-12-24
 ### Changed
@@ -48,6 +54,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.17.2.0...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.3.0...animiru-new-main
+[v0.19.3.0]: https://github.com/quickdesh/Animiru/compare/v0.19.0.0...v0.19.3.0
+[v0.19.0.0]: https://github.com/quickdesh/Animiru/compare/v0.17.2.0...v0.19.0.0
 [v0.17.2.0]: https://github.com/quickdesh/Animiru/compare/v0.17.1.0...v0.17.2.0
 [v0.17.1.0]: https://github.com/quickdesh/Animiru/compare/v0.17.0.0...v0.17.1.0
