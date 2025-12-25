@@ -11,6 +11,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.3.1] - 2025-12-25
 ### Fixed
 - Make the scrollbar on the anime screen less buggy ([@Secozzi](https://github.com/Secozzi)) ([#118](https://github.com/quickdesh/Animiru/pull/118))
 
@@ -56,7 +58,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.3.0...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.3.1...animiru-new-main
+[v0.19.3.1]: https://github.com/quickdesh/Animiru/compare/v0.19.3.0...v0.19.3.1
 [v0.19.3.0]: https://github.com/quickdesh/Animiru/compare/v0.19.0.0...v0.19.3.0
 [v0.19.0.0]: https://github.com/quickdesh/Animiru/compare/v0.17.2.0...v0.19.0.0
 [v0.17.2.0]: https://github.com/quickdesh/Animiru/compare/v0.17.1.0...v0.17.2.0
