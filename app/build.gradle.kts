@@ -308,7 +308,7 @@ dependencies {
 
     // AY -->
     // mpv-android
-    implementation(aniyomilibs.aniyomi.mpv)
+    implementation(aniyomilibs.mpv.lib)
 
     // FFmpeg-kit
     implementation(aniyomilibs.ffmpeg.kit)
