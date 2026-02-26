@@ -12,6 +12,10 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 
 ## [Unreleased]
 
+## [v0.19.4.0] - 2026-02-26
+### Other
+- Merged from Mihon ([@Secozzi](https://github.com/Secozzi)) ([#131](https://github.com/quickdesh/Animiru/pull/131))
+
 ## [v0.19.3.2] - 2026-02-23
 ### Added
 - Added option to automatically select another video on failure to load current one ([@Secozzi](https://github.com/Secozzi)) ([#132](https://github.com/quickdesh/Animiru/pull/132))
@@ -70,7 +74,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.3.2...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.4.0...animiru-new-main
+[v0.19.4.0]: https://github.com/quickdesh/Animiru/compare/v0.19.3.2...v0.19.4.0
 [v0.19.3.2]: https://github.com/quickdesh/Animiru/compare/v0.19.3.1...v0.19.3.2
 [v0.19.3.1]: https://github.com/quickdesh/Animiru/compare/v0.19.3.0...v0.19.3.1
 [v0.19.3.0]: https://github.com/quickdesh/Animiru/compare/v0.19.0.0...v0.19.3.0
