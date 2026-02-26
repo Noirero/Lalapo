@@ -937,6 +937,13 @@ class AnimeScreenModel(
         return if (anime.sortDescending()) episodesSorted.reversed() else episodesSorted
     }
 
+    private fun getBookmarkedEpisodes(): List<Episode> {
+        return filteredEpisodes
+            .orEmpty()
+            .filter { (episode, dlStatus) -> episode.bookmark && dlStatus == Download.State.NOT_DOWNLOADED }
+            .map { it.episode }
+    }
+
     private fun startDownload(
         episodes: List<Episode>,
         startNow: Boolean,
@@ -1008,6 +1015,7 @@ class AnimeScreenModel(
             DownloadAction.NEXT_10_EPISODES -> getUnseenEpisodesSorted().take(10)
             DownloadAction.NEXT_25_EPISODES -> getUnseenEpisodesSorted().take(25)
             DownloadAction.UNSEEN_EPISODES -> getUnseenEpisodes()
+            DownloadAction.BOOKMARKED_EPISODES -> getBookmarkedEpisodes()
         }
         if (episodesToDownload.isNotEmpty()) {
             startDownload(episodesToDownload, false)
@@ -1558,7 +1566,6 @@ class AnimeScreenModel(
     fun toggleSelection(
         item: EpisodeList.Item,
         selected: Boolean,
-        userSelected: Boolean = false,
         fromLongPress: Boolean = false,
     ) {
         updateSuccessState { successState ->
@@ -1573,7 +1580,7 @@ class AnimeScreenModel(
                 set(selectedIndex, selectedItem.copy(selected = selected))
                 selectedEpisodeIds.addOrRemove(item.id, selected)
 
-                if (selected && userSelected && fromLongPress) {
+                if (selected && fromLongPress) {
                     if (firstSelection) {
                         selectedPositions[0] = selectedIndex
                         selectedPositions[1] = selectedIndex
@@ -1599,7 +1606,7 @@ class AnimeScreenModel(
                             }
                         }
                     }
-                } else if (userSelected && !fromLongPress) {
+                } else if (!fromLongPress) {
                     if (!selected) {
                         if (selectedIndex == selectedPositions[0]) {
                             selectedPositions[0] = indexOfFirst { it.selected }

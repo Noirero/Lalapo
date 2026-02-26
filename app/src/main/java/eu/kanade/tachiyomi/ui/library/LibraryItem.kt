@@ -3,8 +3,11 @@ package eu.kanade.tachiyomi.ui.library
 import eu.kanade.tachiyomi.source.getNameForAnimeInfo
 import tachiyomi.domain.library.model.LibraryAnime
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+
+private const val LOCAL_SOURCE_ID_ALIAS = "local"
 
 data class LibraryItem(
     val libraryAnime: LibraryAnime,
@@ -23,9 +26,17 @@ data class LibraryItem(
      * @return true if the anime matches the query, false otherwise.
      */
     fun matches(constraint: String): Boolean {
-        val sourceName by lazy { sourceManager.getOrStub(libraryAnime.anime.source).getNameForAnimeInfo() }
+        val source = sourceManager.getOrStub(libraryAnime.anime.source)
+        val sourceName by lazy { source.getNameForAnimeInfo() }
         if (constraint.startsWith("id:", true)) {
             return id == constraint.substringAfter("id:").toLongOrNull()
+        } else if (constraint.startsWith("src:", true)) {
+            val querySource = constraint.substringAfter("src:")
+            return if (querySource.equals(LOCAL_SOURCE_ID_ALIAS, ignoreCase = true)) {
+                source.id == LocalSource.ID
+            } else {
+                source.id == querySource.toLongOrNull()
+            }
         }
         return libraryAnime.anime.title.contains(constraint, true) ||
             (libraryAnime.anime.author?.contains(constraint, true) ?: false) ||
