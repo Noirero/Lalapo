@@ -11,6 +11,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.4.1] - 2026-03-15
 ### Improved
 - Added option to toggle subtitle rendering on black bars ([@Secozzi](https://github.com/Secozzi)) ([#134](https://github.com/quickdesh/Animiru/pull/134))
 - Remove line limit for videos in quality sheet ([@Secozzi](https://github.com/Secozzi)) ([#135](https://github.com/quickdesh/Animiru/pull/135))
@@ -77,7 +79,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.4.0...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.4.1...animiru-new-main
+[v0.19.4.1]: https://github.com/quickdesh/Animiru/compare/v0.19.4.0...v0.19.4.1
 [v0.19.4.0]: https://github.com/quickdesh/Animiru/compare/v0.19.3.2...v0.19.4.0
 [v0.19.3.2]: https://github.com/quickdesh/Animiru/compare/v0.19.3.1...v0.19.3.2
 [v0.19.3.1]: https://github.com/quickdesh/Animiru/compare/v0.19.3.0...v0.19.3.1
