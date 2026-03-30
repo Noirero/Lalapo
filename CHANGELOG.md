@@ -11,8 +11,17 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.4.2] - 2026-03-30
 ### Added
-- Added two-way sync for enhanced trackers ([@Secozzi](https://github.com/Secozzi)) ([#137](https://github.com/quickdesh/Animiru/pull/137))
+- Added season support for (enhanced) trackers ([@Secozzi](https://github.com/Secozzi)) ([#139](https://github.com/quickdesh/Animiru/pull/139))
+- Added smart sync option for seasons ([@Secozzi](https://github.com/Secozzi)) ([#140](https://github.com/quickdesh/Animiru/pull/140))
+
+### Improved
+- Improved two-way sync for enhanced trackers ([@Secozzi](https://github.com/Secozzi)) ([#138](https://github.com/quickdesh/Animiru/pull/138))
+
+### Fixed
+- Fixed Jellyfin tracking for movies and entries with no episodes ([@Secozzi](https://github.com/Secozzi)) ([#140](https://github.com/quickdesh/Animiru/pull/140))
 
 ## [v0.19.4.1] - 2026-03-15
 ### Improved
@@ -81,7 +90,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.4.1...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.4.2...animiru-new-main
+[v0.19.4.2]: https://github.com/quickdesh/Animiru/compare/v0.19.4.1...v0.19.4.2
 [v0.19.4.1]: https://github.com/quickdesh/Animiru/compare/v0.19.4.0...v0.19.4.1
 [v0.19.4.0]: https://github.com/quickdesh/Animiru/compare/v0.19.3.2...v0.19.4.0
 [v0.19.3.2]: https://github.com/quickdesh/Animiru/compare/v0.19.3.1...v0.19.3.2
