@@ -11,11 +11,16 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.7.0] - 2026-03-30
 ### Added
 - Add parent title to user-data in lua ([@Secozzi](https://github.com/Secozzi)) ([#142](https://github.com/quickdesh/Animiru/pull/142))
 
 ### Fixed
 - Fix "Override ASS/SSA subtitles" option ([@Secozzi](https://github.com/Secozzi)) ([#141](https://github.com/quickdesh/Animiru/pull/141))
+
+### Other
+- Merged from Mihon ([@Secozzi](https://github.com/Secozzi)) ([#136](https://github.com/quickdesh/Animiru/pull/136))
 
 ## [v0.19.4.2] - 2026-03-30
 ### Added
@@ -95,7 +100,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.4.2...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.7.0...animiru-new-main
+[v0.19.7.0]: https://github.com/quickdesh/Animiru/compare/v0.19.4.2...v0.19.7.0
 [v0.19.4.2]: https://github.com/quickdesh/Animiru/compare/v0.19.4.1...v0.19.4.2
 [v0.19.4.1]: https://github.com/quickdesh/Animiru/compare/v0.19.4.0...v0.19.4.1
 [v0.19.4.0]: https://github.com/quickdesh/Animiru/compare/v0.19.3.2...v0.19.4.0
