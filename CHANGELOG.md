@@ -11,6 +11,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.7.3] - 2026-04-17
 ### Improved
 - Allow options in mpv.conf to override options set by `AniyomiMPVView` ([@Secozzi](https://github.com/Secozzi)) ([#151](https://github.com/quickdesh/Animiru/pull/151))
 
@@ -117,8 +119,9 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.7.2...animiru-new-main
-[v0.19.7.1]: https://github.com/quickdesh/Animiru/compare/v0.19.7.1...v0.19.7.2
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.7.3...animiru-new-main
+[v0.19.7.3]: https://github.com/quickdesh/Animiru/compare/v0.19.7.2...v0.19.7.3
+[v0.19.7.2]: https://github.com/quickdesh/Animiru/compare/v0.19.7.1...v0.19.7.2
 [v0.19.7.1]: https://github.com/quickdesh/Animiru/compare/v0.19.7.0...v0.19.7.1
 [v0.19.7.0]: https://github.com/quickdesh/Animiru/compare/v0.19.4.2...v0.19.7.0
 [v0.19.4.2]: https://github.com/quickdesh/Animiru/compare/v0.19.4.1...v0.19.4.2
