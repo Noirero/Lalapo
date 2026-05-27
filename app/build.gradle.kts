@@ -1,17 +1,17 @@
-import mihon.buildlogic.Config
-import mihon.buildlogic.getBuildTime
-import mihon.buildlogic.getCommitCount
-import mihon.buildlogic.getGitSha
+import mihon.gradle.Config
+import mihon.gradle.getBuildTime
+import mihon.gradle.getLatestCommitCount
+import mihon.gradle.getLatestCommitSha
+import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 
 plugins {
-    id("mihon.android.application")
-    id("mihon.android.application.compose")
-    id("com.github.zellius.shortcut-helper")
-    kotlin("plugin.serialization")
-    alias(libs.plugins.aboutLibraries)
-}
+    alias(mihonx.plugins.android.application)
+    alias(mihonx.plugins.compose)
+    alias(mihonx.plugins.spotless)
 
-shortcutHelper.setFilePath("./shortcuts.xml")
+    alias(libs.plugins.aboutLibraries)
+    alias(libs.plugins.kotlin.serialization)
+}
 
 android {
     namespace = "eu.kanade.tachiyomi"
@@ -22,9 +22,9 @@ android {
         versionCode = 140
         versionName = "0.19.7.3"
 
-        buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
-        buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
-        buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = false)}\"")
+        buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
+        buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
+        buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -33,7 +33,7 @@ android {
     buildTypes {
         val debug by getting {
             applicationIdSuffix = ".dev"
-            versionNameSuffix = "-${getCommitCount()}"
+            versionNameSuffix = "-${getLatestCommitCount()}"
             isPseudoLocalesEnabled = true
         }
         val release by getting {
@@ -42,7 +42,7 @@ android {
 
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
 
-            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = true)}\"")
+            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = true)}\"")
         }
 
         val commonMatchingFallbacks = listOf(release.name)
@@ -57,7 +57,7 @@ android {
 
             matchingFallbacks.addAll(commonMatchingFallbacks)
 
-            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = false)}\"")
+            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         }
         create("benchmark") {
             initWith(release)
@@ -74,8 +74,8 @@ android {
     }
 
     sourceSets {
-        getByName("preview").res.srcDirs("src/debug/res")
-        getByName("benchmark").res.srcDirs("src/debug/res")
+        getByName("preview").res.directories.add("src/debug/res")
+        getByName("benchmark").res.directories.add("src/debug/res")
     }
 
     splits {
@@ -138,10 +138,6 @@ android {
         viewBinding = true
         buildConfig = true
         aidl = true
-
-        // Disable some unused things
-        renderScript = false
-        shaders = false
     }
 
     lint {
@@ -189,81 +185,81 @@ dependencies {
     implementation(projects.presentationWidget)
 
     // Compose
-    implementation(compose.activity)
-    implementation(compose.foundation)
-    implementation(compose.material3.core)
-    implementation(compose.material.icons)
-    implementation(compose.animation)
-    implementation(compose.animation.graphics)
-    debugImplementation(compose.ui.tooling)
-    implementation(compose.ui.tooling.preview)
-    implementation(compose.ui.util)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.materialIcons)
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animationGraphics)
+    debugImplementation(libs.androidx.compose.uiTooling)
+    implementation(libs.androidx.compose.uiToolingPreview)
+    implementation(libs.androidx.compose.uiUtil)
 
-    implementation(androidx.interpolator)
+    implementation(libs.androidx.interpolator)
 
-    implementation(androidx.paging.runtime)
-    implementation(androidx.paging.compose)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
 
-    implementation(androidx.sqlite.bundled)
+    implementation(libs.androidx.sqlite.bundled)
 
-    implementation(kotlinx.reflect)
-    implementation(kotlinx.immutables)
+    implementation(libs.kotlin.reflect)
+    implementation(libs.kotlinx.collections.immutable)
 
-    implementation(platform(kotlinx.coroutines.bom))
-    implementation(kotlinx.bundles.coroutines)
+    implementation(libs.bundles.kotlinx.coroutines)
+
+    implementation(libs.sqldelight.async)
 
     // AndroidX libraries
-    implementation(androidx.annotation)
-    implementation(androidx.appcompat)
-    implementation(androidx.biometricktx)
-    implementation(androidx.constraintlayout)
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.appCompat)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.constraintLayout)
     // AY -->
     implementation(aniyomilibs.compose.constraintlayout)
     // <-- AY
-    implementation(androidx.corektx)
-    implementation(androidx.splashscreen)
-    implementation(androidx.recyclerview)
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.coreSplashScreen)
+    implementation(libs.androidx.recyclerView)
     // AM (REMOVE_LIBRARIES) -->
-    // implementation(androidx.viewpager)
+    // implementation(libs.androidx.viewPager)
     // <-- AM (REMOVE_LIBRARIES)
-    implementation(androidx.profileinstaller)
+    implementation(libs.androidx.profileInstaller)
     // AY -->
     implementation(aniyomilibs.mediasession)
     // <-- AY
 
-    implementation(androidx.bundles.lifecycle)
+    implementation(libs.bundles.androidx.lifecycle)
 
     // Job scheduling
-    implementation(androidx.workmanager)
+    implementation(libs.androidx.work)
 
     // RxJava
-    implementation(libs.rxjava)
+    implementation(libs.rxJava)
 
     // Networking
     implementation(libs.bundles.okhttp)
     implementation(libs.okio)
-    implementation(libs.conscrypt.android) // TLS 1.3 support for Android < 10
+    implementation(libs.conscrypt) // TLS 1.3 support for Android < 10
 
     // Data serialization (JSON, protobuf, xml)
-    implementation(kotlinx.bundles.serialization)
+    implementation(libs.bundles.serialization)
 
     // HTML parser
     implementation(libs.jsoup)
 
     // Disk
-    implementation(libs.disklrucache)
+    implementation(libs.diskLruCache)
     implementation(libs.unifile)
 
     // Preferences
-    implementation(libs.preferencektx)
+    implementation(libs.androidx.preference)
 
     // Dependency injection
     implementation(libs.injekt)
 
     // Image loading
-    implementation(platform(libs.coil.bom))
     implementation(libs.bundles.coil)
-    implementation(libs.subsamplingscaleimageview) {
+    implementation(libs.subsamplingScaleImageView) {
         exclude(module = "image-decoder")
     }
     // AM (REMOVE_LIBRARIES) -->
@@ -272,20 +268,20 @@ dependencies {
 
     // UI libraries
     implementation(libs.material)
-    implementation(libs.flexible.adapter.core)
+    implementation(libs.flexibleAdapter)
     // AM (REMOVE_LIBRARIES) -->
-    // implementation(libs.photoview)
-    // implementation(libs.directionalviewpager) {
+    // implementation(libs.photoView)
+    // implementation(libs.directionalViewPager) {
     //     exclude(group = "androidx.viewpager", module = "viewpager")
     // }
     // <-- AM (REMOVE_LIBRARIES)
-    implementation(libs.richeditor.compose)
+    implementation(libs.composeRichEditor)
     implementation(libs.aboutLibraries.compose)
     implementation(libs.bundles.voyager)
-    implementation(libs.compose.materialmotion)
+    implementation(libs.composeMaterialMotion)
     implementation(libs.swipe)
-    implementation(libs.compose.webview)
-    implementation(libs.compose.grid)
+    implementation(libs.composeWebview)
+    implementation(libs.composeGrid)
     implementation(libs.reorderable)
     implementation(libs.bundles.markdown)
     implementation(libs.materialKolor)
@@ -304,9 +300,9 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 
     // For detecting memory leaks; see https://square.github.io/leakcanary/
-    // debugImplementation(libs.leakcanary.android)
+    // debugImplementation(libs.leakCanary.android)
     // AM (REMOVE_LIBRARIES) -->
-    // implementation(libs.leakcanary.plumber)
+    // implementation(libs.leakCanary.plumber)
     // <-- AM (REMOVE_LIBRARIES)
 
     // AY -->
@@ -329,19 +325,26 @@ dependencies {
     implementation(aniyomilibs.google.api.client.oauth)
     // <-- AM (SYNC_DRIVE)
 
-    testImplementation(kotlinx.coroutines.test)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 androidComponents {
+    onVariants { variant ->
+        val resSource = variant.sources.res ?: return@onVariants
+
+        val variantName = variant.name.replaceFirstChar { it.uppercase() }
+        val replaceShortcutsPlaceholderTask = tasks.register<ReplaceShortcutsPlaceholderTask>(
+            "replace${variantName}ShortcutPlaceholder",
+        ) {
+            applicationId.set(variant.applicationId)
+            shortcutsFile.set(projectDir.resolve("src/main/shortcuts.xml"))
+        }
+        resSource.addGeneratedSourceDirectory(replaceShortcutsPlaceholderTask) { it.outputDir }
+    }
+
     onVariants(selector().withFlavor("default" to "standard")) {
         // Only excluding in standard flavor because this breaks
         // Layout Inspector's Compose tree
         it.packaging.resources.excludes.add("META-INF/*.version")
-    }
-}
-
-buildscript {
-    dependencies {
-        classpath(kotlinx.gradle)
     }
 }

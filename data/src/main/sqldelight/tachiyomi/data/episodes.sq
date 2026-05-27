@@ -111,6 +111,11 @@ insert:
 INSERT INTO episodes(anime_id, url, name, scanlator, seen, bookmark, fillermark, last_second_seen, total_seconds, episode_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, summary, preview_url)
 VALUES (:animeId, :url, :name, :scanlator, :seen, :bookmark, :fillermark, :lastSecondSeen, :totalSeconds, :episodeNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :summary, :previewUrl);
 
+insertReturningId:
+INSERT INTO episodes(anime_id, url, name, scanlator, seen, bookmark, fillermark, last_second_seen, total_seconds, episode_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, summary, preview_url)
+VALUES (:animeId, :url, :name, :scanlator, :seen, :bookmark, :fillermark, :lastSecondSeen, :totalSeconds, :episodeNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :summary, :previewUrl)
+RETURNING _id;
+
 update:
 UPDATE episodes
 SET anime_id = coalesce(:animeId, anime_id),
@@ -137,6 +142,3 @@ SET anime_id = coalesce(:animeId, anime_id),
     preview_url = coalesce(:previewUrl, preview_url)
     -- <-- AY
 WHERE _id = :episodeId;
-
-selectLastInsertedRowId:
-SELECT last_insert_rowid();
