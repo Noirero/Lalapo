@@ -11,6 +11,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.7.4] - 2026-05-27
 ### Added
 - Added system font fallback ([@Secozzi](https://github.com/Secozzi)) ([#156](https://github.com/quickdesh/Animiru/pull/156))
 
@@ -124,7 +126,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.7.3...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.7.4...animiru-new-main
+[v0.19.7.4]: https://github.com/quickdesh/Animiru/compare/v0.19.7.3...v0.19.7.4
 [v0.19.7.3]: https://github.com/quickdesh/Animiru/compare/v0.19.7.2...v0.19.7.3
 [v0.19.7.2]: https://github.com/quickdesh/Animiru/compare/v0.19.7.1...v0.19.7.2
 [v0.19.7.1]: https://github.com/quickdesh/Animiru/compare/v0.19.7.0...v0.19.7.1
