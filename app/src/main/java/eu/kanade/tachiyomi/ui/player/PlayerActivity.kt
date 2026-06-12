@@ -943,7 +943,12 @@ class PlayerActivity : BaseActivity() {
             }
         }
 
-        val videoOptions = video.mpvArgs.joinToString(",") { (option, value) ->
+        // We handle selecting these in the viewmodel
+        val mpvOpts = listOf(
+            Pair("sid", "no"),
+            Pair("aid", "no"),
+        )
+        val videoOptions = (video.mpvArgs + mpvOpts).joinToString(",") { (option, value) ->
             "$option=\"$value\""
         }
 
@@ -1112,8 +1117,7 @@ class PlayerActivity : BaseActivity() {
         setMpvMediaTitle()
         setupPlayerOrientation()
         setupChapters()
-        viewModel.setPausedState()
-        viewModel.updateIsLoadingEpisode(false)
+        viewModel.checkFileLoaded()
 
         // aniSkip stuff
         viewModel.viewModelScope.launchIO {
