@@ -1,32 +1,40 @@
-| Stable                                                                                                                                                     | Discord Server                                                                                                                                          | Translate Aniyomi                                                                                                                                 |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| [![stable release](https://img.shields.io/github/release/Quickdesh/Animiru.svg?maxAge=3600&label=download)](https://github.com/Quickdesh/Animiru/releases) | [![Discord](https://img.shields.io/discord/1009125884491468861?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yDuHDMwxhv) | [![Translation status](https://hosted.weblate.org/widgets/aniyomi/-/svg-badge.svg)](https://hosted.weblate.org/engage/aniyomi/?utm_source=widget) |
-
 <div align="center">
 
-# ![app icon](.github/readme-images/app-icon.png)Animiru
-Animiru is a fork of [Aniyomi](https://github.com/jmir1/aniyomi)
+<a href="https://aniyomi.org">
+    <img src="./.github/assets/logo.png" alt="Animiru logo" title="Animiru logo" width="80"/>
+</a>
 
-</div>
-<div align="left">
+# Animiru [App](#)
+Animiru is a fork of [Aniyomi](https://github.com/aniyomiorg/aniyomi)
+
+### Full-featured video player
+Discover and watch anime, donghua, eries, and more – easier than ever on your Android device.
+[![Discord server](https://img.shields.io/discord/1009125884491468861.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/yDuHDMwxhv)
+[![GitHub downloads](https://img.shields.io/github/downloads/quickdesh/Animiru/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/quickdesh/Animiru/releases/latest)
+
+[![CI](https://img.shields.io/github/actions/workflow/status/quickdesh/Animiru/build.yml?labelColor=27303D)](https://github.com/quickdesh/Animiru/actions/workflows/release.yml)
+[![License: Apache-2.0](https://img.shields.io/github/license/quickdesh/Animiru?labelColor=27303D&color=0877d2)](/LICENSE)
+[![Translation status](https://img.shields.io/weblate/progress/aniyomi?labelColor=27303D&color=946300)](https://hosted.weblate.org/engage/aniyomi/)
+
+## Download
+
+[![Animiru](https://img.shields.io/github/release/quickdesh/Animiru.svg?maxAge=3600&label=Stable&labelColor=06599d&color=043b69)](https://github.com/quickdesh/Animiru/releases/latest)
+
+*Requires Android 8.0 or higher.*
 
 ## Features
+
+<div align="left">
 
 Features include:
 * Watch videos
 * Local watching of downloaded content
 * A configurable player built on mpv-android with multiple options and settings
-* Tracker support: [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.io/), [MangaUpdates](https://mangaupdates.com), [Shikimori](https://shikimori.one), and [Bangumi](https://bgm.tv/)
+* Tracker support: [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.app/), [Shikimori](https://shikimori.io), and [Bangumi](https://bgm.tv/)
 * Categories to organize your library
 * Light and dark themes
-* Create backups locally to read/watch offline or to your desired cloud service
-
-## Download
-Get the app from the [releases page](https://github.com/Quickdesh/Animiru/releases).
-
-## Issues, Feature Requests and Contributing
-
-Please make sure to read the full guidelines. Your issue may be closed without warning if you do not.
+* Create backups locally to watch offline or to your desired cloud service
+* Plus much more...
 
 </div>
 
@@ -36,19 +44,20 @@ Please make sure to read the full guidelines. Your issue may be closed without w
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Before reporting a new issue, take a look at the [FAQ](https://aniyomi.org/docs/faq/general), the [changelog](https://aniyomi.org/changelogs/) and the already opened [issues](https://github.com/aniyomiorg/aniyomi/issues); if you got any questions, join our [Discord server](https://discord.gg/F32UjdJZrR).
+Before reporting a new issue, take a look at the [FAQ](https://aniyomi.org/docs/faq/general), the [changelog](https://github.com/quickdesh/Animiru/blob/animiru-new-main/CHANGELOG.md) and the already opened [issues](https://github.com/quickdesh/Animiru/issues); if you got any questions, join our [Discord server](https://discord.gg/yDuHDMwxhv).
+
 
 ### Repositories
 
-[![aniyomiorg/aniyomi-website - GitHub](https://github-readme-stats.vercel.app/api/pin/?username=aniyomiorg&repo=aniyomi-website&bg_color=161B22&text_color=c9d1d9&title_color=818cf8&icon_color=818cf8&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/aniyomiorg/aniyomi-website/)
-[![aniyomiorg/aniyomi-mpv-lib - GitHub](https://github-readme-stats.vercel.app/api/pin/?username=aniyomiorg&repo=aniyomi-mpv-lib&bg_color=161B22&text_color=c9d1d9&title_color=818cf8&icon_color=818cf8&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/aniyomiorg/aniyomi-mpv-lib/)
+[![Secozzi/mpv-android - GitHub](https://github-stats-extended.vercel.app/api/pin?username=Secozzi&repo=mpv-android&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/Secozzi/mpv-android/)
+[![jmir1/ffmpeg-kit - GitHub](https://github-stats-extended.vercel.app/api/pin?username=jmir1&repo=ffmpeg-kit&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/jmir1/ffmpeg-kit/)
 
 ### Credits
 
 Thank you to all the people who have contributed!
 
-<a href="https://github.com/aniyomiorg/aniyomi/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=aniyomiorg/aniyomi" alt="Aniyomi app contributors" title="Aniyomi app contributors" width="800"/>
+<a href="https://github.com/quickdesh/Animiru/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=quickdesh/Animiru" alt="Animiru app contributors" title="Animiru app contributors" width="800"/>
 </a>
 
 ### Disclaimer
