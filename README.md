@@ -9,6 +9,7 @@ Animiru is a fork of [Aniyomi](https://github.com/aniyomiorg/aniyomi)
 
 ### Full-featured video player
 Discover and watch anime, donghua, eries, and more – easier than ever on your Android device.
+
 [![Discord server](https://img.shields.io/discord/1009125884491468861.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/yDuHDMwxhv)
 [![GitHub downloads](https://img.shields.io/github/downloads/quickdesh/Animiru/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/quickdesh/Animiru/releases/latest)
 
