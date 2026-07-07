@@ -11,6 +11,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+## [v0.19.7.8] - 2026-07-07
 ### Added
 - Added option to skip broken tracks on download ([@Secozzi](https://github.com/Secozzi)) ([#169](https://github.com/quickdesh/Animiru/pull/169))
 
@@ -151,7 +153,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.7.7...animiru-new-main
+[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.19.7.8...animiru-new-main
+[v0.19.7.8]: https://github.com/quickdesh/Animiru/compare/v0.19.7.7...v0.19.7.8
 [v0.19.7.7]: https://github.com/quickdesh/Animiru/compare/v0.19.7.6...v0.19.7.7
 [v0.19.7.6]: https://github.com/quickdesh/Animiru/compare/v0.19.7.5...v0.19.7.6
 [v0.19.7.5]: https://github.com/quickdesh/Animiru/compare/v0.19.7.4...v0.19.7.5
