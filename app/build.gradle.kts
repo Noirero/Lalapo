@@ -20,7 +20,7 @@ android {
         applicationId = "xyz.Quickdev.Animiru.mi"
 
         versionCode = 144
-        versionName = "0.19.7.8"
+        versionName = "0.19.7.9"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
