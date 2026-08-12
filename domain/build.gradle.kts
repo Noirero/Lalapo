@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.common)
     // AM (GROUPING) -->
     implementation(projects.i18n)
+    implementation(projects.i18nAniyomi)
     implementation(projects.i18nAnimiru)
     // <-- AM (GROUPING)
 
@@ -36,6 +37,9 @@ dependencies {
 
     compileOnly(platform(libs.androidx.compose.bom))
     compileOnly(libs.androidx.compose.runtimeAnnotation)
+    // AM (CAST) -->
+    compileOnly(libs.androidx.compose.foundation)
+    // <-- AM (CAST)
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)

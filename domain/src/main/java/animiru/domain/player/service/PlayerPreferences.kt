@@ -1,7 +1,7 @@
-package eu.kanade.tachiyomi.ui.player.settings
+package animiru.domain.player.service
 
-import eu.kanade.tachiyomi.ui.player.PlayerOrientation
-import eu.kanade.tachiyomi.ui.player.VideoAspect
+import animiru.domain.player.model.PlayerOrientation
+import animiru.domain.player.model.VideoAspect
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
@@ -69,6 +69,14 @@ class PlayerPreferences(
     val pipEpisodeToasts: Preference<Boolean> = preferenceStore.getBoolean("pref_pip_episode_toasts", true)
     val pipOnExit: Preference<Boolean> = preferenceStore.getBoolean("pref_pip_on_exit", false)
     val pipReplaceWithPrevious: Preference<Boolean> = preferenceStore.getBoolean("pip_replace_with_previous", false)
+
+    // AM (CAST) -->
+    // Cast
+
+    val enableCast: Preference<Boolean> = preferenceStore.getBoolean("pref_enable_cast", true)
+    val castProxy: Preference<Boolean> = preferenceStore.getBoolean("pref_enable_cast_proxy", true)
+    val castProxyPort: Preference<String> = preferenceStore.getString("pref_cast_proxy_port", "8091")
+    // <-- AM (CAST)
 
     // External player
 

@@ -32,7 +32,6 @@ import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.toFFmpegString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +64,7 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNow
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
+import tachiyomi.core.common.util.system.createFileInCacheDir
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.download.service.DownloadPreferences

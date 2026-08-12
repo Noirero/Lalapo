@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package eu.kanade.tachiyomi.ui.player.controls.components
+package eu.kanade.tachiyomi.ui.player.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -41,11 +41,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.vivvvek.seeker.Segment
+import eu.kanade.tachiyomi.ui.player.utils.ChapterUtils
 import `is`.xyz.mpv.Utils
 import tachiyomi.presentation.core.components.material.padding
 
@@ -53,12 +55,14 @@ import tachiyomi.presentation.core.components.material.padding
 fun CurrentChapter(
     chapter: Segment,
     modifier: Modifier = Modifier,
+    background: Color = MaterialTheme.colorScheme.background,
+    onBackground: Color = MaterialTheme.colorScheme.onBackground,
     onClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(25))
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.6F))
+            .background(background.copy(alpha = 0.6F))
             .clickable(onClick = onClick)
             .padding(horizontal = MaterialTheme.padding.mediumSmall, vertical = MaterialTheme.padding.small),
     ) {
@@ -87,7 +91,7 @@ fun CurrentChapter(
                     modifier = Modifier
                         .padding(end = MaterialTheme.padding.extraSmall)
                         .size(16.dp),
-                    tint = MaterialTheme.colorScheme.onBackground,
+                    tint = onBackground,
                 )
                 Text(
                     text = Utils.prettyTime(currentChapter.start.toInt()),
@@ -102,17 +106,17 @@ fun CurrentChapter(
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = onBackground,
                     overflow = TextOverflow.Clip,
                 )
                 Text(
-                    text = chapter.name,
+                    text = chapter.name.substringBeforeLast(ChapterUtils.ANIYOMI_CHAPTER_IDENTIFIER),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = onBackground,
                 )
             }
         }

@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import animiru.domain.player.service.PlayerPreferences
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.track.model.toDbTrack
 import eu.kanade.domain.track.service.DelayedTrackingUpdateJob
@@ -26,7 +27,6 @@ import eu.kanade.tachiyomi.source.isNsfw
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
-import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.isOnline
 import eu.kanade.tachiyomi.util.system.toast

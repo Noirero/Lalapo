@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.player
 
 import android.app.Application
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.net.Uri
@@ -12,6 +13,19 @@ import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import animiru.domain.player.interactor.TrackSelect
+import animiru.domain.player.model.ArtType
+import animiru.domain.player.model.CustomKeyCodes
+import animiru.domain.player.model.PlayerOrientation
+import animiru.domain.player.model.SetAsArt
+import animiru.domain.player.model.SingleActionGesture
+import animiru.domain.player.model.VideoAspect
+import animiru.domain.player.service.AudioPreferences
+import animiru.domain.player.service.DecoderPreferences
+import animiru.domain.player.service.GesturePreferences
+import animiru.domain.player.service.PlayerPreferences
+import animiru.domain.player.service.SubtitlePreferences
+import animiru.feature.cast.CastProxyServerService
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
@@ -41,6 +55,7 @@ import eu.kanade.tachiyomi.data.database.models.isRecognizedNumber
 import eu.kanade.tachiyomi.data.database.models.toDomainEpisode
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.player.service.HttpServerService
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.saver.Location
@@ -48,24 +63,22 @@ import eu.kanade.tachiyomi.data.torrent.service.TorrentServerService
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
+import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.player.cast.CastDialog
+import eu.kanade.tachiyomi.ui.player.cast.CastSheet
+import eu.kanade.tachiyomi.ui.player.cast.CastUiData
+import eu.kanade.tachiyomi.ui.player.components.HosterState
+import eu.kanade.tachiyomi.ui.player.components.getChangedAt
 import eu.kanade.tachiyomi.ui.player.controls.components.IndexedSegment
-import eu.kanade.tachiyomi.ui.player.controls.components.sheets.HosterState
-import eu.kanade.tachiyomi.ui.player.controls.components.sheets.getChangedAt
 import eu.kanade.tachiyomi.ui.player.domain.AudioManager
 import eu.kanade.tachiyomi.ui.player.domain.BrightnessManager
-import eu.kanade.tachiyomi.ui.player.domain.TrackSelect
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
 import eu.kanade.tachiyomi.ui.player.mpv.ChapterNode
 import eu.kanade.tachiyomi.ui.player.mpv.MPVPlayer
+import eu.kanade.tachiyomi.ui.player.mpv.MpvVideoTrack
 import eu.kanade.tachiyomi.ui.player.mpv.TrackNode
 import eu.kanade.tachiyomi.ui.player.mpv.TrackState
-import eu.kanade.tachiyomi.ui.player.mpv.VideoTrack
-import eu.kanade.tachiyomi.ui.player.settings.AudioPreferences
-import eu.kanade.tachiyomi.ui.player.settings.DecoderPreferences
-import eu.kanade.tachiyomi.ui.player.settings.GesturePreferences
-import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
-import eu.kanade.tachiyomi.ui.player.settings.SubtitlePreferences
 import eu.kanade.tachiyomi.ui.player.utils.AniSkipApi
 import eu.kanade.tachiyomi.ui.player.utils.ChapterUtils
 import eu.kanade.tachiyomi.ui.player.utils.ChapterUtils.Companion.getStringRes
@@ -77,8 +90,10 @@ import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.lang.takeBytes
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
+import eu.kanade.tachiyomi.util.system.getWanIp
 import `is`.xyz.mpv.MPVNode
 import `is`.xyz.mpv.Utils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -97,8 +112,17 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
+import okhttp3.Headers
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import tachiyomi.cast.CastEvent
+import tachiyomi.cast.CastManager
+import tachiyomi.cast.domain.TrackInformation
+import tachiyomi.cast.domain.VideoInformation
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -122,6 +146,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.track.interactor.GetTracks
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
@@ -180,6 +205,10 @@ class PlayerViewModel @JvmOverloads constructor(
     // AM (SYNC) -->
     private val syncPreferences: SyncPreferences = Injekt.get(),
     // <-- AM (SYNC)
+    // AM --> (CAST)
+    internal val castManager: CastManager = Injekt.get(),
+    private val videoInformation: VideoInformation = Injekt.get(),
+    // <-- AM (CAST)
 ) : AndroidViewModel(context) {
     val videoOutput = if (decoderPreferences.gpuNext.get()) "gpu-next" else "gpu"
 
@@ -196,6 +225,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val invertDuration = playerPreferences.invertDuration.get()
     private val smoothSeeking = gesturePreferences.playerSmoothSeek.get()
     private val showChapterIndicator = playerPreferences.showCurrentChapter.get()
+    private val enableCast = playerPreferences.enableCast.get()
 
     private val aniSkipEnabled = playerPreferences.aniSkipEnabled.get()
     private val disableAniSkipOnChapters = playerPreferences.disableAniSkipOnChapters.get()
@@ -212,6 +242,8 @@ class PlayerViewModel @JvmOverloads constructor(
     private val showStatusBar = playerPreferences.showSystemStatusBar.get()
     private val downloadAheadAmount = downloadPreferences.autoDownloadWhileWatching.get()
     private val progress = playerPreferences.progressPreference.get()
+    private val castProxy = playerPreferences.castProxy.get()
+    private val castProxyPort = playerPreferences.castProxyPort.get().toInt()
 
     private val fontExtensionRegex = Regex($$""".*\.[ot]tf$""")
     private val maxVolume = audioManager.getMaxVolume()
@@ -237,6 +269,7 @@ class PlayerViewModel @JvmOverloads constructor(
             invertDuration = invertDuration,
             smoothSeeking = smoothSeeking,
             showChapterIndicator = showChapterIndicator,
+            enableCast = enableCast,
         ),
     )
     val uiData = _uiData.asStateFlow()
@@ -257,6 +290,13 @@ class PlayerViewModel @JvmOverloads constructor(
         ),
     )
     val playbackData = _playbackData.asStateFlow()
+    private val _castUiData = MutableStateFlow(
+        CastUiData(
+            invertDurationTimer = invertDuration,
+            showChapterIndicator = showChapterIndicator,
+        ),
+    )
+    val castUiData = _castUiData.asStateFlow()
 
     private val _aspectRatio = MutableStateFlow<Double?>(null)
     val aspectRatio = _aspectRatio.asStateFlow()
@@ -291,6 +331,10 @@ class PlayerViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             player.eventFlow
                 .onEach { handlePlayerFlow(it) }
+                .launchIn(viewModelScope)
+
+            castManager.castEvent
+                .onEach { handleCastFlow(it) }
                 .launchIn(viewModelScope)
 
             playerPreferences.autoplayEnabled.changes()
@@ -404,6 +448,10 @@ class PlayerViewModel @JvmOverloads constructor(
         _playbackData.update { update(it) }
     }
 
+    private fun updateCastUiData(update: (CastUiData) -> CastUiData) {
+        _castUiData.update { update(it) }
+    }
+
     inline fun <reified T> propFlow(name: String): StateFlow<T?> {
         return mpv.propFlow<T>(name)
     }
@@ -502,9 +550,7 @@ class PlayerViewModel @JvmOverloads constructor(
                 onSkipIntro()
             }
             PlayerEvent.ToggleDurationTimer -> {
-                val newValue = !uiData.value.invertDuration
-                playerPreferences.invertDuration.set(newValue)
-                updateUiData { it.copy(invertDuration = newValue) }
+                toggleDurationTimer()
             }
         }
     }
@@ -516,6 +562,76 @@ class PlayerViewModel @JvmOverloads constructor(
             MPVPlayer.Event.FileLoaded -> fileLoaded()
             is MPVPlayer.Event.LuaEvent -> handleLuaInvocation(event.property, event.value)
             is MPVPlayer.Event.TrackLoadFailure -> onTrackLoadedFailure(event.url)
+        }
+    }
+
+    fun handleCastFlow(event: CastEvent) {
+        val castState = castManager.castState.value
+        when (event) {
+            CastEvent.ConnectionError -> {
+                updateStateData {
+                    it.copy(
+                        isCasting = false,
+                        isLoadingCasting = false,
+                        isErrorCasting = true,
+                    )
+                }
+                stopHttpServerService()
+            }
+            CastEvent.ConnectionStart -> {
+                updateStateData {
+                    it.copy(
+                        isCasting = false,
+                        isLoadingCasting = true,
+                        isErrorCasting = false,
+                    )
+                }
+            }
+            CastEvent.Connected -> {
+                updateStateData {
+                    it.copy(
+                        isCasting = castState.isConnected,
+                        isLoadingCasting = false,
+                        isErrorCasting = false,
+                    )
+                }
+
+                if (castState.isConnected && !castState.hasLoadedVideo) {
+                    val position = playbackData.value.position.toLong()
+                    startCasting(startPosition = position)
+                }
+            }
+            is CastEvent.Disconnected -> {
+                updateStateData {
+                    it.copy(
+                        isCasting = false,
+                        isLoadingCasting = false,
+                        isErrorCasting = false,
+                    )
+                }
+
+                context.stopService(Intent(context, CastProxyServerService::class.java))
+                stopHttpServerService()
+            }
+            is CastEvent.NextEpisode -> {
+                nextEpisode(next = event.next)
+            }
+            is CastEvent.OnSecondReached -> {
+                onSecondReached(position = event.position, isCasting = true)
+            }
+            is CastEvent.PlaybackError -> {
+            }
+            is CastEvent.TrackLoadResult -> {
+                trackLoaded(event.trackId, event.success, event.isAudio)
+            }
+            CastEvent.Ready -> {
+                updateCastUiData { it.copy(isLoadingEpisode = false) }
+            }
+            CastEvent.LoadingFailed -> {
+                viewModelScope.launch {
+                    _eventFlow.emit(Event.ToastResource(AMMR.strings.cast_server_load_failed))
+                }
+            }
         }
     }
 
@@ -648,11 +764,14 @@ class PlayerViewModel @JvmOverloads constructor(
                     ?: throw ExceptionWithStringResource("No episode loaded", AYMR.strings.no_episode_loaded)
                 setupEpisode(episode)
 
+                val skipIntroLength = getAnimeSkipIntroLength()
+                updateCastUiData { it.copy(skipIntroLength = skipIntroLength.toLong()) }
+
                 // Write to mpv table
                 val parentTitle = anime.parentId?.let { getAnime.await(it)?.title } ?: ""
                 setPropertyString("user-data/current-anime/anime-title", anime.title)
                 setPropertyString("user-data/current-anime/parent-title", parentTitle)
-                setPropertyInt("user-data/current-anime/intro-length", getAnimeSkipIntroLength())
+                setPropertyInt("user-data/current-anime/intro-length", skipIntroLength)
                 setPropertyString(
                     "user-data/current-anime/category",
                     getCategories.await(anime.id).joinToString {
@@ -850,6 +969,381 @@ class PlayerViewModel @JvmOverloads constructor(
             }
         }
         updatePlaybackData { it.copy(currentOrientation = orientation) }
+    }
+
+    // === Casting ===
+
+    private fun stopHttpServerService() {
+        context.stopService(Intent(context, HttpServerService::class.java))
+    }
+
+    private fun getProxyUrl(address: String, url: String, headers: Headers, isTorrent: Boolean): String {
+        if (isTorrent) return url
+        if (url.toHttpUrlOrNull()?.host?.startsWith(address) == true) return url
+
+        return "http://$address:$castProxyPort".toHttpUrl().newBuilder().apply {
+            addPathSegment("proxy")
+            addQueryParameter("url", url)
+            addQueryParameter("header", json.encodeToString(headers.toMap()))
+        }.build().toString()
+    }
+
+    private fun getLocalUrl(address: String, url: String): String {
+        return "http://$address:$castProxyPort".toHttpUrl().newBuilder().apply {
+            addPathSegment("local")
+            addQueryParameter("url", url)
+        }.build().toString()
+    }
+
+    private fun String.setToLocal(): String {
+        return toHttpUrl().newBuilder().apply {
+            host("localhost")
+            port(1)
+        }.build().toString()
+    }
+
+    private fun startCasting(startPosition: Long = 0) {
+        var video = stateData.value.currentVideo ?: return
+        val source = stateData.value.currentSource ?: return
+        val anime = stateData.value.currentAnime ?: return
+        val episode = stateData.value.currentEpisode ?: return
+
+        if (!player.isExiting) {
+            mpvCommand("stop")
+        }
+
+        pause()
+        updatePlaybackData {
+            it.copy(currentOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+        }
+        updateStateData {
+            it.copy(
+                hasLoadedTracks = false,
+                hasLoadedSubs = false,
+                hasLoadedAudio = false,
+            )
+        }
+
+        viewModelScope.launch {
+            val address = context.getWanIp() ?: "127.0.0.1"
+            val isTorrent = torrentPreferences.torrServerEnable.get() && isTorrent(video)
+
+            // If the video already requires a http server, we need to relaunch it with the service.
+            if (httpServer != null) {
+                stopHttpServer()
+                val (success, port) = MainActivity.startHttpServerService(context, source.id)
+                if (!success) {
+                    _eventFlow.emit(Event.ToastResource(AYMR.strings.http_server_start_failure))
+                    return@launch
+                }
+
+                video = video
+                    .copy(
+                        videoUrl = video.videoUrl.setToLocal(),
+                        subtitleTracks = video.subtitleTracks.map {
+                            it.copy(url = it.url.setToLocal())
+                        },
+                        audioTracks = video.audioTracks.map {
+                            it.copy(url = it.url.setToLocal())
+                        },
+                    )
+                    .copyHttpServer(port)
+            }
+
+            if (isTorrent) {
+                video = withIOContext {
+                    TorrentServerService.start()
+                    val videoUrl = getTorrentUrl(video.videoUrl, video.videoTitle).toHttpUrl().newBuilder()
+                        .host(address)
+                        .build()
+                        .toString()
+                    video.copy(
+                        videoUrl = videoUrl,
+                    )
+                }
+            } else if (stateData.value.isEpisodeOnline && castProxy) {
+                context.startService(
+                    Intent(context, CastProxyServerService::class.java)
+                        .putExtra(CastProxyServerService.EXTRA_ADDRESS, address),
+                )
+
+                val isReady = withTimeoutOrNull(5.seconds) {
+                    CastProxyServerService.isRunning.first { it }
+                }
+
+                if (isReady != true) {
+                    _eventFlow.emit(Event.ToastResource(AMMR.strings.cast_server_start_failed))
+                    stopCasting()
+                    return@launch
+                }
+            }
+
+            val headers = video.headers
+                ?: (source as? AnimeHttpSource)?.headers
+                ?: Headers.EMPTY
+
+            val codecInformation = withContext(Dispatchers.IO) {
+                videoInformation.getVideoInformation(
+                    videoUrl = video.videoUrl,
+                    headers = headers,
+                )
+            }
+
+            val videoHeaders = video.headers ?: Headers.EMPTY
+
+            val video = if (!stateData.value.isEpisodeOnline) {
+                video.copy(
+                    videoUrl = getLocalUrl(address, video.videoUrl),
+                )
+            } else if (castProxy) {
+                video.copy(
+                    videoUrl = getProxyUrl(address, video.videoUrl, videoHeaders, isTorrent),
+                    subtitleTracks = video.subtitleTracks.map {
+                        it.copy(url = getProxyUrl(address, it.url, videoHeaders, isTorrent))
+                    },
+                    audioTracks = video.audioTracks.map {
+                        it.copy(url = getProxyUrl(address, it.url, videoHeaders, isTorrent))
+                    },
+                )
+            } else {
+                video
+            }
+
+            val maxIndex = codecInformation.tracks.maxByOrNull { it.index }?.index?.plus(1) ?: 1
+            val externalSubtitleTracks = video.subtitleTracks.mapIndexed { index, track ->
+                TrackInformation(
+                    index = maxIndex + index,
+                    type = "subtitle",
+                    contentType = videoInformation.getSubtitleContentType(track.url),
+                    title = track.lang,
+                    language = "und",
+                    contentId = track.url,
+                )
+            }
+            val externalAudioTracks = video.audioTracks.mapIndexed { index, track ->
+                TrackInformation(
+                    index = maxIndex + externalSubtitleTracks.size + index,
+                    type = "audio",
+                    contentType = videoInformation.getAudioContentType(track.url),
+                    title = track.lang,
+                    language = "und",
+                    contentId = track.url,
+                )
+            }
+            val subtitleTracks = codecInformation.tracks.filter { it.type == "subtitle" } + externalSubtitleTracks
+            val audioTracks = codecInformation.tracks.filter { it.type == "audio" } + externalAudioTracks
+            val preferredSubtitle = trackSelect.getPreferredTrackIndex(subtitleTracks, subtitle = true)
+            val preferredAudio = trackSelect.getPreferredTrackIndex(audioTracks, subtitle = false)
+
+            val chapters = ChapterUtils.mergeChapters(
+                currentChapters = codecInformation.chapters.sortedBy { it.startTime }.map {
+                    IndexedSegment(
+                        name = it.name,
+                        start = it.startTime.toFloat(),
+                    )
+                },
+                stamps = video.timestamps + stateData.value.aniskipChapters,
+                codecInformation.duration?.toInt(),
+            ).map { it.toSegment() }
+
+            updateCastUiData {
+                it.copy(
+                    duration = codecInformation.duration?.toLong() ?: 0L,
+                    subTracks = subtitleTracks,
+                    audioTracks = audioTracks,
+                    currentSubId = preferredSubtitle?.index ?: -1L,
+                    currentAudioId = preferredAudio?.index ?: -1L,
+                    chapters = chapters,
+                )
+            }
+
+            loadAniSkip(codecInformation.chapters.size, codecInformation.duration?.toInt())
+
+            castManager.stopRemoteMediaClient()
+            castManager.startCasting(
+                video = video,
+                videoInformation = codecInformation,
+                subtitleTracks = subtitleTracks,
+                audioTracks = audioTracks,
+                subtitleId = preferredSubtitle?.index,
+                audioId = preferredAudio?.index,
+                anime = anime,
+                episodeTitle = episode.name,
+                startPosition = startPosition,
+                playbackRate = mpv.getPropertyDouble("speed") ?: 1.0,
+            )
+        }
+    }
+
+    fun stopCasting() {
+        castManager.disconnect()
+        updateStateData { it.copy(isCasting = false) }
+        updateUiData { it.copy(isLoadingEpisode = true) }
+        val video = stateData.value.currentVideo
+        setVideo(video)
+        unpause()
+    }
+
+    fun setCastSheet(sheet: CastSheet) {
+        updateCastUiData { it.copy(sheetShown = sheet) }
+        if (sheet == CastSheet.None) {
+            resetDismissSheet()
+        }
+    }
+
+    fun setCastDialog(dialog: CastDialog) {
+        updateCastUiData { it.copy(dialogShown = dialog) }
+    }
+
+    fun selectTrack(track: TrackInformation, isAudio: Boolean) {
+        if (isAudio) {
+            updateCastUiData {
+                val index = it.audioTracks.indexOfFirst { t -> track.index == t.index }
+                it.copy(
+                    audioTracks = it.audioTracks.toMutableList().apply {
+                        this[index] = this[index].copy(loading = true, error = false)
+                    }.toList(),
+                )
+            }
+        } else {
+            updateCastUiData {
+                val index = it.subTracks.indexOfFirst { t -> track.index == t.index }
+                it.copy(
+                    subTracks = it.subTracks.toMutableList().apply {
+                        this[index] = this[index].copy(loading = true, error = false)
+                    }.toList(),
+                )
+            }
+        }
+
+        castManager.loadTrack(track.index, isAudio)
+    }
+
+    private fun trackLoaded(id: Long, success: Boolean, isAudio: Boolean) {
+        if (isAudio) {
+            updateCastUiData {
+                val index = it.audioTracks.indexOfFirst { t -> id == t.index }
+                it.copy(
+                    audioTracks = it.audioTracks.toMutableList().apply {
+                        this[index] = this[index].copy(loading = false, error = !success)
+                    }.toList(),
+                    currentAudioId = if (success) id else castManager.castState.value.lastLoadedAudioId,
+                )
+            }
+        } else {
+            updateCastUiData {
+                val index = it.subTracks.indexOfFirst { t -> id == t.index }
+                it.copy(
+                    subTracks = it.subTracks.toMutableList().apply {
+                        this[index] = this[index].copy(loading = false, error = !success)
+                    }.toList(),
+                    currentSubId = if (success) id else castManager.castState.value.lastLoadedSubId,
+                )
+            }
+        }
+    }
+
+    fun castSetSkipIntroLength(value: Long) {
+        updateCastUiData { it.copy(skipIntroLength = value) }
+        setAnimeSkipIntroLength(value)
+    }
+
+    fun castOnSeekIntro() {
+        castManager.seekBy(castUiData.value.skipIntroLength)
+    }
+
+    fun castSeekTo(value: Long) {
+        castManager.seekTo(value)
+    }
+
+    fun castStartSeek(position: Float) {
+        updateCastUiData {
+            it.copy(
+                seekPosition = position,
+                isSeeking = true,
+            )
+        }
+    }
+
+    fun castEndSeek() {
+        castManager.seekTo(castUiData.value.seekPosition.toLong())
+        updateCastUiData {
+            it.copy(isSeeking = false)
+        }
+    }
+
+    private fun castOnChapterChanged(chapter: Segment?) {
+        updateCastUiData { it.copy(currentChapter = chapter) }
+        if (chapter == null) {
+            updateCastUiData {
+                it.copy(
+                    skipIntroText = null,
+                    netflixTimeout = null,
+                )
+            }
+            return
+        }
+
+        val chapterType = chapter.getChapterType()
+        if (chapterType == ChapterType.Other) {
+            updateCastUiData {
+                it.copy(
+                    skipIntroText = null,
+                    netflixTimeout = null,
+                )
+            }
+        } else {
+            if (netflixStyle) {
+                // show a toast with the seconds before the skip
+                viewModelScope.launch {
+                    _eventFlow.emit(
+                        Event.ToastString(
+                            "Skip Intro: ${context.stringResource(
+                                AYMR.strings.player_aniskip_dontskip_toast,
+                                chapter.name.substringBeforeLast(ChapterUtils.ANIYOMI_CHAPTER_IDENTIFIER),
+                                defaultWaitingTime,
+                            )}",
+                        ),
+                    )
+                }
+                updateCastUiData {
+                    it.copy(
+                        skipIntroText = context.stringResource(AYMR.strings.player_aniskip_dontskip),
+                        netflixTimeout = defaultWaitingTime,
+                    )
+                }
+            } else if (autoSkip) {
+                castSkipIntro(chapter)
+            } else {
+                updateSkipIntroButton(chapterType)
+            }
+        }
+    }
+
+    private fun Segment.getChapterType(): ChapterType {
+        return name.substringAfterLast(
+            delimiter = ChapterUtils.ANIYOMI_CHAPTER_IDENTIFIER,
+            missingDelimiterValue = ChapterType.Other.ordinal.toString(),
+        ).toInt().let { ChapterType.entries[it] }
+    }
+
+    fun castOnSkipIntro() {
+        val chapter = castUiData.value.currentChapter ?: return
+        if ((castUiData.value.netflixTimeout ?: 0) > 0 && netflixStyle) {
+            updateCastUiData { it.copy(netflixTimeout = null) }
+            updateSkipIntroButton(chapter.getChapterType())
+            return
+        }
+
+        updateCastUiData { it.copy(netflixTimeout = null) }
+        castSkipIntro(chapter)
+    }
+
+    private fun castSkipIntro(chapter: Segment) {
+        val nextChapterStart = castUiData.value.chapters.filter { it.start > chapter.start }
+            .minByOrNull { it.start }?.start?.toLong()
+            ?: castUiData.value.duration
+        castManager.seekTo(nextChapterStart)
     }
 
     // === Load ===
@@ -1070,27 +1564,43 @@ class PlayerViewModel @JvmOverloads constructor(
         if (video == null) return
         stopHttpServer()
 
-        updateStateData { it.copy(isStopped = false) }
-        setHttpOptions(video)
-
-        if (uiData.value.isLoadingEpisode) {
+        val castState = castManager.castState.value
+        val isLoadingEpisode = if (castState.hasLoadedVideo) {
+            castUiData.value.isLoadingEpisode
+        } else {
+            uiData.value.isLoadingEpisode
+        }
+        val resumePosition = if (isLoadingEpisode) {
             stateData.value.currentEpisode?.let { episode ->
                 val preservePos = playerPreferences.preserveWatchingPosition.get()
-                val resumePosition = if (episode.seen && !preservePos) {
+                if (episode.seen && !preservePos) {
                     0L
                 } else {
-                    episode.last_second_seen
+                    episode.last_second_seen / 1000L
                 }
-                mpvCommand("set", "start", "${resumePosition / 1000F}")
             }
+        } else if (castState.hasLoadedVideo) {
+            castState.position
         } else {
-            mpvCommand("set", "start", playbackData.value.position.toString())
+            playbackData.value.position.toLong()
+        }
+
+        if (stateData.value.isCasting) {
+            startCasting(startPosition = resumePosition ?: 0L)
+            return
+        }
+
+        updateStateData { it.copy(isStopped = false) }
+        setHttpOptions(video)
+        resumePosition?.let {
+            mpvCommand("set", "start", it.toString())
         }
 
         // We handle selecting these in the viewmodel
         val mpvOpts = listOf(
             Pair("sid", "no"),
             Pair("aid", "no"),
+            Pair("vid", "auto"),
         )
         val videoOptions = (video.mpvArgs + mpvOpts).joinToString(",") { (option, value) ->
             "$option=\"$value\""
@@ -1133,22 +1643,24 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     private suspend fun torrentLinkHandler(videoUrl: String, title: String, videoOptions: String) {
+        val videoTorrentUrl = getTorrentUrl(videoUrl, title)
+        mpvCommand(
+            "loadfile",
+            videoTorrentUrl,
+            "replace",
+            "0",
+            videoOptions,
+        )
+    }
+
+    private suspend fun getTorrentUrl(videoUrl: String, title: String): String {
         var index = 0
 
         // check if link is from localSource
         if (videoUrl.startsWith("content://")) {
             val videoInputStream = context.contentResolver.openInputStream(videoUrl.toUri())
             val torrent = torrentServerApi.uploadTorrent(videoInputStream!!, title, false)
-            val torrentUrl = torrentServerUtils.getTorrentPlayLink(torrent, 0)
-
-            mpvCommand(
-                "loadfile",
-                torrentUrl,
-                "replace",
-                "0",
-                videoOptions,
-            )
-            return
+            return torrentServerUtils.getTorrentPlayLink(torrent, 0)
         }
 
         // check if link is from magnet, in that check if index is present
@@ -1163,15 +1675,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
 
         val currentTorrent = torrentServerApi.addTorrent(videoUrl, title, "", "", false)
-        val videoTorrentUrl = torrentServerUtils.getTorrentPlayLink(currentTorrent, index)
-
-        mpvCommand(
-            "loadfile",
-            videoTorrentUrl,
-            "replace",
-            "0",
-            videoOptions,
-        )
+        return torrentServerUtils.getTorrentPlayLink(currentTorrent, index)
     }
 
     private fun isTorrent(video: Video): Boolean {
@@ -1302,7 +1806,9 @@ class PlayerViewModel @JvmOverloads constructor(
         viewModelScope.launchIO {
             val success = loadVideo(video, hosterIndex, videoIndex)
             if (success) {
-                if (uiData.value.sheetShown == Sheets.QualityTracks) {
+                if (uiData.value.sheetShown == Sheets.QualityTracks ||
+                    castUiData.value.sheetShown == CastSheet.Quality
+                ) {
                     dismissSheet()
                 }
             }
@@ -1365,11 +1871,23 @@ class PlayerViewModel @JvmOverloads constructor(
 
         // AniSkip stuff
         val chapterCount = mpv.getPropertyInt("chapter-list/count") ?: 0
+        val duration = playbackData.value.duration
+        loadAniSkip(chapterCount, duration)
+    }
+
+    private fun loadAniSkip(chapterCount: Int, duration: Int?) {
         viewModelScope.launchIO {
             if (introSkipEnabled && aniSkipEnabled && !(disableAniSkipOnChapters && chapterCount > 0)) {
-                aniSkipResponse(playbackData.value.duration)?.let {
-                    addTimeStamps(it)
+                aniSkipResponse(duration)?.let { stamps ->
+                    updateStateData { it.copy(aniskipChapters = stamps) }
+                    if (!stateData.value.isCasting) {
+                        addTimeStamps(stamps)
+                    }
+                } ?: run {
+                    updateStateData { it.copy(aniskipChapters = emptyList()) }
                 }
+            } else {
+                updateStateData { it.copy(aniskipChapters = emptyList()) }
             }
         }
     }
@@ -1500,9 +2018,9 @@ class PlayerViewModel @JvmOverloads constructor(
         updateStateData {
             it.copy(
                 subtitleTracks = tracks.filter { it.isSubtitle }
-                    .filterNot { it.title?.startsWith(VideoTrack.TRACK_TITLE_TAG) == true },
+                    .filterNot { it.title?.startsWith(MpvVideoTrack.TRACK_TITLE_TAG) == true },
                 audioTracks = tracks.filter { it.isAudio }
-                    .filterNot { it.title?.startsWith(VideoTrack.TRACK_TITLE_TAG) == true },
+                    .filterNot { it.title?.startsWith(MpvVideoTrack.TRACK_TITLE_TAG) == true },
             )
         }
 
@@ -1521,10 +2039,10 @@ class PlayerViewModel @JvmOverloads constructor(
      */
     private fun onTrackAdded(tracks: List<TrackNode>) {
         val externalSubtitle = tracks.filter {
-            it.isSubtitle && it.title?.startsWith(VideoTrack.TRACK_TITLE_TAG) == true
+            it.isSubtitle && it.title?.startsWith(MpvVideoTrack.TRACK_TITLE_TAG) == true
         }
         val externalAudio = tracks.filter {
-            it.isAudio && it.title?.startsWith(VideoTrack.TRACK_TITLE_TAG) == true
+            it.isAudio && it.title?.startsWith(MpvVideoTrack.TRACK_TITLE_TAG) == true
         }
 
         externalSubtitle.forEach { track ->
@@ -1537,7 +2055,7 @@ class PlayerViewModel @JvmOverloads constructor(
             }
 
             updateSubtitleTrackAt(idx) {
-                it.copy(id = track.id, state = TrackState.Loaded, language = track.getLanguage())
+                it.copy(id = track.id, state = TrackState.Loaded, lang = track.getLanguage())
             }
             updateStateData { it.copy(hasLoadedSubs = true) }
             checkFileLoaded()
@@ -1554,7 +2072,7 @@ class PlayerViewModel @JvmOverloads constructor(
             }
 
             updateAudioTrackAt(idx) {
-                it.copy(id = track.id, state = TrackState.Loaded, language = track.getLanguage())
+                it.copy(id = track.id, state = TrackState.Loaded, lang = track.getLanguage())
             }
             updateStateData { it.copy(hasLoadedAudio = true) }
             checkFileLoaded()
@@ -1570,9 +2088,9 @@ class PlayerViewModel @JvmOverloads constructor(
         val embeddedAudio = tracks.filter { it.isAudio }
         val currentVideo = stateData.value.currentVideo
         val externalSubs = currentVideo?.subtitleTracks.orEmpty().distinctBy { it.url }
-            .mapIndexed { idx, track -> VideoTrack.External(track, idx) }
+            .mapIndexed { idx, track -> MpvVideoTrack.External(track, idx) }
         val externalAudio = currentVideo?.audioTracks.orEmpty().distinctBy { it.url }
-            .mapIndexed { idx, track -> VideoTrack.External(track, idx) }
+            .mapIndexed { idx, track -> MpvVideoTrack.External(track, idx) }
 
         updateStateData {
             it.copy(
@@ -1582,7 +2100,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
 
         val preferredSubtitle = trackSelect.getPreferredTrackIndex(
-            tracks = embeddedSubs.map { VideoTrack.Internal(it) } + externalSubs,
+            tracks = embeddedSubs.map { MpvVideoTrack.Internal(it) } + externalSubs,
             subtitle = true,
         )
         if (preferredSubtitle == null) {
@@ -1592,7 +2110,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
 
         val preferredAudio = trackSelect.getPreferredTrackIndex(
-            tracks = embeddedAudio.map { VideoTrack.Internal(it) } + externalAudio,
+            tracks = embeddedAudio.map { MpvVideoTrack.Internal(it) } + externalAudio,
             subtitle = false,
         )
         if (preferredAudio == null) {
@@ -1602,7 +2120,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    private fun updateSubtitleTrackAt(index: Int, transform: (VideoTrack.External) -> VideoTrack.External) {
+    private fun updateSubtitleTrackAt(index: Int, transform: (MpvVideoTrack.External) -> MpvVideoTrack.External) {
         updateStateData {
             it.copy(
                 externalSubtitleTracks = it.externalSubtitleTracks.toMutableList().apply {
@@ -1612,7 +2130,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    private fun updateAudioTrackAt(index: Int, transform: (VideoTrack.External) -> VideoTrack.External) {
+    private fun updateAudioTrackAt(index: Int, transform: (MpvVideoTrack.External) -> MpvVideoTrack.External) {
         updateStateData {
             it.copy(
                 externalAudioTracks = it.externalAudioTracks.toMutableList().apply {
@@ -1635,9 +2153,9 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    fun selectSub(track: VideoTrack) {
+    fun selectSub(track: MpvVideoTrack) {
         when (track) {
-            is VideoTrack.External -> {
+            is MpvVideoTrack.External -> {
                 if (track.id == null) {
                     updateSubtitleTrackAt(track.index) {
                         it.copy(state = TrackState.Loading)
@@ -1647,7 +2165,7 @@ class PlayerViewModel @JvmOverloads constructor(
                             "sub-add",
                             track.data.url,
                             "auto",
-                            "${VideoTrack.TRACK_TITLE_TAG}=${track.index}",
+                            "${MpvVideoTrack.TRACK_TITLE_TAG}=${track.index}",
                         )
                     }
                 } else {
@@ -1656,7 +2174,7 @@ class PlayerViewModel @JvmOverloads constructor(
                     selectSubById(track.id)
                 }
             }
-            is VideoTrack.Internal -> {
+            is MpvVideoTrack.Internal -> {
                 updateStateData { it.copy(hasLoadedSubs = true) }
                 checkFileLoaded()
                 selectSubById(track.data.id)
@@ -1710,9 +2228,9 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    fun selectAudio(track: VideoTrack, force: Boolean = false) {
+    fun selectAudio(track: MpvVideoTrack, force: Boolean = false) {
         when (track) {
-            is VideoTrack.External -> {
+            is MpvVideoTrack.External -> {
                 if (track.id == null) {
                     updateAudioTrackAt(track.index) {
                         it.copy(state = TrackState.Loading)
@@ -1722,7 +2240,7 @@ class PlayerViewModel @JvmOverloads constructor(
                             "audio-add",
                             track.data.url,
                             "auto",
-                            "${VideoTrack.TRACK_TITLE_TAG}=${track.index}",
+                            "${MpvVideoTrack.TRACK_TITLE_TAG}=${track.index}",
                         )
                     }
                 } else {
@@ -1731,7 +2249,7 @@ class PlayerViewModel @JvmOverloads constructor(
                     selectAudioById(track.id, force)
                 }
             }
-            is VideoTrack.Internal -> {
+            is MpvVideoTrack.Internal -> {
                 updateStateData { it.copy(hasLoadedAudio = true) }
                 checkFileLoaded()
                 selectAudioById(track.data.id, force)
@@ -1841,7 +2359,7 @@ class PlayerViewModel @JvmOverloads constructor(
         val currentIndex = stateData.value.currentPlaylistIndex
         val newIndex = if (next) currentIndex + 1 else currentIndex - 1
 
-        if (newIndex !in 0..<stateData.value.currentPlaylist.size) return
+        if (newIndex !in stateData.value.currentPlaylist.indices) return
         val episodeId = stateData.value.currentPlaylist.getOrNull(newIndex)?.id ?: return
 
         changeEpisode(episodeId, autoplay)
@@ -1854,8 +2372,13 @@ class PlayerViewModel @JvmOverloads constructor(
      * @param autoPlay whether the episode is switching due to auto play
      */
     fun changeEpisode(episodeId: Long?, autoPlay: Boolean = false) {
-        pause()
-        clearTracks()
+        if (stateData.value.isCasting) {
+            castManager.stopRemoteMediaClient()
+            updateCastUiData { it.copy(isLoadingEpisode = true) }
+        } else {
+            pause()
+            clearTracks()
+        }
 
         updateStateData { it.copy(hosterList = emptyList()) }
         updateUiData {
@@ -1967,6 +2490,13 @@ class PlayerViewModel @JvmOverloads constructor(
     fun showSeekBar() {
         if (uiData.value.sheetShown != Sheets.None) return
         updateUiData { it.copy(seekBarShown = true) }
+    }
+
+    fun toggleDurationTimer() {
+        val newValue = !uiData.value.invertDuration
+        playerPreferences.invertDuration.set(newValue)
+        updateUiData { it.copy(invertDuration = newValue) }
+        updateCastUiData { it.copy(invertDurationTimer = newValue) }
     }
 
     fun dismissSheet() {
@@ -2464,20 +2994,37 @@ class PlayerViewModel @JvmOverloads constructor(
      * Called every time a second is reached in the player. Used to mark the flag of episode being
      * seen, update tracking services, enqueue downloaded episode deletion and download next episode.
      */
-    fun onSecondReached(position: Int) {
+    fun onSecondReached(position: Int, isCasting: Boolean = false) {
         updatePlaybackData { it.copy(position = position) }
         if (uiData.value.isLoadingEpisode) return
         val currentEpisode = stateData.value.currentEpisode ?: return
         if (episodeId == -1L) return
-        val duration = playbackData.value.duration
+        val duration = if (isCasting) castUiData.value.duration.toInt() else playbackData.value.duration
         if (duration == 0) return
 
+        if (isCasting) {
+            val chapter = castUiData.value.chapters.filter { it.start <= position }.maxByOrNull { it.start }
+            if (chapter != castUiData.value.currentChapter) {
+                castOnChapterChanged(chapter)
+            }
+        }
+
         // Set netflix-style timeout
-        playbackData.value.netflixTimeout?.let { timeout ->
-            if (timeout > 0) {
-                updatePlaybackData { it.copy(netflixTimeout = timeout - 1) }
-            } else {
-                onSkipIntro()
+        if (isCasting) {
+            castUiData.value.netflixTimeout?.let { timeout ->
+                if (timeout > 0) {
+                    updateCastUiData { it.copy(netflixTimeout = timeout - 1) }
+                } else {
+                    castOnSkipIntro()
+                }
+            }
+        } else {
+            playbackData.value.netflixTimeout?.let { timeout ->
+                if (timeout > 0) {
+                    updatePlaybackData { it.copy(netflixTimeout = timeout - 1) }
+                } else {
+                    onSkipIntro()
+                }
             }
         }
 
@@ -2891,17 +3438,15 @@ class PlayerViewModel @JvmOverloads constructor(
 
     private fun updateSkipIntroButton(chapterType: ChapterType) {
         val skipButtonString = chapterType.getStringRes()
-
-        updateUiData {
-            it.copy(
-                skipIntroText = skipButtonString?.let { s ->
-                    context.stringResource(
-                        AYMR.strings.player_skip_action,
-                        context.stringResource(s),
-                    )
-                },
+        val skipIntroText = skipButtonString?.let { s ->
+            context.stringResource(
+                AYMR.strings.player_skip_action,
+                context.stringResource(s),
             )
         }
+
+        updateUiData { it.copy(skipIntroText = skipIntroText) }
+        updateCastUiData { it.copy(skipIntroText = skipIntroText) }
     }
 
     fun onSkipIntro() {
@@ -3001,6 +3546,9 @@ class PlayerViewModel @JvmOverloads constructor(
     // === Data ===
     @Stable
     data class PlayerStateData(
+        val isCasting: Boolean = false,
+        val isLoadingCasting: Boolean = false,
+        val isErrorCasting: Boolean = false,
         val isStopped: Boolean = false,
         val hasTrackers: Boolean = false,
         val incognitoMode: Boolean = false,
@@ -3022,10 +3570,11 @@ class PlayerViewModel @JvmOverloads constructor(
         val hasLoadedAudio: Boolean = false,
         val chapters: List<Segment> = emptyList(),
         val currentChapter: Segment? = null,
+        val aniskipChapters: List<TimeStamp> = emptyList(),
         val subtitleTracks: List<TrackNode> = emptyList(),
         val audioTracks: List<TrackNode> = emptyList(),
-        val externalSubtitleTracks: List<VideoTrack.External> = emptyList(),
-        val externalAudioTracks: List<VideoTrack.External> = emptyList(),
+        val externalSubtitleTracks: List<MpvVideoTrack.External> = emptyList(),
+        val externalAudioTracks: List<MpvVideoTrack.External> = emptyList(),
         val hosterList: List<Hoster> = emptyList(),
         val hosterState: List<HosterState> = emptyList(),
         val isPipAvailable: Boolean = false,
@@ -3069,6 +3618,7 @@ class PlayerViewModel @JvmOverloads constructor(
         val autoPlayEnabled: Boolean = false,
         val showChapterIndicator: Boolean = true,
         val playerSpeedPref: Float = 1f,
+        val enableCast: Boolean = false,
     )
 
     @Stable

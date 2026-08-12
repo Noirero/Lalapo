@@ -21,22 +21,21 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import animiru.domain.player.model.ArtType
+import animiru.domain.player.model.AudioChannels
+import animiru.domain.player.model.Decoder
 import dev.vivvvek.seeker.Segment
-import eu.kanade.tachiyomi.ui.player.ArtType
-import eu.kanade.tachiyomi.ui.player.Decoder
 import eu.kanade.tachiyomi.ui.player.Panels
 import eu.kanade.tachiyomi.ui.player.Sheets
+import eu.kanade.tachiyomi.ui.player.components.ChaptersSheet
+import eu.kanade.tachiyomi.ui.player.components.HosterState
+import eu.kanade.tachiyomi.ui.player.components.QualitySheet
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.AudioTracksSheet
-import eu.kanade.tachiyomi.ui.player.controls.components.sheets.ChaptersSheet
-import eu.kanade.tachiyomi.ui.player.controls.components.sheets.HosterState
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.MoreSheet
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.PlaybackSpeedSheet
-import eu.kanade.tachiyomi.ui.player.controls.components.sheets.QualitySheet
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.ScreenshotSheet
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.SubtitlesSheet
-import eu.kanade.tachiyomi.ui.player.mpv.VideoTrack
-import eu.kanade.tachiyomi.ui.player.settings.AudioChannels
-import kotlinx.collections.immutable.ImmutableList
+import eu.kanade.tachiyomi.ui.player.mpv.MpvVideoTrack
 import kotlinx.collections.immutable.toImmutableList
 import tachiyomi.domain.custombutton.model.CustomButton
 import java.io.InputStream
@@ -46,14 +45,14 @@ fun PlayerSheets(
     sheetShown: Sheets,
 
     // subtitles sheet
-    subtitles: List<VideoTrack>,
+    subtitles: List<MpvVideoTrack>,
     onAddSubtitle: (Uri) -> Unit,
-    onSelectSubtitle: (VideoTrack) -> Unit,
+    onSelectSubtitle: (MpvVideoTrack) -> Unit,
 
     // audio sheet
-    audioTracks: List<VideoTrack>,
+    audioTracks: List<MpvVideoTrack>,
     onAddAudio: (Uri) -> Unit,
-    onSelectAudio: (VideoTrack) -> Unit,
+    onSelectAudio: (MpvVideoTrack) -> Unit,
 
     // video sheet
     isLoadingHosters: Boolean,

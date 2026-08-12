@@ -3,8 +3,10 @@ mpv-lib = "0.1.14"
 arthenica-smartexceptions = "0.2.1"
 constraint-layout = "1.1.0"
 ffmpeg-kit = "1.18"
+gms-cast = "22.3.1"
 localbroadcastmanager = "1.1.0"
 media = "1.7.0"
+mediarouter = "1.8.1"
 nanohttpd = "2.3.1"
 seeker = "1.2.2"
 torrserver = "0.1.0"
@@ -28,3 +30,8 @@ truetypeparser = { module = "io.github.yubyf:truetypeparser-light", version.ref 
 google-api-services-drive = { module = "com.google.apis:google-api-services-drive", version.ref = "google-api-drive" }
 google-api-client-oauth = { module = "com.google.oauth-client:google-oauth-client", version.ref = "google-api-oauth" }
 # <-- AM (SYNC_DRIVE)
+
+# AM (CAST) -->
+gms-cast = { module = "com.google.android.gms:play-services-cast-framework", version.ref = "gms-cast" }
+mediarouter = { module = "androidx.mediarouter:mediarouter", version.ref = "mediarouter" }
+# <-- AM (CAST)
