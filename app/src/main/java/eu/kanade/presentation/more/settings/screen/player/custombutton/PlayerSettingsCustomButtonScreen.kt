@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.util.fastMap
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.player.custombutton.components.CustomButtonCreateDialog
@@ -16,7 +16,6 @@ import eu.kanade.presentation.more.settings.screen.player.custombutton.component
 import eu.kanade.presentation.more.settings.screen.player.custombutton.components.CustomButtonScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.domain.custombutton.model.CustomButtonUpdate
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -28,9 +27,9 @@ object PlayerSettingsCustomButtonScreen : Screen() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val uriHandler = LocalUriHandler.current
-        val screenModel = rememberScreenModel { PlayerSettingsCustomButtonScreenModel() }
+        val viewModel = viewModel<PlayerSettingsCustomButtonViewModel>()
 
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
 
         if (state is CustomButtonScreenState.Loading) {
             LoadingScreen()
@@ -42,11 +41,11 @@ object PlayerSettingsCustomButtonScreen : Screen() {
         CustomButtonScreen(
             state = successState,
             onClickFAQ = { uriHandler.openUri("https://aniyomi.org/docs/guides/player-settings/custom-buttons") },
-            onClickCreate = { screenModel.showDialog(CustomButtonDialog.Create) },
-            onClickPrimary = { screenModel.togglePrimaryButton(it) },
-            onClickEdit = { screenModel.showDialog(CustomButtonDialog.Edit(it)) },
-            onClickDelete = { screenModel.showDialog(CustomButtonDialog.Delete(it)) },
-            onChangeOrder = screenModel::changeOrder,
+            onClickCreate = { viewModel.showDialog(CustomButtonDialog.Create) },
+            onClickPrimary = { viewModel.togglePrimaryButton(it) },
+            onClickEdit = { viewModel.showDialog(CustomButtonDialog.Edit(it)) },
+            onClickDelete = { viewModel.showDialog(CustomButtonDialog.Delete(it)) },
+            onChangeOrder = viewModel::changeOrder,
             navigateUp = navigator::pop,
         )
 
@@ -54,23 +53,23 @@ object PlayerSettingsCustomButtonScreen : Screen() {
             null -> {}
             CustomButtonDialog.Create -> {
                 CustomButtonCreateDialog(
-                    onDismissRequest = screenModel::dismissDialog,
-                    onCreate = screenModel::createCustomButton,
-                    buttonNames = successState.customButtons.fastMap { it.name }.toImmutableList(),
+                    onDismissRequest = viewModel::dismissDialog,
+                    onCreate = viewModel::createCustomButton,
+                    buttonNames = successState.customButtons.fastMap { it.name },
                 )
             }
             is CustomButtonDialog.Delete -> {
                 CustomButtonDeleteDialog(
-                    onDismissRequest = screenModel::dismissDialog,
-                    onDelete = { screenModel.deleteCustomButton(dialog.customButton) },
+                    onDismissRequest = viewModel::dismissDialog,
+                    onDelete = { viewModel.deleteCustomButton(dialog.customButton) },
                     buttonTitle = dialog.customButton.name,
                 )
             }
             is CustomButtonDialog.Edit -> {
                 CustomButtonEditDialog(
-                    onDismissRequest = screenModel::dismissDialog,
+                    onDismissRequest = viewModel::dismissDialog,
                     onEdit = { title, content, longPressContent, onStartup ->
-                        screenModel.editCustomButton(
+                        viewModel.editCustomButton(
                             CustomButtonUpdate(
                                 id = dialog.customButton.id,
                                 name = title,
@@ -83,14 +82,14 @@ object PlayerSettingsCustomButtonScreen : Screen() {
                     },
                     buttonNames = (successState.customButtons - dialog.customButton).fastMap {
                         it.name
-                    }.toImmutableList(),
+                    },
                     initialState = dialog.customButton,
                 )
             }
         }
 
         LaunchedEffect(Unit) {
-            screenModel.events.collectLatest { event ->
+            viewModel.events.collectLatest { event ->
                 if (event is CustomButtonEvent.LocalizedMessage) {
                     context.toast(event.stringRes)
                 }

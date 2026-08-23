@@ -5,6 +5,9 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
@@ -21,8 +24,7 @@ import tachiyomi.domain.anime.model.AnimeWithEpisodeCount
 import tachiyomi.domain.anime.repository.AnimeRepository
 import tachiyomi.domain.library.model.LibraryAnime
 import tachiyomi.domain.source.model.DeletableAnime
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Clock
 
 class AnimeRepositoryImpl(
     private val database: Database,
@@ -80,9 +82,24 @@ class AnimeRepositoryImpl(
         ).awaitAsList()
     }
 
-    override suspend fun getUpcomingAnime(statuses: Set<Long>): Flow<List<Anime>> {
-        val epochMillis = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
-        return database.animesQueries.getUpcomingAnime(epochMillis, statuses, AnimeMapper::mapAnime)
+    override suspend fun getUpcomingAnime(
+        statuses: Set<Long>,
+        excludedCategories: List<Long>,
+        includedCategories: List<Long>,
+    ): Flow<List<Anime>> {
+        val timeZone = TimeZone.currentSystemDefault()
+        val epochMillis =
+            Clock.System.now().toLocalDateTime(timeZone).date.atStartOfDayIn(timeZone).toEpochMilliseconds()
+        return database.animesQueries
+            .getUpcomingAnime(
+                startOfDay = epochMillis,
+                statuses = statuses,
+                includedEmpty = includedCategories.isEmpty(),
+                includedCategories = includedCategories,
+                excludedEmpty = excludedCategories.isEmpty(),
+                excludedCategories = excludedCategories,
+                AnimeMapper::mapAnime,
+            )
             .subscribeToList()
     }
 

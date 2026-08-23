@@ -17,9 +17,8 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import eu.kanade.presentation.util.animateItemFastScroll
-import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
-import kotlinx.collections.immutable.persistentListOf
+import eu.kanade.tachiyomi.ui.history.HistoryViewModel
+import kotlinx.datetime.LocalDate
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -28,16 +27,15 @@ import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
-import java.time.LocalDate
 
 @Composable
 fun HistoryScreen(
-    state: HistoryScreenModel.State,
+    state: HistoryViewModel.State,
     onSearchQueryChange: (String?) -> Unit,
     onClickCover: (animeId: Long) -> Unit,
     onClickResume: (animeId: Long, episodeId: Long) -> Unit,
     onClickFavorite: (animeId: Long) -> Unit,
-    onDialogChange: (HistoryScreenModel.Dialog?) -> Unit,
+    onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
     contentPadding: PaddingValues,
 ) {
     // AM (RECENTS_FILTER_CHIP) -->
@@ -60,7 +58,7 @@ fun HistoryScreen(
                 contentPadding = contentPadding,
                 onClickCover = { history -> onClickCover(history.animeId) },
                 onClickResume = { history -> onClickResume(history.animeId, history.episodeId) },
-                onClickDelete = { item -> onDialogChange(HistoryScreenModel.Dialog.Delete(item)) },
+                onClickDelete = { item -> onDialogChange(HistoryViewModel.Dialog.Delete(item)) },
                 onClickFavorite = { history -> onClickFavorite(history.animeId) },
             )
         }
@@ -69,9 +67,9 @@ fun HistoryScreen(
 
 @Composable
 fun HistoryTopBar(
-    state: HistoryScreenModel.State,
+    state: HistoryViewModel.State,
     onSearchQueryChange: (String?) -> Unit,
-    onDialogChange: (HistoryScreenModel.Dialog?) -> Unit,
+    onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     SearchToolbar(
@@ -80,12 +78,12 @@ fun HistoryTopBar(
         onChangeSearchQuery = onSearchQueryChange,
         actions = {
             AppBarActions(
-                persistentListOf(
+                listOf(
                     AppBar.Action(
                         title = stringResource(MR.strings.pref_clear_history),
                         icon = Icons.Outlined.DeleteSweep,
                         onClick = {
-                            onDialogChange(HistoryScreenModel.Dialog.DeleteAll)
+                            onDialogChange(HistoryViewModel.Dialog.DeleteAll)
                         },
                     ),
                 ),
@@ -121,14 +119,14 @@ private fun HistoryScreenContent(
             when (item) {
                 is HistoryUiModel.Header -> {
                     ListGroupHeader(
-                        modifier = Modifier.animateItemFastScroll(),
+                        modifier = Modifier.animateItem(),
                         text = relativeDateText(item.date),
                     )
                 }
                 is HistoryUiModel.Item -> {
                     val value = item.item
                     HistoryItem(
-                        modifier = Modifier.animateItemFastScroll(),
+                        modifier = Modifier.animateItem(),
                         history = value,
                         onClickCover = { onClickCover(value) },
                         onClickResume = { onClickResume(value) },
@@ -149,8 +147,8 @@ sealed interface HistoryUiModel {
 @PreviewLightDark
 @Composable
 internal fun HistoryScreenPreviews(
-    @PreviewParameter(HistoryScreenModelStateProvider::class)
-    historyState: HistoryScreenModel.State,
+    @PreviewParameter(HistoryViewModelStateProvider::class)
+    historyState: HistoryViewModel.State,
 ) {
     TachiyomiPreviewTheme {
         HistoryScreen(

@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.GetApp
@@ -41,6 +43,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -52,17 +57,15 @@ import eu.kanade.presentation.browse.components.ExtensionIcon
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.WarningBanner
-import eu.kanade.presentation.more.settings.screen.browse.ExtensionReposScreen
-import eu.kanade.presentation.util.animateItemFastScroll
+import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionFilterScreen
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
-import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsScreenModel
+import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
-import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -70,6 +73,8 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.icons.CustomIcons
+import tachiyomi.presentation.core.icons.Magnet
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -79,7 +84,7 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun ExtensionScreen(
-    state: ExtensionsScreenModel.State,
+    state: ExtensionsViewModel.State,
     searchQuery: String?,
     onLongClickItem: (Extension) -> Unit,
     onClickItemCancel: (Extension) -> Unit,
@@ -114,10 +119,10 @@ fun ExtensionScreen(
                             contentDescription = stringResource(MR.strings.action_filter),
                         )
                     }
-                    IconButton(onClick = { navigator.push(ExtensionReposScreen()) }) {
+                    IconButton(onClick = { navigator.push(ExtensionStoresScreen()) }) {
                         Icon(
                             Icons.Outlined.MoreVert,
-                            contentDescription = stringResource(MR.strings.label_extension_repos),
+                            contentDescription = stringResource(MR.strings.extensionStores),
                         )
                     }
                 },
@@ -150,11 +155,11 @@ fun ExtensionScreen(
                     EmptyScreen(
                         stringRes = msg,
                         modifier = Modifier.padding(contentPadding),
-                        actions = persistentListOf(
+                        actions = listOf(
                             EmptyScreenAction(
-                                stringRes = MR.strings.label_extension_repos,
+                                stringRes = MR.strings.extensionStores,
                                 icon = Icons.Outlined.Settings,
-                                onClick = { navigator.push(ExtensionReposScreen()) },
+                                onClick = { navigator.push(ExtensionStoresScreen()) },
                             ),
                         ),
                     )
@@ -181,7 +186,7 @@ fun ExtensionScreen(
 
 @Composable
 private fun ExtensionContent(
-    state: ExtensionsScreenModel.State,
+    state: ExtensionsViewModel.State,
     contentPadding: PaddingValues,
     onLongClickItem: (Extension) -> Unit,
     onClickItemCancel: (Extension) -> Unit,
@@ -235,14 +240,14 @@ private fun ExtensionContent(
                             }
                         ExtensionHeader(
                             textRes = header.textRes,
-                            modifier = Modifier.animateItemFastScroll(),
+                            modifier = Modifier.animateItem(),
                             action = action,
                         )
                     }
                     is ExtensionUiModel.Header.Text -> {
                         ExtensionHeader(
                             text = header.text,
-                            modifier = Modifier.animateItemFastScroll(),
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
@@ -260,7 +265,7 @@ private fun ExtensionContent(
                 },
             ) { item ->
                 ExtensionItem(
-                    modifier = Modifier.animateItemFastScroll(),
+                    modifier = Modifier.animateItem(),
                     item = item,
                     onClickItem = {
                         when (it) {
@@ -388,11 +393,35 @@ private fun ExtensionItemContent(
     installStep: InstallStep,
     modifier: Modifier = Modifier,
 ) {
+    val text = buildAnnotatedString {
+        if (extension.isTorrent) {
+            appendInlineContent(TORRENT_ICON, "(Torrent)")
+            append(" ")
+        }
+        append(extension.name)
+    }
+
+    val inlineContent = mapOf(
+        Pair(
+            TORRENT_ICON,
+            InlineTextContent(
+                Placeholder(
+                    width = MaterialTheme.typography.bodyMedium.fontSize,
+                    height = MaterialTheme.typography.bodyMedium.fontSize,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.Center,
+                ),
+            ) {
+                Icon(CustomIcons.Magnet, "")
+            },
+        ),
+    )
+
     Column(
         modifier = modifier.padding(start = MaterialTheme.padding.medium),
     ) {
         Text(
-            text = extension.name,
+            text = text,
+            inlineContent = inlineContent,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium,
@@ -602,3 +631,5 @@ private fun ExtensionTrustDialog(
         onDismissRequest = onDismissRequest,
     )
 }
+
+private const val TORRENT_ICON = "torrentIcon"

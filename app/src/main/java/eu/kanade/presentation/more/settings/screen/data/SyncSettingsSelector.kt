@@ -7,8 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.connection.SyncPreferences
@@ -18,8 +17,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.connection.syncmiru.SyncDataJob
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.update
+import mihon.core.viewmodel.StateViewModel
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
@@ -35,7 +34,7 @@ class SyncSettingsSelector : Screen() {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberScreenModel { SyncSettingsSelectorModel() }
+        val model = viewModel<SyncSettingsSelectorViewModel>()
         val state by model.state.collectAsState()
 
         Scaffold(
@@ -77,9 +76,9 @@ class SyncSettingsSelector : Screen() {
 
     @Composable
     private fun Options(
-        options: ImmutableList<BackupOptions.Entry>,
-        state: SyncSettingsSelectorModel.State,
-        model: SyncSettingsSelectorModel,
+        options: List<BackupOptions.Entry>,
+        state: SyncSettingsSelectorViewModel.State,
+        model: SyncSettingsSelectorViewModel,
     ) {
         options.forEach { option ->
             LabeledCheckbox(
@@ -94,9 +93,9 @@ class SyncSettingsSelector : Screen() {
     }
 }
 
-private class SyncSettingsSelectorModel(
+class SyncSettingsSelectorViewModel(
     val syncPreferences: SyncPreferences = Injekt.get(),
-) : StateScreenModel<SyncSettingsSelectorModel.State>(
+) : StateViewModel<SyncSettingsSelectorViewModel.State>(
     State(syncOptionsToBackupOptions(syncPreferences.getSyncSettings())),
 ) {
     fun toggle(setter: (BackupOptions, Boolean) -> BackupOptions, enabled: Boolean) {

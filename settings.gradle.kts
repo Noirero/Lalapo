@@ -19,7 +19,11 @@ dependencyResolutionManagement {
         }
         // <-- AY
     }
+
+    @Suppress("UnstableApiUsage")
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+    @Suppress("UnstableApiUsage")
     repositories {
         google()
         mavenCentral()
@@ -31,6 +35,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Animiru"
 include(":app")
+include(":baseline-profile")
 include(":core-metadata")
 include(":core:archive")
 include(":core:common")
@@ -43,7 +48,6 @@ include(":i18n-aniyomi")
 // AM -->
 include(":i18n-animiru")
 // <-- AM
-include(":macrobenchmark")
 include(":presentation-core")
 include(":presentation-widget")
 include(":source-api")
@@ -51,3 +55,5 @@ include(":source-local")
 // AM -->
 include(":cast")
 // <-- AM
+include(":baseline-profile")
+include(":core:viewmodel")

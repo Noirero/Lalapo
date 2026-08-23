@@ -75,8 +75,8 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForAnimeInfo
-import eu.kanade.tachiyomi.ui.anime.AnimeScreenModel
 import eu.kanade.tachiyomi.ui.anime.AnimeSeasonItem
+import eu.kanade.tachiyomi.ui.anime.AnimeViewModel
 import eu.kanade.tachiyomi.ui.anime.EpisodeList
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.delay
@@ -97,12 +97,13 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.injectLazy
-import java.time.Instant
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 @Composable
 fun AnimeScreen(
-    state: AnimeScreenModel.State.Success,
+    state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
     isTabletUi: Boolean,
@@ -302,7 +303,7 @@ fun AnimeScreen(
 
 @Composable
 private fun AnimeScreenSmallImpl(
-    state: AnimeScreenModel.State.Success,
+    state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
@@ -645,7 +646,7 @@ private fun AnimeScreenSmallImpl(
                                     var timer by remember { mutableLongStateOf(state.airingTime) }
                                     LaunchedEffect(key1 = timer) {
                                         if (timer > 0L) {
-                                            delay(1000L)
+                                            delay(1.seconds)
                                             timer -= 1000L
                                         }
                                     }
@@ -696,7 +697,7 @@ private fun AnimeScreenSmallImpl(
 
 @Composable
 fun AnimeScreenLargeImpl(
-    state: AnimeScreenModel.State.Success,
+    state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
@@ -1010,7 +1011,7 @@ fun AnimeScreenLargeImpl(
                                             var timer by remember { mutableLongStateOf(state.airingTime) }
                                             LaunchedEffect(key1 = timer) {
                                                 if (timer > 0L) {
-                                                    delay(1000L)
+                                                    delay(1.seconds)
                                                     timer -= 1000L
                                                 }
                                             }
@@ -1319,33 +1320,20 @@ private data class StateUIData(
 )
 
 private fun formatTime(milliseconds: Long, useDayFormat: Boolean = false): String {
+    val dur = milliseconds.milliseconds
+
     return if (useDayFormat) {
-        String.format(
-            "Airing in %02dd %02dh %02dm %02ds",
-            TimeUnit.MILLISECONDS.toDays(milliseconds),
-            TimeUnit.MILLISECONDS.toHours(milliseconds) -
-                TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(milliseconds)),
-            TimeUnit.MILLISECONDS.toMinutes(milliseconds) -
-                TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(milliseconds)),
-            TimeUnit.MILLISECONDS.toSeconds(milliseconds) -
-                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(milliseconds)),
-        )
+        dur.toComponents { days, hours, minutes, seconds, _ ->
+            "Airing in %02dd %02dh %02dm %02ds".format(days, hours, minutes, seconds)
+        }
     } else if (milliseconds > 3600000L) {
-        String.format(
-            "%d:%02d:%02d",
-            TimeUnit.MILLISECONDS.toHours(milliseconds),
-            TimeUnit.MILLISECONDS.toMinutes(milliseconds) -
-                TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(milliseconds)),
-            TimeUnit.MILLISECONDS.toSeconds(milliseconds) -
-                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(milliseconds)),
-        )
+        dur.toComponents { _, hours, minutes, seconds, _ ->
+            "%d:%02d:%02d".format(hours, minutes, seconds)
+        }
     } else {
-        String.format(
-            "%d:%02d",
-            TimeUnit.MILLISECONDS.toMinutes(milliseconds),
-            TimeUnit.MILLISECONDS.toSeconds(milliseconds) -
-                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(milliseconds)),
-        )
+        dur.toComponents { _, _, minutes, seconds, _ ->
+            "%d:%02d".format(minutes, seconds)
+        }
     }
 }
 

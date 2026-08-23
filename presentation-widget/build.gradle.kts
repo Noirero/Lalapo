@@ -18,7 +18,7 @@ dependencies {
     implementation(libs.androidx.glance.appWidget)
     implementation(libs.material)
 
-    implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.kotlinx.datetime)
 
     implementation(libs.coil.core)
 

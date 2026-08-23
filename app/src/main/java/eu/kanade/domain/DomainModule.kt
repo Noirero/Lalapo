@@ -28,16 +28,15 @@ import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.domain.track.interactor.RefreshTracks
 import eu.kanade.domain.track.interactor.SyncEpisodeProgressWithTrack
 import eu.kanade.domain.track.interactor.TrackEpisode
-import mihon.data.repository.ExtensionRepoRepositoryImpl
+import mihon.data.extension.repository.ExtensionStoreRepositoryImpl
+import mihon.data.extension.service.ExtensionStoreService
 import mihon.domain.episode.interactor.FilterEpisodesForDownload
-import mihon.domain.extensionrepo.interactor.CreateExtensionRepo
-import mihon.domain.extensionrepo.interactor.DeleteExtensionRepo
-import mihon.domain.extensionrepo.interactor.GetExtensionRepo
-import mihon.domain.extensionrepo.interactor.GetExtensionRepoCount
-import mihon.domain.extensionrepo.interactor.ReplaceExtensionRepo
-import mihon.domain.extensionrepo.interactor.UpdateExtensionRepo
-import mihon.domain.extensionrepo.repository.ExtensionRepoRepository
-import mihon.domain.extensionrepo.service.ExtensionRepoService
+import mihon.domain.extension.interactor.AddExtensionStore
+import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
+import mihon.domain.extension.interactor.GetExtensionStores
+import mihon.domain.extension.interactor.RemoveExtensionStore
+import mihon.domain.extension.interactor.UpdateExtensionStores
+import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.domain.migration.usecases.MigrateAnimeUseCase
 import mihon.domain.source.interactor.UpdateAnimeFromRemote
 import mihon.domain.upcoming.interactor.GetUpcomingAnime
@@ -79,7 +78,6 @@ import tachiyomi.domain.category.interactor.ResetCategoryFlags
 import tachiyomi.domain.category.interactor.SetAnimeCategories
 import tachiyomi.domain.category.interactor.SetDisplayMode
 import tachiyomi.domain.category.interactor.SetSortModeForCategory
-import tachiyomi.domain.category.interactor.UpdateCategory
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.custombutton.interactor.CreateCustomButton
 import tachiyomi.domain.custombutton.interactor.DeleteCustomButton
@@ -134,7 +132,6 @@ class DomainModule : InjektModule {
         addFactory { CreateCategoryWithName(get(), get()) }
         addFactory { RenameCategory(get()) }
         addFactory { ReorderCategory(get()) }
-        addFactory { UpdateCategory(get()) }
         addFactory { DeleteCategory(get(), get(), get()) }
         // AY -->
         addFactory { GetVisibleCategories(get()) }
@@ -175,7 +172,7 @@ class DomainModule : InjektModule {
         // <-- AY
 
         addSingletonFactory<ReleaseService> { ReleaseServiceImpl(get(), get()) }
-        addFactory { GetApplicationRelease(get(), get()) }
+        addFactory { GetApplicationRelease(get()) }
 
         addSingletonFactory<TrackRepository> { TrackRepositoryImpl(get()) }
         addFactory { TrackEpisode(get(), get(), get(), get()) }
@@ -226,14 +223,14 @@ class DomainModule : InjektModule {
         addFactory { ToggleSourcePin(get()) }
         addFactory { TrustExtension(get(), get()) }
 
-        addSingletonFactory<ExtensionRepoRepository> { ExtensionRepoRepositoryImpl(get()) }
-        addFactory { ExtensionRepoService(get(), get()) }
-        addFactory { GetExtensionRepo(get()) }
-        addFactory { GetExtensionRepoCount(get()) }
-        addFactory { CreateExtensionRepo(get(), get()) }
-        addFactory { DeleteExtensionRepo(get()) }
-        addFactory { ReplaceExtensionRepo(get()) }
-        addFactory { UpdateExtensionRepo(get(), get()) }
+        addSingletonFactory { ExtensionStoreService(get(), get(), get()) }
+        addSingletonFactory<ExtensionStoreRepository> { ExtensionStoreRepositoryImpl(get(), get()) }
+        addFactory { AddExtensionStore(get()) }
+        addFactory { GetExtensionStoreCountAsFlow(get()) }
+        addFactory { GetExtensionStores(get()) }
+        addFactory { RemoveExtensionStore(get()) }
+        addFactory { UpdateExtensionStores(get()) }
+
         addFactory { ToggleIncognito(get()) }
         addFactory { GetIncognitoState(get(), get(), get()) }
 
