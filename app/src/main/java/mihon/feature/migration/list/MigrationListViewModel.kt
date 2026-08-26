@@ -300,6 +300,7 @@ class MigrationListViewModel(
                                 .anime
                         }
                     }
+                        .let { MigrateSearchResult.Success(it) }
                 } catch (_: Exception) {
                     MigrateSearchResult.Failure(anime.fetchType)
                 }
