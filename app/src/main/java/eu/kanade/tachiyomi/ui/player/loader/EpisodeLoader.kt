@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.animesource.online.ParsedAnimeHttpSource
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.ui.player.components.HosterState
 import kotlinx.coroutines.CancellationException
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.episode.model.Episode
 import tachiyomi.source.local.LocalSource
@@ -88,13 +89,15 @@ class EpisodeLoader {
          */
         private suspend fun getHostersOnHttp(episode: Episode, source: AnimeHttpSource): List<Hoster> {
             // TODO(16): Remove else block when dropping support for ext lib <1.6
-            return if (checkHasHosters(source)) {
-                source.getHosterList(episode.toSEpisode())
-                    .let { source.run { it.sortHosters() } }
-            } else {
-                source.getVideoList(episode.toSEpisode())
-                    .let { source.run { it.sortVideos() } }
-                    .toHosterList()
+            return withIOContext {
+                if (checkHasHosters(source)) {
+                    source.getHosterList(episode.toSEpisode())
+                        .let { source.run { it.sortHosters() } }
+                } else {
+                    source.getVideoList(episode.toSEpisode())
+                        .let { source.run { it.sortVideos() } }
+                        .toHosterList()
+                }
             }
         }
 
@@ -175,8 +178,9 @@ class EpisodeLoader {
          * @param hoster the hoster.
          */
         private suspend fun getVideosOnHttp(source: AnimeHttpSource, hoster: Hoster): List<Video> {
-            return source.getVideoList(hoster)
-                .parseVideoUrls(source)
+            return withIOContext {
+                source.getVideoList(hoster).parseVideoUrls(source)
+            }
         }
 
         // TODO(1.6): Remove after ext lib bump
