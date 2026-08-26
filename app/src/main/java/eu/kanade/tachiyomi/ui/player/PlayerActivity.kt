@@ -71,6 +71,7 @@ import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.isNsfw
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
+import eu.kanade.tachiyomi.ui.player.components.MAX_BRIGHTNESS
 import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
@@ -467,7 +468,12 @@ class PlayerActivity : BaseActivity() {
                 )
             } else {
                 window.attributes = window.attributes.apply {
-                    screenBrightness = viewModel.playbackData.value.currentBrightness.coerceIn(0f, 1f)
+                    val brightness = viewModel.playbackData.value.currentBrightness
+                    screenBrightness = if (brightness == WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE) {
+                        WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                    } else {
+                        brightness.coerceIn(0f, MAX_BRIGHTNESS)
+                    }
                 }
             }
         } else {
