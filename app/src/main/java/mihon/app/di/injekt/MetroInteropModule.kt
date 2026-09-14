@@ -2,6 +2,7 @@ package mihon.app.di.injekt
 
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.service.TrackPreferences
+import eu.kanade.tachiyomi.data.cache.BackgroundCache
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.JavaScriptEngine
@@ -29,6 +30,9 @@ class MetroInteropModule(
     private val extensionManager: ExtensionManager,
 
     private val coverCache: CoverCache,
+    // AM -->
+    private val backgroundCache: BackgroundCache,
+    // <-- AM
 ) : InjektModule {
 
     override fun InjektRegistrar.registerInjectables() {
@@ -45,5 +49,8 @@ class MetroInteropModule(
         addSingleton(extensionManager)
 
         addSingleton(coverCache)
+        // AM -->
+        addSingleton(backgroundCache)
+        // <-- AM
     }
 }

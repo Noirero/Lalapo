@@ -15,6 +15,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import animiru.domain.player.service.PlayerPreferences
+import animiru.domain.torrent.service.TorrentUtilsHolder
+import animiru.domain.torrent.service.TorrentUtilsImpl
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.memory.MemoryCache
@@ -22,7 +24,6 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowRgb565
 import coil3.request.crossfade
 import coil3.util.DebugLogger
-import dev.mihon.injekt.patchInjekt
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
@@ -129,6 +130,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         }
 
         graph.inject(this)
+        // AM -->
+        TorrentUtilsHolder.init(graph.torrentUtilsImpl)
+        // <-- AM
         // AM (CUSTOM_INFORMATION) -->
         CustomAnimeInfoHolder.init(graph.getCustomAnimeInfo)
         // <-- AM (CUSTOM_INFORMATION)
@@ -205,7 +209,6 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     }
 
     private fun setupInjekt() {
-        patchInjekt()
         Injekt.addSingleton<Application>(this)
         Injekt.addSingleton<Context>(this)
         Injekt.importModule(injektMetroInteropModule)

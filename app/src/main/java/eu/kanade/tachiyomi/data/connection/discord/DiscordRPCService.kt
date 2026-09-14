@@ -157,8 +157,6 @@ class DiscordRPCService : Service() {
 
     companion object {
 
-        // private val connectionPreferences: ConnectionPreferences by injectLazy()
-
         private var rpc: DiscordRPC? = null
         private val handler = Handler(Looper.getMainLooper())
         private val job = SupervisorJob()
