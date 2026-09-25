@@ -4,6 +4,7 @@ package eu.kanade.domain.ui.model
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 
 enum class StartScreen(val titleRes: StringResource, val tab: HomeScreen.Tab) {
     ANIME(MR.strings.label_library, HomeScreen.Tab.Library()),
@@ -14,7 +15,7 @@ enum class StartScreen(val titleRes: StringResource, val tab: HomeScreen.Tab) {
 
     // <-- AM (RECENTS)
     // AM (BROWSE) -->
-    BROWSE(MR.strings.browse, HomeScreen.Tab.Browse(toExtensions = false)),
+    BROWSE(AMMR.strings.am_label_discover, HomeScreen.Tab.Browse(toExtensions = false)),
     // <-- AM (BROWSE)
 }
 // <-- AY

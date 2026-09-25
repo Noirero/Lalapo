@@ -2,32 +2,34 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SwapCalls
-import androidx.compose.material.icons.outlined.TravelExplore
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -56,7 +58,6 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
-import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
 
 @Composable
@@ -79,11 +80,19 @@ fun SourcesScreen(
             AppBar(
                 titleContent = { AppBarTitle(stringResource(AMMR.strings.am_label_discover)) },
                 actions = {
-                    IconButton(onClick = { navigator.push(GlobalSearchScreen()) }) {
-                        Icon(
-                            Icons.Outlined.TravelExplore,
-                            contentDescription = stringResource(MR.strings.action_global_search),
-                        )
+                    IconButton(onClick = toExtensionsScreen) {
+                        BadgedBox(
+                            badge = {
+                                if (updateCount > 0) {
+                                    Badge { Text(updateCount.toString()) }
+                                }
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_extension_24dp),
+                                contentDescription = stringResource(MR.strings.label_extensions),
+                            )
+                        }
                     }
                     IconButton(onClick = { navigator.push(SourcesFilterScreen()) }) {
                         Icon(
@@ -111,25 +120,36 @@ fun SourcesScreen(
                 modifier = Modifier.padding(contentPadding),
             )
             else -> {
-                // AM (BROWSE) -->
-                Scaffold(
-                    floatingActionButton = {
-                        val buttonText = if (updateCount != 0) MR.strings.ext_update else MR.strings.ext_install
-                        val buttonIcon = if (updateCount != 0) Icons.Filled.Upload else Icons.Filled.Download
-                        SmallExtendedFloatingActionButton(
-                            text = { Text(text = stringResource(buttonText)) },
-                            icon = { Icon(imageVector = buttonIcon, contentDescription = stringResource(buttonText)) },
-                            onClick = { toExtensionsScreen() },
-                            expanded = (extensionsListState.shouldExpandFAB()) || updateCount != 0,
-                        )
-                    },
+                ScrollbarLazyColumn(
+                    state = extensionsListState,
+                    contentPadding = contentPadding + topSmallPaddingValues,
                 ) {
-                    ScrollbarLazyColumn(
-                        state = extensionsListState,
-                        // <-- AM (BROWSE)
-                        contentPadding = contentPadding + topSmallPaddingValues,
-                    ) {
-                        items(
+                    item(key = "discover-search") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { navigator.push(GlobalSearchScreen()) }
+                                .padding(
+                                    horizontal = MaterialTheme.padding.medium,
+                                    vertical = MaterialTheme.padding.small,
+                                ),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Search,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Text(
+                                text = stringResource(MR.strings.action_global_search_hint),
+                                modifier = Modifier.padding(start = MaterialTheme.padding.medium),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    items(
                             items = state.items,
                             contentType = {
                                 when (it) {
