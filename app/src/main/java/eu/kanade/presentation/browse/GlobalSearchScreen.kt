@@ -1,15 +1,16 @@
 package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -45,9 +46,9 @@ fun GlobalSearchScreen(
     onLongClickItem: (Anime) -> Unit,
 ) {
     val context = LocalContext.current
-    val libraryAnime by remember { context.appGraph.getLibraryAnime }
-        .subscribe()
-        .collectAsState(initial = emptyList())
+    val libraryAnime by produceState<List<Anime>>(initialValue = emptyList()) {
+        value = context.appGraph.getFavorites.await()
+    }
     var searchScope by rememberSaveable { mutableStateOf(GlobalSearchScope.All) }
 
     val libraryResults = remember(libraryAnime, state.searchQuery) {
@@ -57,7 +58,6 @@ fun GlobalSearchScreen(
         } else {
             libraryAnime
                 .asSequence()
-                .map { it.anime }
                 .filter {
                     it.title.contains(query, ignoreCase = true) ||
                         it.author?.contains(query, ignoreCase = true) == true ||

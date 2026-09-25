@@ -42,6 +42,8 @@ import tachiyomi.presentation.core.util.collectAsState
 
 object SettingsBackupScreen : SearchableSettings {
 
+    val restorePreferenceKeyString = MR.strings.label_backup
+
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = AMMR.strings.am_settings_backup
