@@ -32,7 +32,7 @@ object SettingsConnectionScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = AMMR.strings.pref_category_connection
+    override fun getTitleRes() = AMMR.strings.am_settings_integrations
 
     @Composable
     override fun getPreferences(): List<Preference> {

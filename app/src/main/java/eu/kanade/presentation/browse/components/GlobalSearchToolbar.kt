@@ -27,9 +27,11 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eu.kanade.presentation.browse.GlobalSearchScope
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,6 +43,8 @@ fun GlobalSearchToolbar(
     navigateUp: () -> Unit,
     onChangeSearchQuery: (String?) -> Unit,
     onSearch: (String) -> Unit,
+    searchScope: GlobalSearchScope? = null,
+    onChangeSearchScope: ((GlobalSearchScope) -> Unit)? = null,
     hideSourceFilter: Boolean,
     sourceFilter: SourceFilter,
     onChangeSearchFilter: (SourceFilter) -> Unit,
@@ -75,7 +79,28 @@ fun GlobalSearchToolbar(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // TODO: make this UX better; it only applies when triggering a new search
+            if (searchScope != null && onChangeSearchScope != null) {
+                GlobalSearchScope.entries.forEach { scope ->
+                    FilterChip(
+                        selected = searchScope == scope,
+                        onClick = { onChangeSearchScope(scope) },
+                        label = {
+                            Text(
+                                stringResource(
+                                    when (scope) {
+                                        GlobalSearchScope.All -> AMMR.strings.am_search_scope_all
+                                        GlobalSearchScope.Library -> AMMR.strings.am_search_scope_library
+                                        GlobalSearchScope.Sources -> AMMR.strings.am_search_scope_sources
+                                    },
+                                ),
+                            )
+                        },
+                    )
+                }
+                VerticalDivider(modifier = Modifier.height(FilterChipDefaults.Height))
+            }
+
+            // Source-specific filtering remains available when Sources participate in the scope.
             if (!hideSourceFilter) {
                 FilterChip(
                     selected = sourceFilter == SourceFilter.PinnedOnly,
@@ -111,21 +136,23 @@ fun GlobalSearchToolbar(
                 VerticalDivider(modifier = Modifier.height(FilterChipDefaults.Height))
             }
 
-            FilterChip(
-                selected = onlyShowHasResults,
-                onClick = { onToggleResults() },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.FilterList,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(FilterChipDefaults.IconSize),
-                    )
-                },
-                label = {
-                    Text(text = stringResource(MR.strings.has_results))
-                },
-            )
+            if (searchScope != GlobalSearchScope.Library) {
+                FilterChip(
+                    selected = onlyShowHasResults,
+                    onClick = { onToggleResults() },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.FilterList,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(FilterChipDefaults.IconSize),
+                        )
+                    },
+                    label = {
+                        Text(text = stringResource(MR.strings.has_results))
+                    },
+                )
+            }
         }
 
         HorizontalDivider()

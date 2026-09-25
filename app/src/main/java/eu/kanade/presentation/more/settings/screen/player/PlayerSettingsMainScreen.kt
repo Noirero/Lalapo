@@ -41,10 +41,12 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
 import eu.kanade.presentation.more.settings.screen.player.custombutton.PlayerSettingsCustomButtonScreen
 import eu.kanade.presentation.more.settings.screen.player.editor.PlayerSettingsEditorScreen
+import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -133,6 +135,16 @@ class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
                         items = items,
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
+                        if (index == 0) {
+                            PreferenceGroupHeader(
+                                title = stringResource(AMMR.strings.am_player_group_playback),
+                            )
+                        } else if (index == POWER_USER_START_INDEX) {
+                            PreferenceGroupHeader(
+                                title = stringResource(AMMR.strings.am_settings_power_user),
+                            )
+                        }
+
                         val selected = indexSelected == index
                         var modifier: Modifier = Modifier
                         var contentColor = LocalContentColor.current
@@ -237,3 +249,5 @@ private val items = listOf(
         screen = PlayerSettingsAdvancedScreen,
     ),
 )
+
+private const val POWER_USER_START_INDEX = 5

@@ -2,9 +2,18 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.browse.components.GlobalSearchCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchErrorResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
@@ -15,7 +24,11 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import mihon.app.di.appGraph
 import tachiyomi.domain.anime.model.Anime
+import tachiyomi.i18n.animiru.AMMR
+import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.components.material.Scaffold
 
 @Composable
@@ -31,6 +44,30 @@ fun GlobalSearchScreen(
     onClickItem: (Anime) -> Unit,
     onLongClickItem: (Anime) -> Unit,
 ) {
+    val context = LocalContext.current
+    val libraryAnime by remember { context.appGraph.getLibraryAnime }
+        .subscribe()
+        .collectAsState(initial = emptyList())
+    var searchScope by rememberSaveable { mutableStateOf(GlobalSearchScope.All) }
+
+    val libraryResults = remember(libraryAnime, state.searchQuery) {
+        val query = state.searchQuery.orEmpty().trim()
+        if (query.isBlank()) {
+            emptyList()
+        } else {
+            libraryAnime
+                .asSequence()
+                .map { it.anime }
+                .filter {
+                    it.title.contains(query, ignoreCase = true) ||
+                        it.author?.contains(query, ignoreCase = true) == true ||
+                        it.artist?.contains(query, ignoreCase = true) == true
+                }
+                .take(24)
+                .toList()
+        }
+    }
+
     Scaffold(
         topBar = { scrollBehavior ->
             GlobalSearchToolbar(
@@ -39,8 +76,19 @@ fun GlobalSearchScreen(
                 total = state.total,
                 navigateUp = navigateUp,
                 onChangeSearchQuery = onChangeSearchQuery,
-                onSearch = onSearch,
-                hideSourceFilter = false,
+                onSearch = { query ->
+                    if (searchScope != GlobalSearchScope.Library) {
+                        onSearch(query)
+                    }
+                },
+                searchScope = searchScope,
+                onChangeSearchScope = { scope ->
+                    searchScope = scope
+                    if (scope != GlobalSearchScope.Library && !state.searchQuery.isNullOrBlank()) {
+                        onSearch(state.searchQuery.orEmpty())
+                    }
+                },
+                hideSourceFilter = searchScope == GlobalSearchScope.Library,
                 sourceFilter = state.sourceFilter,
                 onChangeSearchFilter = onChangeSearchFilter,
                 onlyShowHasResults = state.onlyShowHasResults,
@@ -51,6 +99,8 @@ fun GlobalSearchScreen(
     ) { paddingValues ->
         GlobalSearchContent(
             items = state.filteredItems,
+            libraryItems = libraryResults,
+            scope = searchScope,
             contentPadding = paddingValues,
             getAnime = getAnime,
             onClickSource = onClickSource,
@@ -64,6 +114,8 @@ fun GlobalSearchScreen(
 internal fun GlobalSearchContent(
     items: Map<AnimeSource, SearchItemResult>,
     contentPadding: PaddingValues,
+    libraryItems: List<Anime> = emptyList(),
+    scope: GlobalSearchScope = GlobalSearchScope.Sources,
     getAnime: @Composable (Anime) -> State<Anime>,
     onClickSource: (AnimeSource) -> Unit,
     onClickItem: (Anime) -> Unit,
@@ -73,7 +125,27 @@ internal fun GlobalSearchContent(
     LazyColumn(
         contentPadding = contentPadding,
     ) {
-        items.forEach { (source, result) ->
+        if (scope != GlobalSearchScope.Sources && libraryItems.isNotEmpty()) {
+            item(key = "library-results") {
+                Text(
+                    text = stringResource(AMMR.strings.am_search_scope_library),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(
+                        horizontal = MaterialTheme.padding.medium,
+                        vertical = MaterialTheme.padding.small,
+                    ),
+                )
+                GlobalSearchCardRow(
+                    titles = libraryItems,
+                    getAnime = getAnime,
+                    onClick = onClickItem,
+                    onLongClick = onLongClickItem,
+                )
+            }
+        }
+
+        if (scope != GlobalSearchScope.Library) {
+            items.forEach { (source, result) ->
             item(key = source.id) {
                 GlobalSearchResultItem(
                     title = fromSourceId?.let {
@@ -102,5 +174,12 @@ internal fun GlobalSearchContent(
                 }
             }
         }
+        }
     }
+}
+
+enum class GlobalSearchScope {
+    All,
+    Library,
+    Sources,
 }

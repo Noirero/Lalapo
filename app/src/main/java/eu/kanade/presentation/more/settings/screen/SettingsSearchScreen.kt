@@ -59,6 +59,7 @@ import eu.kanade.presentation.more.settings.screen.player.PlayerSettingsSubtitle
 import eu.kanade.presentation.more.settings.screen.player.PlayerSettingsTorrentScreen
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -194,9 +195,30 @@ private fun SearchResult(
     val context = LocalContext.current
 
     val index = if (isPlayer) getPlayerIndex() else getIndex() + getPlayerIndex()
+    val destinationResults = if (isPlayer) {
+        emptyList()
+    } else {
+        getCommandDestinations(context, isLtr)
+    }
     // <-- AY
     val result by produceState<List<SearchResultItem>?>(initialValue = null, searchKey) {
-        value = index.asSequence()
+        val commandMatches = destinationResults.asSequence()
+            .filter { destination ->
+                destination.aliases.any { alias ->
+                    alias.contains(searchKey, ignoreCase = true) ||
+                        searchKey.contains(alias, ignoreCase = true)
+                }
+            }
+            .map { destination ->
+                SearchResultItem(
+                    route = destination.route,
+                    title = destination.title,
+                    breadcrumbs = destination.breadcrumbs,
+                    highlightKey = null,
+                )
+            }
+
+        val preferenceMatches = index.asSequence()
             .flatMap { settingsData ->
                 settingsData.contents.asSequence()
                     // Only search from enabled prefs and one with valid title
@@ -245,7 +267,10 @@ private fun SearchResult(
                         )
                     }
             }
-            .take(10) // Just take top 10 result for quicker result
+
+        value = (commandMatches + preferenceMatches)
+            .distinctBy { it.route::class to it.title }
+            .take(10)
             .toList()
     }
 
@@ -344,15 +369,19 @@ private val playerSettingScreens = listOf(
 
 private val settingScreens = listOf(
     SettingsAppearanceScreen,
+    SettingsGeneralScreen,
     SettingsLibraryScreen,
     SettingsDownloadScreen,
     SettingsTrackingScreen,
+    SettingsSyncBackupScreen,
+    SettingsBackupScreen,
     // AM (CONNECTION) -->
     SettingsConnectionScreen,
     // <-- AM (CONNECTION)
     SettingsBrowseScreen,
     SettingsDataScreen,
     SettingsSecurityScreen,
+    SettingsNetworkScreen,
     SettingsAdvancedScreen,
 )
 
@@ -369,5 +398,76 @@ private data class SearchResultItem(
     val route: VoyagerScreen,
     val title: String,
     val breadcrumbs: String,
-    val highlightKey: String,
+    val highlightKey: String?,
 )
+
+private data class CommandDestination(
+    val route: VoyagerScreen,
+    val title: String,
+    val breadcrumbs: String,
+    val aliases: List<String>,
+)
+
+private fun getCommandDestinations(
+    context: android.content.Context,
+    isLtr: Boolean,
+): List<CommandDestination> {
+    fun destination(
+        route: VoyagerScreen,
+        title: String,
+        aliases: List<String>,
+    ): CommandDestination {
+        return CommandDestination(
+            route = route,
+            title = title,
+            breadcrumbs = getLocalizedBreadcrumb(
+                listOf(MR.strings.label_settings.getString(context), title),
+                isLtr,
+            ),
+            aliases = aliases,
+        )
+    }
+
+    return listOf(
+        destination(
+            route = PlayerSettingsSubtitleScreen,
+            title = AYMR.strings.pref_player_subtitle.getString(context),
+            aliases = listOf("subtitle", "subtitles", "caption", "captions"),
+        ),
+        destination(
+            route = SettingsSyncBackupScreen,
+            title = AMMR.strings.am_label_sync_backup.getString(context),
+            aliases = listOf("backup", "sync", "restore"),
+        ),
+        destination(
+            route = SettingsNetworkScreen,
+            title = AMMR.strings.am_settings_network.getString(context),
+            aliases = listOf("dns", "network", "user agent", "user-agent", "cookies"),
+        ),
+        destination(
+            route = SettingsBrowseScreen,
+            title = AMMR.strings.am_settings_sources_extensions.getString(context),
+            aliases = listOf("extension", "extensions", "source", "sources", "shizuku"),
+        ),
+        destination(
+            route = SettingsAppearanceScreen,
+            title = MR.strings.pref_category_appearance.getString(context),
+            aliases = listOf("theme", "themes", "appearance", "amoled", "dynamic"),
+        ),
+        destination(
+            route = SettingsSecurityScreen,
+            title = MR.strings.pref_category_security.getString(context),
+            aliases = listOf("privacy", "security", "biometric", "secure screen"),
+        ),
+        destination(
+            route = SettingsDataScreen,
+            title = AMMR.strings.am_settings_storage_cleanup.getString(context),
+            aliases = listOf("storage", "cleanup", "cache", "space"),
+        ),
+        destination(
+            route = SettingsConnectionScreen,
+            title = AMMR.strings.am_settings_integrations.getString(context),
+            aliases = listOf("integration", "integrations", "discord", "rpc"),
+        ),
+    )
+}

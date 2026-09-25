@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +51,7 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.isDynamicColorAvailable
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
@@ -84,45 +86,83 @@ private fun AppThemesList(
         AppTheme.entries
             .filterNot { it.titleRes == null || (it == AppTheme.MONET && !DeviceUtil.isDynamicColorAvailable) }
     }
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = PrefsHorizontalPadding),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-    ) {
-        items(
-            items = appThemes,
-            key = { it.name },
-        ) { appTheme ->
-            Column(
-                modifier = Modifier
-                    .width(114.dp)
-                    .padding(top = 8.dp),
-            ) {
-                TachiyomiTheme(
-                    appTheme = appTheme,
-                    amoled = amoled,
+    val curatedThemes = remember {
+        setOf(
+            AppTheme.DEFAULT,
+            AppTheme.MONET,
+            AppTheme.MONOCHROME,
+            AppTheme.CATPPUCCIN,
+            AppTheme.NORD,
+            AppTheme.MIDNIGHT_DUSK,
+        )
+    }
+    var showAllThemes by remember { mutableStateOf(false) }
+    val visibleThemes = remember(appThemes, currentTheme, showAllThemes) {
+        if (showAllThemes) {
+            appThemes
+        } else {
+            appThemes.filter { it in curatedThemes || it == currentTheme }
+        }
+    }
+
+    Column {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = PrefsHorizontalPadding),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        ) {
+            items(
+                items = visibleThemes,
+                key = { it.name },
+            ) { appTheme ->
+                Column(
+                    modifier = Modifier
+                        .width(114.dp)
+                        .padding(top = 8.dp),
                 ) {
-                    AppThemePreviewItem(
-                        selected = currentTheme == appTheme,
-                        onClick = {
-                            onItemClick(appTheme)
-                            (context as? Activity)?.let { ActivityCompat.recreate(it) }
-                        },
+                    TachiyomiTheme(
+                        appTheme = appTheme,
+                        amoled = amoled,
+                    ) {
+                        AppThemePreviewItem(
+                            selected = currentTheme == appTheme,
+                            onClick = {
+                                onItemClick(appTheme)
+                                (context as? Activity)?.let { ActivityCompat.recreate(it) }
+                            },
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(appTheme.titleRes!!),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .secondaryItemAlpha(),
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        minLines = 2,
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(appTheme.titleRes!!),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .secondaryItemAlpha(),
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    minLines = 2,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
             }
+        }
+
+        TextButton(
+            onClick = { showAllThemes = !showAllThemes },
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(end = PrefsHorizontalPadding),
+        ) {
+            Text(
+                stringResource(
+                    if (showAllThemes) {
+                        AMMR.strings.am_theme_show_curated
+                    } else {
+                        AMMR.strings.am_theme_more
+                    },
+                ),
+            )
         }
     }
 }

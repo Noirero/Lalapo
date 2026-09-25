@@ -15,10 +15,12 @@ import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VideoSettings
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +44,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
+import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
@@ -106,55 +109,69 @@ object SettingsMainScreen : Screen() {
             containerColor = containerColor,
             content = { contentPadding ->
                 val state = rememberLazyListState()
-                val indexSelected = if (twoPane) {
-                    items.indexOfFirst { it.screen::class == navigator.items.first()::class }
-                        .also {
-                            LaunchedEffect(Unit) {
-                                state.animateScrollToItem(it)
-                                if (it > 0) {
-                                    // Lift scroll
-                                    topBarState.contentOffset = topBarState.heightOffsetLimit
-                                }
-                            }
+                val selectedClass = if (twoPane) navigator.items.first()::class else null
+                val selectedListIndex = if (selectedClass != null) {
+                    var cursor = 0
+                    var found = 0
+                    sections.forEach { section ->
+                        cursor += 1
+                        val itemIndex = section.items.indexOfFirst { it.screen::class == selectedClass }
+                        if (itemIndex >= 0) {
+                            found = cursor + itemIndex
                         }
+                        cursor += section.items.size
+                    }
+                    found
                 } else {
-                    null
+                    0
+                }
+
+                LaunchedEffect(selectedListIndex) {
+                    if (twoPane && selectedListIndex > 0) {
+                        state.animateScrollToItem(selectedListIndex)
+                        topBarState.contentOffset = topBarState.heightOffsetLimit
+                    }
                 }
 
                 LazyColumn(
                     state = state,
                     contentPadding = contentPadding,
                 ) {
-                    itemsIndexed(
-                        items = items,
-                        key = { _, item -> item.hashCode() },
-                    ) { index, item ->
-                        val selected = indexSelected == index
-                        var modifier: Modifier = Modifier
-                        var contentColor = LocalContentColor.current
-                        if (twoPane) {
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .then(
-                                    if (selected) {
-                                        Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                                    } else {
-                                        Modifier
-                                    },
-                                )
-                            if (selected) {
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            }
+                    sections.forEach { section ->
+                        item {
+                            PreferenceGroupHeader(title = stringResource(section.titleRes))
                         }
-                        CompositionLocalProvider(LocalContentColor provides contentColor) {
-                            TextPreferenceWidget(
-                                modifier = modifier,
-                                title = stringResource(item.titleRes),
-                                subtitle = item.formatSubtitle(),
-                                icon = item.icon,
-                                onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
-                            )
+                        itemsIndexed(
+                            items = section.items,
+                            key = { _, item -> item.hashCode() },
+                        ) { _, item ->
+                            val selected = twoPane && item.screen::class == selectedClass
+                            var modifier: Modifier = Modifier
+                            var contentColor = LocalContentColor.current
+                            if (twoPane) {
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .then(
+                                        if (selected) {
+                                            Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+                                        } else {
+                                            Modifier
+                                        },
+                                    )
+                                if (selected) {
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            }
+                            CompositionLocalProvider(LocalContentColor provides contentColor) {
+                                TextPreferenceWidget(
+                                    modifier = modifier,
+                                    title = stringResource(item.titleRes),
+                                    subtitle = item.formatSubtitle(),
+                                    icon = item.icon,
+                                    onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
+                                )
+                            }
                         }
                     }
                 }
@@ -167,6 +184,11 @@ object SettingsMainScreen : Screen() {
     }
 }
 
+private data class SettingsSection(
+    val titleRes: StringResource,
+    val items: List<Item>,
+)
+
 private data class Item(
     val titleRes: StringResource,
     val subtitleRes: StringResource? = null,
@@ -175,75 +197,111 @@ private data class Item(
     val screen: VoyagerScreen,
 )
 
-private val items = listOf(
-    Item(
-        titleRes = MR.strings.pref_category_appearance,
-        subtitleRes = MR.strings.pref_appearance_summary,
-        icon = Icons.Outlined.Palette,
-        screen = SettingsAppearanceScreen,
+private val sections = listOf(
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_app,
+        items = listOf(
+            Item(
+                titleRes = MR.strings.pref_category_appearance,
+                subtitleRes = MR.strings.pref_appearance_summary,
+                icon = Icons.Outlined.Palette,
+                screen = SettingsAppearanceScreen,
+            ),
+            Item(
+                titleRes = AMMR.strings.am_settings_general,
+                icon = Icons.Outlined.Tune,
+                screen = SettingsGeneralScreen,
+            ),
+            Item(
+                titleRes = MR.strings.pref_category_library,
+                subtitleRes = AMMR.strings.am_pref_library_summary,
+                icon = Icons.Outlined.CollectionsBookmark,
+                screen = SettingsLibraryScreen,
+            ),
+        ),
     ),
-    Item(
-        titleRes = MR.strings.pref_category_library,
-        subtitleRes = AMMR.strings.am_pref_library_summary,
-        icon = Icons.Outlined.CollectionsBookmark,
-        screen = SettingsLibraryScreen,
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_watching,
+        items = listOf(
+            Item(
+                titleRes = AYMR.strings.label_player,
+                subtitleRes = AYMR.strings.pref_player_settings_summary,
+                icon = Icons.Outlined.VideoSettings,
+                screen = PlayerSettingsScreen(mainSettings = true),
+            ),
+            Item(
+                titleRes = MR.strings.pref_category_downloads,
+                subtitleRes = MR.strings.pref_downloads_summary,
+                icon = Icons.Outlined.GetApp,
+                screen = SettingsDownloadScreen,
+            ),
+        ),
     ),
-    Item(
-        titleRes = AYMR.strings.label_player,
-        subtitleRes = AYMR.strings.pref_player_settings_summary,
-        icon = Icons.Outlined.VideoSettings,
-        screen = PlayerSettingsScreen(mainSettings = true),
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_services,
+        items = listOf(
+            Item(
+                titleRes = AMMR.strings.am_settings_sources_extensions,
+                subtitleRes = MR.strings.pref_browse_summary,
+                icon = Icons.Outlined.Explore,
+                screen = SettingsBrowseScreen,
+            ),
+            Item(
+                titleRes = MR.strings.pref_category_tracking,
+                subtitleRes = MR.strings.pref_tracking_summary,
+                icon = Icons.Outlined.Sync,
+                screen = SettingsTrackingScreen,
+            ),
+            Item(
+                titleRes = AMMR.strings.am_label_sync_backup,
+                icon = Icons.Outlined.Storage,
+                screen = SettingsSyncBackupScreen,
+            ),
+            Item(
+                titleRes = AMMR.strings.am_settings_integrations,
+                icon = Icons.Outlined.Link,
+                screen = SettingsConnectionScreen,
+            ),
+        ),
     ),
-    Item(
-        titleRes = MR.strings.pref_category_downloads,
-        subtitleRes = MR.strings.pref_downloads_summary,
-        icon = Icons.Outlined.GetApp,
-        screen = SettingsDownloadScreen,
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_system,
+        items = listOf(
+            Item(
+                titleRes = MR.strings.pref_category_security,
+                subtitleRes = MR.strings.pref_security_summary,
+                icon = Icons.Outlined.Security,
+                screen = SettingsSecurityScreen,
+            ),
+            Item(
+                titleRes = AMMR.strings.am_settings_network,
+                icon = Icons.Outlined.Public,
+                screen = SettingsNetworkScreen,
+            ),
+            Item(
+                titleRes = AMMR.strings.am_settings_storage_cleanup,
+                icon = Icons.Outlined.Storage,
+                screen = SettingsDataScreen,
+            ),
+            Item(
+                titleRes = MR.strings.pref_category_advanced,
+                subtitleRes = MR.strings.pref_advanced_summary,
+                icon = Icons.Outlined.Code,
+                screen = SettingsAdvancedScreen,
+            ),
+        ),
     ),
-    Item(
-        titleRes = MR.strings.pref_category_tracking,
-        subtitleRes = MR.strings.pref_tracking_summary,
-        icon = Icons.Outlined.Sync,
-        screen = SettingsTrackingScreen,
-    ),
-    // AM (CONNECTION) -->
-    Item(
-        titleRes = AMMR.strings.pref_category_connection,
-        subtitleRes = AMMR.strings.pref_connection_summary,
-        icon = Icons.Outlined.Link,
-        screen = SettingsConnectionScreen,
-    ),
-    // <-- AM (CONNECTION)
-    Item(
-        titleRes = MR.strings.browse,
-        subtitleRes = MR.strings.pref_browse_summary,
-        icon = Icons.Outlined.Explore,
-        screen = SettingsBrowseScreen,
-    ),
-    Item(
-        titleRes = MR.strings.label_data_storage,
-        subtitleRes = MR.strings.pref_backup_summary,
-        icon = Icons.Outlined.Storage,
-        screen = SettingsDataScreen,
-    ),
-    Item(
-        titleRes = MR.strings.pref_category_security,
-        subtitleRes = MR.strings.pref_security_summary,
-        icon = Icons.Outlined.Security,
-        screen = SettingsSecurityScreen,
-    ),
-    Item(
-        titleRes = MR.strings.pref_category_advanced,
-        subtitleRes = MR.strings.pref_advanced_summary,
-        icon = Icons.Outlined.Code,
-        screen = SettingsAdvancedScreen,
-    ),
-    Item(
-        titleRes = MR.strings.pref_category_about,
-        formatSubtitle = {
-            "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName(withBuildDate = false)}"
-        },
-        icon = Icons.Outlined.Info,
-        screen = AboutScreen,
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_about,
+        items = listOf(
+            Item(
+                titleRes = MR.strings.pref_category_about,
+                formatSubtitle = {
+                    "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName(withBuildDate = false)}"
+                },
+                icon = Icons.Outlined.Info,
+                screen = AboutScreen,
+            ),
+        ),
     ),
 )
