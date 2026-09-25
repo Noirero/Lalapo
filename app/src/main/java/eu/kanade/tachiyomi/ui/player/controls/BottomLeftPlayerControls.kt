@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,7 +43,6 @@ fun BottomLeftPlayerControls(
     currentChapter: Segment?,
     showChapterIndicator: Boolean,
     onLockControls: () -> Unit,
-    onCycleRotation: () -> Unit,
     onPlaybackSpeedChange: (Float) -> Unit,
     onOpenSheet: (Sheets) -> Unit,
     modifier: Modifier = Modifier,
@@ -56,11 +54,6 @@ fun BottomLeftPlayerControls(
         ControlsButton(
             Icons.Default.LockOpen,
             onClick = onLockControls,
-            verticalSpacing = MaterialTheme.padding.small,
-        )
-        ControlsButton(
-            icon = Icons.Default.ScreenRotation,
-            onClick = onCycleRotation,
             verticalSpacing = MaterialTheme.padding.small,
         )
         ControlsButton(
@@ -91,7 +84,6 @@ private fun BottomLeftPlayerControlsPreview() {
         currentChapter = Segment("Opening", 43f),
         showChapterIndicator = true,
         onLockControls = { },
-        onCycleRotation = { },
         onPlaybackSpeedChange = { },
         onOpenSheet = { },
         modifier = Modifier,

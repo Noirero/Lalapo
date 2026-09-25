@@ -3,16 +3,6 @@
  * https://github.com/abdallahmehiz/mpvKt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 package eu.kanade.tachiyomi.ui.player.controls.components.sheets
@@ -37,9 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardAlt
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -68,6 +56,7 @@ import animiru.domain.player.model.Decoder
 import eu.kanade.presentation.player.components.PlayerSheet
 import tachiyomi.domain.custombutton.model.CustomButton
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -85,10 +74,19 @@ fun MoreSheet(
     onCustomButtonLongClick: (CustomButton) -> Unit,
     onAudioChannelsChange: (AudioChannels) -> Unit,
     onDismissRequest: () -> Unit,
+    playbackSpeed: Float,
+    onOpenSpeed: () -> Unit,
     onEnterFiltersPanel: () -> Unit,
+    onChangeAspect: () -> Unit,
+    onCycleRotation: () -> Unit,
     onOpenSubtitles: () -> Unit,
     onOpenAudio: () -> Unit,
     onOpenQuality: (() -> Unit)?,
+    onOpenSubtitleDelay: () -> Unit,
+    onOpenAudioDelay: () -> Unit,
+    onOpenChapters: (() -> Unit)?,
+    onOpenScreenshot: () -> Unit,
+    onEnterPip: (() -> Unit)?,
     autoPlayEnabled: Boolean,
     onToggleAutoPlay: (Boolean) -> Unit,
     customButtons: List<CustomButton>,
@@ -103,68 +101,19 @@ fun MoreSheet(
                 .fillMaxWidth()
                 .padding(MaterialTheme.padding.medium)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(AYMR.strings.player_sheets_more_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                ) {
-                    var isSleepTimerDialogShown by remember { mutableStateOf(false) }
-                    TextButton(onClick = { isSleepTimerDialogShown = true }) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                        ) {
-                            Icon(imageVector = Icons.Outlined.Timer, contentDescription = null)
-                            Text(
-                                text =
-                                if (remainingTime == 0) {
-                                    stringResource(AYMR.strings.timer_title)
-                                } else {
-                                    stringResource(
-                                        AYMR.strings.timer_remaining,
-                                        DateUtils.formatElapsedTime(remainingTime.toLong()),
-                                    )
-                                },
-                            )
-                            if (isSleepTimerDialogShown) {
-                                TimePickerDialog(
-                                    remainingTime = remainingTime,
-                                    onDismissRequest = { isSleepTimerDialogShown = false },
-                                    onTimeSelect = onStartTimer,
-                                )
-                            }
-                        }
-                    }
-                    TextButton(onClick = onEnterFiltersPanel) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                        ) {
-                            Icon(imageVector = Icons.Default.Tune, contentDescription = null)
-                            Text(text = stringResource(AYMR.strings.player_sheets_filters_title))
-                        }
-                    }
-                }
-            }
-
             Text(
-                text = stringResource(AYMR.strings.label_player),
-                style = MaterialTheme.typography.titleMedium,
+                text = stringResource(AYMR.strings.player_sheets_more_title),
+                style = MaterialTheme.typography.headlineMedium,
             )
-            FlowRow(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
+
+            PlayerSettingsSection(stringResource(AMMR.strings.am_player_group_playback)) {
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenSpeed,
+                    label = { Text(stringResource(AYMR.strings.player_speed, playbackSpeed)) },
+                )
                 FilterChip(
                     selected = autoPlayEnabled,
                     onClick = { onToggleAutoPlay(!autoPlayEnabled) },
@@ -199,89 +148,181 @@ fun MoreSheet(
                 }
             }
 
-            Text(stringResource(AYMR.strings.player_hwdec_mode))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
-                items(Decoder.entries.minus(Decoder.Auto)) { decoder ->
-                    FilterChip(
-                        selected = decoder == selectedDecoder,
-                        onClick = { onSelectDecoder(decoder) },
-                        label = { Text(text = decoder.title) },
-                    )
-                }
+            PlayerSettingsSection(stringResource(AMMR.strings.am_player_group_video)) {
+                FilterChip(
+                    selected = false,
+                    onClick = onChangeAspect,
+                    label = { Text(stringResource(AMMR.strings.am_player_action_aspect_ratio)) },
+                )
+                FilterChip(
+                    selected = false,
+                    onClick = onCycleRotation,
+                    label = { Text(stringResource(AYMR.strings.pref_category_player_orientation)) },
+                )
+                FilterChip(
+                    selected = false,
+                    onClick = onEnterFiltersPanel,
+                    label = { Text(stringResource(AYMR.strings.player_sheets_filters_title)) },
+                )
             }
 
-            Text(stringResource(AYMR.strings.player_sheets_stats_page_title))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
-                items(6) { page ->
+            PlayerSettingsSection(stringResource(AMMR.strings.am_player_group_timing)) {
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenSubtitleDelay,
+                    label = { Text(stringResource(AYMR.strings.player_sheets_sub_delay_title)) },
+                )
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenAudioDelay,
+                    label = { Text(stringResource(AYMR.strings.player_sheets_audio_delay_title)) },
+                )
+                if (onOpenChapters != null) {
                     FilterChip(
-                        label = {
-                            Text(
+                        selected = false,
+                        onClick = onOpenChapters,
+                        label = { Text(stringResource(AYMR.strings.player_sheets_chapters_title)) },
+                    )
+                }
+
+                var isSleepTimerDialogShown by remember { mutableStateOf(false) }
+                FilterChip(
+                    selected = remainingTime > 0,
+                    onClick = { isSleepTimerDialogShown = true },
+                    label = {
+                        Text(
+                            if (remainingTime == 0) {
+                                stringResource(AYMR.strings.timer_title)
+                            } else {
                                 stringResource(
-                                    if (page ==
-                                        0
-                                    ) {
-                                        AYMR.strings.player_sheets_tracks_off
-                                    } else {
-                                        AYMR.strings.player_sheets_stats_page_chip
-                                    },
-                                    page,
-                                ),
-                            )
-                        },
-                        onClick = { onStatisticsPageChange(page) },
-                        selected = statisticsPage == page,
+                                    AYMR.strings.timer_remaining,
+                                    DateUtils.formatElapsedTime(remainingTime.toLong()),
+                                )
+                            },
+                        )
+                    },
+                )
+                if (isSleepTimerDialogShown) {
+                    TimePickerDialog(
+                        remainingTime = remainingTime,
+                        onDismissRequest = { isSleepTimerDialogShown = false },
+                        onTimeSelect = onStartTimer,
                     )
                 }
             }
 
-            if (customButtons.isNotEmpty()) {
-                Text(text = stringResource(AYMR.strings.player_sheets_custom_buttons_title))
-                FlowRow(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.mediumSmall),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                    maxItemsInEachRow = Int.MAX_VALUE,
-                ) {
-                    customButtons.forEach { button ->
+            PlayerSettingsSection(stringResource(AMMR.strings.am_player_group_tools)) {
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenScreenshot,
+                    label = { Text(stringResource(AMMR.strings.am_player_action_screenshot)) },
+                )
+                if (onEnterPip != null) {
+                    FilterChip(
+                        selected = false,
+                        onClick = onEnterPip,
+                        label = { Text(stringResource(AYMR.strings.pref_category_pip)) },
+                    )
+                }
+            }
 
-                        val inputChipInteractionSource = remember { MutableInteractionSource() }
+            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                Text(
+                    text = stringResource(AMMR.strings.am_player_group_advanced),
+                    style = MaterialTheme.typography.titleMedium,
+                )
 
-                        Box {
-                            FilterChip(
-                                onClick = {},
-                                label = { Text(text = button.name) },
-                                selected = false,
-                                interactionSource = inputChipInteractionSource,
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .combinedClickable(
-                                        onClick = { onCustomButtonClick(button) },
-                                        onLongClick = { onCustomButtonLongClick(button) },
-                                        interactionSource = inputChipInteractionSource,
-                                        indication = null,
+                Text(stringResource(AYMR.strings.player_hwdec_mode))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                    items(Decoder.entries.minus(Decoder.Auto)) { decoder ->
+                        FilterChip(
+                            selected = decoder == selectedDecoder,
+                            onClick = { onSelectDecoder(decoder) },
+                            label = { Text(text = decoder.title) },
+                        )
+                    }
+                }
+
+                Text(stringResource(AYMR.strings.player_sheets_stats_page_title))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                    items(6) { page ->
+                        FilterChip(
+                            label = {
+                                Text(
+                                    stringResource(
+                                        if (page == 0) {
+                                            AYMR.strings.player_sheets_tracks_off
+                                        } else {
+                                            AYMR.strings.player_sheets_stats_page_chip
+                                        },
+                                        page,
                                     ),
-                            )
+                                )
+                            },
+                            onClick = { onStatisticsPageChange(page) },
+                            selected = statisticsPage == page,
+                        )
+                    }
+                }
+
+                if (customButtons.isNotEmpty()) {
+                    Text(text = stringResource(AYMR.strings.player_sheets_custom_buttons_title))
+                    FlowRow(
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.mediumSmall),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        maxItemsInEachRow = Int.MAX_VALUE,
+                    ) {
+                        customButtons.forEach { button ->
+                            val interactionSource = remember { MutableInteractionSource() }
+                            Box {
+                                FilterChip(
+                                    onClick = {},
+                                    label = { Text(text = button.name) },
+                                    selected = false,
+                                    interactionSource = interactionSource,
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .combinedClickable(
+                                            onClick = { onCustomButtonClick(button) },
+                                            onLongClick = { onCustomButtonLongClick(button) },
+                                            interactionSource = interactionSource,
+                                            indication = null,
+                                        ),
+                                )
+                            }
                         }
                     }
                 }
-            }
-            Text(text = stringResource(AYMR.strings.pref_audio_channels))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
-                items(AudioChannels.entries) {
-                    FilterChip(
-                        selected = audioChannels == it,
-                        onClick = { onAudioChannelsChange(it) },
-                        label = { Text(text = stringResource(it.titleRes)) },
-                    )
+
+                Text(text = stringResource(AYMR.strings.pref_audio_channels))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                    items(AudioChannels.entries) { channels ->
+                        FilterChip(
+                            selected = audioChannels == channels,
+                            onClick = { onAudioChannelsChange(channels) },
+                            label = { Text(text = stringResource(channels.titleRes)) },
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun PlayerSettingsSection(
+    title: String,
+    content: @Composable () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium)
+        FlowRow(
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        ) {
+            content()
         }
     }
 }

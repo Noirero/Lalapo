@@ -5,8 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +43,7 @@ import eu.kanade.tachiyomi.ui.player.cast.components.CAST_PLAYBACK_MIN
 import eu.kanade.tachiyomi.ui.player.cast.components.CastDialogs
 import eu.kanade.tachiyomi.ui.player.cast.components.CastSheets
 import eu.kanade.tachiyomi.ui.player.components.BrightnessOverlay
+import eu.kanade.tachiyomi.ui.player.components.HosterState
 import eu.kanade.tachiyomi.ui.player.components.MpvSurface
 import eu.kanade.tachiyomi.ui.player.components.OrientationOverlay
 import eu.kanade.tachiyomi.ui.player.components.SystemAwakeOverlay
@@ -62,6 +66,9 @@ import mihon.app.di.appGraph
 import tachiyomi.core.common.preference.deleteAndGet
 import tachiyomi.core.common.preference.minusAssign
 import tachiyomi.core.common.preference.plusAssign
+import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.source.local.isLocal
 import kotlin.math.roundToInt
@@ -97,6 +104,7 @@ fun PlayerScreen(
     val dateFormat by uiPreferences.dateFormat.collectAsState()
 
     var hasNavigatedBack by remember { mutableStateOf(false) }
+    var showPlayerTutorial by remember { mutableStateOf(!playerPreferences.playerTutorialShown.get()) }
 
     BackHandler {
         if (!hasNavigatedBack) {
@@ -364,8 +372,17 @@ fun PlayerScreen(
                     buttons = uiData.customButtons,
                     autoPlayEnabled = uiData.autoPlayEnabled,
                     onToggleAutoPlay = { viewModel.handlePlayerEvent(PlayerEvent.SetAutoPlay(it)) },
-                    qualityAvailable = stateData.isEpisodeOnline,
+                    qualityAvailable = stateData.isEpisodeOnline && (
+                        stateData.hosterList.size > 1 ||
+                            stateData.hosterState.sumOf { hoster ->
+                                (hoster as? HosterState.Ready)?.videoList?.size ?: 0
+                            } > 1
+                        ),
                     onOpenSheet = viewModel::setSheet,
+                    onChangeAspect = { viewModel.handlePlayerEvent(PlayerEvent.ChangeAspect) },
+                    onCycleRotation = { viewModel.handlePlayerEvent(PlayerEvent.CycleRotation) },
+                    isPipAvailable = stateData.isPipAvailable,
+                    onEnterPip = { viewModel.handlePlayerEvent(PlayerEvent.EnterPip) },
                     isLocalSource = stateData.currentSource?.isLocal() == true,
                     showSubtitles = showSubtitles,
                     onToggleShowSubtitles = { subtitlePreferences.screenshotSubtitles.set(it) },
@@ -630,5 +647,26 @@ fun PlayerScreen(
                 )
             }
         }
+    }
+
+    if (showPlayerTutorial) {
+        AlertDialog(
+            onDismissRequest = {
+                playerPreferences.playerTutorialShown.set(true)
+                showPlayerTutorial = false
+            },
+            title = { Text(stringResource(AMMR.strings.am_player_tutorial_title)) },
+            text = { Text(stringResource(AMMR.strings.am_player_tutorial_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        playerPreferences.playerTutorialShown.set(true)
+                        showPlayerTutorial = false
+                    },
+                ) {
+                    Text(stringResource(MR.strings.action_ok))
+                }
+            },
+        )
     }
 }

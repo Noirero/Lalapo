@@ -97,6 +97,10 @@ fun PlayerSheets(
     onToggleAutoPlay: (Boolean) -> Unit,
     qualityAvailable: Boolean,
     onOpenSheet: (Sheets) -> Unit,
+    onChangeAspect: () -> Unit,
+    onCycleRotation: () -> Unit,
+    isPipAvailable: Boolean,
+    onEnterPip: () -> Unit,
 
     // Screenshot sheet
     isLocalSource: Boolean,
@@ -185,7 +189,11 @@ fun PlayerSheets(
                 onCustomButtonLongClick = onCustomButtonLongClick,
                 onAudioChannelsChange = onAudioChannelsChange,
                 onDismissRequest = onDismissRequest,
+                playbackSpeed = speed,
+                onOpenSpeed = { onOpenSheet(Sheets.PlaybackSpeed) },
                 onEnterFiltersPanel = { onOpenPanel(Panels.VideoFilters) },
+                onChangeAspect = onChangeAspect,
+                onCycleRotation = onCycleRotation,
                 onOpenSubtitles = { onOpenSheet(Sheets.SubtitleTracks) },
                 onOpenAudio = { onOpenSheet(Sheets.AudioTracks) },
                 onOpenQuality = if (qualityAvailable) {
@@ -193,6 +201,15 @@ fun PlayerSheets(
                 } else {
                     null
                 },
+                onOpenSubtitleDelay = { onOpenPanel(Panels.SubtitleDelay) },
+                onOpenAudioDelay = { onOpenPanel(Panels.AudioDelay) },
+                onOpenChapters = if (chapter != null && chapters.isNotEmpty()) {
+                    { onOpenSheet(Sheets.Chapters) }
+                } else {
+                    null
+                },
+                onOpenScreenshot = { onOpenSheet(Sheets.Screenshot) },
+                onEnterPip = onEnterPip.takeIf { isPipAvailable },
                 autoPlayEnabled = autoPlayEnabled,
                 onToggleAutoPlay = onToggleAutoPlay,
                 customButtons = buttons,

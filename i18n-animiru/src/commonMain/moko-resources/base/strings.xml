@@ -271,6 +271,15 @@
     <string name="pref_smart_sync_tracker">Smart sync seasons</string>
     <string name="pref_smart_sync_tracker_summary">Skip completed items and stop at entry in progress</string>
     <!-- Lalapo v2 information architecture -->
+    <string name="am_player_group_playback">Playback</string>
+    <string name="am_player_group_video">Video</string>
+    <string name="am_player_group_timing">Timing</string>
+    <string name="am_player_group_tools">Tools</string>
+    <string name="am_player_group_advanced">Advanced</string>
+    <string name="am_player_action_aspect_ratio">Aspect ratio</string>
+    <string name="am_player_action_screenshot">Screenshot</string>
+    <string name="am_player_tutorial_title">Player controls</string>
+    <string name="am_player_tutorial_body">Tap the video to show or hide controls. Use the bottom row for speed and contextual subtitle, audio, quality, or PiP actions. Open More for Video, Timing, Tools, and Advanced controls. Brightness, volume, and seek gestures remain available.</string>
     <string name="am_label_continue_watching">Continue watching</string>
     <string name="am_label_discover">Discover</string>
     <string name="am_label_activity">Activity</string>

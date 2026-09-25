@@ -19,7 +19,6 @@ package eu.kanade.tachiyomi.ui.player.controls
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.PictureInPictureAlt
@@ -41,7 +40,6 @@ fun BottomRightPlayerControls(
     onAudioClick: () -> Unit,
     onAudioLongClick: () -> Unit,
     onQualityClick: () -> Unit,
-    onAspectClick: () -> Unit,
     onPipClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -80,11 +78,5 @@ fun BottomRightPlayerControls(
                 verticalSpacing = MaterialTheme.padding.small,
             )
         }
-
-        ControlsButton(
-            Icons.Default.AspectRatio,
-            onClick = onAspectClick,
-            verticalSpacing = MaterialTheme.padding.small,
-        )
     }
 }

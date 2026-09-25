@@ -426,7 +426,6 @@ fun PlayerControls(
                     onAudioLongClick = { onPlayerEvent(PlayerEvent.SetPanel(Panels.AudioDelay)) },
                     onQualityClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.QualityTracks)) },
                     onPipClick = { onPlayerEvent(PlayerEvent.EnterPip) },
-                    onAspectClick = { onPlayerEvent(PlayerEvent.ChangeAspect) },
                 )
             }
 
@@ -456,7 +455,6 @@ fun PlayerControls(
                     showChapterIndicator = uiData.showChapterIndicator,
                     currentChapter = stateData.currentChapter,
                     onLockControls = { onPlayerEvent(PlayerEvent.LockControls(true)) },
-                    onCycleRotation = { onPlayerEvent(PlayerEvent.CycleRotation) },
                     onPlaybackSpeedChange = { onPlayerEvent(PlayerEvent.ChangeSpeed(it)) },
                     onOpenSheet = { onPlayerEvent(PlayerEvent.SetSheet(it)) },
                 )

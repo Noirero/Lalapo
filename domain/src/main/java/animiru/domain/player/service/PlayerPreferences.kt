@@ -100,6 +100,7 @@ class PlayerPreferences(
     )
     val invertDuration: Preference<Boolean> = preferenceStore.getBoolean("invert_duration", false)
     val aspectState: Preference<VideoAspect> = preferenceStore.getEnum("pref_player_aspect_state", VideoAspect.Fit)
+    val playerTutorialShown: Preference<Boolean> = preferenceStore.getBoolean("player_tutorial_shown_v2", false)
 
     // Old
 
