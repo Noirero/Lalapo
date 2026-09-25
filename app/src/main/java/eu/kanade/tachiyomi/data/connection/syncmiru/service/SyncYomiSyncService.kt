@@ -54,6 +54,7 @@ class SyncYomiSyncService(
             pushSyncData(finalSyncData, etag)
             return finalSyncData.backup
         } catch (e: Exception) {
+            syncPreferences.lastSyncError.set(e.message ?: "SyncYomi sync failed")
             logcat(LogPriority.ERROR) { "Error syncing: ${e.message}" }
             notifier.showSyncError(e.message)
             return null
@@ -167,6 +168,7 @@ class SyncYomiSyncService(
             logcat(LogPriority.DEBUG) { "SyncYomi sync failed with 412" }
         } else {
             val responseBody = response.body.string()
+            syncPreferences.lastSyncError.set("Failed to upload sync data")
             notifier.showSyncError("Failed to upload sync data: $responseBody")
             logcat(LogPriority.ERROR) { "SyncError: $responseBody" }
         }

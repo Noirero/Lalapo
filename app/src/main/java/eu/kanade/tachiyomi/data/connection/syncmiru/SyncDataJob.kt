@@ -56,10 +56,12 @@ class SyncDataJob(private val context: Context, workerParams: WorkerParameters) 
 
         setForegroundSafely()
 
+        syncPreferences.lastSyncError.set("")
         return try {
             syncManager.syncData()
             Result.success()
         } catch (e: Exception) {
+            syncPreferences.lastSyncError.set(e.message ?: "Sync failed")
             logcat(LogPriority.ERROR, e)
             notifier.showSyncError(e.message)
             Result.failure()

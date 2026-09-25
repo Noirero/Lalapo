@@ -80,10 +80,7 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
             getDisplayGroup(playerPreferences = playerPreferences),
             getIntroSkipGroup(playerPreferences = playerPreferences),
             if (deviceSupportsPip) getPipGroup(playerPreferences = playerPreferences) else null,
-            // AM (CAST) -->
-            if (castIncluded) getCastGroup(playerPreferences = playerPreferences) else null,
-            // <-- AM (CAST)
-            getExternalPlayerGroup(
+            getPlaybackTargetGroup(
                 playerPreferences = playerPreferences,
                 basePreferences = basePreferences,
             ),
@@ -298,95 +295,89 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
         )
     }
 
-    // AM (CAST) -->
     @Composable
-    private fun getCastGroup(
-        playerPreferences: PlayerPreferences,
-    ): Preference.PreferenceGroup {
-        val context = LocalContext.current
-
-        val enableCast = playerPreferences.enableCast
-        val castProxy = playerPreferences.castProxy
-        val castProxyPort = playerPreferences.castProxyPort
-
-        val enableCastValue by enableCast.collectAsState()
-        val enableCastProxyValue by castProxy.collectAsState()
-
-        return Preference.PreferenceGroup(
-            title = stringResource(AMMR.strings.pref_cast),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = enableCast,
-                    title = stringResource(AMMR.strings.pref_cast_enable),
-                    onValueChanged = {
-                        context.toast(MR.strings.requires_app_restart)
-                        true
-                    },
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = castProxy,
-                    title = stringResource(AMMR.strings.pref_cast_proxy),
-                    enabled = enableCastValue,
-                ),
-                Preference.PreferenceItem.EditTextInfoPreference(
-                    preference = castProxyPort,
-                    dialogSubtitle = stringResource(AMMR.strings.pref_cast_port_subtitle),
-                    title = stringResource(AMMR.strings.pref_cast_port),
-                    enabled = enableCastValue && enableCastProxyValue,
-                    validate = { pref ->
-                        val port = pref.toIntOrNull()
-                            ?: return@EditTextInfoPreference false
-
-                        if (port !in 1025..65535) {
-                            return@EditTextInfoPreference false
-                        }
-
-                        true
-                    },
-                    errorMessage = { _ ->
-                        stringResource(AMMR.strings.pref_cast_port_error)
-                    },
-                ),
-            ),
-        )
-    }
-    // <-- AM (CAST)
-
-    @Composable
-    private fun getExternalPlayerGroup(
+    private fun getPlaybackTargetGroup(
         playerPreferences: PlayerPreferences,
         basePreferences: BasePreferences,
     ): Preference.PreferenceGroup {
+        val context = LocalContext.current
         val alwaysUseExternalPlayer = playerPreferences.alwaysUseExternalPlayer
         val externalPlayerPreference = playerPreferences.externalPlayerPreference
 
         val pm = basePreferences.context.packageManager
         val installedPackages = pm.getInstalledPackages(0)
         val supportedPlayers = installedPackages.filter { it.packageName in externalPlayers }
+        val packageNamesMap = supportedPlayers
+            .associate { it.packageName to pm.getApplicationLabel(it.applicationInfo!!).toString() }
 
-        val packageNames = supportedPlayers.map { it.packageName }
-        val packageNamesReadable = supportedPlayers
-            .map { pm.getApplicationLabel(it.applicationInfo!!).toString() }
-
-        val packageNamesMap: Map<String, String> =
-            packageNames.zip(packageNamesReadable)
-                .toMap()
+        val enableCast = playerPreferences.enableCast
+        val castProxy = playerPreferences.castProxy
+        val castProxyPort = playerPreferences.castProxyPort
+        val enableCastValue by enableCast.collectAsState()
+        val enableCastProxyValue by castProxy.collectAsState()
 
         return Preference.PreferenceGroup(
-            title = stringResource(AYMR.strings.pref_category_external_player),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = alwaysUseExternalPlayer,
-                    title = stringResource(AYMR.strings.pref_always_use_external_player),
-                ),
-                Preference.PreferenceItem.ListPreference(
-                    preference = externalPlayerPreference,
-                    entries = (mapOf("" to "None") + packageNamesMap),
-                    title = stringResource(AYMR.strings.pref_external_player_preference),
-                ),
-            ),
+            title = stringResource(AMMR.strings.am_playback_target),
+            preferenceItems = buildList {
+                add(
+                    Preference.PreferenceItem.InfoPreference(
+                        title = stringResource(AMMR.strings.am_playback_target_summary),
+                    ),
+                )
+                add(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = alwaysUseExternalPlayer,
+                        title = stringResource(AMMR.strings.am_playback_target_external_default),
+                    ),
+                )
+                add(
+                    Preference.PreferenceItem.ListPreference(
+                        preference = externalPlayerPreference,
+                        entries = mapOf("" to stringResource(AMMR.strings.am_playback_target_system_picker)) +
+                            packageNamesMap,
+                        title = stringResource(AYMR.strings.pref_external_player_preference),
+                    ),
+                )
+
+                if (castIncluded) {
+                    add(
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = enableCast,
+                            title = stringResource(AMMR.strings.am_playback_target_cast),
+                            onValueChanged = {
+                                context.toast(MR.strings.requires_app_restart)
+                                true
+                            },
+                        ),
+                    )
+                    add(
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = castProxy,
+                            title = stringResource(AMMR.strings.pref_cast_proxy),
+                            enabled = enableCastValue,
+                        ),
+                    )
+                    add(
+                        Preference.PreferenceItem.EditTextInfoPreference(
+                            preference = castProxyPort,
+                            dialogSubtitle = stringResource(AMMR.strings.pref_cast_port_subtitle),
+                            title = stringResource(AMMR.strings.pref_cast_port),
+                            enabled = enableCastValue && enableCastProxyValue,
+                            validate = { pref ->
+                                val port = pref.toIntOrNull()
+                                    ?: return@EditTextInfoPreference false
+                                port in 1025..65535
+                            },
+                            errorMessage = { _ ->
+                                stringResource(AMMR.strings.pref_cast_port_error)
+                            },
+                        ),
+                    )
+                }
+            },
         )
     }
+
 }
 
 val externalPlayers = listOf(

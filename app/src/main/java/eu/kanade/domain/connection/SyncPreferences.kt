@@ -25,6 +25,11 @@ class SyncPreferences(
 
     val lastSyncTimestamp: Preference<Long> = preferenceStore.getLong(Preference.appStateKey("last_sync_timestamp"), 0L)
 
+    val lastSyncError: Preference<String> = preferenceStore.getString(
+        Preference.appStateKey("last_sync_error"),
+        "",
+    )
+
     val lastSyncEtag: Preference<String> = preferenceStore.getString("sync_etag", "")
 
     val syncInterval: Preference<Int> = preferenceStore.getInt("sync_interval", 0)

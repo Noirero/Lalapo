@@ -104,6 +104,7 @@ class GoogleDriveSyncService(
             pushSyncData(syncData)
             return syncData.backup
         } catch (e: Exception) {
+            syncPreferences.lastSyncError.set(e.message ?: "Google Drive sync failed")
             log(LogPriority.ERROR, "SyncService") { "Error syncing: ${e.message}" }
             return null
         }
