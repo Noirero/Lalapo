@@ -144,7 +144,7 @@ class MoreViewModel(
     private val _downloadQueueState: MutableStateFlow<DownloadQueueState> = MutableStateFlow(DownloadQueueState.Stopped)
     val downloadQueueState: StateFlow<DownloadQueueState> = _downloadQueueState.asStateFlow()
 
-    private val _isSyncing = MutableStateFlow(false)
+    private val syncingState = MutableStateFlow(false)
     private var syncWatchJob: Job? = null
 
     private val syncApiKey = syncPreferences.clientAPIKey.stateIn(viewModelScope)
@@ -157,7 +157,7 @@ class MoreViewModel(
         syncDriveToken,
         lastSyncTimestamp,
         lastSyncError,
-        _isSyncing,
+        syncingState,
     ) { apiKey, driveToken, timestamp, error, isSyncing ->
         val provider = when {
             apiKey.isNotBlank() && driveToken.isNotBlank() -> SyncProvider.Multiple
@@ -234,18 +234,18 @@ class MoreViewModel(
         if (syncWatchJob?.isActive == true) return
         syncWatchJob = viewModelScope.launchIO {
             if (assumeStarting) {
-                _isSyncing.value = true
+                syncingState.value = true
                 delay(750)
             }
 
             var running = SyncDataJob.isRunning(context.workManager)
-            _isSyncing.value = running || assumeStarting
+            syncingState.value = running || assumeStarting
             while (running) {
                 delay(1_000)
                 running = SyncDataJob.isRunning(context.workManager)
-                _isSyncing.value = running
+                syncingState.value = running
             }
-            _isSyncing.value = false
+            syncingState.value = false
         }
     }
 
