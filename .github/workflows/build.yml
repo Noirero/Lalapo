@@ -66,13 +66,38 @@ jobs:
           name: test-report-${{ github.sha }}
           path: app/build/reports/tests/testDebugUnitTest
 
-      - name: Prepare signed main build
+      - name: Prepare main build
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
         run: |
           set -euo pipefail
-          echo "LALAPO_GITHUB_RELEASE=true" >> "$GITHUB_ENV"
           echo "LALAPO_VERSION_CODE=$((200000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+
+          signing_store="$RUNNER_TEMP/lalapo-signing-check.keystore"
+          signing_ready=false
+
+          if [[ -n "${SIGNING_KEY:-}" && -n "${KEY_STORE_PASSWORD:-}" ]]; then
+            if printf '%s' "$SIGNING_KEY" | base64 --decode > "$signing_store" 2>/dev/null &&
+              keytool -list -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" >/dev/null 2>&1; then
+              signing_ready=true
+            else
+              decoded_once="$RUNNER_TEMP/lalapo-signing-once.txt"
+              if printf '%s' "$SIGNING_KEY" | base64 --decode > "$decoded_once" 2>/dev/null &&
+                base64 --decode "$decoded_once" > "$signing_store" 2>/dev/null &&
+                keytool -list -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" >/dev/null 2>&1; then
+                signing_ready=true
+              fi
+            fi
+          fi
+
+          if [[ "$signing_ready" == "true" ]]; then
+            echo "LALAPO_GITHUB_RELEASE=true" >> "$GITHUB_ENV"
+          else
+            echo "::warning::SIGNING_KEY is not a valid JKS/PKCS12 keystore; building with the normal CI signing configuration. Replace SIGNING_KEY to restore update-in-place signing."
+          fi
 
       - name: Build app
         run: ./gradlew assembleRelease -Pinclude-cast -Penable-updater
