@@ -185,7 +185,6 @@ fun SourcesScreen(
                         }
                     }
                 }
-                }
             }
         }
     }
