@@ -26,7 +26,7 @@ android {
     defaultConfig {
         applicationId = "com.noirero.lalapo"
 
-        versionCode = 148
+        versionCode = System.getenv("LALAPO_VERSION_CODE")?.toIntOrNull() ?: 148
         versionName = "0.20.0.1"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
