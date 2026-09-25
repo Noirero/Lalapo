@@ -128,7 +128,6 @@ class AnimeScreen(
         AnimeScreen(
             state = successState,
             snackbarHostState = viewModel.snackbarHostState,
-            nextUpdate = successState.anime.expectedNextUpdate,
             isTabletUi = isTabletUi(),
             episodeSwipeStartAction = viewModel.episodeSwipeStartAction,
             episodeSwipeEndAction = viewModel.episodeSwipeEndAction,

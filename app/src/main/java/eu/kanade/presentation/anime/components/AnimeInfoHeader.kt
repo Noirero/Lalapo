@@ -28,7 +28,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.AttachMoney
@@ -37,9 +36,11 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -94,8 +95,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.coil.useBackground
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.daysUntil
 import mihon.app.di.appGraph
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
@@ -112,8 +111,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 import kotlin.math.roundToInt
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 @Composable
 fun AnimeInfoBox(
@@ -183,8 +180,6 @@ fun AnimeInfoBox(
 fun AnimeActionRow(
     favorite: Boolean,
     trackingCount: Int,
-    nextUpdate: Instant?,
-    isUserIntervalMode: Boolean,
     // AM -->
     isSyncingTrackers: Boolean,
     // <-- AM
@@ -194,21 +189,12 @@ fun AnimeActionRow(
     // AY -->
     onTrackingClicked: (() -> Unit)?,
     // <-- AY
+    onShareClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
-
-    // TODO: show something better when using custom interval
-    val nextUpdateDays = remember(nextUpdate) {
-        return@remember if (nextUpdate != null) {
-            val now = Clock.System.now()
-            now.daysUntil(nextUpdate, TimeZone.currentSystemDefault()).coerceAtLeast(0)
-        } else {
-            null
-        }
-    }
 
     Row(modifier = modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
         AnimeActionButton(
@@ -222,25 +208,9 @@ fun AnimeActionRow(
             onClick = onAddToLibraryClicked,
             onLongClick = onEditCategory,
         )
-        AnimeActionButton(
-            title = when (nextUpdateDays) {
-                null -> stringResource(MR.strings.not_applicable)
-                0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
-                else -> pluralStringResource(
-                    MR.plurals.day,
-                    count = nextUpdateDays,
-                    nextUpdateDays,
-                )
-            },
-            icon = Icons.Default.HourglassEmpty,
-            color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-            onClick = { onEditIntervalClicked?.invoke() },
-        )
-        // AY -->
+
         if (onTrackingClicked != null) {
-            // <-- AY
             if (isSyncingTrackers) {
-                // AM -->
                 AnimeActionButton(
                     title = stringResource(MR.strings.loading),
                     color = MaterialTheme.colorScheme.primary,
@@ -251,7 +221,6 @@ fun AnimeActionRow(
                         strokeWidth = 3.dp,
                     )
                 }
-                // <-- AM
             } else {
                 AnimeActionButton(
                     title = if (trackingCount == 0) {
@@ -265,14 +234,105 @@ fun AnimeActionRow(
                 )
             }
         }
-        if (onWebViewClicked != null) {
+
+        if (onShareClicked != null) {
             AnimeActionButton(
-                title = stringResource(MR.strings.action_web_view),
-                icon = Icons.Outlined.Public,
+                title = stringResource(MR.strings.action_share),
+                icon = Icons.Outlined.Share,
                 color = defaultActionButtonColor,
-                onClick = onWebViewClicked,
-                onLongClick = onWebViewLongClicked,
+                onClick = onShareClicked,
             )
+        }
+
+        if (
+            onWebViewClicked != null ||
+            onWebViewLongClicked != null ||
+            onEditIntervalClicked != null ||
+            onEditCategory != null
+        ) {
+            AnimeMoreActionButton(
+                color = defaultActionButtonColor,
+                onWebViewClicked = onWebViewClicked,
+                onCopyLinkClicked = onWebViewLongClicked,
+                onEditIntervalClicked = onEditIntervalClicked,
+                onEditCategory = onEditCategory,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowScope.AnimeMoreActionButton(
+    color: Color,
+    onWebViewClicked: (() -> Unit)?,
+    onCopyLinkClicked: (() -> Unit)?,
+    onEditIntervalClicked: (() -> Unit)?,
+    onEditCategory: (() -> Unit)?,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.weight(1f)) {
+        TextButton(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = Icons.Outlined.MoreVert,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(MR.strings.label_more),
+                    color = color,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            onWebViewClicked?.let { action ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(MR.strings.action_open_in_web_view)) },
+                    onClick = {
+                        expanded = false
+                        action()
+                    },
+                )
+            }
+            onCopyLinkClicked?.let { action ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(MR.strings.action_copy_link)) },
+                    onClick = {
+                        expanded = false
+                        action()
+                    },
+                )
+            }
+            onEditIntervalClicked?.let { action ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(MR.strings.action_set_interval)) },
+                    onClick = {
+                        expanded = false
+                        action()
+                    },
+                )
+            }
+            onEditCategory?.let { action ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(MR.strings.action_edit_categories)) },
+                    onClick = {
+                        expanded = false
+                        action()
+                    },
+                )
+            }
         }
     }
 }

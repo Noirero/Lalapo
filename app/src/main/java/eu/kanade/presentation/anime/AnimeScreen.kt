@@ -99,13 +99,11 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.source.local.isLocal
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 
 @Composable
 fun AnimeScreen(
     state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
-    nextUpdate: Instant?,
     isTabletUi: Boolean,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
     episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
@@ -193,7 +191,6 @@ fun AnimeScreen(
         AnimeScreenSmallImpl(
             state = state,
             snackbarHostState = snackbarHostState,
-            nextUpdate = nextUpdate,
             episodeSwipeStartAction = episodeSwipeStartAction,
             episodeSwipeEndAction = episodeSwipeEndAction,
             // AY -->
@@ -253,7 +250,6 @@ fun AnimeScreen(
         AnimeScreenLargeImpl(
             state = state,
             snackbarHostState = snackbarHostState,
-            nextUpdate = nextUpdate,
             episodeSwipeStartAction = episodeSwipeStartAction,
             episodeSwipeEndAction = episodeSwipeEndAction,
             // AY -->
@@ -316,7 +312,6 @@ fun AnimeScreen(
 private fun AnimeScreenSmallImpl(
     state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
-    nextUpdate: Instant?,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
     episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
     // AY -->
@@ -559,8 +554,6 @@ private fun AnimeScreenSmallImpl(
                         AnimeActionRow(
                             favorite = state.anime.favorite,
                             trackingCount = state.trackingCount,
-                            nextUpdate = nextUpdate,
-                            isUserIntervalMode = state.anime.fetchInterval < 0,
                             // AM -->
                             isSyncingTrackers = state.isSyncingTrackers,
                             // <-- AM
@@ -568,6 +561,7 @@ private fun AnimeScreenSmallImpl(
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
                             onTrackingClicked = onTrackingClicked,
+                            onShareClicked = onShareClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
                             // AY -->
@@ -712,7 +706,6 @@ private fun AnimeScreenSmallImpl(
 fun AnimeScreenLargeImpl(
     state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
-    nextUpdate: Instant?,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
     episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
     // AY -->
@@ -918,8 +911,6 @@ fun AnimeScreenLargeImpl(
                             AnimeActionRow(
                                 favorite = state.anime.favorite,
                                 trackingCount = state.trackingCount,
-                                nextUpdate = nextUpdate,
-                                isUserIntervalMode = state.anime.fetchInterval < 0,
                                 // AM -->
                                 isSyncingTrackers = state.isSyncingTrackers,
                                 // <-- AM
@@ -927,6 +918,7 @@ fun AnimeScreenLargeImpl(
                                 onWebViewClicked = onWebViewClicked,
                                 onWebViewLongClicked = onWebViewLongClicked,
                                 onTrackingClicked = onTrackingClicked,
+                                onShareClicked = onShareClicked,
                                 onEditIntervalClicked = onEditIntervalClicked,
                                 onEditCategory = onEditCategoryClicked,
                             )
