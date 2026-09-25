@@ -755,6 +755,7 @@
     <string name="download_unread">Unread</string>
     <string name="download_bookmarked">Bookmarked</string>
     <string name="custom_cover">Custom cover</string>
+    <string name="manga_cover">Cover</string>
     <string name="cover_saved">Cover saved</string>
     <string name="error_saving_cover">Error saving cover</string>
     <string name="error_sharing_cover">Error sharing cover</string>
@@ -771,6 +772,7 @@
     <string name="trackers_updated_summary">Trackers updated to chapter %d</string>
 
     <!-- Tracking Screen -->
+    <string name="manga_tracking_tab">Tracking</string>
     <string name="add_tracking">Add tracking</string>
     <string name="action_track">Track</string>
     <string name="unread">Unread</string>
