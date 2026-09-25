@@ -12,9 +12,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SwapCalls
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -150,41 +150,41 @@ fun SourcesScreen(
                     }
 
                     items(
-                            items = state.items,
-                            contentType = {
-                                when (it) {
-                                    is SourceUiModel.Header -> "header"
-                                    is SourceUiModel.Item -> "item"
-                                }
-                            },
-                            key = {
-                                when (it) {
-                                    is SourceUiModel.Header -> it.hashCode()
-                                    is SourceUiModel.Item -> "source-${it.source.key()}"
-                                }
-                            },
-                        ) { model ->
-                            when (model) {
-                                is SourceUiModel.Header -> {
-                                    SourceHeader(
-                                        modifier = Modifier.animateItem(),
-                                        language = model.language,
-                                    )
-                                }
-                                is SourceUiModel.Item -> SourceItem(
+                        items = state.items,
+                        contentType = {
+                            when (it) {
+                                is SourceUiModel.Header -> "header"
+                                is SourceUiModel.Item -> "item"
+                            }
+                        },
+                        key = {
+                            when (it) {
+                                is SourceUiModel.Header -> it.hashCode()
+                                is SourceUiModel.Item -> "source-${it.source.key()}"
+                            }
+                        },
+                    ) { model ->
+                        when (model) {
+                            is SourceUiModel.Header -> {
+                                SourceHeader(
                                     modifier = Modifier.animateItem(),
-                                    // AM (BROWSE) -->
-                                    extension = model.extension,
-                                    onClickSettings = { navigator.push(ExtensionDetailsScreen(it.pkgName)) },
-                                    // <-- AM (BROWSE)
-                                    source = model.source,
-                                    onClickItem = onClickItem,
-                                    onLongClickItem = onLongClickItem,
-                                    onClickPin = onClickPin,
+                                    language = model.language,
                                 )
                             }
+                            is SourceUiModel.Item -> SourceItem(
+                                modifier = Modifier.animateItem(),
+                                // AM (BROWSE) -->
+                                extension = model.extension,
+                                onClickSettings = { navigator.push(ExtensionDetailsScreen(it.pkgName)) },
+                                // <-- AM (BROWSE)
+                                source = model.source,
+                                onClickItem = onClickItem,
+                                onLongClickItem = onLongClickItem,
+                                onClickPin = onClickPin,
+                            )
                         }
                     }
+                }
                 }
             }
         }
