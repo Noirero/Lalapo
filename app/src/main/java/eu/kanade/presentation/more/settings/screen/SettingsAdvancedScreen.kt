@@ -177,5 +177,4 @@ object SettingsAdvancedScreen : SearchableSettings {
             ),
         )
     }
-
 }

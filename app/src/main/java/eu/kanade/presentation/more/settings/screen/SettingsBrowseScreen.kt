@@ -123,7 +123,9 @@ object SettingsBrowseScreen : SearchableSettings {
                     entries = extensionInstallerPref.entries.associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.ext_installer_pref),
                     onValueChanged = {
-                        if (it == BasePreferences.ExtensionInstaller.SHIZUKU && !context.isShizukuInstalled) {
+                        if (it == BasePreferences.ExtensionInstaller.SHIZUKU &&
+                            !context.isShizukuInstalled
+                        ) {
                             shizukuMissing = true
                             false
                         } else {
@@ -141,5 +143,4 @@ object SettingsBrowseScreen : SearchableSettings {
             ),
         )
     }
-
 }

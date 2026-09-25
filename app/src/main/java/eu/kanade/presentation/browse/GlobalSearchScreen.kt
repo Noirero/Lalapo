@@ -27,9 +27,9 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.app.di.appGraph
 import tachiyomi.domain.anime.model.Anime
 import tachiyomi.i18n.animiru.AMMR
+import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.components.material.Scaffold
 
 @Composable
 fun GlobalSearchScreen(
@@ -146,34 +146,34 @@ internal fun GlobalSearchContent(
 
         if (scope != GlobalSearchScope.Library) {
             items.forEach { (source, result) ->
-            item(key = source.id) {
-                GlobalSearchResultItem(
-                    title = fromSourceId?.let {
-                        "▶ ${source.name}".takeIf { source.id == fromSourceId }
-                    } ?: source.name,
-                    subtitle = LocaleHelper.getLocalizedDisplayName(source.lang),
-                    onClick = { onClickSource(source) },
-                    modifier = Modifier.animateItem(),
-                ) {
-                    when (result) {
-                        SearchItemResult.Loading -> {
-                            GlobalSearchLoadingResultItem()
-                        }
-                        is SearchItemResult.Success -> {
-                            GlobalSearchCardRow(
-                                titles = result.result,
-                                getAnime = getAnime,
-                                onClick = onClickItem,
-                                onLongClick = onLongClickItem,
-                            )
-                        }
-                        is SearchItemResult.Error -> {
-                            GlobalSearchErrorResultItem(message = result.throwable.message)
+                item(key = source.id) {
+                    GlobalSearchResultItem(
+                        title = fromSourceId?.let {
+                            "▶ ${source.name}".takeIf { source.id == fromSourceId }
+                        } ?: source.name,
+                        subtitle = LocaleHelper.getLocalizedDisplayName(source.lang),
+                        onClick = { onClickSource(source) },
+                        modifier = Modifier.animateItem(),
+                    ) {
+                        when (result) {
+                            SearchItemResult.Loading -> {
+                                GlobalSearchLoadingResultItem()
+                            }
+                            is SearchItemResult.Success -> {
+                                GlobalSearchCardRow(
+                                    titles = result.result,
+                                    getAnime = getAnime,
+                                    onClick = onClickItem,
+                                    onLongClick = onLongClickItem,
+                                )
+                            }
+                            is SearchItemResult.Error -> {
+                                GlobalSearchErrorResultItem(message = result.throwable.message)
+                            }
                         }
                     }
                 }
             }
-        }
         }
     }
 }
