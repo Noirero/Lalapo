@@ -40,8 +40,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    if (System.getenv("ANIMIRU_GITHUB_RELEASE").toBoolean()) {
-        val tempStoreFile = file(System.getenv("RUNNER_TEMP")).resolve("quickie.keystore")
+    if (System.getenv("LALAPO_GITHUB_RELEASE").toBoolean()) {
+        val tempStoreFile = file(System.getenv("RUNNER_TEMP")).resolve("lalapo.keystore")
 
         val storeFileBytes = System.getenv("storeFileBase64").let(Base64::decode)
         tempStoreFile.outputStream().use { it.write(storeFileBytes) }

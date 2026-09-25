@@ -5,13 +5,12 @@ permissions:
 
 on:
   push:
-    branches:
-      - release
     tags:
       - v*
+      - r*
 
 env:
-  ANIMIRU_GITHUB_RELEASE: true
+  LALAPO_GITHUB_RELEASE: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,23 +18,31 @@ concurrency:
 
 jobs:
   get_tag:
-    if: github.repository == 'quickdesh/Animiru'
+    if: github.repository == 'Noirero/Lalapo'
     name: Extract tag name
     runs-on: 'ubuntu-24.04'
     outputs:
       tag: ${{ steps.extract.outputs.tag }}
-
+      is_preview: ${{ steps.extract.outputs.is_preview }}
     steps:
-      - name: Get tag name
+      - name: Get tag metadata
         id: extract
-        run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF#refs/tags/}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          if [[ "$tag" == r* ]]; then
+            echo "is_preview=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_preview=false" >> "$GITHUB_OUTPUT"
+          fi
 
   build:
-    if: github.repository == 'quickdesh/Animiru'
+    if: github.repository == 'Noirero/Lalapo'
     name: Build
     runs-on: 'ubuntu-24.04'
     needs: get_tag
-
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,20 +53,25 @@ jobs:
           java-version-file: .github/.java-version
           distribution: temurin
 
-      # AM (SYNC_DRIVE) -->
       - name: Write client_secrets.json
         uses: DamianReeves/write-file-action@v1.2
         with:
-            path: app/src/main/assets/client_secrets.json
-            contents: ${{ secrets.CLIENT_SECRETS_TEXT }}
-            write-mode: overwrite
-      # <-- AM (SYNC_DRIVE)
+          path: app/src/main/assets/client_secrets.json
+          contents: ${{ secrets.CLIENT_SECRETS_TEXT }}
+          write-mode: overwrite
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Build
-        run: ./gradlew assembleRelease -Pinclude-cast -Penable-updater
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ needs.get_tag.outputs.is_preview }}" == "true" ]]; then
+            ./gradlew assemblePreview -Pinclude-cast -Penable-updater
+          else
+            ./gradlew assembleRelease -Pinclude-cast -Penable-updater
+          fi
         env:
           storeFileBase64: ${{ secrets.SIGNING_KEY }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -67,32 +79,37 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Rename APK
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
+          if [[ "${{ needs.get_tag.outputs.is_preview }}" == "true" ]]; then
+            variant="preview"
+          else
+            variant="release"
+          fi
 
-          mv app/build/outputs/apk/release/app-universal-release.apk Animiru-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-arm64-v8a-release.apk Animiru-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-armeabi-v7a-release.apk Animiru-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-x86-release.apk Animiru-x86-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-x86_64-release.apk Animiru-x86_64-${{ needs.get_tag.outputs.tag }}.apk
+          mv "app/build/outputs/apk/${variant}/app-universal-${variant}.apk" "Lalapo-${{ needs.get_tag.outputs.tag }}.apk"
+          mv "app/build/outputs/apk/${variant}/app-arm64-v8a-${variant}.apk" "Lalapo-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk"
+          mv "app/build/outputs/apk/${variant}/app-armeabi-v7a-${variant}.apk" "Lalapo-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk"
+          mv "app/build/outputs/apk/${variant}/app-x86-${variant}.apk" "Lalapo-x86-${{ needs.get_tag.outputs.tag }}.apk"
+          mv "app/build/outputs/apk/${variant}/app-x86_64-${variant}.apk" "Lalapo-x86_64-${{ needs.get_tag.outputs.tag }}.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Animiru
+          name: Lalapo
           path: |
-            Animiru-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-x86-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-x86_64-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-x86-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-x86_64-${{ needs.get_tag.outputs.tag }}.apk
 
   build_foss:
-    if: github.repository == 'quickdesh/Animiru'
+    if: github.repository == 'Noirero/Lalapo' && needs.get_tag.outputs.is_preview != 'true'
     name: Build (FOSS)
     runs-on: 'ubuntu-24.04'
     needs: get_tag
-
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -103,14 +120,12 @@ jobs:
           java-version-file: .github/.java-version
           distribution: temurin
 
-      # AM (SYNC_DRIVE) -->
       - name: Write client_secrets.json
         uses: DamianReeves/write-file-action@v1.2
         with:
           path: app/src/main/assets/client_secrets.json
           contents: ${{ secrets.CLIENT_SECRETS_TEXT }}
           write-mode: overwrite
-      # <-- AM (SYNC_DRIVE)
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
@@ -126,44 +141,44 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Rename APK
-        run: |
-          set -e
-
-          mv app/build/outputs/apk/foss/app-universal-foss.apk Animiru-${{ needs.get_tag.outputs.tag }}-foss.apk
+        run: mv app/build/outputs/apk/foss/app-universal-foss.apk Lalapo-${{ needs.get_tag.outputs.tag }}-foss.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Animiru-foss
-          path: Animiru-${{ needs.get_tag.outputs.tag }}-foss.apk
+          name: Lalapo-foss
+          path: Lalapo-${{ needs.get_tag.outputs.tag }}-foss.apk
 
   release:
-    if: github.repository == 'quickdesh/Animiru'
+    if: >-
+      always() &&
+      github.repository == 'Noirero/Lalapo' &&
+      needs.build.result == 'success' &&
+      (needs.build_foss.result == 'success' || needs.build_foss.result == 'skipped')
     name: Create GitHub Release
     runs-on: ubuntu-24.04
     needs: [get_tag, build, build_foss]
-
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           merge-multiple: true
 
-      - name: Delete all artifacts
+      - name: Delete workflow artifacts
         uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         with:
           failOnError: false
           name: |
-            Animiru
-            Animiru-foss
+            Lalapo
+            Lalapo-foss
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           tag_name: ${{ needs.get_tag.outputs.tag }}
-          name: Animiru ${{ needs.get_tag.outputs.tag }}
+          name: Lalapo ${{ needs.get_tag.outputs.tag }}
           body: |
-            Check out the [past release notes](https://github.com/quickdesh/Animiru/releases) if you’re upgrading from an earlier version.
+            Check the [past Lalapo releases](https://github.com/Noirero/Lalapo/releases) when upgrading from an earlier version.
 
             <!-->
 
@@ -173,15 +188,15 @@ jobs:
 
             > [!TIP]
             >
-            > ### If you are unsure which version to download then go with `Animiru-${{ needs.get_tag.outputs.tag }}.apk`
+            > If you are unsure which version to download, use `Lalapo-${{ needs.get_tag.outputs.tag }}.apk`.
           files: |
-            Animiru-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-${{ needs.get_tag.outputs.tag }}-foss.apk
-            Animiru-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-x86-${{ needs.get_tag.outputs.tag }}.apk
-            Animiru-x86_64-${{ needs.get_tag.outputs.tag }}.apk
-          draft: true
-          prerelease: false
+            Lalapo-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-${{ needs.get_tag.outputs.tag }}-foss.apk
+            Lalapo-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-x86-${{ needs.get_tag.outputs.tag }}.apk
+            Lalapo-x86_64-${{ needs.get_tag.outputs.tag }}.apk
+          draft: ${{ needs.get_tag.outputs.is_preview != 'true' }}
+          prerelease: ${{ needs.get_tag.outputs.is_preview == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
