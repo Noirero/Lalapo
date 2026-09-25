@@ -24,10 +24,19 @@ class ReleaseServiceImpl(
 
     override suspend fun latest(arguments: GetApplicationRelease.Arguments): Release? {
         val release = with(json) {
-            networkService.client
-                .newCall(GET("https://api.github.com/repos/${arguments.repository}/releases/latest"))
-                .awaitSuccess()
-                .parseAs<GithubRelease>()
+            if (arguments.isPreview) {
+                networkService.client
+                    .newCall(GET("https://api.github.com/repos/${arguments.repository}/releases?per_page=20"))
+                    .awaitSuccess()
+                    .parseAs<List<GithubRelease>>()
+                    .firstOrNull { it.prerelease && it.version.startsWith("r") }
+                    ?: return null
+            } else {
+                networkService.client
+                    .newCall(GET("https://api.github.com/repos/${arguments.repository}/releases/latest"))
+                    .awaitSuccess()
+                    .parseAs<GithubRelease>()
+            }
         }
 
         val downloadLink = getDownloadLink(release = release, isFoss = arguments.isFoss) ?: return null

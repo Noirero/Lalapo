@@ -35,13 +35,7 @@ class AppUpdateChecker(
     }
 }
 
-val GITHUB_REPO: String by lazy {
-    if (isPreviewBuildType) {
-        "quickdesh/Animiru-preview"
-    } else {
-        "quickdesh/Animiru"
-    }
-}
+const val GITHUB_REPO = "Noirero/Lalapo"
 
 val RELEASE_TAG: String by lazy {
     if (isPreviewBuildType) {
