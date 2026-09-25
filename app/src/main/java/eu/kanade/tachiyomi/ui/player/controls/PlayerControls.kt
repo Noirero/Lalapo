@@ -37,6 +37,7 @@ import eu.kanade.tachiyomi.ui.player.PlayerUpdates
 import eu.kanade.tachiyomi.ui.player.PlayerViewModel
 import eu.kanade.tachiyomi.ui.player.PlayerViewModel.PlayerEvent
 import eu.kanade.tachiyomi.ui.player.Sheets
+import eu.kanade.tachiyomi.ui.player.components.HosterState
 import eu.kanade.tachiyomi.ui.player.controls.components.BrightnessSlider
 import eu.kanade.tachiyomi.ui.player.controls.components.ControlsButton
 import eu.kanade.tachiyomi.ui.player.controls.components.SeekbarWithTimers
@@ -348,14 +349,9 @@ fun PlayerControls(
                 },
             ) {
                 TopRightPlayerControls(
-                    autoPlayEnabled = uiData.autoPlayEnabled,
-                    onToggleAutoPlay = { onPlayerEvent(PlayerEvent.SetAutoPlay(it)) },
-                    onSubtitlesClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.SubtitleTracks)) },
-                    onSubtitlesLongClick = { onPlayerEvent(PlayerEvent.SetPanel(Panels.SubtitleSettings)) },
-                    onAudioClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.AudioTracks)) },
-                    onAudioLongClick = { onPlayerEvent(PlayerEvent.SetPanel(Panels.AudioDelay)) },
-                    onQualityClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.QualityTracks)) },
-                    isEpisodeOnline = stateData.isEpisodeOnline,
+                    castEnabled = uiData.enableCast,
+                    castLoading = stateData.isLoadingCasting,
+                    castError = stateData.isErrorCasting,
                     onMoreClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.More)) },
                     onMoreLongClick = { onPlayerEvent(PlayerEvent.SetPanel(Panels.VideoFilters)) },
                 )
@@ -409,11 +405,26 @@ fun PlayerControls(
                     end.linkTo(seekbar.end)
                 },
             ) {
+                val subtitleQuickActionAvailable =
+                    stateData.subtitleTracks.isNotEmpty() || stateData.externalSubtitleTracks.isNotEmpty()
+                val audioQuickActionAvailable =
+                    stateData.audioTracks.size + stateData.externalAudioTracks.size > 1
+                val qualityChoiceCount = stateData.hosterState.sumOf { hoster ->
+                    (hoster as? HosterState.Ready)?.videoList?.size ?: 0
+                }
+                val qualityQuickActionAvailable = stateData.isEpisodeOnline &&
+                    (stateData.hosterList.size > 1 || qualityChoiceCount > 1)
+
                 BottomRightPlayerControls(
-                    castEnabled = uiData.enableCast,
-                    castLoading = stateData.isLoadingCasting,
-                    castError = stateData.isErrorCasting,
+                    showSubtitles = subtitleQuickActionAvailable,
+                    showAudio = audioQuickActionAvailable,
+                    showQuality = qualityQuickActionAvailable,
                     isPipAvailable = stateData.isPipAvailable,
+                    onSubtitlesClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.SubtitleTracks)) },
+                    onSubtitlesLongClick = { onPlayerEvent(PlayerEvent.SetPanel(Panels.SubtitleSettings)) },
+                    onAudioClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.AudioTracks)) },
+                    onAudioLongClick = { onPlayerEvent(PlayerEvent.SetPanel(Panels.AudioDelay)) },
+                    onQualityClick = { onPlayerEvent(PlayerEvent.SetSheet(Sheets.QualityTracks)) },
                     onPipClick = { onPlayerEvent(PlayerEvent.EnterPip) },
                     onAspectClick = { onPlayerEvent(PlayerEvent.ChangeAspect) },
                 )

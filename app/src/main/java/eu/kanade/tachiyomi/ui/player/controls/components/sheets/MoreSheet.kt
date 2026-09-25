@@ -86,6 +86,11 @@ fun MoreSheet(
     onAudioChannelsChange: (AudioChannels) -> Unit,
     onDismissRequest: () -> Unit,
     onEnterFiltersPanel: () -> Unit,
+    onOpenSubtitles: () -> Unit,
+    onOpenAudio: () -> Unit,
+    onOpenQuality: (() -> Unit)?,
+    autoPlayEnabled: Boolean,
+    onToggleAutoPlay: (Boolean) -> Unit,
     customButtons: List<CustomButton>,
     modifier: Modifier = Modifier,
 ) {
@@ -149,6 +154,48 @@ fun MoreSheet(
                             Text(text = stringResource(AYMR.strings.player_sheets_filters_title))
                         }
                     }
+                }
+            }
+
+            Text(
+                text = stringResource(AYMR.strings.label_player),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            FlowRow(
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            ) {
+                FilterChip(
+                    selected = autoPlayEnabled,
+                    onClick = { onToggleAutoPlay(!autoPlayEnabled) },
+                    label = {
+                        Text(
+                            stringResource(
+                                if (autoPlayEnabled) {
+                                    AYMR.strings.enable_auto_play
+                                } else {
+                                    AYMR.strings.disable_auto_play
+                                },
+                            ),
+                        )
+                    },
+                )
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenSubtitles,
+                    label = { Text(stringResource(AYMR.strings.pref_player_subtitle)) },
+                )
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenAudio,
+                    label = { Text(stringResource(AYMR.strings.pref_player_audio)) },
+                )
+                if (onOpenQuality != null) {
+                    FilterChip(
+                        selected = false,
+                        onClick = onOpenQuality,
+                        label = { Text(stringResource(AYMR.strings.player_sheets_qualities_title)) },
+                    )
                 }
             }
 

@@ -93,6 +93,10 @@ fun PlayerSheets(
     onCustomButtonClick: (CustomButton) -> Unit,
     onCustomButtonLongClick: (CustomButton) -> Unit,
     buttons: List<CustomButton>,
+    autoPlayEnabled: Boolean,
+    onToggleAutoPlay: (Boolean) -> Unit,
+    qualityAvailable: Boolean,
+    onOpenSheet: (Sheets) -> Unit,
 
     // Screenshot sheet
     isLocalSource: Boolean,
@@ -182,6 +186,15 @@ fun PlayerSheets(
                 onAudioChannelsChange = onAudioChannelsChange,
                 onDismissRequest = onDismissRequest,
                 onEnterFiltersPanel = { onOpenPanel(Panels.VideoFilters) },
+                onOpenSubtitles = { onOpenSheet(Sheets.SubtitleTracks) },
+                onOpenAudio = { onOpenSheet(Sheets.AudioTracks) },
+                onOpenQuality = if (qualityAvailable) {
+                    { onOpenSheet(Sheets.QualityTracks) }
+                } else {
+                    null
+                },
+                autoPlayEnabled = autoPlayEnabled,
+                onToggleAutoPlay = onToggleAutoPlay,
                 customButtons = buttons,
             )
         }

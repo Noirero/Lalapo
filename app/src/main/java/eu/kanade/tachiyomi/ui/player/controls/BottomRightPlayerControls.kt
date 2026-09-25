@@ -20,30 +20,55 @@ package eu.kanade.tachiyomi.ui.player.controls
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.PictureInPictureAlt
+import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.player.controls.components.ControlsButton
-import eu.kanade.tachiyomi.util.system.castIncluded
-import tachiyomi.cast.CastButton
 import tachiyomi.presentation.core.components.material.padding
 
 @Composable
 fun BottomRightPlayerControls(
-    castEnabled: Boolean,
-    castLoading: Boolean,
-    castError: Boolean,
+    showSubtitles: Boolean,
+    showAudio: Boolean,
+    showQuality: Boolean,
     isPipAvailable: Boolean,
+    onSubtitlesClick: () -> Unit,
+    onSubtitlesLongClick: () -> Unit,
+    onAudioClick: () -> Unit,
+    onAudioLongClick: () -> Unit,
+    onQualityClick: () -> Unit,
     onAspectClick: () -> Unit,
     onPipClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier) {
-        if (castIncluded && castEnabled) {
-            CastButton(
-                loading = castLoading,
-                error = castError,
+        if (showSubtitles) {
+            ControlsButton(
+                icon = Icons.Default.Subtitles,
+                onClick = onSubtitlesClick,
+                onLongClick = onSubtitlesLongClick,
+                verticalSpacing = MaterialTheme.padding.small,
+            )
+        }
+
+        if (showAudio) {
+            ControlsButton(
+                icon = Icons.Default.Audiotrack,
+                onClick = onAudioClick,
+                onLongClick = onAudioLongClick,
+                verticalSpacing = MaterialTheme.padding.small,
+            )
+        }
+
+        if (showQuality) {
+            ControlsButton(
+                icon = Icons.Default.HighQuality,
+                onClick = onQualityClick,
+                onLongClick = onQualityClick,
                 verticalSpacing = MaterialTheme.padding.small,
             )
         }
