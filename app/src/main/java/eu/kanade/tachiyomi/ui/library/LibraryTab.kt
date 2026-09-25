@@ -225,6 +225,7 @@ data object LibraryTab : Tab {
                         showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
                         onChangeCurrentPage = viewModel::updateActiveCategoryIndex,
                         onClickAnime = { navigator.push(AnimeScreen(it)) },
+                        continueWatchingItems = state.continueWatchingItems,
                         onContinueWatchingClicked = { it: LibraryAnime ->
                             scope.launchIO {
                                 val episode = viewModel.getNextUnseenEpisode(it.anime)

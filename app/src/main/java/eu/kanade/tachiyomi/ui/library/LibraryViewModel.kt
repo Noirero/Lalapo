@@ -1032,6 +1032,19 @@ class LibraryViewModel(
 
         val selectionMode = selection.isNotEmpty()
 
+        val continueWatchingItems: List<LibraryItem> by lazy {
+            if (!showAnimeContinueButton) {
+                emptyList()
+            } else {
+                libraryData.favorites
+                    .asSequence()
+                    .filter { it.libraryAnime.hasStarted && it.unseenCount > 0 }
+                    .sortedByDescending { it.libraryAnime.lastSeen }
+                    .take(12)
+                    .toList()
+            }
+        }
+
         val selectedAnime by lazy { selection.mapNotNull { libraryData.favoritesById[it]?.libraryAnime?.anime } }
 
         fun getItemsForCategoryId(categoryId: Long?): List<LibraryItem> {

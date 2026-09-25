@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -25,12 +27,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -95,7 +96,6 @@ import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -490,30 +490,6 @@ private fun AnimeScreenSmallImpl(
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            floatingActionButton = {
-                val isFABVisible = remember(episodes) {
-                    episodes.fastAny { !it.episode.seen } && !isAnySelected
-                }
-                SmallExtendedFloatingActionButton(
-                    text = {
-                        val isWatching = remember(state.episodes) {
-                            state.episodes.fastAny { it.episode.seen }
-                        }
-                        Text(
-                            text = stringResource(
-                                if (isWatching) MR.strings.action_resume else MR.strings.action_start,
-                            ),
-                        )
-                    },
-                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
-                    onClick = onContinueWatching,
-                    expanded = itemListState.shouldExpandFAB(),
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = isFABVisible,
-                        alignment = Alignment.BottomEnd,
-                    ),
-                )
-            },
         ) { contentPadding ->
             val topPadding = contentPadding.calculateTopPadding()
 
@@ -558,6 +534,21 @@ private fun AnimeScreenSmallImpl(
                         )
                     }
 
+                    val hasUnseenEpisodes = episodes.fastAny { !it.episode.seen }
+                    if (hasUnseenEpisodes && !isAnySelected) {
+                        item(
+                            key = EXACT_HEIGHT_KEY_PREFIX + AnimeScreenItem.PRIMARY_ACTION,
+                            contentType = AnimeScreenItem.PRIMARY_ACTION,
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            AnimePrimaryAction(
+                                isWatching = episodes.fastAny { it.episode.seen },
+                                onClick = onContinueWatching,
+                                modifier = Modifier.ignorePadding(offsetGridPaddingPx),
+                            )
+                        }
+                    }
+
                     item(
                         key = EXACT_HEIGHT_KEY_PREFIX + AnimeScreenItem.ACTION_ROW,
                         contentType = AnimeScreenItem.ACTION_ROW,
@@ -579,33 +570,6 @@ private fun AnimeScreenSmallImpl(
                             onTrackingClicked = onTrackingClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
-                            // AY -->
-                            modifier = Modifier.ignorePadding(offsetGridPaddingPx),
-                            // <-- AY
-                        )
-                    }
-
-                    item(
-                        key = EXACT_HEIGHT_KEY_PREFIX + AnimeScreenItem.DESCRIPTION_WITH_TAG,
-                        contentType = AnimeScreenItem.DESCRIPTION_WITH_TAG,
-                        // AY -->
-                        span = { GridItemSpan(maxLineSpan) },
-                        // <-- AY
-                    ) {
-                        ExpandableAnimeDescription(
-                            defaultExpandState = state.isFromSource,
-                            description = state.anime.description,
-                            tagsProvider = { state.anime.genre },
-                            notes = state.anime.notes,
-                            onTagSearch = onTagSearch,
-                            onCopyTagToClipboard = onCopyTagToClipboard,
-                            onEditNotes = onEditNotesClicked,
-                            // AY -->
-                            relations = state.relatedAnime,
-                            onRelatedClick = onRelatedAnimeClicked,
-                            onRelatedLongClick = onRelatedAnimeLongClicked,
-                            relatedDisplayMode = relatedAnimeDisplayMode,
-                            // <-- AY
                             // AY -->
                             modifier = Modifier.ignorePadding(offsetGridPaddingPx),
                             // <-- AY
@@ -710,6 +674,33 @@ private fun AnimeScreenSmallImpl(
                                 itemModifier = Modifier.ignorePadding(offsetGridPaddingPx),
                             )
                         }
+                    }
+
+                    item(
+                        key = EXACT_HEIGHT_KEY_PREFIX + AnimeScreenItem.DESCRIPTION_WITH_TAG,
+                        contentType = AnimeScreenItem.DESCRIPTION_WITH_TAG,
+                        // AY -->
+                        span = { GridItemSpan(maxLineSpan) },
+                        // <-- AY
+                    ) {
+                        ExpandableAnimeDescription(
+                            defaultExpandState = state.isFromSource,
+                            description = state.anime.description,
+                            tagsProvider = { state.anime.genre },
+                            notes = state.anime.notes,
+                            onTagSearch = onTagSearch,
+                            onCopyTagToClipboard = onCopyTagToClipboard,
+                            onEditNotes = onEditNotesClicked,
+                            // AY -->
+                            relations = state.relatedAnime,
+                            onRelatedClick = onRelatedAnimeClicked,
+                            onRelatedLongClick = onRelatedAnimeLongClicked,
+                            relatedDisplayMode = relatedAnimeDisplayMode,
+                            // <-- AY
+                            // AY -->
+                            modifier = Modifier.ignorePadding(offsetGridPaddingPx),
+                            // <-- AY
+                        )
                     }
                 }
             }
@@ -887,30 +878,6 @@ fun AnimeScreenLargeImpl(
                 }
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            floatingActionButton = {
-                val isFABVisible = remember(episodes) {
-                    episodes.fastAny { !it.episode.seen } && !isAnySelected
-                }
-                SmallExtendedFloatingActionButton(
-                    text = {
-                        val isWatching = remember(state.episodes) {
-                            state.episodes.fastAny { it.episode.seen }
-                        }
-                        Text(
-                            text = stringResource(
-                                if (isWatching) MR.strings.action_resume else MR.strings.action_start,
-                            ),
-                        )
-                    },
-                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
-                    onClick = onContinueWatching,
-                    expanded = itemListState.shouldExpandFAB(),
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = isFABVisible,
-                        alignment = Alignment.BottomEnd,
-                    ),
-                )
-            },
         ) { contentPadding ->
             PullRefresh(
                 refreshing = state.isRefreshingData,
@@ -942,6 +909,12 @@ fun AnimeScreenLargeImpl(
                                 onCoverClick = onCoverClicked,
                                 doSearch = onSearch,
                             )
+                            if (episodes.fastAny { !it.episode.seen } && !isAnySelected) {
+                                AnimePrimaryAction(
+                                    isWatching = episodes.fastAny { it.episode.seen },
+                                    onClick = onContinueWatching,
+                                )
+                            }
                             AnimeActionRow(
                                 favorite = state.anime.favorite,
                                 trackingCount = state.trackingCount,
@@ -1094,6 +1067,31 @@ fun AnimeScreenLargeImpl(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AnimePrimaryAction(
+    isWatching: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.PlayArrow,
+            contentDescription = null,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = stringResource(
+                if (isWatching) MR.strings.action_resume else MR.strings.action_start,
+            ),
+        )
     }
 }
 

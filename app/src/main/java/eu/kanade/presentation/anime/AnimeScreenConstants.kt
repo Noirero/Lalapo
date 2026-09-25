@@ -16,6 +16,7 @@ enum class EditCoverAction {
 
 enum class AnimeScreenItem {
     INFO_BOX,
+    PRIMARY_ACTION,
     ACTION_ROW,
     DESCRIPTION_WITH_TAG,
     EPISODE_HEADER,

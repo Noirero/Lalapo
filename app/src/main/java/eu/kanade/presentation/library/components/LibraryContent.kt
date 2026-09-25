@@ -36,6 +36,7 @@ fun LibraryContent(
     showPageTabs: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onClickAnime: (Long) -> Unit,
+    continueWatchingItems: List<LibraryItem>,
     onContinueWatchingClicked: ((LibraryAnime) -> Unit)?,
     onToggleSelection: (Category, LibraryAnime) -> Unit,
     onToggleRangeSelection: (Category, LibraryAnime) -> Unit,
@@ -57,6 +58,20 @@ fun LibraryContent(
 
         val scope = rememberCoroutineScope()
         var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
+
+        if (
+            continueWatchingItems.isNotEmpty() &&
+            selection.isEmpty() &&
+            searchQuery.isNullOrEmpty() &&
+            !hasActiveFilters &&
+            onContinueWatchingClicked != null
+        ) {
+            ContinueWatchingShelf(
+                items = continueWatchingItems,
+                onClickAnime = { onClickAnime(it.anime.id) },
+                onContinueWatching = onContinueWatchingClicked,
+            )
+        }
 
         if (showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)) {
             LaunchedEffect(categories) {
