@@ -270,4 +270,10 @@
     <string name="pref_tracking_sync_enhanced">Sync progress from enhanced trackers</string>
     <string name="pref_smart_sync_tracker">Smart sync seasons</string>
     <string name="pref_smart_sync_tracker_summary">Skip completed items and stop at entry in progress</string>
+    <!-- Lalapo v2 information architecture -->
+    <string name="am_label_discover">Discover</string>
+    <string name="am_label_activity">Activity</string>
+    <string name="am_label_private_session">Private session</string>
+    <string name="am_label_offline_mode">Offline mode</string>
+    <string name="am_label_sync_backup">Sync &amp; backup</string>
 </resources>

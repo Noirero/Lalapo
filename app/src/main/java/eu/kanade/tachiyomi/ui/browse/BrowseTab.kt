@@ -42,13 +42,13 @@ import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import kotlin.math.abs
@@ -62,9 +62,9 @@ data object BrowseTab : Tab {
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_browse_enter)
             return TabOptions(
                 // AM (BROWSE)  -->
-                index = 2u,
+                index = 1u,
                 // <-- AM (BROWSE)
-                title = stringResource(MR.strings.browse),
+                title = stringResource(AMMR.strings.am_label_discover),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -213,9 +213,8 @@ data object BrowseTab : Tab {
             (context as? MainActivity)?.ready = true
         }
 
-        LaunchedEffect(inExtensionsScreen) {
-            HomeScreen.showBottomNav(!inExtensionsScreen)
-        }
+        // Keep primary navigation visible while managing extensions.
+        // Extensions are administration inside Discover, not a separate app mode.
         // <-- AM (BROWSE)
     }
 }

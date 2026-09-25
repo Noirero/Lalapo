@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -29,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -80,8 +82,8 @@ data object RecentsTab : Tab {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_recents_enter)
             return TabOptions(
-                index = 1u,
-                title = stringResource(AMMR.strings.label_recent_recents),
+                index = 2u,
+                title = stringResource(AMMR.strings.am_label_activity),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -94,10 +96,14 @@ data object RecentsTab : Tab {
         navigator.push(DownloadQueueScreen)
     }
 
-    private val switchToHistoryTabChannel = Channel<Unit>(1, BufferOverflow.DROP_OLDEST)
+    private val switchActivitySectionChannel = Channel<Boolean>(1, BufferOverflow.DROP_OLDEST)
 
     fun showHistory() {
-        switchToHistoryTabChannel.trySend(Unit)
+        switchActivitySectionChannel.trySend(true)
+    }
+
+    fun showUpdates() {
+        switchActivitySectionChannel.trySend(false)
     }
 
     @Composable
@@ -111,7 +117,7 @@ data object RecentsTab : Tab {
         // AM (TAB_HOLD) -->
         val snackbarHostState = SnackbarHostState()
         // <-- AM (TAB_HOLD)
-        var showHistoryScreen by remember { mutableStateOf(false) }
+        var showHistoryScreen by rememberSaveable { mutableStateOf(true) }
 
         RecentsScaffold(
             showHistoryScreen = showHistoryScreen,
@@ -130,7 +136,7 @@ data object RecentsTab : Tab {
         }
 
         LaunchedEffect(Unit) {
-            switchToHistoryTabChannel.receiveAsFlow().collectLatest { showHistoryScreen = true }
+            switchActivitySectionChannel.receiveAsFlow().collectLatest { showHistoryScreen = it }
         }
         // <-- AM (RECENTS_FILTER_CHIP)
 
@@ -207,6 +213,19 @@ fun RecentsScaffold(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     FilterChip(
+                        selected = showHistoryScreen,
+                        onClick = { shouldShowHistoryScreen(true) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.History,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize),
+                            )
+                        },
+                        label = { Text(text = stringResource(MR.strings.label_recent_manga)) },
+                    )
+
+                    FilterChip(
                         selected = !showHistoryScreen,
                         onClick = { shouldShowHistoryScreen(false) },
                         leadingIcon = {
@@ -220,16 +239,16 @@ fun RecentsScaffold(
                     )
 
                     FilterChip(
-                        selected = showHistoryScreen,
-                        onClick = { shouldShowHistoryScreen(true) },
+                        selected = false,
+                        onClick = { navigator.push(DownloadQueueScreen) },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Outlined.History,
+                                imageVector = Icons.Outlined.GetApp,
                                 contentDescription = null,
                                 modifier = Modifier.size(FilterChipDefaults.IconSize),
                             )
                         },
-                        label = { Text(text = stringResource(MR.strings.label_recent_manga)) },
+                        label = { Text(text = stringResource(MR.strings.pref_category_downloads)) },
                     )
                 }
             }

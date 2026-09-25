@@ -18,13 +18,10 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -69,12 +66,8 @@ object HomeScreen : Screen() {
 
     private val TABS = listOf(
         LibraryTab,
-        // AM (RECENTS) -->
-        RecentsTab,
-        // <-- AM (RECENTS)
-        // AM (BROWSE) -->
         BrowseTab,
-        // <-- AM (BROWSE)
+        RecentsTab,
         MoreTab,
     )
 
@@ -88,18 +81,6 @@ object HomeScreen : Screen() {
             // AM (NAVIGATION_PILL) -->
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
-                val currentTabIndex by remember {
-                    // AM (RECENTS_FILTER_CHIP) -->
-                    derivedStateOf { TABS.indexOfFirst { it::class == tabNavigator.current::class } }
-                    // <-- AM (RECENTS_FILTER_CHIP)
-                }
-
-                var oldIndex by remember { mutableIntStateOf(currentTabIndex) }
-
-                LaunchedEffect(currentTabIndex) {
-                    oldIndex = currentTabIndex
-                }
-
                 val tabletUi = isTabletUi()
                 val navigationSuiteType = if (tabletUi) {
                     NavigationSuiteType.NavigationRail
@@ -124,24 +105,15 @@ object HomeScreen : Screen() {
                     navigationSuiteType = navigationSuiteType,
                     state = navigationSuiteState,
                     navigationSuite = {
-                        if (navigationSuiteType == NavigationSuiteType.NavigationBar) {
-                            // AM -->
-                            NavigationPill(
-                                tabs = TABS,
-                                labelFade = TabFadeDuration / 2,
-                            )
-                            // <-- AM
-                        } else {
-                            NavigationSuite(
-                                navigationSuiteType = navigationSuiteType,
-                                colors = NavigationSuiteDefaults.colors(
-                                    navigationRailContainerColor = MaterialTheme.colorScheme
-                                        .surfaceColorAtElevation(3.dp),
-                                ),
-                                verticalArrangement = Arrangement.Center,
-                            ) {
-                                TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
-                            }
+                        NavigationSuite(
+                            navigationSuiteType = navigationSuiteType,
+                            colors = NavigationSuiteDefaults.colors(
+                                navigationRailContainerColor = MaterialTheme.colorScheme
+                                    .surfaceColorAtElevation(3.dp),
+                            ),
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
                         }
                     },
                 ) {
@@ -181,6 +153,8 @@ object HomeScreen : Screen() {
                             is Tab.Recents -> {
                                 if (it.toHistory) {
                                     RecentsTab.showHistory()
+                                } else {
+                                    RecentsTab.showUpdates()
                                 }
                                 RecentsTab
                             }

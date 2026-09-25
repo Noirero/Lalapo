@@ -45,6 +45,7 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.domain.source.model.Pin
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -76,7 +77,7 @@ fun SourcesScreen(
         modifier = modifier,
         topBar = { scrollBehavior ->
             AppBar(
-                titleContent = { AppBarTitle(stringResource(MR.strings.browse)) },
+                titleContent = { AppBarTitle(stringResource(AMMR.strings.am_label_discover)) },
                 actions = {
                     IconButton(onClick = { navigator.push(GlobalSearchScreen()) }) {
                         Icon(

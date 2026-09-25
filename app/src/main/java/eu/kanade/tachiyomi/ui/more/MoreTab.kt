@@ -29,9 +29,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
 import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.download.DownloadManager
-import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
-import eu.kanade.tachiyomi.ui.setting.PlayerSettingsScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
 import eu.kanade.tachiyomi.ui.storage.StorageScreen
@@ -83,12 +81,8 @@ data object MoreTab : Tab {
             incognitoMode = viewModel.incognitoMode,
             onIncognitoModeChange = { viewModel.incognitoMode = it },
             onClickDownloadQueue = { navigator.push(DownloadQueueScreen) },
-            onClickCategories = { navigator.push(CategoryScreen()) },
+            onClickSyncAndBackup = { navigator.push(SettingsScreen(SettingsScreen.Destination.SyncAndBackup)) },
             onClickStats = { navigator.push(StatsScreen()) },
-            onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
-            // AY -->
-            onClickPlayerSettings = { navigator.push(PlayerSettingsScreen(mainSettings = false)) },
-            // <-- AY
             onClickSettings = { navigator.push(SettingsScreen()) },
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
         )
