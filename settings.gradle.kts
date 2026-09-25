@@ -56,4 +56,3 @@ include(":source-local")
 // AM -->
 include(":cast")
 // <-- AM
-include(":baseline-profile")
