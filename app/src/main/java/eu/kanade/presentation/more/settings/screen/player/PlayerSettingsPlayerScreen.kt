@@ -377,7 +377,6 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
             },
         )
     }
-
 }
 
 val externalPlayers = listOf(
