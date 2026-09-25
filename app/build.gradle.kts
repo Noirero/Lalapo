@@ -4,6 +4,7 @@ import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import java.io.FileInputStream
+import java.security.KeyStore
 import java.util.Properties
 import kotlin.io.encoding.Base64
 
@@ -19,6 +20,34 @@ plugins {
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
+
+fun decodeSigningStore(
+    encodedStore: String,
+    storePassword: String,
+): ByteArray {
+    fun isValidStore(bytes: ByteArray): Boolean {
+        return listOf("JKS", "PKCS12").any { type ->
+            runCatching {
+                KeyStore.getInstance(type).apply {
+                    bytes.inputStream().use { load(it, storePassword.toCharArray()) }
+                }
+            }.isSuccess
+        }
+    }
+
+    val normalized = encodedStore.filterNot(Char::isWhitespace)
+    val decoded = Base64.decode(normalized)
+    if (isValidStore(decoded)) return decoded
+
+    val decodedText = decoded.toString(Charsets.UTF_8).filterNot(Char::isWhitespace)
+    val decodedTwice = runCatching { Base64.decode(decodedText) }.getOrNull()
+    if (decodedTwice != null && isValidStore(decodedTwice)) return decodedTwice
+
+    error(
+        "SIGNING_KEY is not a valid Base64-encoded JKS/PKCS12 keystore. " +
+            "Encode the keystore file itself, not a PEM key or keystore.properties.",
+    )
+}
 
 android {
     namespace = "eu.kanade.tachiyomi"
@@ -43,13 +72,17 @@ android {
     if (System.getenv("LALAPO_GITHUB_RELEASE").toBoolean()) {
         val tempStoreFile = file(System.getenv("RUNNER_TEMP")).resolve("lalapo.keystore")
 
-        val storeFileBytes = System.getenv("storeFileBase64").let(Base64::decode)
+        val storePasswordValue = System.getenv("storePassword")
+            ?: error("KEY_STORE_PASSWORD is required for signed GitHub builds")
+        val encodedStore = System.getenv("storeFileBase64")
+            ?: error("SIGNING_KEY is required for signed GitHub builds")
+        val storeFileBytes = decodeSigningStore(encodedStore, storePasswordValue)
         tempStoreFile.outputStream().use { it.write(storeFileBytes) }
 
         signingConfigs {
             named("debug") {
                 storeFile = tempStoreFile
-                storePassword = System.getenv("storePassword")
+                storePassword = storePasswordValue
                 keyAlias = System.getenv("keyAlias")
                 keyPassword = System.getenv("keyPassword")
             }
