@@ -27,11 +27,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.anime.components.AnimeCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
-import tachiyomi.domain.anime.model.AnimeCover as AnimeCoverModel
 import tachiyomi.domain.library.model.LibraryAnime
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.domain.anime.model.AnimeCover as AnimeCoverModel
 
 @Composable
 fun ContinueWatchingShelf(
