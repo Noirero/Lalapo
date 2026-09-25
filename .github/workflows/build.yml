@@ -66,8 +66,21 @@ jobs:
           name: test-report-${{ github.sha }}
           path: app/build/reports/tests/testDebugUnitTest
 
+      - name: Prepare signed main build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "LALAPO_GITHUB_RELEASE=true" >> "$GITHUB_ENV"
+          echo "LALAPO_VERSION_CODE=$((200000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+
       - name: Build app
         run: ./gradlew assembleRelease -Pinclude-cast -Penable-updater
+        env:
+          storeFileBase64: ${{ secrets.SIGNING_KEY }}
+          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyAlias: ${{ secrets.ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
