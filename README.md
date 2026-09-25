@@ -1,71 +1,59 @@
 <div align="center">
 
-<a href="https://aniyomi.org">
-    <img src="./.github/assets/logo.png" alt="Animiru logo" title="Animiru logo" width="80"/>
-</a>
+# Lalapo
 
-# Animiru [App](#)
-Animiru is a fork of [Aniyomi](https://github.com/aniyomiorg/aniyomi)
+Lalapo is an Android anime streaming/library application forked from [Animiru](https://github.com/quickdesh/Animiru), which itself builds on [Aniyomi](https://github.com/aniyomiorg/aniyomi) and the Mihon ecosystem.
 
 ### Full-featured video player
-Discover and watch anime, donghua, series, and more – easier than ever on your Android device.
+Discover and watch anime, donghua, series, and more on your Android device.
 
-[![Discord server](https://img.shields.io/discord/1009125884491468861.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/yDuHDMwxhv)
-[![GitHub downloads](https://img.shields.io/github/downloads/quickdesh/Animiru/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/quickdesh/Animiru/releases/latest)
-
-[![CI](https://img.shields.io/github/actions/workflow/status/quickdesh/Animiru/build.yml?labelColor=27303D)](https://github.com/quickdesh/Animiru/actions/workflows/release.yml)
-[![License: Apache-2.0](https://img.shields.io/github/license/quickdesh/Animiru?labelColor=27303D&color=0877d2)](/LICENSE)
-[![Translation status](https://img.shields.io/weblate/progress/aniyomi?labelColor=27303D&color=946300)](https://hosted.weblate.org/engage/aniyomi/)
+[![GitHub downloads](https://img.shields.io/github/downloads/Noirero/Lalapo/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/Noirero/Lalapo/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/Noirero/Lalapo/build.yml?branch=main&labelColor=27303D)](https://github.com/Noirero/Lalapo/actions/workflows/build.yml)
+[![License: Apache-2.0](https://img.shields.io/github/license/Noirero/Lalapo?labelColor=27303D&color=0877d2)](/LICENSE)
 
 ## Download
 
-[![Animiru](https://img.shields.io/github/release/quickdesh/Animiru.svg?maxAge=3600&label=Stable&labelColor=06599d&color=043b69)](https://github.com/quickdesh/Animiru/releases/latest)
+[![Lalapo](https://img.shields.io/github/release/Noirero/Lalapo.svg?maxAge=3600&label=Stable&labelColor=06599d&color=043b69)](https://github.com/Noirero/Lalapo/releases/latest)
 
 *Requires Android 8.0 or higher.*
 
 ## Features
 
-<div align="left">
-
-Features include:
-* Watch videos
-* Local watching of downloaded content
-* A configurable player built on mpv-android with multiple options and settings
-* Tracker support: [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.app/), [Shikimori](https://shikimori.io), [Simkl](https://simkl.com/), [Bangumi](https://bgm.tv/), and [Hikka](https://hikka.io/) support.
-* Categories to organize your library
-* Light and dark themes
-* Create backups locally to watch offline or to your desired cloud service
-* Plus much more...
-
 </div>
+
+- Watch videos from installed anime extensions.
+- Watch local/downloaded content.
+- Configurable mpv-based player.
+- Tracking support for MyAnimeList, AniList, Kitsu, Shikimori, Simkl, Bangumi, Hikka, and supported enhanced trackers.
+- Categories and library management.
+- Downloads, backup/restore, sync, casting, Picture-in-Picture, and torrent support where supported by the build.
+- Light and dark themes.
+
+## Release setup
+
+Release tags, signing requirements, and required repository secrets are documented in [`.github/RELEASE.md`](./.github/RELEASE.md).
 
 ## Contributing
 
-[Code of conduct](./CODE_OF_CONDUCT.md) · [Contributing guide](./CONTRIBUTING.md)
+[Code of conduct](./CODE_OF_CONDUCT.md) · [Contributing guide](./CONTRIBUTING.md) · [Changelog](./CHANGELOG.md)
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Issues and pull requests for Lalapo should be filed in this repository.
 
-Before reporting a new issue, take a look at the [FAQ](https://aniyomi.org/docs/faq/general), the [changelog](https://github.com/quickdesh/Animiru/blob/animiru-new-main/CHANGELOG.md) and the already opened [issues](https://github.com/quickdesh/Animiru/issues); if you got any questions, join our [Discord server](https://discord.gg/yDuHDMwxhv).
+## Credits and upstream attribution
 
+Lalapo preserves the Apache-2.0 licensing and attribution of its upstream projects. Historical changelog links intentionally continue to point to the original Animiru pull requests and commits where those changes were made.
 
-### Repositories
+- [Animiru](https://github.com/quickdesh/Animiru)
+- [Aniyomi](https://github.com/aniyomiorg/aniyomi)
+- [Mihon](https://github.com/mihonapp/mihon)
 
-[![Secozzi/mpv-android - GitHub](https://github-stats-extended.vercel.app/api/pin?username=Secozzi&repo=mpv-android&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/Secozzi/mpv-android/)
-[![jmir1/ffmpeg-kit - GitHub](https://github-stats-extended.vercel.app/api/pin?username=jmir1&repo=ffmpeg-kit&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/jmir1/ffmpeg-kit/)
+Thank you to the upstream maintainers and contributors whose work Lalapo builds on.
 
-### Credits
+## Disclaimer
 
-Thank you to all the people who have contributed!
+The developer(s) of this application are not affiliated with the content providers available through extensions, and this application hosts no content.
 
-<a href="https://github.com/quickdesh/Animiru/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=quickdesh/Animiru" alt="Animiru app contributors" title="Animiru app contributors" width="800"/>
-</a>
-
-### Disclaimer
-
-The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.
-
-### License
+## License
 
 <pre>
 Copyright © 2015 Javier Tomás

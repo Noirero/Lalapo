@@ -33,7 +33,7 @@ dependencyResolutionManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "Animiru"
+rootProject.name = "Lalapo"
 include(":app")
 include(":baseline-profile")
 include(":core-metadata")

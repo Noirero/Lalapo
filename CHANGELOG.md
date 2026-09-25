@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable Lalapo changes are documented here. Entries before the Lalapo fork retain their original Animiru links for historical attribution.
 
 The format is a modified version of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Added` - for new features.
@@ -11,6 +11,9 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+### Changed
+- Rebranded the application and release infrastructure as Lalapo.
+- Changed the Android application ID to `com.noirero.lalapo` while retaining compatible upstream URI schemes and source namespaces.
 
 ## [v0.20.0.1] - 2026-09-14
 ### Fixed
@@ -206,7 +209,7 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 ### Fixed
 - Fix crash when opening a new extension's settings ([@Quickdev](https://github.com/quickdesh)) ([`d90f059`](https://github.com/quickdesh/Animiru/commit/d90f059))
 
-[unreleased]: https://github.com/quickdesh/Animiru/compare/v0.20.0.1...animiru-new-main
+[unreleased]: https://github.com/Noirero/Lalapo/commits/main
 [v0.20.0.1]: https://github.com/quickdesh/Animiru/compare/v0.20.0.0...v0.20.0.1
 [v0.20.0.0]: https://github.com/quickdesh/Animiru/compare/v0.19.8.1...v0.20.0.0
 [v0.19.8.1]: https://github.com/quickdesh/Animiru/compare/v0.19.8.0...v0.19.8.1

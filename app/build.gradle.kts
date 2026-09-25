@@ -24,7 +24,7 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "xyz.Quickdev.Animiru.mi"
+        applicationId = "com.noirero.lalapo"
 
         versionCode = 148
         versionName = "0.20.0.1"
