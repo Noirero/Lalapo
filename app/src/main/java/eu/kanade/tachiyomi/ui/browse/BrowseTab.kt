@@ -16,8 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -53,9 +53,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import kotlin.math.abs
 
-// AM (BROWSE)  -->
-internal var goToExtensions = false
-// <-- AM (BROWSE)
 
 data object BrowseTab : Tab {
 
@@ -102,11 +99,17 @@ data object BrowseTab : Tab {
         val extensionViewModel = metroViewModel<ExtensionsViewModel>()
         val extensionsState by extensionViewModel.state.collectAsStateWithLifecycle()
 
-        var inExtensionsScreen by remember { mutableStateOf(goToExtensions) }
+        var inExtensionsScreen by rememberSaveable { mutableStateOf(false) }
         val animationDuration = 300
         val animationEasing = FastOutSlowInEasing
 
         BackHandler(enabled = inExtensionsScreen) { inExtensionsScreen = false }
+
+        LaunchedEffect(Unit) {
+            for (event in switchToExtensionTabChannel) {
+                inExtensionsScreen = true
+            }
+        }
 
         val alpha by animateFloatAsState(
             targetValue = if (!inExtensionsScreen) 1f else -1f,
@@ -126,7 +129,6 @@ data object BrowseTab : Tab {
                     animationSpec = tween(durationMillis = animationDuration, easing = animationEasing),
                 ),
             ) {
-                goToExtensions = false
                 SourcesScreen(
                     state = sourcesState,
                     onClickItem = { source, listing ->
@@ -152,7 +154,6 @@ data object BrowseTab : Tab {
                     animationSpec = tween(durationMillis = animationDuration, easing = animationEasing),
                 ),
             ) {
-                goToExtensions = true
                 ExtensionScreen(
                     state = extensionsState,
                     searchQuery = extensionsState.searchQuery,

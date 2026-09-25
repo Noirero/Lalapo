@@ -186,7 +186,12 @@ object HomeScreen : Screen() {
                             }
                             // <-- AM (RECENTS)
                             // AM (BROWSE) -->
-                            is Tab.Browse -> BrowseTab
+                            is Tab.Browse -> {
+                                if (it.toExtensions) {
+                                    BrowseTab.showExtension()
+                                }
+                                BrowseTab
+                            }
                             // <-- AM (BROWSE)
                             is Tab.More -> MoreTab
                         }
