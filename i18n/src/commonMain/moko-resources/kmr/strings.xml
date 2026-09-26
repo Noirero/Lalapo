@@ -230,13 +230,9 @@
     <string name="pref_update_only_non_completed">Babetên bi rewşa \"Qedîyayî\" derbas bike</string>
     <string name="pref_update_only_started">Babetên nedestpêkirî derbas bike</string>
     <string name="pref_library_update_categories_details">Babetên di polên derxistî de nayên nûkirin, her çend di polên tevlêkirî de bin jî.</string>
-    <string name="pref_create_folder_per_manga_summary">Li gorî sernavê babeta peldanka çedikê</string>
     <string name="pref_download_new_categories_details">Babetên di polên daxistî de nayên daxistin, her çend di polên tevlêkirî de bin jî.</string>
     <string name="action_open_in_web_view">Bi WebView veke</string>
     <string name="action_migrate">Veguhezîne</string>
-    <string name="tapping_inverted_horizontal">Asoyî</string>
-    <string name="tapping_inverted_vertical">Stûnî</string>
-    <string name="tapping_inverted_both">Herdu</string>
     <string name="theme_strawberrydaiquiri">Daiquiriya Çîlekan</string>
     <string name="pref_category_nsfw_content">Çavkaniyên NSFW (18+)</string>
     <string name="pref_show_nsfw_source">Di lîsteyên çavkanî û pêvekan de nîşan bide</string>
