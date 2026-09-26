@@ -38,7 +38,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - Fixed Discover showing a non-functional Uninstall action for sources without an installed extension.
 - Fixed duplicated player chapter markers and a current-time control that looked clickable but had no action.
 - Fixed Settings command search routing Backup/Restore queries to the wrong destination.
-- Fixed library CSV export using stale data, allowing an empty export selection, and suggesting an old Animiru filename.
+- Fixed library CSV export using stale data, allowing an empty export selection, suggesting an old Animiru filename, and reporting success without a writable output stream.
+- Fixed cancelling the Restore Backup file picker being reported as an error.
 - Corrected accessibility labels for Settings Search reset and Storage help actions.
 - Restored the still-live shared image viewer and its dependency after cleanup validation proved they are referenced.
 

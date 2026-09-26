@@ -70,12 +70,9 @@ object SettingsBackupScreen : SearchableSettings {
                     return Intent.createChooser(intent, context.stringResource(MR.strings.file_select_backup))
                 }
             },
-        ) {
-            if (it == null) {
-                context.toast(MR.strings.file_null_uri_error)
-                return@rememberLauncherForActivityResult
-            }
-            navigator.push(RestoreBackupScreen(it.toString()))
+        ) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+            navigator.push(RestoreBackupScreen(uri.toString()))
         }
 
         return Preference.PreferenceGroup(

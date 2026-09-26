@@ -25,8 +25,8 @@ object LibraryExporter {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 val csvData = generateCsvData(favorites, options)
                 outputStream.write(csvData.toByteArray())
+                onExportComplete()
             }
-            onExportComplete()
         }
     }
 
