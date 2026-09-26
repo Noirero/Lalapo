@@ -1,76 +1,79 @@
-Looking to report an issue/bug or make a feature request? Please refer to the [README file](https://github.com/quickdesh/Animiru#issues-feature-requests-and-contributing).
+# Contributing to Lalapo
 
----
+Thanks for helping improve Lalapo.
 
-Thanks for your interest in contributing to Animiru!
+## Where to contribute
 
+Use this repository for Lalapo issues and pull requests:
 
-# Code contributions
+- Issues: https://github.com/Noirero/Lalapo/issues
+- Pull requests: https://github.com/Noirero/Lalapo/pulls
 
-Pull requests are welcome!
-
-If you're interested in taking on [an open issue](https://github.com/quickdesh/Animiru/issues), please comment on it so others are aware.
-You do not need to ask for permission nor an assignment.
+Upstream bugs that also reproduce unchanged in Animiru, Aniyomi, or Mihon may be reported upstream when appropriate, but Lalapo-specific presentation, identity, release, and integration changes belong here.
 
 ## Prerequisites
 
-Before you start, please note that the ability to use following technologies is **required** and that existing contributors will not actively teach them to you.
+Contributors should be comfortable with:
 
-- Basic [Android development](https://developer.android.com/)
-- [Kotlin](https://kotlinlang.org/)
+- Android development
+- Kotlin
+- Jetpack Compose
+- Gradle
 
-### Tools
+Recommended tools:
 
-- [Android Studio](https://developer.android.com/studio)
-- Emulator or phone with developer options enabled to test changes.
+- Android Studio
+- An emulator or Android phone with developer options enabled
 
-## Keep In Mind
+## Development principles
 
-Do remember to mark each line of code that is either added or edited (excluding imports) specifying the reason behind the code.
-Surround the new code with:
+Lalapo follows the product principle **Simple by default, powerful when needed**.
 
-`AM (<Title of code>) --> <-- AM (<Title of code>)`
+When changing presentation code:
 
-### Credits (Added / Edited code from upstream)
+- preserve source, playback, library, download, tracking, backup, and sync behavior unless the change explicitly requires domain work;
+- keep phone and adaptive/tablet navigation coherent;
+- avoid adding permanent dashboard cards for status that can be contextual;
+- keep uncommon power-user controls discoverable without making them primary UI;
+- preserve compatibility URI schemes documented in `docs/FORK_IDENTITY.md`.
 
-- **AM (REMOVE_TABBED_SCREENS)** --> Refactoring from Aniyomi code to Animiru!
-- **AM (REMOVE_ACRA_FIREBASE)** --> Refactoring from Aniyomi code to Animiru!
-- **AM (REMOVE_LIBRARIES)** --> Refactoring from Aniyomi code to Animiru!
-- **AM (BROWSE)** --> Thank you Quickdesh!
-- **AM (KEYBOARD_CONTROLS)** --> Thank you Quickdesh!
-- **AM (NAVIGATION_PILL)** --> Thank you Quickdesh!
-- **AM (TAB_HOLD)** --> Thank you Quickdesh!
-- **AM (FILE_SIZE)** --> Thank you Khaled0!
-- **AM (DISCORD_RPC)** --> Original library from dead8309/Kizzy, refactored code by 最高 man/Shivam. Thank you, both of you!
-- **AM (CUSTOM_INFORMATION)** --> Copied from SY, Thank you jobobby4/syer!
-- **AM (GROUPING)** --> Copied from SY, Thank you jobobby4/syer!
-- **AM (RECENTS)** --> Idea inspired from J2K, Thank you Jays2Kings!
-- **AM (SYNC, SYNC_DRIVE, SYNC_YOMI)** --> Original code in SyncYomi, copied from Kuukiyomi. Thank you Kaiserbh and Luftverbot!
-- **AM (STORAGE_SCREEN)** --> Taken from Aniyomi and refactored to fit Animiru's codebase!
-- **AM (RECENTS_FILTER_CHIP)** --> Thank you Quickdesh!
+Do not mass-rename the `eu.kanade.tachiyomi` package or compatibility schemes only for branding. They are internal/upstream compatibility surfaces and should be changed only with a concrete migration plan.
 
-## Linting
+## Code style
 
-To auto-fix some linting errors, run the `spotlessApply` Gradle task.
+Run:
 
-## Getting help
+```bash
+./gradlew spotlessApply
+```
 
-- Join [the Discord server](https://discord.gg/yDuHDMwxhv) for online help and to ask questions while developing.
+before submitting changes.
 
-# Translations
+The historical `AM (...)` marker convention from Animiru is **not required for new Lalapo code**. Existing attribution comments may remain when they still convey useful origin/context, but stale wrapper comments should be removed as files are touched.
 
-Translations are done externally via Weblate. See [our website](https://aniyomi.org/docs/contribute#translation) for more details.
+Prefer clear commit history and normal Git attribution over adding new marker blocks around every edit.
 
+## Quality gate
 
-# Forks
+Before a change is considered ready:
 
-Forks are allowed so long as they abide by [the project's LICENSE](https://github.com/aniyomiorg/aniyomi/blob/main/LICENSE).
+- code formatting passes;
+- unit tests pass;
+- SQLDelight migration verification passes;
+- the app builds successfully;
+- affected navigation/back/deep-link behavior is checked;
+- empty/loading/error/offline states are considered;
+- phone runtime QA is performed for release candidates;
+- tablet/adaptive and light/dark/AMOLED states are checked when affected.
 
-When creating a fork, remember to:
+## Translations
 
-- To avoid confusion with the main app:
-    - Change the app name
-    - Change the app icon
-    - Change or disable the [app update checker](https://github.com/quickdesh/Animiru/blob/main/app/src/main/java/eu/kanade/tachiyomi/data/updater/AppUpdateChecker.kt)
-- To avoid installation conflicts:
-    - Change the `applicationId` in [`build.gradle.kts`](https://github.com/quickdesh/Animiru/blob/main/app/build.gradle.kts)
+Lalapo currently inherits translation infrastructure from its upstream projects. New Lalapo-specific strings should be added to the appropriate Lalapo/Animiru resource module and kept semantically anime-first.
+
+Do not reintroduce manga/reader-only strings without a live code path that requires them.
+
+## Licensing and attribution
+
+Contributions are accepted under the repository's Apache-2.0 license unless explicitly stated otherwise. Preserve applicable upstream copyright and attribution notices.
+
+See `LICENSE`, `NOTICE`, and `docs/FORK_IDENTITY.md`.

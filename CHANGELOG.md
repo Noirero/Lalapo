@@ -11,9 +11,35 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+### Added
+- Added Lalapo v2 contextual Private Session and Offline Mode presentation.
+- Added Continue Watching presentation to Library.
+- Added contextual sync/source/extension/storage health in More.
+- Added destination-aware Settings Search and Library / Sources / All global-search scopes.
+- Added a one-time player controls tutorial and contextual player quick actions.
+
 ### Changed
 - Rebranded the application and release infrastructure as Lalapo.
 - Changed the Android application ID to `com.noirero.lalapo` while retaining compatible upstream URI schemes and source namespaces.
+- Redesigned primary navigation around Library / Discover / Activity / More.
+- Reorganized Anime Detail around the primary Resume/Play action and episode-first hierarchy.
+- Reorganized player settings into Playback / Video / Timing / Tools / Advanced.
+- Reorganized Settings into App / Watching / Services / System / About.
+- Curated theme presentation while retaining the complete theme engine behind More Themes.
+- Unified Internal / Cast / External controls under a consistent Playback Target concept.
+- Split Network, Backup, Sync, and Storage/Cleanup into clearer settings destinations.
+
+### Removed
+- Removed the orphan manga-reader image view and its subsampling image dependency.
+- Removed dead reader-only base resource definitions and clearly manga-only Aniyomi compatibility strings after reference/build audit.
+
+### Fixed
+- Kept main builds green when the persistent signing secret is invalid, while preserving signed upgrade behavior when valid signing material is present.
+
+### Other
+- Added Lalapo-specific contribution guidance and upstream attribution notice.
+- Documented fork identity, compatibility surfaces, and Phase 6 cleanup decisions.
 
 ## [v0.20.0.1] - 2026-09-14
 ### Fixed

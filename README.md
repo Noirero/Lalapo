@@ -2,10 +2,9 @@
 
 # Lalapo
 
-Lalapo is an Android anime streaming/library application forked from [Animiru](https://github.com/quickdesh/Animiru), which itself builds on [Aniyomi](https://github.com/aniyomiorg/aniyomi) and the Mihon ecosystem.
+Lalapo is an Android anime streaming and library application forked from [Animiru](https://github.com/quickdesh/Animiru), which builds on [Aniyomi](https://github.com/aniyomiorg/aniyomi) and the [Mihon](https://github.com/mihonapp/mihon) ecosystem.
 
-### Full-featured video player
-Discover and watch anime, donghua, series, and more on your Android device.
+**Simple by default, powerful when needed.**
 
 [![GitHub downloads](https://img.shields.io/github/downloads/Noirero/Lalapo/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/Noirero/Lalapo/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/Noirero/Lalapo/build.yml?branch=main&labelColor=27303D)](https://github.com/Noirero/Lalapo/actions/workflows/build.yml)
@@ -17,21 +16,43 @@ Discover and watch anime, donghua, series, and more on your Android device.
 
 *Requires Android 8.0 or higher.*
 
-## Features
-
 </div>
 
-- Watch videos from installed anime extensions.
-- Watch local/downloaded content.
-- Configurable mpv-based player.
-- Tracking support for MyAnimeList, AniList, Kitsu, Shikimori, Simkl, Bangumi, Hikka, and supported enhanced trackers.
-- Categories and library management.
-- Downloads, backup/restore, sync, casting, Picture-in-Picture, and torrent support where supported by the build.
-- Light and dark themes.
+## Product structure
+
+Lalapo's primary navigation is intentionally small:
+
+- **Library** — manage saved anime and continue watching.
+- **Discover** — search content, browse sources, and manage extensions.
+- **Activity** — History, Updates, and Downloads.
+- **More** — Private Session, Offline Mode, contextual health/status, Sync & Backup, Statistics, Settings, and About.
+
+The redesign keeps the existing source, download, tracking, backup, and mpv engines while simplifying how those capabilities are presented.
+
+## Highlights
+
+- Anime extensions and local/downloaded playback.
+- Continue Watching presentation in Library.
+- Global search scopes for Library / Sources / All.
+- Contextual player controls with mpv-backed advanced settings.
+- Internal, Cast, Picture-in-Picture, and external playback targets.
+- Tracking support for supported anime trackers.
+- Categories, filtering, sorting, grouping, and bulk library actions.
+- Downloads, backup/restore, Cross Sync, and Google Drive/SyncYomi integrations where configured.
+- Private Session and Offline Mode.
+- Contextual sync, extension/source, download, and low-storage status.
+- Phone navigation plus adaptive/tablet presentation.
+- Light, dark, AMOLED, and curated theme presentation.
+
+## Development status
+
+The Lalapo v2 presentation redesign is implemented through Phase 6 on `main`. The frozen UI/UX baseline is documented in [`docs/Lalapo_V2_UI_UX_Spec.md`](./docs/Lalapo_V2_UI_UX_Spec.md).
+
+Runtime QA on physical devices is tracked separately from source/CI completion and should be completed before treating a build as release-ready.
 
 ## Release setup
 
-Release tags, signing requirements, and required repository secrets are documented in [`.github/RELEASE.md`](./.github/RELEASE.md).
+Release tags, signing requirements, and repository secrets are documented in [`.github/RELEASE.md`](./.github/RELEASE.md).
 
 ## Contributing
 
@@ -39,38 +60,21 @@ Release tags, signing requirements, and required repository secrets are document
 
 Issues and pull requests for Lalapo should be filed in this repository.
 
-## Credits and upstream attribution
+## Upstream attribution
 
-Lalapo preserves the Apache-2.0 licensing and attribution of its upstream projects. Historical changelog links intentionally continue to point to the original Animiru pull requests and commits where those changes were made.
+Lalapo preserves Apache-2.0 licensing and upstream attribution. Historical changelog links intentionally continue to point to the original upstream pull requests and commits where those changes were made.
 
 - [Animiru](https://github.com/quickdesh/Animiru)
 - [Aniyomi](https://github.com/aniyomiorg/aniyomi)
 - [Mihon](https://github.com/mihonapp/mihon)
+- Original Tachiyomi lineage and contributors
 
-Thank you to the upstream maintainers and contributors whose work Lalapo builds on.
+Additional attribution is recorded in [`NOTICE`](./NOTICE).
 
 ## Disclaimer
 
-The developer(s) of this application are not affiliated with the content providers available through extensions, and this application hosts no content.
+Lalapo is not affiliated with content providers available through extensions and does not host media content.
 
 ## License
 
-<pre>
-Copyright © 2015 Javier Tomás
-Copyright © 2024 Mihon Open Source Project
-Copyright © 2024 Aniyomi Open Source Project
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-</pre>
-
-</div>
+Lalapo is distributed under the Apache License 2.0. See [`LICENSE`](./LICENSE).

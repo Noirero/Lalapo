@@ -1,0 +1,20 @@
+Lalapo
+Copyright 2026 Lalapo contributors
+
+This product includes software derived from and/or incorporating work from:
+
+- Animiru — https://github.com/quickdesh/Animiru
+- Aniyomi — https://github.com/aniyomiorg/aniyomi
+- Mihon — https://github.com/mihonapp/mihon
+- Tachiyomi and its historical contributors
+
+The repository is distributed under the Apache License, Version 2.0.
+See LICENSE for the complete license text.
+
+Lalapo retains upstream copyright, license, and attribution notices where
+applicable. Historical source comments and changelog links may reference their
+original upstream projects and authors so provenance is not lost during the
+fork.
+
+"Lalapo" identifies this fork and does not imply endorsement by the upstream
+projects.
