@@ -39,6 +39,10 @@
     <string name="label_default">Default</string>
     <string name="label_warning">Warning</string>
     <string name="label_auto">Auto</string>
+    <string name="rotation_free">Free</string>
+    <string name="rotation_portrait">Portrait</string>
+    <string name="rotation_reverse_portrait">Reverse portrait</string>
+    <string name="rotation_landscape">Landscape</string>
 
     <!-- Shared labels -->
     <string name="label_started">Started</string>
