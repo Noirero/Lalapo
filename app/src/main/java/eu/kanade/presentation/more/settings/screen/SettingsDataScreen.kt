@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +50,6 @@ import mihon.app.di.appGraph
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.animiru.AMMR
@@ -73,7 +71,7 @@ object SettingsDataScreen : SearchableSettings {
         IconButton(onClick = { uriHandler.openUri(HELP_URL) }) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
-                contentDescription = stringResource(MR.strings.tracking_guide),
+                contentDescription = stringResource(MR.strings.label_help),
             )
         }
     }
@@ -229,16 +227,13 @@ object SettingsDataScreen : SearchableSettings {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val getFavorites = remember { context.appGraph.getFavorites }
-        var favorites by remember { mutableStateOf<List<Anime>>(emptyList()) }
-        LaunchedEffect(Unit) {
-            favorites = getFavorites.await()
-        }
 
         val saveFileLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.CreateDocument("text/csv"),
         ) { uri ->
             uri?.let {
                 scope.launch {
+                    val favorites = getFavorites.await()
                     LibraryExporter.exportToCsv(
                         context = context,
                         uri = it,
@@ -259,7 +254,7 @@ object SettingsDataScreen : SearchableSettings {
                 options = exportOptions,
                 onConfirm = { options ->
                     exportOptions = options
-                    saveFileLauncher.launch("animiru_library.csv")
+                    saveFileLauncher.launch("lalapo_library.csv")
                 },
                 onDismissRequest = { showDialog = false },
             )
@@ -328,6 +323,7 @@ object SettingsDataScreen : SearchableSettings {
             },
             confirmButton = {
                 TextButton(
+                    enabled = titleSelected,
                     onClick = {
                         onConfirm(
                             ExportOptions(

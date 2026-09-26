@@ -295,7 +295,7 @@ fun PlayerControls(
                     onValueChangeFinished = { onPlayerEvent(PlayerEvent.SeekFinished(it.roundToInt())) },
                     timersInverted = Pair(false, uiData.invertDuration),
                     durationTimerOnCLick = { onPlayerEvent(PlayerEvent.ToggleDurationTimer) },
-                    positionTimerOnClick = { },
+                    positionTimerOnClick = null,
                     chapters = stateData.chapters,
                 )
             }

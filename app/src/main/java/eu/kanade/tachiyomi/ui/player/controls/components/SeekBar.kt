@@ -75,7 +75,7 @@ fun SeekbarWithTimers(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: (Float) -> Unit,
     timersInverted: Pair<Boolean, Boolean>,
-    positionTimerOnClick: () -> Unit,
+    positionTimerOnClick: (() -> Unit)?,
     durationTimerOnCLick: () -> Unit,
     chapters: List<Segment>,
     modifier: Modifier = Modifier,
@@ -97,9 +97,11 @@ fun SeekbarWithTimers(
         VideoTimer(
             value = position,
             timersInverted.first,
-            onClick = {
-                clickEvent()
-                positionTimerOnClick()
+            onClick = positionTimerOnClick?.let { action ->
+                {
+                    clickEvent()
+                    action()
+                }
             },
             modifier = Modifier.width(92.dp),
         )
@@ -117,12 +119,12 @@ fun SeekbarWithTimers(
             segments = chapters
                 .filter { it.start in 0f..duration }
                 .let {
-                    // add an extra segment at 0 if it doesn't exist.
+                    // Add an extra segment at 0 if it doesn't exist.
                     if (it.isNotEmpty() && it[0].start != 0f) {
                         listOf(Segment("", 0f)) + it
                     } else {
                         it
-                    } + it
+                    }
                 },
             modifier = Modifier.weight(1f),
             colors = SeekerDefaults.seekerColors(
@@ -151,16 +153,22 @@ fun VideoTimer(
     isInverted: Boolean,
     modifier: Modifier = Modifier,
     color: Color = Color.White,
-    onClick: () -> Unit = {},
+    onClick: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Text(
         modifier = modifier
             .fillMaxHeight()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = ripple(),
-                onClick = onClick,
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = ripple(),
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                },
             )
             .wrapContentHeight(Alignment.CenterVertically),
         text = Utils.prettyTime(value.toInt(), isInverted),

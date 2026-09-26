@@ -194,10 +194,11 @@ data object BrowseTab : Tab {
                     sourcesViewModel.toggleSource(source)
                     sourcesViewModel.closeDialog()
                 },
-                onClickUninstall = {
-                    val ext = dialog.extension ?: return@SourceOptionsDialog
-                    sourcesViewModel.uninstallExtension(ext)
-                    sourcesViewModel.closeDialog()
+                onClickUninstall = dialog.extension?.let { extension ->
+                    {
+                        sourcesViewModel.uninstallExtension(extension)
+                        sourcesViewModel.closeDialog()
+                    }
                 },
                 onDismiss = sourcesViewModel::closeDialog,
             )

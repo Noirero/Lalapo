@@ -31,11 +31,16 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - Split Network, Backup, Sync, and Storage/Cleanup into clearer settings destinations.
 
 ### Removed
-- Removed the orphan manga-reader image view and its subsampling image dependency.
 - Removed dead reader-only base resource definitions and clearly manga-only Aniyomi compatibility strings after reference/build audit.
 
 ### Fixed
 - Kept main builds green when the persistent signing secret is invalid, while preserving signed upgrade behavior when valid signing material is present.
+- Fixed Discover showing a non-functional Uninstall action for sources without an installed extension.
+- Fixed duplicated player chapter markers and a current-time control that looked clickable but had no action.
+- Fixed Settings command search routing Backup/Restore queries to the wrong destination.
+- Fixed library CSV export using stale data, allowing an empty export selection, and suggesting an old Animiru filename.
+- Corrected accessibility labels for Settings Search reset and Storage help actions.
+- Restored the still-live shared image viewer and its dependency after cleanup validation proved they are referenced.
 
 ### Other
 - Added Lalapo-specific contribution guidance and upstream attribution notice.

@@ -151,7 +151,7 @@ class SettingsSearchScreen(
                                 IconButton(onClick = { textFieldState.clearText() }) {
                                     Icon(
                                         imageVector = Icons.Outlined.Close,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(MR.strings.action_reset),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
@@ -437,7 +437,12 @@ private fun getCommandDestinations(
         destination(
             route = SettingsSyncBackupScreen,
             title = AMMR.strings.am_label_sync_backup.getString(context),
-            aliases = listOf("backup", "sync", "restore"),
+            aliases = listOf("sync", "synchronization"),
+        ),
+        destination(
+            route = SettingsBackupScreen,
+            title = AMMR.strings.am_settings_backup.getString(context),
+            aliases = listOf("backup", "restore"),
         ),
         destination(
             route = SettingsNetworkScreen,

@@ -48,7 +48,7 @@ import tachiyomi.presentation.core.components.material.padding
 fun ControlsButton(
     icon: ImageVector,
     onClick: () -> Unit,
-    onLongClick: () -> Unit = {},
+    onLongClick: (() -> Unit)? = null,
     title: String? = null,
     color: Color = Color.White,
     horizontalSpacing: Dp = MaterialTheme.padding.medium,
@@ -99,7 +99,7 @@ fun ControlsButton(
     modifier: Modifier = Modifier,
     horizontalSpacing: Dp = MaterialTheme.padding.medium,
     verticalSpacing: Dp = MaterialTheme.padding.medium,
-    onLongClick: () -> Unit = {},
+    onLongClick: (() -> Unit)? = null,
     color: Color = Color.White,
 ) {
     val interactionSource = remember { MutableInteractionSource() }

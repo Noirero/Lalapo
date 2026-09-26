@@ -18,11 +18,6 @@ Runtime QA is intentionally scheduled after Phase 6 source/CI completion for thi
 
 ### Removed
 
-- `app/src/main/java/eu/kanade/tachiyomi/util/ReaderPageImageView.kt`.
-  - No active Lalapo navigation or anime playback surface owns this reader image-view utility.
-  - The app is anime-only and no reader screen remains in the repository tree.
-- `subsampling-scale-image-view` app dependency and version-catalog entry.
-  - It was retained for the orphan reader image view.
 - The delimited Mihon `Reader section` from the base i18n resource file.
   - Build/resource generation is used as the second reference audit; any still-live identifier must be restored explicitly rather than keeping the entire dead reader surface.
 - Clearly manga-only Aniyomi compatibility labels for removed manga navigation, library, database, source, migration, storage, and extension surfaces.
@@ -32,6 +27,9 @@ Runtime QA is intentionally scheduled after Phase 6 source/CI completion for thi
 - Generic upstream resource identifiers that may still back anime behavior even when their historical name says `chapter` or `manga`.
   - Naming alone is not proof that a resource is dead.
 - Video **chapters** terminology used by mpv/AniSkip/player chapter markers.
+- `ReaderPageImageView.kt` and `subsampling-scale-image-view`.
+  - The initial cleanup attempt removed them, but compile/reference validation proved the shared image viewer is still live.
+  - They are retained until the remaining image-view ownership can be separated safely.
 - `eu.kanade.tachiyomi` internal package namespace.
 - `aniyomi://` and `animiru://` compatibility URI/OAuth schemes documented in `FORK_IDENTITY.md`.
 - Historical upstream commit/PR links and relevant source attribution.
@@ -55,5 +53,6 @@ Phase 6 source completion requires:
 - unit tests green;
 - SQLDelight migration verification green;
 - APK build and artifact upload green.
+- Post-phase interaction audit checks visible actions for dead/no-op callbacks and misleading destinations.
 
 Runtime QA is deferred until after Phase 6 per the current implementation plan. That final pass must include phone behavior, responsive/tablet surfaces that changed, light/dark/AMOLED themes, empty/loading/error/offline states, and relevant navigation/back/deep-link paths.

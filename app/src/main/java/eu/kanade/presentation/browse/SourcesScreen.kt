@@ -302,7 +302,7 @@ fun SourceOptionsDialog(
     onClickPin: () -> Unit,
     onClickDisable: () -> Unit,
     // AM (BROWSE) -->
-    onClickUninstall: () -> Unit,
+    onClickUninstall: (() -> Unit)?,
     // <-- AM (BROWSE)
     onDismiss: () -> Unit,
 ) {
@@ -330,13 +330,15 @@ fun SourceOptionsDialog(
                     )
                 }
                 // AM (BROWSE) -->
-                Text(
-                    text = stringResource(resource = MR.strings.ext_uninstall),
-                    modifier = Modifier
-                        .clickable(onClick = onClickUninstall)
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                )
+                onClickUninstall?.let { uninstall ->
+                    Text(
+                        text = stringResource(resource = MR.strings.ext_uninstall),
+                        modifier = Modifier
+                            .clickable(onClick = uninstall)
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                    )
+                }
                 // <-- AM (BROWSE)
             }
         },
