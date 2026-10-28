@@ -38,7 +38,6 @@ import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
-import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
@@ -71,12 +70,6 @@ data object BrowseTab : Tab {
     override suspend fun onReselect(navigator: Navigator) {
         navigator.push(GlobalSearchScreen())
     }
-
-    // AM (TAB_HOLD) -->
-    override suspend fun onReselectHold(navigator: Navigator) {
-        navigator.push(MigrateSourceScreen())
-    }
-    // <-- AM (TAB_HOLD)
 
     private val switchToExtensionTabChannel = Channel<Unit>(1, BufferOverflow.DROP_OLDEST)
 

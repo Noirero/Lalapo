@@ -41,7 +41,6 @@ import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import eu.kanade.tachiyomi.ui.storage.StorageScreen
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.Job
@@ -75,10 +74,6 @@ data object MoreTab : Tab {
 
     override suspend fun onReselect(navigator: Navigator) {
         navigator.push(SettingsScreen())
-    }
-
-    override suspend fun onReselectHold(navigator: Navigator) {
-        navigator.push(StorageScreen())
     }
 
     @Composable

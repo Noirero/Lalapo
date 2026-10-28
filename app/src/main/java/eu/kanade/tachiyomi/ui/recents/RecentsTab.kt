@@ -91,10 +91,6 @@ data object RecentsTab : Tab {
         resumeLastEpisodeSeenEvent.send(Unit)
     }
 
-    override suspend fun onReselectHold(navigator: Navigator) {
-        navigator.push(DownloadQueueScreen)
-    }
-
     private val switchActivitySectionChannel = Channel<Boolean>(1, BufferOverflow.DROP_OLDEST)
 
     fun showHistory() {
@@ -113,9 +109,7 @@ data object RecentsTab : Tab {
         // AM (RECENTS_FILTER_CHIP) -->
         val updatesViewModel = metroViewModel<UpdatesViewModel>()
         val updatesSettingsViewModel = metroViewModel<UpdatesSettingsViewModel>()
-        // AM (TAB_HOLD) -->
         val snackbarHostState = SnackbarHostState()
-        // <-- AM (TAB_HOLD)
         var showHistoryScreen by rememberSaveable { mutableStateOf(true) }
 
         RecentsScaffold(
@@ -146,7 +140,6 @@ data object RecentsTab : Tab {
             }
             // <-- AM (DISCORD_RPC)
             (context as? MainActivity)?.ready = true
-            // AM (TAB_HOLD) -->
             resumeLastEpisodeSeenEvent.receiveAsFlow().collectLatest {
                 openEpisode(context, historyViewModel.getNextEpisode(), snackbarHostState)
             }
