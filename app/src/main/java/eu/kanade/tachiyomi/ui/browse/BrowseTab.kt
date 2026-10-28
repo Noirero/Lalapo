@@ -40,6 +40,7 @@ import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
+import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
@@ -179,9 +180,23 @@ data object BrowseTab : Tab {
             val source = dialog.source
             SourceOptionsDialog(
                 source = source,
+                onClickLatest = if (source.supportsLatest) {
+                    {
+                        sourcesViewModel.closeDialog()
+                        navigator.push(BrowseSourceScreen(source.id, Listing.Latest.query))
+                    }
+                } else {
+                    null
+                },
                 onClickPin = {
                     sourcesViewModel.togglePin(source)
                     sourcesViewModel.closeDialog()
+                },
+                onClickSettings = dialog.extension?.let { extension ->
+                    {
+                        sourcesViewModel.closeDialog()
+                        navigator.push(ExtensionDetailsScreen(extension.pkgName))
+                    }
                 },
                 onClickDisable = {
                     sourcesViewModel.toggleSource(source)

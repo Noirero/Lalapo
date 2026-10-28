@@ -6,7 +6,7 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.util.fastAll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import animiru.domain.player.service.PlayerPreferences
@@ -34,7 +33,6 @@ import eu.kanade.presentation.library.DeleteLibraryAnimeDialog
 import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryToolbar
-import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
@@ -59,6 +57,7 @@ import tachiyomi.domain.episode.model.Episode
 import tachiyomi.domain.library.model.LibraryAnime
 import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -83,12 +82,6 @@ data object LibraryTab : Tab {
     override suspend fun onReselect(navigator: Navigator) {
         requestOpenSettingsSheet()
     }
-
-    // AM (TAB_HOLD) -->
-    override suspend fun onReselectHold(navigator: Navigator) {
-        requestOpenRandomAnime()
-    }
-    // <-- AM (TAB_HOLD)
 
     @Composable
     override fun Content() {
@@ -137,7 +130,6 @@ data object LibraryTab : Tab {
         }
         // <-- AY
 
-        // AM (TAB_HOLD) -->
         fun openRandomAnime() {
             scope.launch {
                 val randomItem = viewModel.getRandomLibraryItemForCurrentCategory()
@@ -150,7 +142,6 @@ data object LibraryTab : Tab {
                 }
             }
         }
-        // <-- AM (TAB_HOLD)
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -169,9 +160,7 @@ data object LibraryTab : Tab {
                     onClickFilter = viewModel::showSettingsDialog,
                     onClickRefresh = { onClickRefresh(state.activeCategory) },
                     onClickGlobalUpdate = { onClickRefresh(null) },
-                    // AM (TAB_HOLD) -->
                     onClickOpenRandomAnime = ::openRandomAnime,
-                    // <-- AM (TAB_HOLD)
                     searchQuery = state.searchQuery,
                     onSearchQueryChange = viewModel::search,
                     // For scroll overlay when no tab
@@ -201,15 +190,18 @@ data object LibraryTab : Tab {
                     LoadingScreen(Modifier.padding(contentPadding))
                 }
                 state.searchQuery.isNullOrEmpty() && !state.hasActiveFilters && state.isLibraryEmpty -> {
-                    val handler = LocalUriHandler.current
                     EmptyScreen(
                         stringRes = MR.strings.information_empty_library,
                         modifier = Modifier.padding(contentPadding),
                         actions = listOf(
                             EmptyScreenAction(
-                                stringRes = MR.strings.getting_started_guide,
-                                icon = Icons.AutoMirrored.Outlined.HelpOutline,
-                                onClick = { handler.openUri(GETTING_STARTED_URL) },
+                                stringRes = AMMR.strings.am_label_discover,
+                                icon = Icons.Outlined.Explore,
+                                onClick = {
+                                    scope.launch {
+                                        HomeScreen.openTab(HomeScreen.Tab.Browse())
+                                    }
+                                },
                             ),
                         ),
                     )
@@ -317,9 +309,6 @@ data object LibraryTab : Tab {
             // <-- AM (DISCORD_RPC)
             launch { queryEvent.receiveAsFlow().collect(viewModel::search) }
             launch { requestSettingsSheetEvent.receiveAsFlow().collectLatest { viewModel.showSettingsDialog() } }
-            // AM (TAB_HOLD) -->
-            launch { requestOpenRandomAnimeEvent.receiveAsFlow().collectLatest { openRandomAnime() } }
-            // <-- AM (TAB_HOLD)
         }
     }
 
@@ -330,10 +319,4 @@ data object LibraryTab : Tab {
     // For opening settings sheet in LibraryController
     private val requestSettingsSheetEvent = Channel<Unit>()
     private suspend fun requestOpenSettingsSheet() = requestSettingsSheetEvent.send(Unit)
-
-    // AM (TAB_HOLD) -->
-    // For opening random entry
-    private val requestOpenRandomAnimeEvent = Channel<Unit>()
-    private suspend fun requestOpenRandomAnime() = requestOpenRandomAnimeEvent.send(Unit)
-    // <-- AM (TAB_HOLD)
 }
