@@ -65,7 +65,6 @@ import tachiyomi.source.local.isLocal
 fun SourcesScreen(
     state: SourcesViewModel.State,
     onClickItem: (Source, Listing) -> Unit,
-    onClickPin: (Source) -> Unit,
     onLongClickItem: (Source) -> Unit,
     // AM (BROWSE) -->
     toExtensionsScreen: () -> Unit,

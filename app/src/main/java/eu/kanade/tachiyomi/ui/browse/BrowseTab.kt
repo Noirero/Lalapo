@@ -126,7 +126,6 @@ data object BrowseTab : Tab {
                     onClickItem = { source, listing ->
                         navigator.push(BrowseSourceScreen(source.id, listing.query))
                     },
-                    onClickPin = sourcesViewModel::togglePin,
                     onLongClickItem = sourcesViewModel::showSourceDialog,
                     toExtensionsScreen = { inExtensionsScreen = true },
                     updateCount = updateCount,
