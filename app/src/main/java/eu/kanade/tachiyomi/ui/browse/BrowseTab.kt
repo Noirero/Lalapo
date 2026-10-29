@@ -127,6 +127,7 @@ data object BrowseTab : Tab {
                         navigator.push(BrowseSourceScreen(source.id, listing.query))
                     },
                     onLongClickItem = sourcesViewModel::showSourceDialog,
+                    onRetry = sourcesViewModel::retrySources,
                     toExtensionsScreen = { inExtensionsScreen = true },
                     updateCount = updateCount,
                     modifier = Modifier.alpha(alpha.coerceAtLeast(0f)),

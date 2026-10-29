@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -56,6 +57,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
@@ -66,6 +68,7 @@ fun SourcesScreen(
     state: SourcesViewModel.State,
     onClickItem: (Source, Listing) -> Unit,
     onLongClickItem: (Source) -> Unit,
+    onRetry: () -> Unit,
     // AM (BROWSE) -->
     toExtensionsScreen: () -> Unit,
     updateCount: Int,
@@ -130,6 +133,17 @@ fun SourcesScreen(
         // <-- AM (BROWSE)
         when {
             state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
+            state.hasError -> EmptyScreen(
+                stringRes = MR.strings.internal_error,
+                modifier = Modifier.padding(contentPadding),
+                actions = listOf(
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_retry,
+                        icon = Icons.Outlined.Refresh,
+                        onClick = onRetry,
+                    ),
+                ),
+            )
             state.isEmpty -> EmptyScreen(
                 stringRes = MR.strings.source_empty_screen,
                 modifier = Modifier.padding(contentPadding),
