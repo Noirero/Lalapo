@@ -16,18 +16,16 @@ import eu.kanade.presentation.browse.SourceUiModel
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
@@ -51,15 +49,19 @@ class SourcesViewModel(
     // <-- AM (BROWSE)
 ) : ViewModel() {
 
-    private val _events = Channel<Event>(Int.MAX_VALUE)
-    val events = _events.receiveAsFlow()
-
     private val dialog = MutableStateFlow<Dialog?>(null)
-    private val sourceLoadState = MutableStateFlow<SourceLoadState>(SourceLoadState.Loading)
-    private var sourceCollectionJob: Job? = null
+    private val sourceRetry = MutableStateFlow(0L)
 
-    init {
-        subscribeToSources()
+    private val sourceLoadState = sourceRetry.flatMapLatest {
+        getEnabledSources.subscribe()
+            .map<List<Source>, SourceLoadState> { sources ->
+                SourceLoadState.Success(toSourceUiModels(sources))
+            }
+            .onStart { emit(SourceLoadState.Loading) }
+            .catch {
+                logcat(LogPriority.ERROR, it)
+                emit(SourceLoadState.Error)
+            }
     }
 
     val state: StateFlow<State> = combine(
@@ -75,25 +77,8 @@ class SourcesViewModel(
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
 
-    private fun subscribeToSources() {
-        sourceCollectionJob?.cancel()
-        sourceLoadState.value = SourceLoadState.Loading
-        sourceCollectionJob = viewModelScope.launchIO {
-            getEnabledSources.subscribe()
-                .map(::toSourceUiModels)
-                .catch {
-                    logcat(LogPriority.ERROR, it)
-                    sourceLoadState.value = SourceLoadState.Error
-                    _events.send(Event.FailedFetchingSources)
-                }
-                .collect { items ->
-                    sourceLoadState.value = SourceLoadState.Success(items)
-                }
-        }
-    }
-
     fun retrySources() {
-        subscribeToSources()
+        sourceRetry.update { it + 1 }
     }
 
     private fun toSourceUiModels(sources: List<Source>): List<SourceUiModel> {
@@ -167,10 +152,6 @@ class SourcesViewModel(
         data object Loading : SourceLoadState
         data object Error : SourceLoadState
         data class Success(val items: List<SourceUiModel>) : SourceLoadState
-    }
-
-    sealed interface Event {
-        data object FailedFetchingSources : Event
     }
 
     data class Dialog(
