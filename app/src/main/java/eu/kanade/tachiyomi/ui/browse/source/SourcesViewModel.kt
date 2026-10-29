@@ -105,14 +105,7 @@ class SourcesViewModel(
         return byLang.flatMap {
             listOf(
                 SourceUiModel.Header(it.key),
-                *it.value.map { source ->
-                    SourceUiModel.Item(
-                        source,
-                        // AM (BROWSE) -->
-                        extensionManager.getInstalledExtension(source.id),
-                        // <-- AM (BROWSE)
-                    )
-                }.toTypedArray(),
+                *it.value.map(SourceUiModel::Item).toTypedArray(),
             )
         }
     }
