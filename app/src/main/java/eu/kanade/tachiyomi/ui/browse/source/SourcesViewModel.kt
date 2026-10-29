@@ -105,7 +105,7 @@ class SourcesViewModel(
         return byLang.flatMap {
             listOf(
                 SourceUiModel.Header(it.key),
-                *it.value.map(SourceUiModel::Item).toTypedArray(),
+                *it.value.map { source -> SourceUiModel.Item(source) }.toTypedArray(),
             )
         }
     }
