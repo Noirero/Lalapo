@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
@@ -36,13 +38,25 @@ fun HistoryScreen(
     onClickResume: (animeId: Long, episodeId: Long) -> Unit,
     onClickFavorite: (animeId: Long) -> Unit,
     onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
+    onRetry: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     // AM (RECENTS_FILTER_CHIP) -->
-    state.list.let {
-        if (it == null) {
-            LoadingScreen(Modifier.padding(contentPadding))
-        } else if (it.isEmpty()) {
+    val history = state.list
+    when {
+        state.hasError -> EmptyScreen(
+            stringRes = MR.strings.internal_error,
+            modifier = Modifier.padding(contentPadding),
+            actions = listOf(
+                EmptyScreenAction(
+                    stringRes = MR.strings.action_retry,
+                    icon = Icons.Outlined.Refresh,
+                    onClick = onRetry,
+                ),
+            ),
+        )
+        history == null -> LoadingScreen(Modifier.padding(contentPadding))
+        history.isEmpty() -> {
             val msg = if (!state.searchQuery.isNullOrEmpty()) {
                 MR.strings.no_results_found
             } else {
@@ -52,14 +66,15 @@ fun HistoryScreen(
                 stringRes = msg,
                 modifier = Modifier.padding(contentPadding),
             )
-        } else {
+        }
+        else -> {
             HistoryScreenContent(
-                history = it,
+                history = history,
                 contentPadding = contentPadding,
-                onClickCover = { history -> onClickCover(history.animeId) },
-                onClickResume = { history -> onClickResume(history.animeId, history.episodeId) },
+                onClickCover = { item -> onClickCover(item.animeId) },
+                onClickResume = { item -> onClickResume(item.animeId, item.episodeId) },
                 onClickDelete = { item -> onDialogChange(HistoryViewModel.Dialog.Delete(item)) },
-                onClickFavorite = { history -> onClickFavorite(history.animeId) },
+                onClickFavorite = { item -> onClickFavorite(item.animeId) },
             )
         }
     }
@@ -158,6 +173,7 @@ internal fun HistoryScreenPreviews(
             onClickResume = { _, _ -> run {} },
             onDialogChange = {},
             onClickFavorite = {},
+            onRetry = {},
             contentPadding = PaddingValues(),
         )
     }

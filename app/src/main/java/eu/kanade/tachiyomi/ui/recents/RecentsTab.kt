@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -109,7 +110,7 @@ data object RecentsTab : Tab {
         // AM (RECENTS_FILTER_CHIP) -->
         val updatesViewModel = metroViewModel<UpdatesViewModel>()
         val updatesSettingsViewModel = metroViewModel<UpdatesSettingsViewModel>()
-        val snackbarHostState = SnackbarHostState()
+        val snackbarHostState = remember { SnackbarHostState() }
         var showHistoryScreen by rememberSaveable { mutableStateOf(true) }
 
         RecentsScaffold(
@@ -121,7 +122,12 @@ data object RecentsTab : Tab {
         ) { contentPadding ->
             Crossfade(targetState = showHistoryScreen, label = "recents_crossfade") { showHistory ->
                 if (!showHistory) {
-                    AnimeUpdatesHalfTab(updatesViewModel, updatesSettingsViewModel, contentPadding)
+                    AnimeUpdatesHalfTab(
+                        viewModel = updatesViewModel,
+                        settingsViewModel = updatesSettingsViewModel,
+                        snackbarHostState = snackbarHostState,
+                        contentPadding = contentPadding,
+                    )
                 } else {
                     HistoryHalfTab(historyViewModel, snackbarHostState, contentPadding)
                 }

@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -99,6 +100,7 @@ class UpdatesViewModel(
     private val selectedEpisodeIds = MutableStateFlow(emptySet<Long>())
 
     private val dialog = MutableStateFlow<Dialog?>(null)
+    private val updatesRetry = MutableStateFlow(0L)
 
     private val downloadStates = MutableStateFlow(emptyMap<Long, DownloadProgress>())
 
@@ -144,49 +146,59 @@ class UpdatesViewModel(
         }
         .distinctUntilChanged()
 
-    private val updateItems = combine(
-        // needed for SQL filters (unseen, started, bookmarked, etc)
-        getUpdatesItemPreferenceFlow()
-            .distinctUntilChanged()
-            .flatMapLatest {
-                getUpdates.subscribe(
-                    Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault()),
-                    unseen = it.filterUnseen.toBooleanOrNull(),
-                    started = it.filterStarted.toBooleanOrNull(),
-                    bookmarked = it.filterBookmarked.toBooleanOrNull(),
-                    // AY -->
-                    fillermarked = it.filterFillermarked.toBooleanOrNull(),
-                    // <-- AY
-                    hideExcludedScanlators = it.filterExcludedScanlators,
-                    includedCategories = it.filterIncludedCategories,
-                    excludedCategories = it.filterExcludedCategories,
-                ).distinctUntilChanged()
-            },
-        downloadCache.changes,
-        downloadManager.queueState,
-        // needed for Kotlin filters (downloaded)
-        getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
-            old.filterDownloaded == new.filterDownloaded
-        },
-    ) { updates, _, _, itemPreferences ->
-        updates
-            .toUpdateItems()
-            .applyFilters(itemPreferences)
-    }
+    private val updateLoadState = updatesRetry
+        .flatMapLatest {
+            combine(
+                // needed for SQL filters (unseen, started, bookmarked, etc)
+                getUpdatesItemPreferenceFlow()
+                    .distinctUntilChanged()
+                    .flatMapLatest {
+                        getUpdates.subscribe(
+                            Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault()),
+                            unseen = it.filterUnseen.toBooleanOrNull(),
+                            started = it.filterStarted.toBooleanOrNull(),
+                            bookmarked = it.filterBookmarked.toBooleanOrNull(),
+                            // AY -->
+                            fillermarked = it.filterFillermarked.toBooleanOrNull(),
+                            // <-- AY
+                            hideExcludedScanlators = it.filterExcludedScanlators,
+                            includedCategories = it.filterIncludedCategories,
+                            excludedCategories = it.filterExcludedCategories,
+                        ).distinctUntilChanged()
+                    },
+                downloadCache.changes,
+                downloadManager.queueState,
+                // needed for Kotlin filters (downloaded)
+                getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
+                    old.filterDownloaded == new.filterDownloaded
+                },
+            ) { updates, _, _, itemPreferences ->
+                updates
+                    .toUpdateItems()
+                    .applyFilters(itemPreferences)
+            }
+                .map<List<UpdatesItem>, UpdatesLoadState> { UpdatesLoadState.Success(it) }
+                .onStart { emit(UpdatesLoadState.Loading) }
+                .catch { error ->
+                    logcat(LogPriority.ERROR, error)
+                    emit(UpdatesLoadState.Error)
+                }
+        }
         .flowOn(Dispatchers.IO)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     val state: StateFlow<State> = combine(
-        updateItems,
+        updateLoadState,
         selectedEpisodeIds,
         downloadStates,
         dialog,
         hasActiveFilters,
-    ) { items, selectedIds, downloads, dialog, hasActiveFilters ->
+    ) { loadState, selectedIds, downloads, dialog, hasActiveFilters ->
+        val items = (loadState as? UpdatesLoadState.Success)?.items.orEmpty()
         State(
-            isLoading = items == null,
+            isLoading = loadState is UpdatesLoadState.Loading,
+            hasError = loadState is UpdatesLoadState.Error,
             hasActiveFilters = hasActiveFilters,
-            items = items.orEmpty().map { item ->
+            items = items.map { item ->
                 val download = downloads[item.update.episodeId]
                 item.copy(
                     selected = item.update.episodeId in selectedIds,
@@ -206,6 +218,10 @@ class UpdatesViewModel(
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
+
+    fun retryUpdates() {
+        updatesRetry.update { it + 1 }
+    }
 
     private fun List<UpdatesItem>.applyFilters(
         preferences: ItemPreferences,
@@ -533,11 +549,18 @@ class UpdatesViewModel(
         val filterExcludedCategories: List<Long>,
     )
 
+    private sealed interface UpdatesLoadState {
+        data object Loading : UpdatesLoadState
+        data object Error : UpdatesLoadState
+        data class Success(val items: List<UpdatesItem>) : UpdatesLoadState
+    }
+
     private data class DownloadProgress(val status: Download.State, val progress: Int)
 
     @Immutable
     data class State(
         val isLoading: Boolean = true,
+        val hasError: Boolean = false,
         val hasActiveFilters: Boolean = false,
         val items: List<UpdatesItem> = listOf(),
         val dialog: Dialog? = null,
