@@ -31,7 +31,7 @@ internal class GuidesStep(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
         ) {
-            Text(stringResource(MR.strings.onboarding_guides_new_user, stringResource(MR.strings.app_name)))
+            Text(stringResource(MR.strings.pref_browse_summary))
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onOpenDiscover,
