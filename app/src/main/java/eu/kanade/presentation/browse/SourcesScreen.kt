@@ -1,6 +1,7 @@
 package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,23 +12,25 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.SwapCalls
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -37,8 +40,6 @@ import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.extension.model.Extension
-import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesFilterScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
@@ -50,12 +51,12 @@ import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
@@ -65,8 +66,8 @@ import tachiyomi.source.local.isLocal
 fun SourcesScreen(
     state: SourcesViewModel.State,
     onClickItem: (Source, Listing) -> Unit,
-    onClickPin: (Source) -> Unit,
     onLongClickItem: (Source) -> Unit,
+    onRetry: () -> Unit,
     // AM (BROWSE) -->
     toExtensionsScreen: () -> Unit,
     updateCount: Int,
@@ -75,6 +76,7 @@ fun SourcesScreen(
 ) {
     // AM (BROWSE) -->
     val navigator = LocalNavigator.currentOrThrow
+    var showToolsMenu by remember { mutableStateOf(false) }
     Scaffold(
         modifier = modifier,
         topBar = { scrollBehavior ->
@@ -101,11 +103,25 @@ fun SourcesScreen(
                             contentDescription = stringResource(MR.strings.action_filter),
                         )
                     }
-                    IconButton(onClick = { navigator.push(MigrateSourceScreen()) }) {
-                        Icon(
-                            Icons.Outlined.SwapCalls,
-                            contentDescription = stringResource(MR.strings.action_migrate),
-                        )
+                    Box {
+                        IconButton(onClick = { showToolsMenu = true }) {
+                            Icon(
+                                Icons.Outlined.MoreVert,
+                                contentDescription = stringResource(MR.strings.label_more),
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showToolsMenu,
+                            onDismissRequest = { showToolsMenu = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.action_migrate)) },
+                                onClick = {
+                                    showToolsMenu = false
+                                    navigator.push(MigrateSourceScreen())
+                                },
+                            )
+                        }
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -116,6 +132,17 @@ fun SourcesScreen(
         // <-- AM (BROWSE)
         when {
             state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
+            state.hasError -> EmptyScreen(
+                stringRes = MR.strings.internal_error,
+                modifier = Modifier.padding(contentPadding),
+                actions = listOf(
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_retry,
+                        icon = Icons.Outlined.Refresh,
+                        onClick = onRetry,
+                    ),
+                ),
+            )
             state.isEmpty -> EmptyScreen(
                 stringRes = MR.strings.source_empty_screen,
                 modifier = Modifier.padding(contentPadding),
@@ -174,14 +201,9 @@ fun SourcesScreen(
                             }
                             is SourceUiModel.Item -> SourceItem(
                                 modifier = Modifier.animateItem(),
-                                // AM (BROWSE) -->
-                                extension = model.extension,
-                                onClickSettings = { navigator.push(ExtensionDetailsScreen(it.pkgName)) },
-                                // <-- AM (BROWSE)
                                 source = model.source,
                                 onClickItem = onClickItem,
                                 onLongClickItem = onLongClickItem,
-                                onClickPin = onClickPin,
                             )
                         }
                     }
@@ -208,13 +230,8 @@ private fun SourceHeader(
 @Composable
 private fun SourceItem(
     source: Source,
-    // AM (BROWSE) -->
-    extension: Extension.Installed?,
-    onClickSettings: (Extension.Installed) -> Unit,
-    // <-- AM (BROWSE)
     onClickItem: (Source, Listing) -> Unit,
     onLongClickItem: (Source) -> Unit,
-    onClickPin: (Source) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BaseSourceItem(
@@ -223,83 +240,32 @@ private fun SourceItem(
         onClickItem = { onClickItem(source, Listing.Popular) },
         onLongClickItem = { onLongClickItem(source) },
         action = {
-            if (source.supportsLatest) {
-                TextButton(
-                    onClick = { onClickItem(source, Listing.Latest) },
-                    // AM (BROWSE) -->
-                    modifier = Modifier.takeIf { source.isLocal() }?.padding(end = 48.dp) ?: Modifier,
-                    // <-- AM (BROWSE)
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.latest),
-                        style = LocalTextStyle.current.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
-                }
-            }
-            // AM (BROWSE) -->
-            if (!source.isLocal() && extension != null) {
-                SourceSettingsButton(onClickSettings = { onClickSettings(extension) })
+            IconButton(onClick = { onLongClickItem(source) }) {
+                Icon(
+                    imageVector = Icons.Outlined.MoreVert,
+                    contentDescription = stringResource(MR.strings.label_more),
+                )
             }
         },
         pin = {
-            // <-- AM (BROWSE)
-            SourcePinButton(
-                isPinned = Pin.Pinned in source.pin,
-                onClick = { onClickPin(source) },
-            )
+            if (Pin.Pinned in source.pin) {
+                Icon(
+                    imageVector = Icons.Filled.PushPin,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp),
+                    contentDescription = stringResource(MR.strings.action_unpin),
+                )
+            }
         },
     )
 }
 
 @Composable
-private fun SourcePinButton(
-    isPinned: Boolean,
-    onClick: () -> Unit,
-) {
-    val icon = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin
-    val tint = if (isPinned) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onBackground.copy(
-            alpha = SECONDARY_ALPHA,
-        )
-    }
-    val description = if (isPinned) MR.strings.action_unpin else MR.strings.action_pin
-    IconButton(onClick = onClick) {
-        Icon(
-            imageVector = icon,
-            tint = tint,
-            // AM (BROWSE) -->
-            modifier = Modifier
-                .size(16.dp)
-                .rotate(-30f),
-            // <-- AM (BROWSE)
-            contentDescription = stringResource(description),
-        )
-    }
-}
-
-// AM (BROWSE) -->
-@Composable
-private fun SourceSettingsButton(
-    onClickSettings: () -> Unit,
-) {
-    IconButton(onClick = onClickSettings) {
-        Icon(
-            imageVector = Icons.Outlined.Settings,
-            tint = MaterialTheme.colorScheme.primary,
-            contentDescription = stringResource(MR.strings.label_settings),
-        )
-    }
-}
-// <-- AM (BROWSE)
-
-@Composable
 fun SourceOptionsDialog(
     source: Source,
+    onClickLatest: (() -> Unit)?,
     onClickPin: () -> Unit,
+    onClickSettings: (() -> Unit)?,
     onClickDisable: () -> Unit,
     // AM (BROWSE) -->
     onClickUninstall: (() -> Unit)?,
@@ -312,6 +278,15 @@ fun SourceOptionsDialog(
         },
         text = {
             Column {
+                onClickLatest?.let { latest ->
+                    Text(
+                        text = stringResource(MR.strings.latest),
+                        modifier = Modifier
+                            .clickable(onClick = latest)
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                    )
+                }
                 val textId = if (Pin.Pinned in source.pin) MR.strings.action_unpin else MR.strings.action_pin
                 Text(
                     text = stringResource(textId),
@@ -320,6 +295,15 @@ fun SourceOptionsDialog(
                         .fillMaxWidth()
                         .padding(vertical = 16.dp),
                 )
+                onClickSettings?.let { settings ->
+                    Text(
+                        text = stringResource(MR.strings.label_settings),
+                        modifier = Modifier
+                            .clickable(onClick = settings)
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                    )
+                }
                 if (!source.isLocal()) {
                     Text(
                         text = stringResource(MR.strings.action_disable),
@@ -348,11 +332,6 @@ fun SourceOptionsDialog(
 }
 
 sealed interface SourceUiModel {
-    data class Item(
-        val source: Source,
-        // AM (BROWSE) -->
-        val extension: Extension.Installed?,
-        // <-- AM (BROWSE)
-    ) : SourceUiModel
+    data class Item(val source: Source) : SourceUiModel
     data class Header(val language: String) : SourceUiModel
 }

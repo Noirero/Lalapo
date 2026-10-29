@@ -10,15 +10,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class GuidesStep(
+    private val onOpenDiscover: () -> Unit,
     private val onRestoreBackup: () -> Unit,
 ) : OnboardingStep {
 
@@ -26,18 +27,16 @@ internal class GuidesStep(
 
     @Composable
     override fun Content() {
-        val handler = LocalUriHandler.current
-
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
         ) {
-            Text(stringResource(MR.strings.onboarding_guides_new_user, stringResource(MR.strings.app_name)))
+            Text(stringResource(MR.strings.pref_browse_summary))
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { handler.openUri(GETTING_STARTED_URL) },
+                onClick = onOpenDiscover,
             ) {
-                Text(stringResource(MR.strings.getting_started_guide))
+                Text(stringResource(AMMR.strings.am_label_discover))
             }
 
             HorizontalDivider(
@@ -56,13 +55,12 @@ internal class GuidesStep(
     }
 }
 
-const val GETTING_STARTED_URL = "https://aniyomi.org/docs/guides/getting-started"
-
 @PreviewLightDark
 @Composable
 private fun GuidesStepPreview() {
     TachiyomiPreviewTheme {
         GuidesStep(
+            onOpenDiscover = {},
             onRestoreBackup = {},
         ).Content()
     }

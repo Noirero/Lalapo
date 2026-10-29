@@ -38,9 +38,9 @@ import eu.kanade.tachiyomi.data.connection.discord.DiscordScreen
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
-import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
+import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
@@ -71,12 +71,6 @@ data object BrowseTab : Tab {
     override suspend fun onReselect(navigator: Navigator) {
         navigator.push(GlobalSearchScreen())
     }
-
-    // AM (TAB_HOLD) -->
-    override suspend fun onReselectHold(navigator: Navigator) {
-        navigator.push(MigrateSourceScreen())
-    }
-    // <-- AM (TAB_HOLD)
 
     private val switchToExtensionTabChannel = Channel<Unit>(1, BufferOverflow.DROP_OLDEST)
 
@@ -132,8 +126,8 @@ data object BrowseTab : Tab {
                     onClickItem = { source, listing ->
                         navigator.push(BrowseSourceScreen(source.id, listing.query))
                     },
-                    onClickPin = sourcesViewModel::togglePin,
                     onLongClickItem = sourcesViewModel::showSourceDialog,
+                    onRetry = sourcesViewModel::retrySources,
                     toExtensionsScreen = { inExtensionsScreen = true },
                     updateCount = updateCount,
                     modifier = Modifier.alpha(alpha.coerceAtLeast(0f)),
@@ -186,9 +180,23 @@ data object BrowseTab : Tab {
             val source = dialog.source
             SourceOptionsDialog(
                 source = source,
+                onClickLatest = if (source.supportsLatest) {
+                    {
+                        sourcesViewModel.closeDialog()
+                        navigator.push(BrowseSourceScreen(source.id, Listing.Latest.query))
+                    }
+                } else {
+                    null
+                },
                 onClickPin = {
                     sourcesViewModel.togglePin(source)
                     sourcesViewModel.closeDialog()
+                },
+                onClickSettings = dialog.extension?.let { extension ->
+                    {
+                        sourcesViewModel.closeDialog()
+                        navigator.push(ExtensionDetailsScreen(extension.pkgName))
+                    }
                 },
                 onClickDisable = {
                     sourcesViewModel.toggleSource(source)

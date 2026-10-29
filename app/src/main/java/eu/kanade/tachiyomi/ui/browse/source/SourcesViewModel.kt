@@ -16,16 +16,16 @@ import eu.kanade.presentation.browse.SourceUiModel
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
@@ -49,26 +49,37 @@ class SourcesViewModel(
     // <-- AM (BROWSE)
 ) : ViewModel() {
 
-    private val _events = Channel<Event>(Int.MAX_VALUE)
-    val events = _events.receiveAsFlow()
-
     private val dialog = MutableStateFlow<Dialog?>(null)
+    private val sourceRetry = MutableStateFlow(0L)
 
-    private val enabledSources = getEnabledSources.subscribe()
-        .catch {
-            logcat(LogPriority.ERROR, it)
-            _events.send(Event.FailedFetchingSources)
-        }
-        .map(::toSourceUiModels)
+    private val sourceLoadState = sourceRetry.flatMapLatest {
+        getEnabledSources.subscribe()
+            .map<List<Source>, SourceLoadState> { sources ->
+                SourceLoadState.Success(toSourceUiModels(sources))
+            }
+            .onStart { emit(SourceLoadState.Loading) }
+            .catch {
+                logcat(LogPriority.ERROR, it)
+                emit(SourceLoadState.Error)
+            }
+    }
 
     val state: StateFlow<State> = combine(
-        enabledSources,
+        sourceLoadState,
         dialog,
-    ) { items, dialog ->
-        State(dialog = dialog, isLoading = false, items = items)
+    ) { loadState, dialog ->
+        when (loadState) {
+            SourceLoadState.Loading -> State(dialog = dialog, isLoading = true)
+            SourceLoadState.Error -> State(dialog = dialog, isLoading = false, hasError = true)
+            is SourceLoadState.Success -> State(dialog = dialog, isLoading = false, items = loadState.items)
+        }
     }
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
+
+    fun retrySources() {
+        sourceRetry.update { it + 1 }
+    }
 
     private fun toSourceUiModels(sources: List<Source>): List<SourceUiModel> {
         val map = TreeMap<String, MutableList<Source>> { d1, d2 ->
@@ -94,14 +105,7 @@ class SourcesViewModel(
         return byLang.flatMap {
             listOf(
                 SourceUiModel.Header(it.key),
-                *it.value.map { source ->
-                    SourceUiModel.Item(
-                        source,
-                        // AM (BROWSE) -->
-                        extensionManager.getInstalledExtension(source.id),
-                        // <-- AM (BROWSE)
-                    )
-                }.toTypedArray(),
+                *it.value.map { source -> SourceUiModel.Item(source) }.toTypedArray(),
             )
         }
     }
@@ -137,8 +141,10 @@ class SourcesViewModel(
     }
     // <-- AM (BROWSE)
 
-    sealed interface Event {
-        data object FailedFetchingSources : Event
+    private sealed interface SourceLoadState {
+        data object Loading : SourceLoadState
+        data object Error : SourceLoadState
+        data class Success(val items: List<SourceUiModel>) : SourceLoadState
     }
 
     data class Dialog(
@@ -152,9 +158,10 @@ class SourcesViewModel(
     data class State(
         val dialog: Dialog? = null,
         val isLoading: Boolean = true,
+        val hasError: Boolean = false,
         val items: List<SourceUiModel> = listOf(),
     ) {
-        val isEmpty = items.isEmpty()
+        val isEmpty = !isLoading && !hasError && items.isEmpty()
     }
 
     companion object {
