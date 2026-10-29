@@ -50,6 +50,7 @@ fun Screen.HistoryHalfTab(
         onClickResume = viewModel::getNextEpisodeForAnime,
         onDialogChange = viewModel::setDialog,
         onClickFavorite = viewModel::addFavorite,
+        onRetry = viewModel::retryHistory,
         contentPadding = contentPadding,
     )
     // <-- AM (RECENTS_FILTER_CHIP)

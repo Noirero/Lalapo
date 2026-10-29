@@ -39,6 +39,7 @@ import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.theme.active
 import kotlin.time.Duration.Companion.seconds
@@ -53,10 +54,22 @@ fun UpdateScreen(
     onDownloadEpisode: (List<UpdatesItem>, EpisodeDownloadAction) -> Unit,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onOpenEpisode: (UpdatesItem, altPlayer: Boolean) -> Unit,
+    onRetry: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     when {
         state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
+        state.hasError -> EmptyScreen(
+            stringRes = MR.strings.internal_error,
+            modifier = Modifier.padding(contentPadding),
+            actions = listOf(
+                EmptyScreenAction(
+                    stringRes = MR.strings.action_retry,
+                    icon = Icons.Outlined.Refresh,
+                    onClick = onRetry,
+                ),
+            ),
+        )
         state.items.isEmpty() -> EmptyScreen(
             stringRes = MR.strings.information_no_recent,
             modifier = Modifier.padding(contentPadding),

@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -78,28 +79,50 @@ class HistoryViewModel(
     private val searchQuery = MutableStateFlow<String?>(null)
 
     private val dialog = MutableStateFlow<Dialog?>(null)
+    private val historyRetry = MutableStateFlow(0L)
 
-    private val history = searchQuery
-        .flatMapLatest { query ->
-            getHistory.subscribe(query ?: "")
-                .distinctUntilChanged()
-                .catch { error ->
-                    logcat(LogPriority.ERROR, error)
-                    _events.send(Event.InternalError)
-                }
-                .map { it.toHistoryUiModels() }
-                .flowOn(Dispatchers.IO)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
+    private val historyLoadState = historyRetry.flatMapLatest {
+        searchQuery
+            .flatMapLatest { query ->
+                getHistory.subscribe(query ?: "")
+                    .distinctUntilChanged()
+                    .map<List<HistoryWithRelations>, HistoryLoadState> { history ->
+                        HistoryLoadState.Success(history.toHistoryUiModels())
+                    }
+            }
+            .onStart { emit(HistoryLoadState.Loading) }
+            .catch { error ->
+                logcat(LogPriority.ERROR, error)
+                emit(HistoryLoadState.Error)
+            }
+            .flowOn(Dispatchers.IO)
+    }
 
     val state: StateFlow<State> = combine(
         searchQuery,
-        history,
+        historyLoadState,
         dialog,
-    ) { searchQuery, history, dialog ->
-        State(searchQuery = searchQuery, list = history, dialog = dialog)
+    ) { searchQuery, loadState, dialog ->
+        when (loadState) {
+            HistoryLoadState.Loading -> State(searchQuery = searchQuery, dialog = dialog)
+            HistoryLoadState.Error -> State(
+                searchQuery = searchQuery,
+                list = emptyList(),
+                hasError = true,
+                dialog = dialog,
+            )
+            is HistoryLoadState.Success -> State(
+                searchQuery = searchQuery,
+                list = loadState.items,
+                dialog = dialog,
+            )
+        }
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
+
+    fun retryHistory() {
+        historyRetry.update { it + 1 }
+    }
 
     private fun List<HistoryWithRelations>.toHistoryUiModels(): List<HistoryUiModel> {
         return map { HistoryUiModel.Item(it) }
@@ -253,10 +276,17 @@ class HistoryViewModel(
         }
     }
 
+    private sealed interface HistoryLoadState {
+        data object Loading : HistoryLoadState
+        data object Error : HistoryLoadState
+        data class Success(val items: List<HistoryUiModel>) : HistoryLoadState
+    }
+
     @Immutable
     data class State(
         val searchQuery: String? = null,
         val list: List<HistoryUiModel>? = null,
+        val hasError: Boolean = false,
         val dialog: Dialog? = null,
     )
 

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.updates
 
 import android.content.Context
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +33,7 @@ import tachiyomi.i18n.MR
 fun AnimeUpdatesHalfTab(
     viewModel: UpdatesViewModel,
     settingsViewModel: UpdatesSettingsViewModel,
+    snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
 ) {
     val context = LocalContext.current
@@ -52,6 +54,7 @@ fun AnimeUpdatesHalfTab(
             }
             Unit
         },
+        onRetry = viewModel::retryUpdates,
         contentPadding = contentPadding,
     )
     // <-- AM (RECENTS_FILTER_CHIP)
@@ -89,7 +92,7 @@ fun AnimeUpdatesHalfTab(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                Event.InternalError -> viewModel.snackbarHostState.showSnackbar(
+                Event.InternalError -> snackbarHostState.showSnackbar(
                     context.stringResource(MR.strings.internal_error),
                 )
                 is Event.LibraryUpdateTriggered -> {
@@ -98,7 +101,7 @@ fun AnimeUpdatesHalfTab(
                     } else {
                         MR.strings.update_already_running
                     }
-                    viewModel.snackbarHostState.showSnackbar(context.stringResource(msg))
+                    snackbarHostState.showSnackbar(context.stringResource(msg))
                 }
             }
         }
