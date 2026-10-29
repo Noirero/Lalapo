@@ -40,7 +40,6 @@ import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesFilterScreen
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
@@ -333,11 +332,6 @@ fun SourceOptionsDialog(
 }
 
 sealed interface SourceUiModel {
-    data class Item(
-        val source: Source,
-        // AM (BROWSE) -->
-        val extension: Extension.Installed?,
-        // <-- AM (BROWSE)
-    ) : SourceUiModel
+    data class Item(val source: Source) : SourceUiModel
     data class Header(val language: String) : SourceUiModel
 }
