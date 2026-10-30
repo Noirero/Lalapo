@@ -67,6 +67,7 @@ jobs:
           fi
           echo "LALAPO_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
           echo "APK versionCode: $version_code" >> "$GITHUB_STEP_SUMMARY"
+          echo "Distribution policy: publish only APKs built from the current protected branch tip; historical commit artifacts are for testing, not app updates." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Assemble APK
         run: ./gradlew assemblePreview -Pinclude-cast
