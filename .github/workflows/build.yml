@@ -1,4 +1,4 @@
-name: Build & Test
+name: CI Checks
 on:
   pull_request:
     paths:
@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test App
+    name: Code Quality & Tests
     runs-on: 'ubuntu-24.04'
 
     steps:
@@ -67,72 +67,3 @@ jobs:
           name: test-report-${{ github.sha }}
           path: app/build/reports/tests/testDebugUnitTest
 
-      - name: Prepare signed branch build
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
-        shell: bash
-        env:
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-        run: |
-          set -euo pipefail
-          echo "LALAPO_VERSION_CODE=$((200000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
-
-          signing_store="$RUNNER_TEMP/lalapo-signing-check.keystore"
-          signing_ready=false
-
-          if [[ -n "${SIGNING_KEY:-}" && -n "${KEY_STORE_PASSWORD:-}" ]]; then
-            if printf '%s' "$SIGNING_KEY" | base64 --decode > "$signing_store" 2>/dev/null &&
-              keytool -list -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" >/dev/null 2>&1; then
-              signing_ready=true
-            else
-              decoded_once="$RUNNER_TEMP/lalapo-signing-once.txt"
-              if printf '%s' "$SIGNING_KEY" | base64 --decode > "$decoded_once" 2>/dev/null &&
-                base64 --decode "$decoded_once" > "$signing_store" 2>/dev/null &&
-                keytool -list -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" >/dev/null 2>&1; then
-                signing_ready=true
-              fi
-            fi
-          fi
-
-          if [[ "$signing_ready" == "true" ]]; then
-            echo "LALAPO_GITHUB_RELEASE=true" >> "$GITHUB_ENV"
-          else
-            echo "::warning::SIGNING_KEY is not a valid JKS/PKCS12 keystore; building with the normal CI signing configuration. Replace SIGNING_KEY to restore update-in-place signing."
-          fi
-
-      - name: Build app
-        run: ./gradlew assembleRelease -Pinclude-cast -Penable-updater
-        env:
-          storeFileBase64: ${{ secrets.SIGNING_KEY }}
-          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyAlias: ${{ secrets.ALIAS }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Build installable Beta Preview APK
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/beta') || (github.event_name == 'pull_request' && github.base_ref == 'beta')
-        run: ./gradlew assemblePreview -Pinclude-cast
-        env:
-          storeFileBase64: ${{ secrets.SIGNING_KEY }}
-          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyAlias: ${{ secrets.ALIAS }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Upload Beta Preview APK
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/beta') || (github.event_name == 'pull_request' && github.base_ref == 'beta')
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: Lalapo-Beta-Preview-${{ github.sha }}
-          path: app/build/outputs/apk/preview/app-arm64-v8a-preview.apk
-          if-no-files-found: error
-
-      - name: Upload APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: arm64-v8a-${{ github.sha }}
-          path: app/build/outputs/apk/release/app-arm64-v8a-release.apk
-
-      - name: Upload mapping
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: mapping-${{ github.sha }}
-          path: app/build/outputs/mapping/release
