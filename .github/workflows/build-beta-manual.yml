@@ -54,11 +54,14 @@ jobs:
             fi
           fi
 
+      - name: Set monotonic build version
+        shell: bash
+        run: echo "LALAPO_VERSION_CODE=$((200000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+
       - name: Assemble APK
         run: ./gradlew assemblePreview -Pinclude-cast
         env:
           LALAPO_GITHUB_RELEASE: 'true'
-          LALAPO_VERSION_CODE: ${{ 200000 + github.run_number }}
           storeFileBase64: ${{ secrets.SIGNING_KEY }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
