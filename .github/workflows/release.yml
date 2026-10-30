@@ -13,8 +13,8 @@ env:
   LALAPO_GITHUB_RELEASE: true
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: lalapo-apk-version-sequence
+  cancel-in-progress: false
 
 jobs:
   get_tag:
@@ -24,6 +24,7 @@ jobs:
     outputs:
       tag: ${{ steps.extract.outputs.tag }}
       is_preview: ${{ steps.extract.outputs.is_preview }}
+      version_code: ${{ steps.extract.outputs.version_code }}
     steps:
       - name: Get tag metadata
         id: extract
@@ -32,6 +33,12 @@ jobs:
           set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          version_code="$(date -u +%s)"
+          if (( version_code > 2100000000 )); then
+            echo "::error::versionCode exceeds Android supported range"
+            exit 1
+          fi
+          echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
           if [[ "$tag" == r* ]]; then
             echo "is_preview=true" >> "$GITHUB_OUTPUT"
           else
@@ -64,15 +71,7 @@ jobs:
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Set build version code
-        shell: bash
-        run: |
-          set -euo pipefail
-          version_code="$(date -u +%s)"
-          if (( version_code > 2100000000 )); then
-            echo "::error::versionCode exceeds Android supported range"
-            exit 1
-          fi
-          echo "LALAPO_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
+        run: echo "LALAPO_VERSION_CODE=${{ needs.get_tag.outputs.version_code }}" >> "$GITHUB_ENV"
 
       - name: Build
         shell: bash
@@ -144,15 +143,7 @@ jobs:
           cache-disabled: true
 
       - name: Set build version code
-        shell: bash
-        run: |
-          set -euo pipefail
-          version_code="$(date -u +%s)"
-          if (( version_code > 2100000000 )); then
-            echo "::error::versionCode exceeds Android supported range"
-            exit 1
-          fi
-          echo "LALAPO_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
+        run: echo "LALAPO_VERSION_CODE=${{ needs.get_tag.outputs.version_code }}" >> "$GITHUB_ENV"
 
       - name: Build
         run: ./gradlew assembleFoss -Penable-updater
