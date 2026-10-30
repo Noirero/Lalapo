@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application
+        android:label="Lalapo Beta"
+        android:icon="@drawable/ic_launcher_beta"
+        android:roundIcon="@drawable/ic_launcher_beta"
+        tools:replace="android:label,android:icon,android:roundIcon" />
+</manifest>
