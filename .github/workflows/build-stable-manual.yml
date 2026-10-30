@@ -120,14 +120,23 @@ jobs:
           expected_raw="$(keytool -list -v -keystore "$RUNNER_TEMP/lalapo-signing-check.keystore" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | head -n 1)"
           actual="$(printf '%s' "$actual_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
           expected="$(printf '%s' "$expected_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
-          echo "APK signer SHA-256: ${actual:-<missing>}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Keystore alias SHA-256: ${expected:-<missing>}" >> "$GITHUB_STEP_SUMMARY"
-          if [[ -z "$actual" || -z "$expected" ]]; then
-            echo "::error::Unable to parse APK or keystore signing certificate SHA-256"
+          # Certificate SHA-256 fingerprints are public identifiers; never print secret values.
+          echo "APK signer SHA-256: ${actual:-<missing>}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Keystore alias SHA-256: ${expected:-<missing>}" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [[ -z "$actual" ]]; then
+            echo "::error::Unable to parse APK signer SHA-256 from apksigner output"
             exit 1
           fi
-          if [[ ! "$actual" =~ ^[0-9a-f]{64}$ || ! "$expected" =~ ^[0-9a-f]{64}$ ]]; then
-            echo "::error::Invalid APK or keystore signing certificate SHA-256 format"
+          if [[ -z "$expected" ]]; then
+            echo "::error::Unable to parse keystore alias SHA-256 from keytool output"
+            exit 1
+          fi
+          if [[ ! "$actual" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Invalid APK signer SHA-256 format"
+            exit 1
+          fi
+          if [[ ! "$expected" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Invalid keystore alias SHA-256 format"
             exit 1
           fi
           if [[ "$actual" != "$expected" ]]; then
