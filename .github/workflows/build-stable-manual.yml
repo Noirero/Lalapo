@@ -58,10 +58,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version_code="$(date -u +%s)"
-          echo "::notice::Timestamp-based versionCode is not collision-proof across workflows; verify before publishing."
-          if (( version_code > 2100000000 )); then
-            echo "::error::versionCode exceeds Android supported range"
+          # GitHub run IDs are unique across workflows; reserve a bounded range for Android.
+          # Fail closed if GitHub's run ID allocation leaves this range.
+          version_code=$(( GITHUB_RUN_ID - 41000000000 ))
+          if (( version_code <= 148 || version_code > 2100000000 )); then
+            echo "::error::Workflow run ID outside supported versionCode allocation range"
             exit 1
           fi
           echo "LALAPO_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
