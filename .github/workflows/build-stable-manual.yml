@@ -116,7 +116,12 @@ jobs:
           "$apksigner" verify --verbose "$apk"
           # apksigner emits an unseparated hex digest; keytool emits colon-separated hex.
           # Normalize both and distinguish parsing failures from genuine mismatches.
-          actual_raw="$("$apksigner" verify --print-certs "$apk" | sed -n 's/^[[:space:]]*Signer #1 certificate SHA-256 digest:[[:space:]]*//p' | head -n 1)"
+          # Print only certificate metadata (public); no keystore or secret material.
+          cert_output="$("$apksigner" verify --print-certs "$apk")"
+          printf '%s\n' "$cert_output"
+          # Match both "Signer #1 certificate SHA-256 digest:" and "Signer #1 certificate SHA-256 digest: ..."
+          # while tolerating leading whitespace and minor label spacing differences.
+          actual_raw="$(printf '%s\n' "$cert_output" | sed -nE 's/^[[:space:]]*Signer[[:space:]]*#[[:space:]]*1[[:space:]]+certificate[[:space:]]+SHA-?256[[:space:]]+digest[[:space:]]*:[[:space:]]*//Ip' | head -n 1)"
           expected_raw="$(keytool -list -v -keystore "$RUNNER_TEMP/lalapo-signing-check.keystore" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | head -n 1)"
           actual="$(printf '%s' "$actual_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
           expected="$(printf '%s' "$expected_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
