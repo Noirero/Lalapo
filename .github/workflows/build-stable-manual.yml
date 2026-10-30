@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: lalapo-apk-version-sequence
   cancel-in-progress: false
 
 jobs:
