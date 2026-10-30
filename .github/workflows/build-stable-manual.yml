@@ -54,9 +54,17 @@ jobs:
             fi
           fi
 
-      - name: Set monotonic build version
+      - name: Set build version code
         shell: bash
-        run: echo "LALAPO_VERSION_CODE=$((200000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+        run: |
+          set -euo pipefail
+          version_code="$(date -u +%s)"
+          if (( version_code > 2100000000 )); then
+            echo "::error::versionCode exceeds Android supported range"
+            exit 1
+          fi
+          echo "LALAPO_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
+          echo "APK versionCode: $version_code" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Assemble APK
         run: ./gradlew assembleRelease -Pinclude-cast
@@ -66,6 +74,27 @@ jobs:
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Report APK signing certificate
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+        run: |
+          set -euo pipefail
+          signing_store="$RUNNER_TEMP/lalapo-signing-check.keystore"
+          # The earlier validation step already decoded the keystore into this path.
+          fingerprint="$(keytool -list -v -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | grep -m1 'SHA256:' | sed 's/^[[:space:]]*//')"
+          if [[ -z "$fingerprint" ]]; then
+            echo "::error::Unable to read signing certificate fingerprint"
+            exit 1
+          fi
+          echo "$fingerprint" >> "$GITHUB_STEP_SUMMARY"
+          echo "Baseline installed CI APK: 92:A9:4C:3E:C5:00:76:4C:67:28:8D:8F:A6:2F:64:30:0D:5D:BE:E2:50:AE:F7:68:42:38:39:6F:FB:2E:C9:2F" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${fingerprint#SHA256: }" != "92:A9:4C:3E:C5:00:76:4C:67:28:8D:8F:A6:2F:64:30:0D:5D:BE:E2:50:AE:F7:68:42:38:39:6F:FB:2E:C9:2F" ]]; then
+            echo "::warning::Signing certificate differs from the installed CI APK baseline. Update-in-place may be rejected; back up app data before reinstalling."
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
