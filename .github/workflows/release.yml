@@ -13,7 +13,7 @@ env:
   LALAPO_GITHUB_RELEASE: true
 
 concurrency:
-  group: lalapo-apk-version-sequence
+  group: lalapo-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
