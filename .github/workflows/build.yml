@@ -67,8 +67,8 @@ jobs:
           name: test-report-${{ github.sha }}
           path: app/build/reports/tests/testDebugUnitTest
 
-      - name: Prepare main build
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Prepare signed branch build
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
         shell: bash
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
