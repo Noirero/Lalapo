@@ -114,9 +114,23 @@ jobs:
           apksigner="$(find "$sdk/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
           if [[ -z "$apksigner" ]]; then echo "::error::apksigner not found"; exit 1; fi
           "$apksigner" verify --verbose "$apk"
-          actual="$("$apksigner" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1 | tr '[:upper:]' '[:lower:]' | tr -d ':')"
-          expected="$(keytool -list -v -keystore "$RUNNER_TEMP/lalapo-signing-check.keystore" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA256: //p' | head -n 1 | tr '[:upper:]' '[:lower:]' | tr -d ':')"
-          if [[ -z "$actual" || -z "$expected" || "$actual" != "$expected" ]]; then
+          # apksigner emits an unseparated hex digest; keytool emits colon-separated hex.
+          # Normalize both and distinguish parsing failures from genuine mismatches.
+          actual_raw="$("$apksigner" verify --print-certs "$apk" | sed -n 's/^[[:space:]]*Signer #1 certificate SHA-256 digest:[[:space:]]*//p' | head -n 1)"
+          expected_raw="$(keytool -list -v -keystore "$RUNNER_TEMP/lalapo-signing-check.keystore" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | head -n 1)"
+          actual="$(printf '%s' "$actual_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          expected="$(printf '%s' "$expected_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          echo "APK signer SHA-256: ${actual:-<missing>}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Keystore alias SHA-256: ${expected:-<missing>}" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -z "$actual" || -z "$expected" ]]; then
+            echo "::error::Unable to parse APK or keystore signing certificate SHA-256"
+            exit 1
+          fi
+          if [[ ! "$actual" =~ ^[0-9a-f]{64}$ || ! "$expected" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Invalid APK or keystore signing certificate SHA-256 format"
+            exit 1
+          fi
+          if [[ "$actual" != "$expected" ]]; then
             echo "::error::APK signing certificate does not match configured keystore alias"
             exit 1
           fi
