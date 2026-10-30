@@ -33,9 +33,9 @@ jobs:
           set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
-          version_code="$(date -u +%s)"
-          if (( version_code > 2100000000 )); then
-            echo "::error::versionCode exceeds Android supported range"
+          version_code=$(( GITHUB_RUN_ID - 41000000000 ))
+          if (( version_code <= 148 || version_code > 2100000000 )); then
+            echo "::error::Workflow run ID outside supported versionCode allocation range"
             exit 1
           fi
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
