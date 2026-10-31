@@ -71,6 +71,26 @@ class CategoriesRestorerIntegrationTest {
             database.category_setsQueries.getSetAssignments().awaitAsList().map { it.category_id to it.set_id })
     }
 
+
+    @Test
+    fun duplicateSyncKeyInPayloadReusesOnePersistedSet() = runBlocking {
+        val categories = listOf(
+            BackupCategory("First", 0, 501),
+            BackupCategory("Second", 1, 502),
+        )
+        val sets = listOf(
+            BackupCategorySet("duplicate:key", "Shared", 0, listOf(501)),
+            BackupCategorySet("duplicate:key", "Shared", 1, listOf(502)),
+        )
+        restorer(categories, sets)
+        val persistedSets = database.category_setsQueries.getSets().awaitAsList()
+        assertEquals(1, persistedSets.count { it.sync_key == "duplicate:key" })
+        val targetId = persistedSets.single { it.sync_key == "duplicate:key" }._id
+        val assignments = database.category_setsQueries.getSetAssignments().awaitAsList()
+        assertEquals(2, assignments.count { it.set_id == targetId })
+        assertEquals(2, assignments.map { it.category_id }.distinct().size)
+    }
+
     @Test
     fun oldBackupWithoutSetsPreservesDefaultAssignments() = runBlocking {
         restorer(listOf(BackupCategory("Legacy", 0, 777)), emptyList())
