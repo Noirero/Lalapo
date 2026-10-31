@@ -120,6 +120,32 @@ class CategoriesRestorerIntegrationTest {
     }
 
     @Test
+    fun oldBackupFallsBackWhenDefaultSetWasDeleted() = runBlocking {
+        database.category_setsQueries.insertSet(
+            "second:set",
+            "Second",
+            0,
+            0,
+            0,
+        )
+        val defaultId = database.category_setsQueries.getSets().awaitAsList()
+            .single { it.sync_key == "lalapo:category-set:default" }._id
+        database.category_setsQueries.deleteSet(defaultId)
+
+        restorer(listOf(BackupCategory("Legacy", 0, 777)), emptyList())
+
+        val category = database.categoriesQueries.getCategories().awaitAsList()
+            .single { it.name == "Legacy" }
+        val assignment = database.category_setsQueries.getSetAssignments().awaitAsList()
+            .single { it.category_id == category.id }
+        assertEquals(
+            "second:set",
+            database.category_setsQueries.getSets().awaitAsList()
+                .single { it._id == assignment.set_id }.sync_key,
+        )
+    }
+
+    @Test
     fun existingSetMetadataAndOrderAreRestored() = runBlocking {
         restorer(
             emptyList(),
