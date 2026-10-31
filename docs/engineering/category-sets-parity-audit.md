@@ -1,4 +1,4 @@
-# Kelola Set — parity and compatibility audit (work in progress)
+# Kelola Set — parity and compatibility audit
 
 Baseline: Lalapo main `d6676fc01178e5d355dadf065806264d9c43ba26`; Miyorare main `613dc16e20354132ad0eb0266f401a19efafb44c`. Scope: category sets only; player investigations excluded. This document is evidence, not a claim of feature completion.
 
@@ -30,15 +30,15 @@ Baseline: Lalapo main `d6676fc01178e5d355dadf065806264d9c43ba26`; Miyorare main 
 | Behavior | Status in Lalapo | Evidence / next action |
 | --- | --- | --- |
 | Category CRUD/reorder | Available | Existing category repository and Compose UI |
-| Set CRUD/reorder | Needed | Miyorare CategorySetsViewModel / FavouritesRepository |
-| Category assignment and movement between Sets | Needed | Miyorare assignment entity and repository; audit mutation rules |
-| Set selection persisted | Needed | Miyorare FavouriteSetSelectionStore; adapt scope for Lalapo anime-only model |
-| Default Set and legacy category backfill | Needed | Miyorare Migration49To50; design SQLDelight migration |
-| Deletion impact and active-set fallback | Needed | Miyorare ViewModel and selection store |
-| Favorites filtering/navigation by Set | Adaptation | Lalapo library flows and navigation not yet fully traced |
-| Set backup/restore with remapped category IDs | Needed | Existing name-based restore requires explicit old-to-new mapping |
-| Import/export/sync parity | Unverified | Inspect Miyorare and Lalapo supported integrations |
-| Validation, duplicate titles, empty state | Unverified | Inspect repository, dialogs and UI tests |
+| Set CRUD/reorder | Implemented | `CategorySetRepositoryImpl` plus `CategoryViewModel` / `CategoryScreen` |
+| Category assignment and movement between Sets | Implemented | One assignment per non-system category; moves use transactional upsert |
+| Set selection persisted | Implemented | Stable `syncKey` stored in `LibraryPreferences.activeCategorySetKey` |
+| Default Set and legacy category backfill | Implemented + tested | `143.sqm` plus targeted SQLite migration fixture |
+| Deletion impact and active-set fallback | Implemented | Nonempty Sets move categories before delete; last Set guarded; missing/deleted active key repairs to a valid fallback |
+| Favorites filtering/navigation by Set | Implemented | Library observes categories for the active Set and exposes a direct Set selector |
+| Set backup/restore with remapped category IDs | Implemented + tested | Protobuf field 507; restore remaps backup category IDs and preserves empty Sets |
+| Import/export/sync parity | Out of scope / unverified | No parity claim in PR #19 |
+| Validation, duplicate titles, empty state | Implemented where in scope | Repository rejects blank/duplicate Set names; empty Sets supported; physical-device UI validation remains separate |
 
 ## Safety invariants before schema changes
 
@@ -52,4 +52,6 @@ Baseline: Lalapo main `d6676fc01178e5d355dadf065806264d9c43ba26`; Miyorare main 
 
 ## Remaining verification
 
-Trace Miyorare `FavouritesRepository` set mutations and dialog validation; Lalapo library filter/navigation and SQLDelight migration configuration; backup restore sequencing and sync/export behavior. No data schema or production code has been modified by this audit.
+Engineering validation for PR #19 covers SQLDelight migration semantics, repository invariants, active-Set fallback/reactivity, and category-Set backup/restore including ID remapping and empty Sets. CI evidence is exact-head evidence only.
+
+Physical-device validation remains separate evidence for the Library selector, navigation/recomposition, restart persistence, and deletion fallback UX. Destructive category deletion through Set deletion remains intentionally disabled. Import/export/sync parity is not claimed by this PR.
