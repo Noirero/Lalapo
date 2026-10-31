@@ -1,0 +1,53 @@
+name: Disposable lifecycle emulator gate
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/lifecycle-emulator-gate.yml'
+      - 'app/src/androidTest/java/eu/kanade/tachiyomi/ui/player/EmulatorInfrastructureGateTest.kt'
+      - 'app/build.gradle.kts'
+
+permissions:
+  contents: read
+
+jobs:
+  emulator-gate:
+    if: github.head_ref == 'investigation/lifecycle-emulator-gate'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version-file: .github/.java-version
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Enable KVM access
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo 'KVM_NOT_AVAILABLE'
+          fi
+      - name: Gate A - Android emulator API 34 x86_64 and app instrumentation
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            adb shell getprop ro.build.version.sdk
+            adb shell getprop ro.product.cpu.abi
+            ./gradlew :app:connectedDebugAndroidTest --stacktrace
+      - name: Upload instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lifecycle-emulator-gate-results
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: ignore
