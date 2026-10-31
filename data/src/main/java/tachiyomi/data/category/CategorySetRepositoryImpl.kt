@@ -8,8 +8,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.domain.category.model.Category
@@ -28,18 +28,18 @@ class CategorySetRepositoryImpl(
     private val libraryPreferences: LibraryPreferences,
 ) : CategorySetRepository {
 
-    override fun observeSets(): Flow<List<CategorySet>> =
-        database.category_setsQueries.getSets().subscribeToList()
-            .map { rows ->
-                rows.map { CategorySet(it._id, it.sync_key, it.name, it.sort, it.created_at, it.updated_at) }
-            }
-            .onEach { sets ->
-                val activeKey = libraryPreferences.activeCategorySetKey.get()
-                val fallback = sets.firstOrNull()
-                if (fallback != null && sets.none { it.syncKey == activeKey }) {
-                    libraryPreferences.activeCategorySetKey.set(fallback.syncKey)
-                }
-            }
+    override fun observeSets(): Flow<List<CategorySet>> = combine(
+        database.category_setsQueries.getSets().subscribeToList().map { rows ->
+            rows.map { CategorySet(it._id, it.sync_key, it.name, it.sort, it.created_at, it.updated_at) }
+        },
+        libraryPreferences.activeCategorySetKey.changes(),
+    ) { sets, activeKey ->
+        val fallback = sets.firstOrNull()
+        if (fallback != null && sets.none { it.syncKey == activeKey }) {
+            libraryPreferences.activeCategorySetKey.set(fallback.syncKey)
+        }
+        sets
+    }.distinctUntilChanged()
 
     override fun observeVisibleCategoriesInActiveSet(): Flow<List<Category>> = combine(
         categoryRepository.getAllVisibleAsFlow(),
