@@ -750,8 +750,8 @@ class LibraryViewModel(
         return state.getItemsForCategoryId(state.activeCategory?.id).randomOrNull()
     }
 
-    fun showSettingsDialog() {
-        dialog.update { Dialog.SettingsSheet }
+    fun showSettingsDialog(page: SettingsPage = SettingsPage.Display) {
+        dialog.update { Dialog.SettingsSheet(page) }
     }
 
     private var lastSelectionCategory: Long? = null
@@ -980,8 +980,15 @@ class LibraryViewModel(
     }
     // <-- AM (GROUPING)
 
+    enum class SettingsPage(val index: Int) {
+        Filter(0),
+        Sort(1),
+        Display(2),
+        Group(3),
+    }
+
     sealed interface Dialog {
-        data object SettingsSheet : Dialog
+        data class SettingsSheet(val initialPage: SettingsPage) : Dialog
         data class ChangeCategory(
             val anime: List<Anime>,
             val initialSelection: List<CheckboxState<Category>>,
