@@ -120,6 +120,28 @@ class CategoriesRestorerIntegrationTest {
     }
 
     @Test
+    fun existingSetMetadataAndOrderAreRestored() = runBlocking {
+        restorer(
+            emptyList(),
+            listOf(
+                BackupCategorySet("backup:set:first", "First", 0, emptyList()),
+                BackupCategorySet("lalapo:category-set:default", "Renamed Default", 1, emptyList()),
+            ),
+        )
+
+        val sets = database.category_setsQueries.getSets().awaitAsList()
+        assertEquals(
+            listOf("backup:set:first", "lalapo:category-set:default"),
+            sets.map { it.sync_key },
+        )
+        assertEquals(listOf(0L, 1L), sets.map { it.sort })
+        assertEquals(
+            "Renamed Default",
+            sets.single { it.sync_key == "lalapo:category-set:default" }.name,
+        )
+    }
+
+    @Test
     fun oldBackupWithoutSetsPreservesDefaultAssignments() = runBlocking {
         restorer(listOf(BackupCategory("Legacy", 0, 777)), emptyList())
         val category = database.categoriesQueries.getCategories().awaitAsList()
