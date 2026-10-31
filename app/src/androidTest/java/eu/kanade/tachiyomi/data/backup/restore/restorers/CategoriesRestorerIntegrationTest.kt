@@ -57,20 +57,29 @@ class CategoriesRestorerIntegrationTest {
         val restoredId = database.categoriesQueries.getCategories().awaitAsList()
             .first { it.name == "Restored" }.id
         assertTrue(restoredId != 901L)
-        assertEquals(existingId, database.categoriesQueries.getCategories().awaitAsList()
-            .first { it.name == "Existing" }.id)
+        assertEquals(
+            existingId,
+            database.categoriesQueries.getCategories().awaitAsList()
+                .first { it.name == "Existing" }.id,
+        )
         val firstSets = database.category_setsQueries.getSets().awaitAsList()
         val firstAssignments = database.category_setsQueries.getSetAssignments().awaitAsList()
         val imported = firstSets.single { it.sync_key == "backup:set:a" }
-        assertEquals(setOf(existingId, restoredId), firstAssignments
-            .filter { it.set_id == imported._id }.map { it.category_id }.toSet())
+        assertEquals(
+            setOf(existingId, restoredId),
+            firstAssignments
+                .filter { it.set_id == imported._id }.map { it.category_id }.toSet(),
+        )
         restorer(categories, sets)
-        assertEquals(firstSets.map { it.sync_key to it.sort },
-            database.category_setsQueries.getSets().awaitAsList().map { it.sync_key to it.sort })
-        assertEquals(firstAssignments.map { it.category_id to it.set_id },
-            database.category_setsQueries.getSetAssignments().awaitAsList().map { it.category_id to it.set_id })
+        assertEquals(
+            firstSets.map { it.sync_key to it.sort },
+            database.category_setsQueries.getSets().awaitAsList().map { it.sync_key to it.sort },
+        )
+        assertEquals(
+            firstAssignments.map { it.category_id to it.set_id },
+            database.category_setsQueries.getSetAssignments().awaitAsList().map { it.category_id to it.set_id },
+        )
     }
-
 
     @Test
     fun duplicateSyncKeyInPayloadReusesOnePersistedSet() = runBlocking {
@@ -98,8 +107,10 @@ class CategoriesRestorerIntegrationTest {
             .single { it.name == "Legacy" }
         val assignment = database.category_setsQueries.getSetAssignments().awaitAsList()
             .single { it.category_id == category.id }
-        assertEquals("lalapo:category-set:default",
+        assertEquals(
+            "lalapo:category-set:default",
             database.category_setsQueries.getSets().awaitAsList()
-                .single { it._id == assignment.set_id }.sync_key)
+                .single { it._id == assignment.set_id }.sync_key,
+        )
     }
 }
