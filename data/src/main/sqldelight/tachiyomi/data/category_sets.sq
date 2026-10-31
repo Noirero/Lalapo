@@ -8,6 +8,9 @@ CREATE TABLE category_sets (
     updated_at INTEGER NOT NULL
 );
 
+INSERT INTO category_sets(_id, sync_key, name, sort, created_at, updated_at)
+VALUES (1, 'lalapo:category-set:default', 'Utama', 0, 0, 0);
+
 CREATE TABLE category_set_assignments (
     category_id INTEGER NOT NULL PRIMARY KEY REFERENCES categories(_id) ON DELETE CASCADE,
     set_id INTEGER NOT NULL REFERENCES category_sets(_id) ON DELETE RESTRICT
