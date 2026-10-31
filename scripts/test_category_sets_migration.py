@@ -56,7 +56,7 @@ class Migration143Test(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError):
             db.execute("UPDATE category_set_assignments SET category_id = 0 WHERE category_id = 3")
         with self.assertRaises(sqlite3.IntegrityError):
-            db.execute("INSERT INTO category_set_assignments VALUES (12, 999)")
+            db.execute("UPDATE category_set_assignments SET set_id = 999 WHERE category_id = 12")
         with self.assertRaises(sqlite3.IntegrityError):
             db.execute("DELETE FROM category_sets WHERE _id = 1")
         db.execute("INSERT INTO category_sets VALUES (2, 'second', 'Second', 1, 0, 0)")
