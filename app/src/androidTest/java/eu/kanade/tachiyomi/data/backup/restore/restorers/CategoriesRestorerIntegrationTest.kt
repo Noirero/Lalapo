@@ -143,7 +143,16 @@ class CategoriesRestorerIntegrationTest {
 
     @Test
     fun oldBackupWithoutSetsPreservesDefaultAssignments() = runBlocking {
+        database.category_setsQueries.insertSet(
+            "second:set",
+            "Second",
+            -1,
+            0,
+            0,
+        )
+
         restorer(listOf(BackupCategory("Legacy", 0, 777)), emptyList())
+
         val category = database.categoriesQueries.getCategories().awaitAsList()
             .single { it.name == "Legacy" }
         val assignment = database.category_setsQueries.getSetAssignments().awaitAsList()
