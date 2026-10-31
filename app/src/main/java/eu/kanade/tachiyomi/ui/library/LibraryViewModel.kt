@@ -60,6 +60,7 @@ import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.anime.model.AnimeUpdate
 import tachiyomi.domain.anime.model.applyFilter
 import tachiyomi.domain.category.interactor.GetVisibleCategories
+import tachiyomi.domain.category.repository.CategorySetRepository
 import tachiyomi.domain.category.interactor.SetAnimeCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.episode.interactor.GetBookmarkedEpisodesByAnimeId
@@ -90,6 +91,7 @@ class LibraryViewModel(
     private val getLibraryAnime: GetLibraryAnime,
     // AY -->
     private val getVisibleCategories: GetVisibleCategories,
+    private val categorySetRepository: CategorySetRepository,
     // <-- AY
     private val getTracksPerAnime: GetTracksPerAnime,
     private val getNextEpisodes: GetNextEpisodes,
@@ -150,7 +152,7 @@ class LibraryViewModel(
     private val library = eu.kanade.core.util.combine(
         searchQuery.debounce(0.25.seconds),
         // AY -->
-        getVisibleCategories.subscribe(),
+        categorySetRepository.observeVisibleCategoriesInActiveSet(),
         // <-- AY
         getFavoritesFlow(),
         combine(getTracksPerAnime.subscribe(), getTrackingFiltersFlow(), ::Pair),
@@ -205,7 +207,7 @@ class LibraryViewModel(
         combine(activeCategoryIndex, displayPreferences, hasActiveFilters, ::Triple),
         // AM (GROUPING) -->
         libraryPreferences.groupLibraryBy.changes(),
-        getVisibleCategories.subscribe(),
+        categorySetRepository.observeVisibleCategoriesInActiveSet(),
         // <-- AM (GROUPING)
     ) {
             library,
