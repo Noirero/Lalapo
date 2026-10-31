@@ -21,7 +21,7 @@ class CategoriesRestorer(
         backupSets: List<BackupCategorySet>,
     ) {
         // Restore maps by backup category identity, never by raw database ID.
-        val categoryIdMap = backupCategories.zip(restoredCategories).associate { (old, current) ->
+        val categoryIdMap = backupCategories.sortedBy { it.order }.zip(restoredCategories).associate { (old, current) ->
             old.id to current.id
         }
         database.transaction {
