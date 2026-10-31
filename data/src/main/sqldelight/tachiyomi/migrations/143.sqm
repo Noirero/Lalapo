@@ -8,7 +8,7 @@ CREATE TABLE category_sets (
     updated_at INTEGER NOT NULL
 );
 CREATE TABLE category_set_assignments (
-    category_id INTEGER NOT NULL PRIMARY KEY REFERENCES categories(_id) ON DELETE CASCADE,
+    category_id INTEGER NOT NULL PRIMARY KEY CHECK (category_id > 0) REFERENCES categories(_id) ON DELETE CASCADE,
     set_id INTEGER NOT NULL REFERENCES category_sets(_id) ON DELETE RESTRICT
 );
 CREATE INDEX category_set_assignments_set_id ON category_set_assignments(set_id);
