@@ -114,9 +114,24 @@ jobs:
           apksigner="$(find "$sdk/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
           if [[ -z "$apksigner" ]]; then echo "::error::apksigner not found"; exit 1; fi
           "$apksigner" verify --verbose "$apk"
-          actual="$("$apksigner" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1 | tr '[:upper:]' '[:lower:]' | tr -d ':')"
-          expected="$(keytool -list -v -keystore "$RUNNER_TEMP/lalapo-signing-check.keystore" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA256: //p' | head -n 1 | tr '[:upper:]' '[:lower:]' | tr -d ':')"
-          if [[ -z "$actual" || -z "$expected" || "$actual" != "$expected" ]]; then
+          # Public certificate metadata only; never log private keys or signing secrets.
+          cert_output="$("$apksigner" verify --print-certs "$apk")"
+          printf '%s\n' "$cert_output"
+          actual_raw="$(printf '%s\n' "$cert_output" | sed -nE 's/^[[:space:]]*(V[0-9]+[[:space:]]+Signer|Signer[[:space:]]*#[[:space:]]*1)[[:space:]]*:?[[:space:]]*certificate[[:space:]]+SHA-?256[[:space:]]+digest[[:space:]]*:[[:space:]]*//Ip' | head -n 1)"
+          expected_raw="$(keytool -list -v -keystore "$RUNNER_TEMP/lalapo-signing-check.keystore" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | head -n 1)"
+          actual="$(printf '%s' "$actual_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          expected="$(printf '%s' "$expected_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          echo "APK signer SHA-256: ${actual:-<missing>}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Keystore alias SHA-256: ${expected:-<missing>}" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [[ -z "$actual" || ! "$actual" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Unable to parse valid APK signer SHA-256"
+            exit 1
+          fi
+          if [[ -z "$expected" || ! "$expected" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Unable to parse valid keystore alias SHA-256"
+            exit 1
+          fi
+          if [[ "$actual" != "$expected" ]]; then
             echo "::error::APK signing certificate does not match configured keystore alias"
             exit 1
           fi
