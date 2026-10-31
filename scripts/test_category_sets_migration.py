@@ -126,7 +126,7 @@ class Migration143Test(unittest.TestCase):
                 name: re.sub(
                     r"\s+", " ",
                     definition.replace("IF NOT EXISTS ", "").strip(),
-                ).lower()
+                ).lower().replace("( ", "(").replace(" )", ")")
                 for name, definition in rows
                 if name in {"category_set_auto_assign", "category_set_prevent_last_delete"}
             }
