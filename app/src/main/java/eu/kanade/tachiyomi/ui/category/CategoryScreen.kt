@@ -87,7 +87,10 @@ class CategoryScreen : Screen() {
                                 TextButton(onClick = { viewModel.selectSet(set.syncKey) }) {
                                     Text(if (activeSetKey == set.syncKey) "✓ ${set.name}" else set.name)
                                 }
-                                TextButton(onClick = { renameId = set.id; name = set.name }) {
+                                TextButton(onClick = {
+                                    renameId = set.id
+                                    name = set.name
+                                }) {
                                     Text("Ubah")
                                 }
                                 if (sets.size > 1) {
