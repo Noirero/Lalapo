@@ -57,6 +57,13 @@ class CategoriesRestorer(
         backupCategories: List<BackupCategory>,
         backupSets: List<BackupCategorySet> = emptyList(),
     ) {
+        if (backupCategories.isEmpty()) {
+            if (backupSets.isNotEmpty()) {
+                restoreSets(emptyList(), emptyList(), backupSets)
+            }
+            return
+        }
+
         if (backupCategories.isNotEmpty()) {
             val dbCategories = getCategories.await()
             val dbCategoriesByName = dbCategories.associateBy { it.name }
