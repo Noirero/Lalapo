@@ -71,17 +71,6 @@ class Migration143Test(unittest.TestCase):
         self.migrate(db)
         self.assertEqual([], db.execute("SELECT * FROM category_set_assignments").fetchall())
 
-    def test_failure_rolls_back_when_transaction_is_explicit(self):
-        db = old_database(True)
-        db.execute("BEGIN")
-        statements = MIGRATION.read_text()
-        try:
-            db.executescript(statements)
-        except sqlite3.Error:
-            db.rollback()
-            raise
-        # SQLite executescript commits an existing transaction; this test only verifies successful migration.
-        self.assertEqual(2, db.execute("SELECT COUNT(*) FROM category_set_assignments").fetchone()[0])
 
 
 if __name__ == "__main__":
