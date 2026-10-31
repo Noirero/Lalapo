@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -162,7 +163,7 @@ data object LibraryTab : Tab {
                 )
                 Column {
                     if (sets.isNotEmpty()) {
-                        androidx.compose.foundation.layout.Box {
+                        Box {
                             val selectedSet = sets.firstOrNull { it.syncKey == activeSetKey } ?: sets.first()
                             TextButton(onClick = { setMenuExpanded = true }) {
                                 Text("Set: ${selectedSet.name}")
@@ -190,22 +191,22 @@ data object LibraryTab : Tab {
                             }
                         }
                     }
-                LibraryToolbar(
-                    hasActiveFilters = state.hasActiveFilters,
-                    selectedCount = state.selection.size,
-                    title = title,
-                    onClickUnselectAll = viewModel::clearSelection,
-                    onClickSelectAll = viewModel::selectAll,
-                    onClickInvertSelection = viewModel::invertSelection,
-                    onClickFilter = viewModel::showSettingsDialog,
-                    onClickRefresh = { onClickRefresh(state.activeCategory) },
-                    onClickGlobalUpdate = { onClickRefresh(null) },
-                    onClickOpenRandomAnime = ::openRandomAnime,
-                    searchQuery = state.searchQuery,
-                    onSearchQueryChange = viewModel::search,
-                    // For scroll overlay when no tab
-                    scrollBehavior = scrollBehavior.takeIf { !state.showCategoryTabs },
-                )
+                    LibraryToolbar(
+                        hasActiveFilters = state.hasActiveFilters,
+                        selectedCount = state.selection.size,
+                        title = title,
+                        onClickUnselectAll = viewModel::clearSelection,
+                        onClickSelectAll = viewModel::selectAll,
+                        onClickInvertSelection = viewModel::invertSelection,
+                        onClickFilter = viewModel::showSettingsDialog,
+                        onClickRefresh = { onClickRefresh(state.activeCategory) },
+                        onClickGlobalUpdate = { onClickRefresh(null) },
+                        onClickOpenRandomAnime = ::openRandomAnime,
+                        searchQuery = state.searchQuery,
+                        onSearchQueryChange = viewModel::search,
+                        // For scroll overlay when no tab
+                        scrollBehavior = scrollBehavior.takeIf { !state.showCategoryTabs },
+                    )
                 }
             },
             bottomBar = {
