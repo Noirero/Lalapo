@@ -25,8 +25,10 @@ class CategoriesRestorer(
             old.id to current.id
         }
         database.transaction {
-            val existing = database.category_setsQueries.getSets().awaitAsList()
             backupSets.sortedBy { it.order }.forEach { backupSet ->
+                // Re-query inside the transaction so duplicate keys in a single backup
+                // and repeat restores resolve to the same Set, not duplicate inserts.
+                val existing = database.category_setsQueries.getSets().awaitAsList()
                 val matched = existing.firstOrNull { it.sync_key == backupSet.syncKey }
                 val targetId = if (matched != null) {
                     matched._id
