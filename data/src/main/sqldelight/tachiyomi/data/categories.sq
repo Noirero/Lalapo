@@ -25,6 +25,18 @@ FROM categories
 WHERE _id = :id
 LIMIT 1;
 
+getCategoryByNameAndOrder:
+SELECT
+_id AS id,
+name,
+sort AS `order`,
+flags,
+hidden
+FROM categories
+WHERE name = :name AND sort = :order
+ORDER BY _id DESC
+LIMIT 1;
+
 getCategories:
 SELECT
 _id AS id,

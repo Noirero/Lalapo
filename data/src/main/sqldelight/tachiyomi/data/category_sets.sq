@@ -1,0 +1,69 @@
+-- Category Sets own categories; anime/category membership and category IDs remain unchanged.
+CREATE TABLE category_sets (
+    _id INTEGER NOT NULL PRIMARY KEY,
+    sync_key TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    sort INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+INSERT INTO category_sets(_id, sync_key, name, sort, created_at, updated_at)
+VALUES (1, 'lalapo:category-set:default', 'Utama', 0, 0, 0);
+
+CREATE TABLE category_set_assignments (
+    category_id INTEGER NOT NULL PRIMARY KEY CHECK (category_id > 0) REFERENCES categories(_id) ON DELETE CASCADE,
+    set_id INTEGER NOT NULL REFERENCES category_sets(_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX category_set_assignments_set_id ON category_set_assignments(set_id);
+
+-- System category (ID 0) is not assigned to a user Set.
+getSets:
+SELECT * FROM category_sets ORDER BY sort, _id;
+
+getSet:
+SELECT * FROM category_sets WHERE _id = :setId LIMIT 1;
+
+getSetBySyncKey:
+SELECT * FROM category_sets WHERE sync_key = :syncKey LIMIT 1;
+
+getSetAssignments:
+SELECT * FROM category_set_assignments ORDER BY category_id;
+
+getCategoriesInSet:
+SELECT categories.* FROM categories
+JOIN category_set_assignments ON categories._id = category_set_assignments.category_id
+WHERE category_set_assignments.set_id = :setId
+ORDER BY categories.sort, categories._id;
+
+insertSet:
+INSERT INTO category_sets(sync_key, name, sort, created_at, updated_at)
+VALUES (:syncKey, :name, :sort, :createdAt, :updatedAt);
+
+renameSet:
+UPDATE category_sets SET name = :name, updated_at = :updatedAt WHERE _id = :setId;
+
+reorderSet:
+UPDATE category_sets SET sort = :sort, updated_at = :updatedAt WHERE _id = :setId;
+
+assignCategory:
+INSERT INTO category_set_assignments(category_id, set_id)
+VALUES (:categoryId, :setId)
+ON CONFLICT(category_id) DO UPDATE SET set_id = excluded.set_id;
+
+moveSetCategories:
+UPDATE category_set_assignments SET set_id = :targetSetId WHERE set_id = :sourceSetId;
+
+deleteSet:
+DELETE FROM category_sets WHERE _id = :setId;
+
+getCategorySet:
+SELECT set_id FROM category_set_assignments WHERE category_id = :categoryId;
+
+countCategoriesInSet:
+SELECT count(*) FROM category_set_assignments WHERE set_id = :setId;
+
+getSetCount:
+SELECT count(*) FROM category_sets;
+

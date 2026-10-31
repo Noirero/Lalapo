@@ -424,6 +424,8 @@ dependencies {
     // <-- AM (CAST)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation("androidx.test:runner:1.7.0")
 }
 
 androidComponents {

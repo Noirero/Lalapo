@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.create
 
 import android.content.Context
 import android.net.Uri
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -18,6 +19,7 @@ import eu.kanade.tachiyomi.data.backup.create.creators.SourcesBackupCreator
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCategorySet
 import eu.kanade.tachiyomi.data.backup.models.BackupCustomButtons
 import eu.kanade.tachiyomi.data.backup.models.BackupExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
@@ -31,6 +33,7 @@ import okio.gzip
 import okio.sink
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.Database
 import tachiyomi.domain.anime.interactor.GetFavorites
 import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.anime.repository.AnimeRepository
@@ -46,6 +49,7 @@ import kotlin.time.Clock
 class BackupCreator(
     @Assisted private val isAutoBackup: Boolean,
     private val context: Context,
+    private val database: Database,
     private val parser: ProtoBuf,
     private val getFavorites: GetFavorites,
     private val backupPreferences: BackupPreferences,
@@ -101,6 +105,7 @@ class BackupCreator(
                 isLegacy = false,
                 backupAnime = backupAnime,
                 backupCategories = backupCategories(options),
+                backupCategorySets = backupCategorySets(options),
                 backupSources = backupSources(backupAnime),
                 backupExtensions = backupExtensions(options),
                 backupExtensionStores = backupExtensionStores(options),
@@ -142,6 +147,16 @@ class BackupCreator(
         if (!options.categories) return emptyList()
 
         return categoriesBackupCreator()
+    }
+
+    internal suspend fun backupCategorySets(options: BackupOptions): List<BackupCategorySet> {
+        if (!options.categories) return emptyList()
+        val assignments = database.category_setsQueries.getSetAssignments()
+            .awaitAsList()
+            .groupBy({ it.set_id }, { it.category_id })
+        return database.category_setsQueries.getSets().awaitAsList().map {
+            BackupCategorySet(it.sync_key, it.name, it.sort, assignments[it._id].orEmpty())
+        }
     }
 
     internal suspend fun backupAnimes(animes: List<Anime>, options: BackupOptions): List<BackupAnime> {
