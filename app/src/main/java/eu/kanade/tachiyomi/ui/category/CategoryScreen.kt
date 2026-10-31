@@ -10,14 +10,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -59,15 +59,15 @@ class CategoryScreen : Screen() {
             }
             Box {
                 CategoryScreen(
-            state = successState,
-            onClickCreate = { viewModel.showDialog(CategoryDialog.Create) },
-            onClickRename = { viewModel.showDialog(CategoryDialog.Rename(it)) },
-            onClickDelete = { viewModel.showDialog(CategoryDialog.Delete(it)) },
-            // AY -->
-            onClickHide = viewModel::hideCategory,
-            // <-- AY
-            onChangeOrder = viewModel::changeOrder,
-            navigateUp = navigator::pop,
+                    state = successState,
+                    onClickCreate = { viewModel.showDialog(CategoryDialog.Create) },
+                    onClickRename = { viewModel.showDialog(CategoryDialog.Rename(it)) },
+                    onClickDelete = { viewModel.showDialog(CategoryDialog.Delete(it)) },
+                    // AY -->
+                    onClickHide = viewModel::hideCategory,
+                    // <-- AY
+                    onChangeOrder = viewModel::changeOrder,
+                    navigateUp = navigator::pop,
                 )
             }
         }
