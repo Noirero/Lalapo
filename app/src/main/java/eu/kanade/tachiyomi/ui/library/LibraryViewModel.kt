@@ -115,6 +115,22 @@ class LibraryViewModel(
     // <-- AM (GROUPING)
 ) : ViewModel() {
 
+    val categorySets = categorySetRepository.observeSets()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
+
+    val activeSetKey = libraryPreferences.activeCategorySetKey.changes()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5.seconds),
+            libraryPreferences.activeCategorySetKey.get(),
+        )
+
+    fun selectSet(syncKey: String) {
+        viewModelScope.launchIO {
+            categorySetRepository.selectActiveSet(syncKey)
+        }
+    }
+
     private val searchQuery = MutableStateFlow<String?>(null)
 
     private val selection = MutableStateFlow(emptySet</* Anime */ Long>())
