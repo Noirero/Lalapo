@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.data.backup.BackupDecoder
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCategorySet
 import eu.kanade.tachiyomi.data.backup.models.BackupCustomButtons
 import eu.kanade.tachiyomi.data.backup.models.BackupExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
@@ -136,7 +137,7 @@ class BackupRestorer(
 
         coroutineScope {
             val restoreCategoriesJob = if (options.categories) {
-                restoreCategories(backup.backupCategories)
+                restoreCategories(backup.backupCategories, backup.backupCategorySets)
             } else {
                 null
             }
@@ -173,9 +174,12 @@ class BackupRestorer(
         }
     }
 
-    private fun CoroutineScope.restoreCategories(backupCategories: List<BackupCategory>) = launch {
+    private fun CoroutineScope.restoreCategories(
+        backupCategories: List<BackupCategory>,
+        backupSets: List<BackupCategorySet>,
+    ) = launch {
         ensureActive()
-        categoriesRestorer(backupCategories)
+        categoriesRestorer(backupCategories, backupSets)
 
         val progress = restoreProgress.incrementAndFetch()
         notifier.showRestoreProgress(
