@@ -124,7 +124,7 @@ class Migration143Test(unittest.TestCase):
             ).fetchall()
             return {
                 name: re.sub(
-                    r"\\s+", " ",
+                    r"\s+", " ",
                     definition.replace("IF NOT EXISTS ", "").strip(),
                 ).lower()
                 for name, definition in rows
