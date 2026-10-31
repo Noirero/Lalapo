@@ -50,7 +50,10 @@ class CategoriesRestorer(
         }
     }
 
-    suspend operator fun invoke(backupCategories: List<BackupCategory>, backupSets: List<BackupCategorySet> = emptyList()) {
+    suspend operator fun invoke(
+        backupCategories: List<BackupCategory>,
+        backupSets: List<BackupCategorySet> = emptyList(),
+    ) {
         if (backupCategories.isNotEmpty()) {
             val dbCategories = getCategories.await()
             val dbCategoriesByName = dbCategories.associateBy { it.name }
