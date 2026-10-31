@@ -18,7 +18,9 @@ class GetNextEpisodesTest {
     private val subject = GetNextEpisodes(getEpisodes, getAnime, mockk<HistoryRepository>())
 
     private fun setup(episodes: List<Episode>) {
-        coEvery { getAnime.await(animeId) } returns mockk<Anime>(relaxed = true)
+        val anime = mockk<Anime>()
+        io.mockk.every { anime.sorting } returns Anime.EPISODE_SORTING_NUMBER
+        coEvery { getAnime.await(animeId) } returns anime
         coEvery { getEpisodes.await(animeId, applyScanlatorFilter = true) } returns episodes
     }
 
