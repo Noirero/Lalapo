@@ -95,17 +95,17 @@ class CategorySetRepositoryImpl(
             val sets = getSets()
             require(sets.size > 1 && sets.any { it.id == id }) { "Cannot delete last or unknown Set" }
             val categories = database.category_setsQueries.getCategoriesInSet(id).awaitAsList()
+            // Category deletion also updates library/download preferences via DeleteCategory.
+            // Raw SQL here would bypass those side effects; reject until the explicit
+            // destructive flow can coordinate both database and preference cleanup.
+            require(!deleteCategories) { "Destructive Set deletion requires category cleanup" }
             if (categories.isNotEmpty()) {
-                if (deleteCategories) {
-                    categories.forEach { database.categoriesQueries.delete(it._id) }
-                } else {
-                    require(
-                        destinationSetId != null && destinationSetId != id && sets.any {
-                            it.id == destinationSetId
-                        },
-                    )
-                    database.category_setsQueries.moveSetCategories(destinationSetId, id)
-                }
+                require(
+                    destinationSetId != null && destinationSetId != id && sets.any {
+                        it.id == destinationSetId
+                    },
+                )
+                database.category_setsQueries.moveSetCategories(destinationSetId, id)
             }
             database.category_setsQueries.deleteSet(id)
         }
