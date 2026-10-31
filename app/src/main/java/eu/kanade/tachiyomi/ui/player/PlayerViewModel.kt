@@ -3154,8 +3154,7 @@ class PlayerViewModel(
      */
     private fun saveWatchingProgress(episode: Episode) {
         viewModelScope.launchNonCancellable {
-            saveEpisodeProgress(episode)
-            saveEpisodeHistory(episode)
+            persistWatchingProgress(episode, ::saveEpisodeProgress, ::saveEpisodeHistory)
         }
     }
 
@@ -3733,4 +3732,18 @@ class PlayerViewModel(
         data object ToggleKeyboard : Event
         data class UpdateDiscordRPC(val paused: Boolean, val position: Int? = null) : Event
     }
+}
+
+/**
+ * Production persistence sequence shared with deterministic investigation tests.
+ * The caller retains coroutine ownership, dispatcher and cancellation policy.
+ * Both callbacks still read the live Episode when their respective operation starts.
+ */
+internal suspend fun persistWatchingProgress(
+    episode: Episode,
+    saveProgress: suspend (Episode) -> Unit,
+    saveHistory: suspend (Episode) -> Unit,
+) {
+    saveProgress(episode)
+    saveHistory(episode)
 }
