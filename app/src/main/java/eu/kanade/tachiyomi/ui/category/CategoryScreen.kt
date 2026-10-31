@@ -51,6 +51,7 @@ class CategoryScreen : Screen() {
 
         var manageSets by remember { mutableStateOf(false) }
         var pendingDelete by remember { mutableStateOf<Long?>(null) }
+        var pendingMoveCategory by remember { mutableStateOf<Long?>(null) }
         val sets by viewModel.categorySets.collectAsStateWithLifecycle()
         val activeSetKey by viewModel.activeSetKey.collectAsStateWithLifecycle()
 
@@ -101,6 +102,12 @@ class CategoryScreen : Screen() {
                                 }) { Text("↑") }
                             }
                         }
+                        Text("Pindahkan kategori")
+                        successState.categories.forEach { category ->
+                            TextButton(onClick = { pendingMoveCategory = category.id }) {
+                                Text(category.name)
+                            }
+                        }
                         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nama Set") })
                         Button(onClick = {
                             val id = renameId
@@ -111,6 +118,26 @@ class CategoryScreen : Screen() {
                     }
                 },
                 confirmButton = { TextButton(onClick = { manageSets = false }) { Text("Selesai") } },
+            )
+        }
+
+        pendingMoveCategory?.let { categoryId ->
+            AlertDialog(
+                onDismissRequest = { pendingMoveCategory = null },
+                title = { Text("Pilih Set tujuan") },
+                text = {
+                    Column {
+                        sets.forEach { set ->
+                            TextButton(onClick = {
+                                viewModel.moveCategory(categoryId, set.id)
+                                pendingMoveCategory = null
+                            }) { Text(set.name) }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { pendingMoveCategory = null }) { Text("Batal") }
+                },
             )
         }
 
