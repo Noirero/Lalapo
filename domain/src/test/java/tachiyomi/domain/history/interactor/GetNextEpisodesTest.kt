@@ -35,7 +35,8 @@ class GetNextEpisodesTest {
     @Test
     fun `missing reference includes first available episode`() = runBlocking {
         val episodes = listOf(episode(1), episode(2), episode(3))
-        setup(episodes)
+        setup(listOf(episodes[2], episodes[0], episodes[1]))
+        // Episode ordering follows the configured number sort, not repository input order.
         subject.await(animeId, 99, onlyUnseen = false) shouldBe episodes
     }
 
