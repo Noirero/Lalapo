@@ -205,7 +205,8 @@ data object LibraryTab : Tab {
                     onSearchQueryChange = viewModel::search,
                     // For scroll overlay when no tab
                     scrollBehavior = scrollBehavior.takeIf { !state.showCategoryTabs },
-                )                }
+                )
+                }
             },
             bottomBar = {
                 LibraryBottomActionMenu(
