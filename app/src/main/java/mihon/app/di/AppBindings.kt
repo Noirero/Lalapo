@@ -39,6 +39,38 @@ object AppBindings {
             configuration = AndroidxSqliteConfiguration(
                 isForeignKeyConstraintsEnabled = true,
             ),
+            // The SQLDelight parser cannot compile triggers referencing NEW.
+            // Install these idempotently on every open, after create/migrate.
+            // This callback is serialized by AndroidxSqliteDriver initialization.
+            onOpen = {
+                execute(
+                    null,
+                    """
+                    CREATE TRIGGER IF NOT EXISTS category_set_auto_assign
+                    AFTER INSERT ON categories WHEN NEW._id > 0
+                    BEGIN
+                        INSERT INTO category_set_assignments(category_id, set_id)
+                        SELECT NEW._id, _id FROM category_sets ORDER BY sort, _id LIMIT 1;
+                        SELECT CASE WHEN NOT EXISTS (
+                            SELECT 1 FROM category_set_assignments WHERE category_id = NEW._id
+                        ) THEN RAISE(ABORT, 'Missing category Set') END;
+                    END
+                    """.trimIndent(),
+                    0,
+                ).await()
+                execute(
+                    null,
+                    """
+                    CREATE TRIGGER IF NOT EXISTS category_set_prevent_last_delete
+                    BEFORE DELETE ON category_sets
+                    WHEN (SELECT count(*) FROM category_sets) <= 1
+                    BEGIN
+                        SELECT RAISE(ABORT, 'Cannot delete last Set');
+                    END
+                    """.trimIndent(),
+                    0,
+                ).await()
+            },
         )
     }
 
