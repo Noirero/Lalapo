@@ -1,0 +1,38 @@
+-- Additive migration: never rebuild categories or animes_categories.
+CREATE TABLE category_sets (
+    _id INTEGER NOT NULL PRIMARY KEY,
+    sync_key TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    sort INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+CREATE TABLE category_set_assignments (
+    category_id INTEGER NOT NULL PRIMARY KEY REFERENCES categories(_id) ON DELETE CASCADE,
+    set_id INTEGER NOT NULL REFERENCES category_sets(_id) ON DELETE RESTRICT
+);
+CREATE INDEX category_set_assignments_set_id ON category_set_assignments(set_id);
+INSERT INTO category_sets(_id, sync_key, name, sort, created_at, updated_at)
+VALUES (1, 'lalapo:category-set:default', 'Utama', 0, 0, 0);
+INSERT INTO category_set_assignments(category_id, set_id)
+SELECT _id, 1 FROM categories WHERE _id > 0;
+CREATE TRIGGER category_set_assignment_guard_insert BEFORE INSERT ON category_set_assignments
+BEGIN
+    SELECT CASE WHEN NEW.category_id <= 0 THEN RAISE(ABORT, 'Cannot assign system category') END;
+END;
+CREATE TRIGGER category_set_assignment_guard_update BEFORE UPDATE ON category_set_assignments
+BEGIN
+    SELECT CASE WHEN NEW.category_id <= 0 THEN RAISE(ABORT, 'Cannot assign system category') END;
+END;
+CREATE TRIGGER category_set_auto_assign AFTER INSERT ON categories WHEN NEW._id > 0
+BEGIN
+    INSERT INTO category_set_assignments(category_id, set_id)
+    SELECT NEW._id, _id FROM category_sets ORDER BY sort, _id LIMIT 1;
+    SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM category_set_assignments WHERE category_id = NEW._id)
+        THEN RAISE(ABORT, 'Missing category Set') END;
+END;
+CREATE TRIGGER category_set_prevent_last_delete BEFORE DELETE ON category_sets
+WHEN (SELECT count(*) FROM category_sets) <= 1
+BEGIN
+    SELECT RAISE(ABORT, 'Cannot delete last Set');
+END;
