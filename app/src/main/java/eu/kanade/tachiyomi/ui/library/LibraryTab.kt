@@ -45,6 +45,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -167,7 +168,7 @@ data object LibraryTab : Tab {
                     groupType = state.groupType,
                     hasCategories = state.hasCategories,
                     onClickSettings = {
-                        viewModel.showSettingsDialog(LibraryViewModel.SettingsPage.Display)
+                        navigator.push(SettingsScreen())
                     },
                     onClickUnselectAll = viewModel::clearSelection,
                     onClickSelectAll = viewModel::selectAll,
