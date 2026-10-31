@@ -38,7 +38,9 @@ class CategorySetRepositoryImpl(
         database.category_setsQueries.getSetAssignments().subscribeToList(),
         libraryPreferences.activeCategorySetKey.changes(),
     ) { categories, sets, assignments, activeKey ->
-        val selected = sets.firstOrNull { it.syncKey == activeKey } ?: sets.firstOrNull()
+        val selected = sets.firstOrNull { it.syncKey == activeKey } ?: sets.firstOrNull()?.also { fallback ->
+            libraryPreferences.activeCategorySetKey.set(fallback.syncKey)
+        }
         val allowedIds = assignments.asSequence()
             .filter { it.set_id == selected?.id }
             .map { it.category_id }
