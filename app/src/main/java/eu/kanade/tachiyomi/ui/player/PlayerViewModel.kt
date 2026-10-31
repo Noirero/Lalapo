@@ -3166,14 +3166,7 @@ class PlayerViewModel(
         val stateData = stateData.value
         if (!stateData.incognitoMode || stateData.hasTrackers) {
             updateEpisode.await(
-                EpisodeUpdate(
-                    id = episode.id!!,
-                    seen = episode.seen,
-                    bookmark = episode.bookmark,
-                    fillermark = episode.fillermark,
-                    lastSecondSeen = episode.last_second_seen,
-                    totalSeconds = episode.total_seconds,
-                ),
+                episode.toWatchingProgressUpdate(),
             )
             // AM (SYNC) -->
             val isSyncEnabled = syncPreferences.isSyncEnabled()
@@ -3747,3 +3740,13 @@ internal suspend fun persistWatchingProgress(
     saveProgress(episode)
     saveHistory(episode)
 }
+
+/** Constructs the exact episode persistence payload from the live legacy episode. */
+internal fun Episode.toWatchingProgressUpdate(): EpisodeUpdate = EpisodeUpdate(
+    id = id!!,
+    seen = seen,
+    bookmark = bookmark,
+    fillermark = fillermark,
+    lastSecondSeen = last_second_seen,
+    totalSeconds = total_seconds,
+)
