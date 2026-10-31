@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategorySet
@@ -68,9 +69,9 @@ class CategoriesRestorer(
                         val dbCategory = dbCategoriesByName[it.name]
                         if (dbCategory != null) return@map dbCategory
                         val order = nextOrder++
-                        database.categoriesQueries
-                            .insert(it.name, order, it.flags)
-                            .let { id -> it.toCategory(id).copy(order = order) }
+                        database.categoriesQueries.insert(it.name, order, it.flags)
+                        database.categoriesQueries.getCategoryByNameAndOrder(it.name, order)
+                            .awaitAsOne()
                     }
             }
 
