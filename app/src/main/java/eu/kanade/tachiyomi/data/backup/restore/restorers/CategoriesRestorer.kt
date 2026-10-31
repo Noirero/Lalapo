@@ -70,8 +70,9 @@ class CategoriesRestorer(
                         if (dbCategory != null) return@map dbCategory
                         val order = nextOrder++
                         database.categoriesQueries.insert(it.name, order, it.flags)
-                        database.categoriesQueries.getCategoryByNameAndOrder(it.name, order)
-                            .awaitAsOne()
+                        val persistedId = database.categoriesQueries.getCategoryByNameAndOrder(it.name, order)
+                            .awaitAsOne().id
+                        it.toCategory(persistedId).copy(order = order)
                     }
             }
 
