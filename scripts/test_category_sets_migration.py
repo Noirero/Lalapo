@@ -66,6 +66,38 @@ class Migration143Test(unittest.TestCase):
         db.execute("DELETE FROM category_sets WHERE _id = 1")
         self.assertEqual([], db.execute("PRAGMA foreign_key_check").fetchall())
 
+    def test_move_then_delete_preserves_category_and_anime_membership(self):
+        db = old_database(True)
+        self.migrate(db)
+        before = db.execute("SELECT * FROM animes_categories ORDER BY _id").fetchall()
+        db.execute("INSERT INTO category_sets VALUES (2, 'other', 'Other', 1, 0, 0)")
+        with self.assertRaises(sqlite3.IntegrityError):
+            db.execute("DELETE FROM category_sets WHERE _id = 1")
+        db.execute("BEGIN")
+        db.execute("UPDATE category_set_assignments SET set_id = 2 WHERE set_id = 1")
+        db.execute("DELETE FROM category_sets WHERE _id = 1")
+        db.commit()
+        self.assertEqual(before, db.execute("SELECT * FROM animes_categories ORDER BY _id").fetchall())
+        self.assertEqual([(3, 2), (9, 2)], db.execute(
+            "SELECT category_id, set_id FROM category_set_assignments ORDER BY category_id"
+        ).fetchall())
+        self.assertEqual([], db.execute("PRAGMA foreign_key_check").fetchall())
+
+    def test_failed_move_and_delete_rolls_back(self):
+        db = old_database(True)
+        self.migrate(db)
+        db.execute("INSERT INTO category_sets VALUES (2, 'other', 'Other', 1, 0, 0)")
+        db.commit()
+        before = db.execute("SELECT * FROM category_set_assignments ORDER BY category_id").fetchall()
+        with self.assertRaises(sqlite3.IntegrityError):
+            with db:
+                db.execute("UPDATE category_set_assignments SET set_id = 2 WHERE category_id = 3")
+                db.execute("DELETE FROM category_sets WHERE _id = 1")
+        self.assertEqual(before, db.execute(
+            "SELECT * FROM category_set_assignments ORDER BY category_id"
+        ).fetchall())
+        self.assertEqual(2, db.execute("SELECT count(*) FROM category_sets").fetchone()[0])
+
     def test_empty_user_library(self):
         db = old_database(False)
         self.migrate(db)
