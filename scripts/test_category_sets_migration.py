@@ -109,12 +109,12 @@ class Migration143Test(unittest.TestCase):
         fresh = old_database(False)
         upgraded = old_database(False)
         self.migrate(upgraded)
-        for match in re.finditer(r"CREATE (?:TABLE|INDEX) [\\s\\S]*?;", schema):
+        for match in re.finditer(r"CREATE (?:TABLE|INDEX) [\s\S]*?;", schema):
             fresh.execute(match.group())
         fresh.execute(
             "INSERT INTO category_sets VALUES (1, 'lalapo:category-set:default', 'Utama', 0, 0, 0)"
         )
-        triggers = re.findall(r'"""(\\s*CREATE TRIGGER IF NOT EXISTS[\\s\\S]*?)"""', bindings)
+        triggers = re.findall(r'"""(\s*CREATE TRIGGER IF NOT EXISTS[\s\S]*?)"""', bindings)
         self.assertEqual(2, len(triggers), "Expected both production onOpen triggers")
         for trigger in triggers:
             fresh.executescript(trigger)
