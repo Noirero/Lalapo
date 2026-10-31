@@ -13,7 +13,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import tachiyomi.core.common.preference.InMemoryPreferenceStore
+import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -24,16 +24,18 @@ class CategoriesRestorerIntegrationTest {
     private lateinit var driver: app.cash.sqldelight.db.SqlDriver
     private lateinit var database: tachiyomi.data.Database
     private lateinit var restorer: CategoriesRestorer
+    private val preferencesName = "categories_restore_integration_test"
 
     @Before
     fun setUp() {
         context.deleteDatabase("tachiyomi.animedb")
+        context.getSharedPreferences(preferencesName, 0).edit().clear().commit()
         driver = AppBindings.providesSqlDriver(context)
         database = AppBindings.providesDatabase(driver)
         restorer = CategoriesRestorer(
             database,
             GetCategories(CategoryRepositoryImpl(database)),
-            LibraryPreferences(InMemoryPreferenceStore()),
+            LibraryPreferences(AndroidPreferenceStore(context.getSharedPreferences(preferencesName, 0))),
         )
     }
 
@@ -41,6 +43,7 @@ class CategoriesRestorerIntegrationTest {
     fun tearDown() {
         driver.close()
         context.deleteDatabase("tachiyomi.animedb")
+        context.getSharedPreferences(preferencesName, 0).edit().clear().commit()
     }
 
     @Test
