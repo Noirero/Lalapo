@@ -48,8 +48,12 @@ class CategorySetRepositoryImpl(
 
     override suspend fun getActiveSet(): CategorySet {
         val sets = getSets()
-        return sets.firstOrNull { it.syncKey == libraryPreferences.activeCategorySetKey.get() }
+        val selected = sets.firstOrNull { it.syncKey == libraryPreferences.activeCategorySetKey.get() }
             ?: sets.first()
+        if (libraryPreferences.activeCategorySetKey.get() != selected.syncKey) {
+            libraryPreferences.activeCategorySetKey.set(selected.syncKey)
+        }
+        return selected
     }
 
     override suspend fun selectActiveSet(syncKey: String) {
@@ -140,5 +144,7 @@ class CategorySetRepositoryImpl(
             }
             database.category_setsQueries.deleteSet(id)
         }
+        // Preference updates are outside the SQL transaction; only update after commit.
+        getActiveSet()
     }
 }
