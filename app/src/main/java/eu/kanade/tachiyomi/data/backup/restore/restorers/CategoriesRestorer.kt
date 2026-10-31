@@ -31,7 +31,11 @@ class CategoriesRestorer(
                 // and repeat restores resolve to the same Set, not duplicate inserts.
                 val existing = database.category_setsQueries.getSets().awaitAsList()
                 val matched = existing.firstOrNull { it.sync_key == backupSet.syncKey }
+                val restoredName = backupSet.name.trim().ifEmpty { "Restored Set" }
+                val now = System.currentTimeMillis()
                 val targetId = if (matched != null) {
+                    database.category_setsQueries.renameSet(restoredName, now, matched._id)
+                    database.category_setsQueries.reorderSet(backupSet.order, now, matched._id)
                     matched._id
                 } else {
                     val uniqueKey = backupSet.syncKey.takeIf { key ->
@@ -39,10 +43,10 @@ class CategoriesRestorer(
                     } ?: java.util.UUID.randomUUID().toString()
                     database.category_setsQueries.insertSet(
                         uniqueKey,
-                        backupSet.name.trim().ifEmpty { "Restored Set" },
-                        (existing.maxOfOrNull { it.sort } ?: 0L) + backupSet.order + 1L,
-                        System.currentTimeMillis(),
-                        System.currentTimeMillis(),
+                        restoredName,
+                        backupSet.order,
+                        now,
+                        now,
                     )
                     database.category_setsQueries.getSetBySyncKey(uniqueKey).awaitAsList().first()._id
                 }
