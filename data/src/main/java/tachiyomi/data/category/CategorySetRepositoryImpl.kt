@@ -6,13 +6,13 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.domain.category.model.CategorySet
 import tachiyomi.domain.category.repository.CategorySetRepository
+import java.util.UUID
 
 @Inject
 @SingleIn(AppScope::class)
@@ -58,7 +58,11 @@ class CategorySetRepositoryImpl(
         database.transaction {
             val sets = getSets()
             require(sets.any { it.id == id }) { "Unknown Set" }
-            require(sets.none { it.id != id && it.name.trim().equals(normalized, ignoreCase = true) }) { "Duplicate Set name" }
+            require(
+                sets.none {
+                    it.id != id && it.name.trim().equals(normalized, ignoreCase = true)
+                },
+            ) { "Duplicate Set name" }
             database.category_setsQueries.renameSet(normalized, System.currentTimeMillis(), id)
         }
     }
@@ -78,7 +82,9 @@ class CategorySetRepositoryImpl(
             require(getSets().any { it.id == targetSetId }) { "Unknown target Set" }
             categoryIds.distinct().forEach { categoryId ->
                 require(categoryId > 0L)
-                require(database.categoriesQueries.getCategory(categoryId).awaitAsList().isNotEmpty()) { "Unknown category" }
+                require(database.categoriesQueries.getCategory(categoryId).awaitAsList().isNotEmpty()) {
+                    "Unknown category"
+                }
                 database.category_setsQueries.assignCategory(categoryId, targetSetId)
             }
         }
@@ -93,7 +99,11 @@ class CategorySetRepositoryImpl(
                 if (deleteCategories) {
                     categories.forEach { database.categoriesQueries.delete(it._id) }
                 } else {
-                    require(destinationSetId != null && destinationSetId != id && sets.any { it.id == destinationSetId })
+                    require(
+                        destinationSetId != null && destinationSetId != id && sets.any {
+                            it.id == destinationSetId
+                        },
+                    )
                     database.category_setsQueries.moveSetCategories(destinationSetId, id)
                 }
             }
