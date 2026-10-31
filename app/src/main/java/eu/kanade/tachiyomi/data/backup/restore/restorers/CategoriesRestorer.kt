@@ -89,6 +89,16 @@ class CategoriesRestorer(
 
             if (backupSets.isNotEmpty()) {
                 restoreSets(backupCategories, categories, backupSets)
+            } else {
+                val defaultSetId = database.category_setsQueries
+                    .getSetBySyncKey("lalapo:category-set:default")
+                    .awaitAsOne()
+                    ._id
+                database.transaction {
+                    categories.forEach { category ->
+                        database.category_setsQueries.assignCategory(category.id, defaultSetId)
+                    }
+                }
             }
 
             libraryPreferences.categorizedDisplaySettings.set(
