@@ -50,6 +50,7 @@ class CategoryScreen : Screen() {
         val successState = state as CategoryScreenState.Success
 
         var manageSets by remember { mutableStateOf(false) }
+        var pendingDelete by remember { mutableStateOf<Long?>(null) }
         val sets by viewModel.categorySets.collectAsStateWithLifecycle()
         val activeSetKey by viewModel.activeSetKey.collectAsStateWithLifecycle()
 
@@ -88,6 +89,9 @@ class CategoryScreen : Screen() {
                                 TextButton(onClick = { renameId = set.id; name = set.name }) {
                                     Text("Ubah")
                                 }
+                                if (sets.size > 1) {
+                                    TextButton(onClick = { pendingDelete = set.id }) { Text("Hapus") }
+                                }
                                 TextButton(onClick = {
                                     if (index > 0) {
                                         val ids = sets.map { it.id }.toMutableList()
@@ -107,6 +111,22 @@ class CategoryScreen : Screen() {
                     }
                 },
                 confirmButton = { TextButton(onClick = { manageSets = false }) { Text("Selesai") } },
+            )
+        }
+
+        pendingDelete?.let { sourceId ->
+            val destination = sets.firstOrNull { it.id != sourceId }
+            AlertDialog(
+                onDismissRequest = { pendingDelete = null },
+                title = { Text("Hapus Set?") },
+                text = { Text("Kategori dalam Set ini akan dipindahkan ke Set tujuan, bukan dihapus.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deleteSet(sourceId, destination?.id)
+                        pendingDelete = null
+                    }) { Text("Pindahkan dan hapus") }
+                },
+                dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Batal") } },
             )
         }
 
