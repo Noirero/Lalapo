@@ -9,6 +9,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.domain.category.model.Category
@@ -28,9 +29,17 @@ class CategorySetRepositoryImpl(
 ) : CategorySetRepository {
 
     override fun observeSets(): Flow<List<CategorySet>> =
-        database.category_setsQueries.getSets().subscribeToList().map { rows ->
-            rows.map { CategorySet(it._id, it.sync_key, it.name, it.sort, it.created_at, it.updated_at) }
-        }
+        database.category_setsQueries.getSets().subscribeToList()
+            .map { rows ->
+                rows.map { CategorySet(it._id, it.sync_key, it.name, it.sort, it.created_at, it.updated_at) }
+            }
+            .onEach { sets ->
+                val activeKey = libraryPreferences.activeCategorySetKey.get()
+                val fallback = sets.firstOrNull()
+                if (fallback != null && sets.none { it.syncKey == activeKey }) {
+                    libraryPreferences.activeCategorySetKey.set(fallback.syncKey)
+                }
+            }
 
     override fun observeVisibleCategoriesInActiveSet(): Flow<List<Category>> = combine(
         categoryRepository.getAllVisibleAsFlow(),
@@ -38,9 +47,7 @@ class CategorySetRepositoryImpl(
         database.category_setsQueries.getSetAssignments().subscribeToList(),
         libraryPreferences.activeCategorySetKey.changes(),
     ) { categories, sets, assignments, activeKey ->
-        val selected = sets.firstOrNull { it.syncKey == activeKey } ?: sets.firstOrNull()?.also { fallback ->
-            libraryPreferences.activeCategorySetKey.set(fallback.syncKey)
-        }
+        val selected = sets.firstOrNull { it.syncKey == activeKey } ?: sets.firstOrNull()
         val allowedIds = assignments.asSequence()
             .filter { it.set_id == selected?.id }
             .map { it.category_id }
