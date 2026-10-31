@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategorySet
@@ -92,8 +93,9 @@ class CategoriesRestorer(
             } else {
                 val defaultSetId = database.category_setsQueries
                     .getSetBySyncKey("lalapo:category-set:default")
-                    .awaitAsOne()
-                    ._id
+                    .awaitAsOneOrNull()
+                    ?._id
+                    ?: database.category_setsQueries.getSets().awaitAsList().first()._id
                 database.transaction {
                     categories.forEach { category ->
                         database.category_setsQueries.assignCategory(category.id, defaultSetId)
