@@ -104,6 +104,22 @@ class CategoriesRestorerIntegrationTest {
     }
 
     @Test
+    fun emptyCategoriesStillRestoreEmptySets() = runBlocking {
+        restorer(
+            emptyList(),
+            listOf(BackupCategorySet("backup:set:empty", "Empty Set", 0, emptyList())),
+        )
+
+        val restoredSet = database.category_setsQueries.getSets().awaitAsList()
+            .single { it.sync_key == "backup:set:empty" }
+        assertEquals("Empty Set", restoredSet.name)
+        assertTrue(
+            database.category_setsQueries.getSetAssignments().awaitAsList()
+                .none { it.set_id == restoredSet._id },
+        )
+    }
+
+    @Test
     fun oldBackupWithoutSetsPreservesDefaultAssignments() = runBlocking {
         restorer(listOf(BackupCategory("Legacy", 0, 777)), emptyList())
         val category = database.categoriesQueries.getCategories().awaitAsList()
