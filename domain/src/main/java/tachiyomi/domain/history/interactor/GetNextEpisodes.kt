@@ -6,7 +6,6 @@ import tachiyomi.domain.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.episode.model.Episode
 import tachiyomi.domain.episode.service.getEpisodeSort
 import tachiyomi.domain.history.repository.HistoryRepository
-import kotlin.math.max
 
 @Inject
 class GetNextEpisodes(
@@ -39,7 +38,9 @@ class GetNextEpisodes(
     ): List<Episode> {
         val episodes = await(animeId, onlyUnseen)
         val currEpisodeIndex = episodes.indexOfFirst { it.id == fromEpisodeId }
-        val nextEpisodes = episodes.subList(max(0, currEpisodeIndex), episodes.size)
+        // A removed or filtered history episode must not skip the first available episode.
+        if (currEpisodeIndex == -1) return episodes
+        val nextEpisodes = episodes.subList(currEpisodeIndex, episodes.size)
 
         if (onlyUnseen) {
             return nextEpisodes
