@@ -7,11 +7,15 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
+import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategorySet
+import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.category.repository.CategorySetRepository
+import tachiyomi.domain.library.service.LibraryPreferences
 import java.util.UUID
 
 @Inject
@@ -19,12 +23,39 @@ import java.util.UUID
 @ContributesBinding(AppScope::class)
 class CategorySetRepositoryImpl(
     private val database: Database,
+    private val categoryRepository: CategoryRepository,
+    private val libraryPreferences: LibraryPreferences,
 ) : CategorySetRepository {
 
     override fun observeSets(): Flow<List<CategorySet>> =
         database.category_setsQueries.getSets().subscribeToList().map { rows ->
             rows.map { CategorySet(it._id, it.sync_key, it.name, it.sort, it.created_at, it.updated_at) }
         }
+
+    override fun observeVisibleCategoriesInActiveSet(): Flow<List<Category>> = combine(
+        categoryRepository.getAllVisibleAsFlow(),
+        observeSets(),
+        database.category_setsQueries.getSetAssignments().subscribeToList(),
+        libraryPreferences.activeCategorySetKey.changes(),
+    ) { categories, sets, assignments, activeKey ->
+        val selected = sets.firstOrNull { it.syncKey == activeKey } ?: sets.firstOrNull()
+        val allowedIds = assignments.asSequence()
+            .filter { it.set_id == selected?.id }
+            .map { it.category_id }
+            .toSet()
+        categories.filter { it.id == 0L || it.id in allowedIds }
+    }
+
+    override suspend fun getActiveSet(): CategorySet {
+        val sets = getSets()
+        return sets.firstOrNull { it.syncKey == libraryPreferences.activeCategorySetKey.get() }
+            ?: sets.first()
+    }
+
+    override suspend fun selectActiveSet(syncKey: String) {
+        require(getSets().any { it.syncKey == syncKey }) { "Unknown Set" }
+        libraryPreferences.activeCategorySetKey.set(syncKey)
+    }
 
     override suspend fun getSets(): List<CategorySet> =
         database.category_setsQueries.getSets().awaitAsList().map {
