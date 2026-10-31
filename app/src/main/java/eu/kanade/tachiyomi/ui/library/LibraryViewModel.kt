@@ -60,9 +60,9 @@ import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.anime.model.AnimeUpdate
 import tachiyomi.domain.anime.model.applyFilter
 import tachiyomi.domain.category.interactor.GetVisibleCategories
-import tachiyomi.domain.category.repository.CategorySetRepository
 import tachiyomi.domain.category.interactor.SetAnimeCategories
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.repository.CategorySetRepository
 import tachiyomi.domain.episode.interactor.GetBookmarkedEpisodesByAnimeId
 import tachiyomi.domain.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.episode.model.Episode
