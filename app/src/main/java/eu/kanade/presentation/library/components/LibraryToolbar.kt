@@ -344,7 +344,11 @@ private fun LibraryRegularToolbar(
                 onClick = onClickFilter,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = if (hasFilters) MaterialTheme.colorScheme.active else MaterialTheme.colorScheme.onSurface,
+                    contentColor = if (hasFilters) {
+                        MaterialTheme.colorScheme.active
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                 ),
             ) {
                 Icon(
