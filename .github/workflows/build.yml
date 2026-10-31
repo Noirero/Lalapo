@@ -57,6 +57,9 @@ jobs:
         id: unit_tests
         run: ./gradlew testDebugUnitTest
 
+      - name: Verify category Sets legacy SQLite migration fixtures
+        run: python3 scripts/test_category_sets_migration.py
+
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 
