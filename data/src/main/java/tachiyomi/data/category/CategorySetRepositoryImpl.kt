@@ -39,15 +39,15 @@ class CategorySetRepositoryImpl(
             val existing = getSets()
             require(existing.none { it.name.trim().equals(normalized, ignoreCase = true) }) { "Duplicate Set name" }
             val now = System.currentTimeMillis()
+            val syncKey = UUID.randomUUID().toString()
             database.category_setsQueries.insertSet(
-                syncKey = UUID.randomUUID().toString(),
+                syncKey = syncKey,
                 name = normalized,
                 sort = (existing.maxOfOrNull { it.order } ?: -1L) + 1L,
                 createdAt = now,
                 updatedAt = now,
             )
-            createdId = database.category_setsQueries.getSets().awaitAsList()
-                .first { it.name == normalized }. _id
+            createdId = database.category_setsQueries.getSetBySyncKey(syncKey).awaitAsOne()._id
         }
         return createdId
     }
