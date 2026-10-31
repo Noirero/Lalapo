@@ -36,7 +36,7 @@ Baseline: Lalapo main `d6676fc01178e5d355dadf065806264d9c43ba26`; Miyorare main 
 | Default Set and legacy category backfill | Implemented + tested | `143.sqm` plus targeted SQLite migration fixture |
 | Deletion impact and active-set fallback | Implemented | Nonempty Sets move categories before delete; last Set guarded; missing/deleted active key repairs to a valid fallback |
 | Favorites filtering/navigation by Set | Implemented | Library observes categories for the active Set and exposes a direct Set selector |
-| Set backup/restore with remapped category IDs | Implemented + tested | Protobuf field 507; restore remaps backup category IDs and preserves empty Sets |
+| Set backup/restore with remapped category IDs | Implemented + tested | Protobuf field 507; restore remaps category IDs and preserves Set metadata/order and empty Sets |
 | Import/export/sync parity | Out of scope / unverified | No parity claim in PR #19 |
 | Validation, duplicate titles, empty state | Implemented where in scope | Repository rejects blank/duplicate Set names; empty Sets supported; physical-device UI validation remains separate |
 
@@ -47,7 +47,7 @@ Baseline: Lalapo main `d6676fc01178e5d355dadf065806264d9c43ba26`; Miyorare main 
 3. Assign every non-system category to exactly one valid Set; never assign the system category as a user category.
 4. Prevent deletion of the final Set; implement explicit move-or-delete semantics with transactionality for nonempty Sets.
 5. Persist active Set using stable identity and recover from missing/deleted selections.
-6. Extend protobuf backup compatibly; old backups must restore into the default Set, and restored categories must be remapped to valid IDs before assignments.
+6. Extend protobuf backup compatibly; old backups restore into the default Set when present (or the first valid Set if that default was deleted), and restored categories must be remapped to valid IDs before assignments.
 7. Verify actual SQLDelight migration version/path and generated API before committing schema or Kotlin implementation.
 
 ## Remaining verification
