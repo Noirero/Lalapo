@@ -12,7 +12,7 @@ INSERT INTO category_sets(_id, sync_key, name, sort, created_at, updated_at)
 VALUES (1, 'lalapo:category-set:default', 'Utama', 0, 0, 0);
 
 CREATE TABLE category_set_assignments (
-    category_id INTEGER NOT NULL PRIMARY KEY REFERENCES categories(_id) ON DELETE CASCADE,
+    category_id INTEGER NOT NULL PRIMARY KEY CHECK (category_id > 0) REFERENCES categories(_id) ON DELETE CASCADE,
     set_id INTEGER NOT NULL REFERENCES category_sets(_id) ON DELETE RESTRICT
 );
 
@@ -57,3 +57,13 @@ UPDATE category_set_assignments SET set_id = :targetSetId WHERE set_id = :source
 
 deleteSet:
 DELETE FROM category_sets WHERE _id = :setId;
+
+getCategorySet:
+SELECT set_id FROM category_set_assignments WHERE category_id = :categoryId;
+
+countCategoriesInSet:
+SELECT count(*) FROM category_set_assignments WHERE set_id = :setId;
+
+getSetCount:
+SELECT count(*) FROM category_sets;
+
