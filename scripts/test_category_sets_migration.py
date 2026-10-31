@@ -118,6 +118,25 @@ class Migration143Test(unittest.TestCase):
         self.assertEqual(2, len(triggers), "Expected both production onOpen triggers")
         for trigger in triggers:
             fresh.executescript(trigger)
+        def normalized_triggers(db):
+            rows = db.execute(
+                "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' ORDER BY name"
+            ).fetchall()
+            return {
+                name: re.sub(
+                    r"\\s+", " ",
+                    definition.replace("IF NOT EXISTS ", "").strip(),
+                ).lower()
+                for name, definition in rows
+                if name in {"category_set_auto_assign", "category_set_prevent_last_delete"}
+            }
+
+        self.assertEqual(normalized_triggers(fresh), normalized_triggers(upgraded))
+        for db in (fresh, upgraded):
+            # Reopen-equivalent initialization: the same CREATE statements must be idempotent.
+            for trigger in triggers:
+                db.executescript(trigger)
+            self.assertEqual(2, len(normalized_triggers(db)))
         for db in (fresh, upgraded):
             db.execute("INSERT INTO categories VALUES (5, 'New', 0, 0, 0)")
             self.assertEqual((5, 1), db.execute(
