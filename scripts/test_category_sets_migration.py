@@ -99,6 +99,36 @@ class Migration143Test(unittest.TestCase):
         ).fetchall())
         self.assertEqual(2, db.execute("SELECT count(*) FROM category_sets").fetchone()[0])
 
+    def test_fresh_schema_matches_upgrade_constraints(self):
+        # Extract the production CREATE TABLE/INDEX statements from SQLDelight .sq.
+        # Trigger DDL comes from the production onOpen callback.
+        import re
+        root = Path(__file__).resolve().parents[1]
+        schema = (root / "data/src/main/sqldelight/tachiyomi/data/category_sets.sq").read_text()
+        bindings = (root / "app/src/main/java/mihon/app/di/AppBindings.kt").read_text()
+        fresh = old_database(False)
+        upgraded = old_database(False)
+        self.migrate(upgraded)
+        for match in re.finditer(r"CREATE (?:TABLE|INDEX) [\\s\\S]*?;", schema):
+            fresh.execute(match.group())
+        fresh.execute(
+            "INSERT INTO category_sets VALUES (1, 'lalapo:category-set:default', 'Utama', 0, 0, 0)"
+        )
+        triggers = re.findall(r'"""(\\s*CREATE TRIGGER IF NOT EXISTS[\\s\\S]*?)"""', bindings)
+        self.assertEqual(2, len(triggers), "Expected both production onOpen triggers")
+        for trigger in triggers:
+            fresh.executescript(trigger)
+        for db in (fresh, upgraded):
+            db.execute("INSERT INTO categories VALUES (5, 'New', 0, 0, 0)")
+            self.assertEqual((5, 1), db.execute(
+                "SELECT category_id, set_id FROM category_set_assignments WHERE category_id = 5"
+            ).fetchone())
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("DELETE FROM category_sets WHERE _id = 1")
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("INSERT INTO category_set_assignments VALUES (0, 1)")
+            self.assertEqual([], db.execute("PRAGMA foreign_key_check").fetchall())
+
     def test_empty_user_library(self):
         db = old_database(False)
         self.migrate(db)
