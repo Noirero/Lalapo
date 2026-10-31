@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.create
 
 import android.content.Context
 import android.net.Uri
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -32,10 +33,10 @@ import okio.gzip
 import okio.sink
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.Database
 import tachiyomi.domain.anime.interactor.GetFavorites
 import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.anime.repository.AnimeRepository
-import tachiyomi.data.Database
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.i18n.MR
 import java.io.FileOutputStream
@@ -151,7 +152,7 @@ class BackupCreator(
     internal suspend fun backupCategorySets(options: BackupOptions): List<BackupCategorySet> {
         if (!options.categories) return emptyList()
         val assignments = database.category_setsQueries.getSetAssignments()
-            .executeAsList()
+            .awaitAsList()
             .groupBy({ it.set_id }, { it.category_id })
         return database.category_setsQueries.getSets().executeAsList().map {
             BackupCategorySet(it.sync_key, it.name, it.sort, assignments[it._id].orEmpty())
