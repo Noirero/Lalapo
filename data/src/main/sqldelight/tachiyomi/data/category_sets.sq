@@ -19,30 +19,6 @@ CREATE TABLE category_set_assignments (
 CREATE INDEX category_set_assignments_set_id ON category_set_assignments(set_id);
 
 -- System category (ID 0) is not assigned to a user Set.
-CREATE TRIGGER category_set_assignment_guard_insert BEFORE INSERT ON category_set_assignments
-BEGIN
-    SELECT CASE WHEN NEW.category_id <= 0 THEN RAISE(ABORT, 'Cannot assign system category') END;
-END;
-
-CREATE TRIGGER category_set_assignment_guard_update BEFORE UPDATE ON category_set_assignments
-BEGIN
-    SELECT CASE WHEN NEW.category_id <= 0 THEN RAISE(ABORT, 'Cannot assign system category') END;
-END;
-
-CREATE TRIGGER category_set_auto_assign AFTER INSERT ON categories WHEN NEW._id > 0
-BEGIN
-    INSERT INTO category_set_assignments(category_id, set_id)
-    SELECT NEW._id, _id FROM category_sets ORDER BY sort, _id LIMIT 1;
-    SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM category_set_assignments WHERE category_id = NEW._id)
-        THEN RAISE(ABORT, 'Missing category Set') END;
-END;
-
-CREATE TRIGGER category_set_prevent_last_delete BEFORE DELETE ON category_sets
-WHEN (SELECT count(*) FROM category_sets) <= 1
-BEGIN
-    SELECT RAISE(ABORT, 'Cannot delete last Set');
-END;
-
 getSets:
 SELECT * FROM category_sets ORDER BY sort, _id;
 
