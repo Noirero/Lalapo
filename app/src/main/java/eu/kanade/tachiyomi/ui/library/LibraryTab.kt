@@ -4,15 +4,22 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -93,6 +100,9 @@ data object LibraryTab : Tab {
         val viewModel = metroViewModel<LibraryViewModel>()
         val settingsViewModel = metroViewModel<LibrarySettingsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val sets by viewModel.categorySets.collectAsStateWithLifecycle()
+        val activeSetKey by viewModel.activeSetKey.collectAsStateWithLifecycle()
+        var setMenuExpanded by remember { mutableStateOf(false) }
 
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -150,6 +160,36 @@ data object LibraryTab : Tab {
                     defaultCategoryTitle = stringResource(MR.strings.label_default),
                     page = state.coercedActiveCategoryIndex,
                 )
+                Column {
+                    if (sets.isNotEmpty()) {
+                        androidx.compose.foundation.layout.Box {
+                            val selectedSet = sets.firstOrNull { it.syncKey == activeSetKey } ?: sets.first()
+                            TextButton(onClick = { setMenuExpanded = true }) {
+                                Text("Set: ${selectedSet.name}")
+                            }
+                            DropdownMenu(
+                                expanded = setMenuExpanded,
+                                onDismissRequest = { setMenuExpanded = false },
+                            ) {
+                                sets.forEach { set ->
+                                    DropdownMenuItem(
+                                        text = { Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name) },
+                                        onClick = {
+                                            setMenuExpanded = false
+                                            viewModel.selectSet(set.syncKey)
+                                        },
+                                    )
+                                }
+                                DropdownMenuItem(
+                                    text = { Text("Kelola Set") },
+                                    onClick = {
+                                        setMenuExpanded = false
+                                        navigator.push(CategoryScreen())
+                                    },
+                                )
+                            }
+                        }
+                    }
                 LibraryToolbar(
                     hasActiveFilters = state.hasActiveFilters,
                     selectedCount = state.selection.size,
@@ -165,7 +205,7 @@ data object LibraryTab : Tab {
                     onSearchQueryChange = viewModel::search,
                     // For scroll overlay when no tab
                     scrollBehavior = scrollBehavior.takeIf { !state.showCategoryTabs },
-                )
+                )                }
             },
             bottomBar = {
                 LibraryBottomActionMenu(
