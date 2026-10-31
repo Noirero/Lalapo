@@ -154,7 +154,7 @@ class BackupCreator(
         val assignments = database.category_setsQueries.getSetAssignments()
             .awaitAsList()
             .groupBy({ it.set_id }, { it.category_id })
-        return database.category_setsQueries.getSets().executeAsList().map {
+        return database.category_setsQueries.getSets().awaitAsList().map {
             BackupCategorySet(it.sync_key, it.name, it.sort, assignments[it._id].orEmpty())
         }
     }
