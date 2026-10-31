@@ -1,0 +1,85 @@
+package eu.kanade.tachiyomi.data.backup.restore.restorers
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCategorySet
+import kotlinx.coroutines.runBlocking
+import mihon.app.di.AppBindings
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import tachiyomi.core.common.preference.InMemoryPreferenceStore
+import tachiyomi.data.category.CategoryRepositoryImpl
+import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.library.service.LibraryPreferences
+
+@RunWith(AndroidJUnit4::class)
+class CategoriesRestorerIntegrationTest {
+    private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
+    private lateinit var driver: app.cash.sqldelight.db.SqlDriver
+    private lateinit var database: tachiyomi.data.Database
+    private lateinit var restorer: CategoriesRestorer
+
+    @Before
+    fun setUp() {
+        context.deleteDatabase("tachiyomi.animedb")
+        driver = AppBindings.providesSqlDriver(context)
+        database = AppBindings.providesDatabase(driver)
+        restorer = CategoriesRestorer(
+            database,
+            GetCategories(CategoryRepositoryImpl(database)),
+            LibraryPreferences(InMemoryPreferenceStore()),
+        )
+    }
+
+    @After
+    fun tearDown() {
+        driver.close()
+        context.deleteDatabase("tachiyomi.animedb")
+    }
+
+    @Test
+    fun categoryIdsAreRemappedAndRepeatedRestoreIsIdempotent() = runBlocking {
+        database.categoriesQueries.insert("Existing", 0, 0)
+        val existingId = database.categoriesQueries.getCategories().awaitAsList()
+            .first { it.name == "Existing" }.id
+        val categories = listOf(
+            BackupCategory("Existing", 0, 900),
+            BackupCategory("Restored", 1, 901),
+        )
+        val sets = listOf(BackupCategorySet("backup:set:a", "Imported", 0, listOf(900, 901)))
+        restorer(categories, sets)
+        val restoredId = database.categoriesQueries.getCategories().awaitAsList()
+            .first { it.name == "Restored" }.id
+        assertTrue(restoredId != 901L)
+        assertEquals(existingId, database.categoriesQueries.getCategories().awaitAsList()
+            .first { it.name == "Existing" }.id)
+        val firstSets = database.category_setsQueries.getSets().awaitAsList()
+        val firstAssignments = database.category_setsQueries.getSetAssignments().awaitAsList()
+        val imported = firstSets.single { it.sync_key == "backup:set:a" }
+        assertEquals(setOf(existingId, restoredId), firstAssignments
+            .filter { it.set_id == imported._id }.map { it.category_id }.toSet())
+        restorer(categories, sets)
+        assertEquals(firstSets.map { it.sync_key to it.sort },
+            database.category_setsQueries.getSets().awaitAsList().map { it.sync_key to it.sort })
+        assertEquals(firstAssignments.map { it.category_id to it.set_id },
+            database.category_setsQueries.getSetAssignments().awaitAsList().map { it.category_id to it.set_id })
+    }
+
+    @Test
+    fun oldBackupWithoutSetsPreservesDefaultAssignments() = runBlocking {
+        restorer(listOf(BackupCategory("Legacy", 0, 777)), emptyList())
+        val category = database.categoriesQueries.getCategories().awaitAsList()
+            .single { it.name == "Legacy" }
+        val assignment = database.category_setsQueries.getSetAssignments().awaitAsList()
+            .single { it.category_id == category.id }
+        assertEquals("lalapo:category-set:default",
+            database.category_setsQueries.getSets().awaitAsList()
+                .single { it._id == assignment.set_id }.sync_key)
+    }
+}
