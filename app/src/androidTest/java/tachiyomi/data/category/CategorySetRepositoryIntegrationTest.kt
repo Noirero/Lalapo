@@ -52,10 +52,10 @@ class CategorySetRepositoryIntegrationTest {
     }
 
     @Test
-    fun missingPersistedSelectionFallsBackAndRepairsPreference() = runBlocking {
+    fun observingSetsRepairsMissingPersistedSelection() = runBlocking {
         preferences.activeCategorySetKey.set("missing:set")
 
-        repository.observeVisibleCategoriesInActiveSet().first()
+        repository.observeSets().first()
 
         assertEquals(
             "lalapo:category-set:default",
