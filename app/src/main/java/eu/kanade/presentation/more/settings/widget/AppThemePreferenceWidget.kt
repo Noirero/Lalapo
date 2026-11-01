@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.domain.ui.model.DesignStyle
 import eu.kanade.presentation.anime.components.AnimeCover
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.util.system.DeviceUtil
@@ -122,6 +123,7 @@ private fun AppThemesList(
                     TachiyomiTheme(
                         appTheme = appTheme,
                         amoled = amoled,
+                        designStyle = DesignStyle.CLASSIC,
                     ) {
                         AppThemePreviewItem(
                             selected = currentTheme == appTheme,

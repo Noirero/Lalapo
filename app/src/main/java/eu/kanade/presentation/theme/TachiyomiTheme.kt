@@ -12,6 +12,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.domain.ui.model.DesignStyle
+import eu.kanade.domain.ui.model.ModernThemePreset
 import eu.kanade.presentation.theme.colorscheme.BaseColorScheme
 import eu.kanade.presentation.theme.colorscheme.CatppuccinColorScheme
 import eu.kanade.presentation.theme.colorscheme.CloudflareColorScheme
@@ -40,7 +42,8 @@ import mihon.app.di.appGraph
 fun TachiyomiTheme(
     appTheme: AppTheme? = null,
     amoled: Boolean? = null,
-    modernAppearance: Boolean? = null,
+    designStyle: DesignStyle? = null,
+    modernThemePreset: ModernThemePreset? = null,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -48,7 +51,8 @@ fun TachiyomiTheme(
     BaseTachiyomiTheme(
         appTheme = appTheme ?: uiPreferences.appTheme.get(),
         isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),
-        modernAppearance = modernAppearance ?: uiPreferences.modernAppearance.get(),
+        designStyle = designStyle ?: uiPreferences.designStyle.get(),
+        modernThemePreset = modernThemePreset ?: uiPreferences.modernThemePreset.get(),
         content = content,
     )
 }
@@ -57,31 +61,48 @@ fun TachiyomiTheme(
 fun TachiyomiPreviewTheme(
     appTheme: AppTheme = AppTheme.DEFAULT,
     isAmoled: Boolean = false,
-    modernAppearance: Boolean = false,
+    designStyle: DesignStyle = DesignStyle.CLASSIC,
+    modernThemePreset: ModernThemePreset = ModernThemePreset.LALAPO,
     content: @Composable () -> Unit,
-) = BaseTachiyomiTheme(appTheme, isAmoled, modernAppearance, content)
+) = BaseTachiyomiTheme(appTheme, isAmoled, designStyle, modernThemePreset, content)
 
 @Composable
 private fun BaseTachiyomiTheme(
     appTheme: AppTheme,
     isAmoled: Boolean,
-    modernAppearance: Boolean,
+    designStyle: DesignStyle,
+    modernThemePreset: ModernThemePreset,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    val colorScheme = remember(appTheme, isDark, isAmoled) {
-        getThemeColorScheme(
-            context = context,
-            appTheme = appTheme,
+    val colorScheme = remember(context, appTheme, isDark, isAmoled, designStyle, modernThemePreset) {
+        resolveDesignStyleColorScheme(
+            designStyle = designStyle,
+            modernThemePreset = modernThemePreset,
             isDark = isDark,
             isAmoled = isAmoled,
+            classicResolver = {
+                getThemeColorScheme(
+                    context = context,
+                    appTheme = appTheme,
+                    isDark = isDark,
+                    isAmoled = isAmoled,
+                )
+            },
         )
     }
-    val modernVisualPalette = remember(colorScheme, modernAppearance) {
+    val modernDefinition = if (designStyle == DesignStyle.MODERN) {
+        ModernThemeDefinitions.find(modernThemePreset) ?: ModernThemeDefinitions.Lalapo
+    } else {
+        null
+    }
+    val modernVisualPalette = remember(colorScheme, modernDefinition, isDark, isAmoled) {
         resolveModernVisualPalette(
             colorScheme = colorScheme,
-            enabled = modernAppearance,
+            enabled = modernDefinition != null,
+            definition = modernDefinition,
+            isAmoled = isDark && isAmoled,
         )
     }
 

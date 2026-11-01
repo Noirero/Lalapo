@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.DesignStyle
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.more.settings.Preference
@@ -52,8 +53,8 @@ object SettingsAppearanceScreen : SearchableSettings {
         val amoledPref = uiPreferences.themeDarkAmoled
         val amoled by amoledPref.collectAsState()
 
-        val modernAppearancePref = uiPreferences.modernAppearance
-        val modernAppearance by modernAppearancePref.collectAsState()
+        val designStylePref = uiPreferences.designStyle
+        val designStyle by designStylePref.collectAsState()
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_theme),
@@ -90,11 +91,11 @@ object SettingsAppearanceScreen : SearchableSettings {
                     title = stringResource(AMMR.strings.am_modern_appearance),
                 ) {
                     ModernAppearancePreferenceWidget(
-                        checked = modernAppearance,
+                        checked = designStyle == DesignStyle.MODERN,
                         appTheme = appTheme,
                         amoled = amoled,
                         onCheckedChanged = {
-                            modernAppearancePref.set(it)
+                            designStylePref.set(if (it) DesignStyle.MODERN else DesignStyle.CLASSIC)
                             (context as? Activity)?.let { activity -> ActivityCompat.recreate(activity) }
                         },
                     )

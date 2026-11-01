@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.domain.ui.model.DesignStyle
 import eu.kanade.presentation.components.ModernMetadataChip
 import eu.kanade.presentation.components.ModernPrimaryButton
 import eu.kanade.presentation.components.ModernSegmentedButton
@@ -34,7 +35,7 @@ internal fun ModernAppearancePreferenceWidget(
                 TachiyomiTheme(
                     appTheme = appTheme,
                     amoled = amoled,
-                    modernAppearance = checked,
+                    designStyle = if (checked) DesignStyle.MODERN else DesignStyle.CLASSIC,
                 ) {
                     ModernAppearancePreview()
                 }

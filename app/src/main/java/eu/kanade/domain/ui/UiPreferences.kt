@@ -4,6 +4,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.domain.ui.model.DesignStyle
+import eu.kanade.domain.ui.model.ModernThemePreset
 import eu.kanade.domain.ui.model.StartScreen
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
@@ -35,7 +37,15 @@ class UiPreferences(
 
     val themeDarkAmoled: Preference<Boolean> = preferenceStore.getBoolean("pref_theme_dark_amoled_key", false)
 
-    val modernAppearance: Preference<Boolean> = preferenceStore.getBoolean("pref_modern_appearance", false)
+    val designStyle: Preference<DesignStyle> = preferenceStore.getEnum("pref_design_style", DesignStyle.CLASSIC)
+
+    val modernThemePreset: Preference<ModernThemePreset> = preferenceStore.getEnum(
+        "pref_modern_theme_preset",
+        ModernThemePreset.LALAPO,
+    )
+
+    // Read only by the formal preference migration; never the active appearance selector.
+    internal val legacyModernAppearance: Preference<Boolean> = preferenceStore.getBoolean("pref_modern_appearance", false)
 
     val relativeTime: Preference<Boolean> = preferenceStore.getBoolean("relative_time_v2", true)
 

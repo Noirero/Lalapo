@@ -114,6 +114,8 @@ internal fun ModernVisualPalette.resolveAccentPalette(
 internal fun resolveModernVisualPalette(
     colorScheme: ColorScheme,
     enabled: Boolean,
+    definition: ModernThemeDefinition? = null,
+    isAmoled: Boolean = false,
 ): ModernVisualPalette {
     if (!enabled) return ModernVisualPalette.Standard
 
@@ -136,7 +138,7 @@ internal fun resolveModernVisualPalette(
         fallback = colorScheme.primary,
     )
 
-    return ModernVisualPalette(
+    val palette = ModernVisualPalette(
         isModern = true,
         backgroundGradientStart = ensureBackgroundContrast(
             background = lerp(
@@ -215,17 +217,28 @@ internal fun resolveModernVisualPalette(
         ),
         borderHighlight = lerp(
             colorScheme.outline,
-            colorScheme.secondary,
+            definition?.secondarySeed ?: colorScheme.secondary,
             0.22f + gradientStrength * 0.26f,
         ).copy(alpha = BALANCED_BORDER_ALPHA),
         glow = lerp(
             colorScheme.primary,
-            colorScheme.secondary,
+            definition?.tertiarySeed ?: colorScheme.secondary,
             0.34f,
         ).copy(alpha = if (isLight) LIGHT_GLOW_ALPHA else BALANCED_GLOW_ALPHA),
         accentGradientContentColor = accentContentColor,
         glassSurfaceAlpha = if (isLight) LIGHT_GLASS_SURFACE_ALPHA else DARK_GLASS_SURFACE_ALPHA,
     )
+    // A pure-black body is an invariant, not a user-adjustable decorative gradient.
+    return if (isAmoled) {
+        palette.copy(
+            backgroundGradientStart = Color.Black,
+            backgroundGradientMiddle = Color.Black,
+            backgroundGradientEnd = Color.Black,
+            glow = Color.Transparent,
+        )
+    } else {
+        palette
+    }
 }
 
 private fun bestReadableContentColor(
