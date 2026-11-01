@@ -114,23 +114,23 @@ internal fun ModernGlobalBackground(modifier: Modifier = Modifier) {
 }
 
 private object ModernBlurredWallpaperCache {
-    private const val BlurWidth = 135
-    private const val BlurHeight = 301
-    private const val BlurRadius = 7
-    private const val BlurPasses = 2
-    private val CACHE = LruCache<Int, Bitmap>(2)
+    private const val BLUR_WIDTH = 135
+    private const val BLUR_HEIGHT = 301
+    private const val BLUR_RADIUS = 7
+    private const val BLUR_PASSES = 2
+    private val cache = LruCache<Int, Bitmap>(2)
 
     fun getOrCreate(resources: Resources, @DrawableRes resourceId: Int): Bitmap? {
-        synchronized(CACHE) {
-            CACHE.get(resourceId)?.let { return it }
+        synchronized(cache) {
+            cache.get(resourceId)?.let { return it }
         }
         val decoded = decodeSampled(resources, resourceId) ?: return null
-        val scaled = Bitmap.createScaledBitmap(decoded, BlurWidth, BlurHeight, true)
+        val scaled = Bitmap.createScaledBitmap(decoded, BLUR_WIDTH, BLUR_HEIGHT, true)
         if (scaled !== decoded) decoded.recycle()
-        val blurred = boxBlur(scaled, BlurRadius, BlurPasses)
+        val blurred = boxBlur(scaled, BLUR_RADIUS, BLUR_PASSES)
         if (blurred !== scaled) scaled.recycle()
-        synchronized(CACHE) {
-            CACHE.put(resourceId, blurred)
+        synchronized(cache) {
+            cache.put(resourceId, blurred)
         }
         return blurred
     }
@@ -141,8 +141,8 @@ private object ModernBlurredWallpaperCache {
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
 
         var sample = 1
-        val targetWidth = BlurWidth * 2
-        val targetHeight = BlurHeight * 2
+        val targetWidth = BLUR_WIDTH * 2
+        val targetHeight = BLUR_HEIGHT * 2
         while (
             bounds.outWidth / (sample * 2) >= targetWidth &&
             bounds.outHeight / (sample * 2) >= targetHeight

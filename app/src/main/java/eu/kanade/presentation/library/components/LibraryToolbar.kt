@@ -349,7 +349,11 @@ private fun LibraryRegularToolbar(
                     Text(
                         text = "Koleksi anime kamu",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (useMiyorareVisuals) glass.contentMuted else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (useMiyorareVisuals) {
+                            glass.contentMuted
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
