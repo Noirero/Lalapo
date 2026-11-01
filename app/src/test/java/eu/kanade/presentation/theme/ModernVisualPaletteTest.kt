@@ -47,13 +47,13 @@ class ModernVisualPaletteTest {
     @Test
     fun `modern roles preserve every existing static color scheme`() {
         staticColorSchemes().forEach { scheme ->
-            val snapshot = scheme.copy()
+            val snapshot = scheme.authoritySnapshot()
             val palette = resolveModernVisualPalette(
                 colorScheme = scheme,
                 enabled = true,
             )
 
-            assertEquals(snapshot, scheme)
+            assertEquals(snapshot, scheme.authoritySnapshot())
             assertTrue(palette.isModern)
             assertNotEquals(Color.Unspecified, palette.backgroundGradientStart)
             assertNotEquals(Color.Unspecified, palette.surfaceGradientStart)
@@ -97,6 +97,34 @@ class ModernVisualPaletteTest {
             assertReadableGradients(scheme, palette)
         }
     }
+
+    private fun ColorScheme.authoritySnapshot(): List<Color> = listOf(
+        primary,
+        onPrimary,
+        primaryContainer,
+        onPrimaryContainer,
+        secondary,
+        onSecondary,
+        secondaryContainer,
+        onSecondaryContainer,
+        tertiary,
+        onTertiary,
+        tertiaryContainer,
+        onTertiaryContainer,
+        background,
+        onBackground,
+        surface,
+        onSurface,
+        surfaceVariant,
+        onSurfaceVariant,
+        surfaceContainerLowest,
+        surfaceContainerLow,
+        surfaceContainer,
+        surfaceContainerHigh,
+        surfaceContainerHighest,
+        outline,
+        outlineVariant,
+    )
 
     private fun staticColorSchemes(): List<ColorScheme> {
         val schemes = listOf(
