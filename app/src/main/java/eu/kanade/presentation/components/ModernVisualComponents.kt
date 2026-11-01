@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRowScope
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
@@ -21,7 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.theme.LocalCinematicAccentPalette
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.resolveAccentPalette
 
 /**
  * Material-first presentation primitives for the optional Modern appearance.
@@ -38,12 +43,12 @@ internal fun Modifier.modernSurfaceTreatment(
     val palette = LocalModernVisualPalette.current
     if (!palette.isModern) return this
 
+    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
     val brush = if (selected) {
         Brush.horizontalGradient(
             listOf(
-                palette.accentGradientStart,
-                palette.accentGradientMiddle,
-                palette.accentGradientEnd,
+                accent.activeGradientStart,
+                accent.activeGradientEnd,
             ),
         )
     } else {
@@ -62,7 +67,7 @@ internal fun Modifier.modernSurfaceTreatment(
             if (drawBorder) {
                 Modifier.border(
                     width = 1.dp,
-                    color = if (selected) palette.glow else palette.borderHighlight,
+                    color = if (selected) accent.glow else accent.borderHighlight,
                     shape = shape,
                 )
             } else {
@@ -74,14 +79,15 @@ internal fun Modifier.modernSurfaceTreatment(
 @Composable
 internal fun Modifier.modernBorderHighlight(
     shape: Shape,
-    selected: Boolean = false,
+    emphasized: Boolean = false,
 ): Modifier {
     val palette = LocalModernVisualPalette.current
     if (!palette.isModern) return this
 
+    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
     return border(
         width = 1.dp,
-        color = if (selected) palette.glow else palette.borderHighlight,
+        color = if (emphasized) accent.glow else accent.borderHighlight,
         shape = shape,
     )
 }
@@ -93,10 +99,11 @@ internal fun Modifier.modernCoverTreatment(
     val palette = LocalModernVisualPalette.current
     if (!palette.isModern) return this
 
+    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
     return clip(shape)
         .border(
             width = 1.dp,
-            color = palette.borderHighlight,
+            color = accent.borderHighlight,
             shape = shape,
         )
 }
@@ -110,6 +117,7 @@ internal fun ModernSurface(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val palette = LocalModernVisualPalette.current
+    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
     val fallbackColor = if (selected) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
@@ -130,7 +138,7 @@ internal fun ModernSurface(
         shape = shape,
         color = if (palette.isModern) Color.Transparent else fallbackColor,
         contentColor = if (selected && palette.isModern) {
-            palette.accentGradientContentColor
+            accent.accentGradientContentColor
         } else if (selected) {
             MaterialTheme.colorScheme.onPrimaryContainer
         } else {
@@ -162,26 +170,53 @@ internal fun ModernPrimaryButton(
         return
     }
 
+    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
     Button(
         onClick = onClick,
         modifier = modifier
             .background(
                 brush = Brush.horizontalGradient(
                     listOf(
-                        palette.accentGradientStart,
-                        palette.accentGradientMiddle,
-                        palette.accentGradientEnd,
+                        accent.accentGradientStart,
+                        accent.accentGradientMiddle,
+                        accent.accentGradientEnd,
                     ),
                 ),
                 shape = shape,
             )
-            .modernBorderHighlight(shape = shape, selected = true),
+            .modernBorderHighlight(
+                shape = shape,
+                emphasized = true,
+            ),
         enabled = true,
         shape = shape,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = palette.accentGradientContentColor,
+            contentColor = accent.accentGradientContentColor,
         ),
+        content = content,
+    )
+}
+
+@Composable
+internal fun ModernTonalButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = MaterialTheme.shapes.extraLarge,
+    content: @Composable RowScope.() -> Unit,
+) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier.then(
+            if (enabled) {
+                Modifier.modernBorderHighlight(shape = shape)
+            } else {
+                Modifier
+            },
+        ),
+        enabled = enabled,
+        shape = shape,
         content = content,
     )
 }
@@ -191,7 +226,7 @@ internal fun ModernMetadataChip(
     onClick: () -> Unit,
     label: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    selected: Boolean = false,
+    emphasized: Boolean = false,
     enabled: Boolean = true,
     shape: Shape = MaterialTheme.shapes.extraLarge,
 ) {
@@ -202,7 +237,7 @@ internal fun ModernMetadataChip(
             if (enabled) {
                 Modifier.modernBorderHighlight(
                     shape = shape,
-                    selected = selected,
+                    emphasized = emphasized,
                 )
             } else {
                 Modifier
@@ -222,22 +257,67 @@ internal fun SingleChoiceSegmentedButtonRowScope.ModernSegmentedButton(
     enabled: Boolean = true,
     label: @Composable () -> Unit,
 ) {
+    val palette = LocalModernVisualPalette.current
+    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+    val useModernSelectedTreatment = palette.isModern && enabled && selected
+
     SegmentedButton(
         selected = selected,
         onClick = onClick,
         shape = shape,
         modifier = modifier.then(
-            if (enabled && selected) {
-                Modifier.modernBorderHighlight(
-                    shape = shape,
-                    selected = true,
-                )
+            if (useModernSelectedTreatment) {
+                Modifier
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            listOf(
+                                accent.activeGradientStart,
+                                accent.activeGradientEnd,
+                            ),
+                        ),
+                        shape = shape,
+                    )
+                    .modernBorderHighlight(
+                        shape = shape,
+                        emphasized = true,
+                    )
             } else {
                 Modifier
             },
         ),
         enabled = enabled,
+        colors = if (useModernSelectedTreatment) {
+            SegmentedButtonDefaults.colors(
+                activeContainerColor = Color.Transparent,
+                activeContentColor = accent.accentGradientContentColor,
+                activeBorderColor = Color.Transparent,
+            )
+        } else {
+            SegmentedButtonDefaults.colors()
+        },
         label = label,
+    )
+}
+
+@Composable
+internal fun ModernAccentDivider(
+    modifier: Modifier = Modifier,
+    thickness: Dp = 1.dp,
+) {
+    val palette = LocalModernVisualPalette.current
+    if (!palette.isModern) {
+        HorizontalDivider(
+            modifier = modifier,
+            thickness = thickness,
+        )
+        return
+    }
+
+    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+    HorizontalDivider(
+        modifier = modifier,
+        thickness = thickness,
+        color = accent.borderHighlight,
     )
 }
 
@@ -248,19 +328,22 @@ internal fun ModernHeroBackground(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val palette = LocalModernVisualPalette.current
+    val cinematicAccent = LocalCinematicAccentPalette.current
 
     Box(modifier = modifier) {
         backgroundContent()
 
         if (palette.isModern) {
+            val gradientStart = cinematicAccent?.accentGradientStart ?: palette.backgroundGradientStart
+            val gradientMiddle = cinematicAccent?.accentGradientMiddle ?: palette.backgroundGradientMiddle
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
                             listOf(
-                                palette.backgroundGradientStart.copy(alpha = 0.18f),
-                                palette.backgroundGradientMiddle.copy(alpha = 0.30f),
+                                gradientStart.copy(alpha = 0.18f),
+                                gradientMiddle.copy(alpha = 0.30f),
                                 MaterialTheme.colorScheme.background.copy(alpha = 0.92f),
                             ),
                         ),
