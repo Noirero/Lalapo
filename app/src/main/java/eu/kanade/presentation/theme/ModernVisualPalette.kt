@@ -1,6 +1,8 @@
 package eu.kanade.presentation.theme
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -54,7 +56,60 @@ data class ModernVisualPalette(
     }
 }
 
+@Immutable
+internal data class CinematicAccentPalette(
+    val accentGradientStart: Color,
+    val accentGradientMiddle: Color,
+    val accentGradientEnd: Color,
+    val activeGradientStart: Color,
+    val activeGradientEnd: Color,
+    val borderHighlight: Color,
+    val glow: Color,
+    val accentGradientContentColor: Color,
+) {
+    companion object {
+        val Standard = CinematicAccentPalette(
+            accentGradientStart = Color.Unspecified,
+            accentGradientMiddle = Color.Unspecified,
+            accentGradientEnd = Color.Unspecified,
+            activeGradientStart = Color.Unspecified,
+            activeGradientEnd = Color.Unspecified,
+            borderHighlight = Color.Transparent,
+            glow = Color.Transparent,
+            accentGradientContentColor = Color.Unspecified,
+        )
+    }
+}
+
 internal val LocalModernVisualPalette = staticCompositionLocalOf { ModernVisualPalette.Standard }
+internal val LocalCinematicAccentPalette = staticCompositionLocalOf<CinematicAccentPalette?> { null }
+
+@Composable
+internal fun ProvideCinematicAccentPalette(
+    palette: CinematicAccentPalette?,
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalCinematicAccentPalette provides palette,
+        content = content,
+    )
+}
+
+internal fun ModernVisualPalette.resolveAccentPalette(
+    cinematicAccentPalette: CinematicAccentPalette?,
+): CinematicAccentPalette {
+    if (!isModern) return CinematicAccentPalette.Standard
+    return cinematicAccentPalette ?: CinematicAccentPalette(
+        accentGradientStart = accentGradientStart,
+        accentGradientMiddle = accentGradientMiddle,
+        accentGradientEnd = accentGradientEnd,
+        activeGradientStart = activeGradientStart,
+        activeGradientEnd = activeGradientEnd,
+        borderHighlight = borderHighlight,
+        glow = glow,
+        accentGradientContentColor = accentGradientContentColor,
+    )
+}
 
 internal fun resolveModernVisualPalette(
     colorScheme: ColorScheme,
@@ -140,15 +195,23 @@ internal fun resolveModernVisualPalette(
         accentGradientStart = accentGradientStart,
         accentGradientMiddle = accentGradientMiddle,
         accentGradientEnd = accentGradientEnd,
-        activeGradientStart = lerp(
-            colorScheme.primary,
-            colorScheme.secondary,
-            gradientStrength * 0.42f,
+        activeGradientStart = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.primary,
+                colorScheme.secondary,
+                gradientStrength * 0.42f,
+            ),
+            foreground = accentContentColor,
+            fallback = colorScheme.primary,
         ),
-        activeGradientEnd = lerp(
-            colorScheme.primary,
-            colorScheme.tertiary,
-            0.12f + gradientStrength * 0.24f,
+        activeGradientEnd = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.primary,
+                colorScheme.tertiary,
+                0.12f + gradientStrength * 0.24f,
+            ),
+            foreground = accentContentColor,
+            fallback = colorScheme.primary,
         ),
         borderHighlight = lerp(
             colorScheme.outline,
