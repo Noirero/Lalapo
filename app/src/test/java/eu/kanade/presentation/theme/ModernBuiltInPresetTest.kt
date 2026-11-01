@@ -16,18 +16,54 @@ class ModernBuiltInPresetTest {
     @Test
     fun `six visual-reference-derived identities and decorative roles are frozen`() {
         val expected = listOf(
-            Identity(ModernThemePreset.LALAPO, 0xFF485CE0, 0xFF04BBD4, 0xFFE84AAC,
-                ModernDecorativeIdentity.LALAPO_AURORA, ModernArtworkIdentity.LALAPO_AURORA),
-            Identity(ModernThemePreset.SAKURA, 0xFFC6436A, 0xFFF7A092, 0xFFFD62A2,
-                ModernDecorativeIdentity.SAKURA_BLOSSOM, ModernArtworkIdentity.SAKURA_BLOSSOM),
-            Identity(ModernThemePreset.VIOLET, 0xFF6F25C4, 0xFFA164E0, 0xFFD763F2,
-                ModernDecorativeIdentity.VIOLET_MOON_AURORA, ModernArtworkIdentity.VIOLET_MOON_AURORA),
-            Identity(ModernThemePreset.CYAN, 0xFF048DA8, 0xFF6CCEE7, 0xFF0D638B,
-                ModernDecorativeIdentity.CYAN_WATER_SKY, ModernArtworkIdentity.CYAN_WATER_SKY),
-            Identity(ModernThemePreset.EMERALD, 0xFF039B79, 0xFF7BDFC5, 0xFF0D958B,
-                ModernDecorativeIdentity.EMERALD_FOLIAGE, ModernArtworkIdentity.EMERALD_FOLIAGE),
-            Identity(ModernThemePreset.AMBER, 0xFFCE6107, 0xFFFBA916, 0xFFFDE252,
-                ModernDecorativeIdentity.AMBER_MAPLE_SUNSET, ModernArtworkIdentity.AMBER_MAPLE_SUNSET),
+            Identity(
+                ModernThemePreset.LALAPO,
+                0xFF485CE0,
+                0xFF04BBD4,
+                0xFFE84AAC,
+                ModernDecorativeIdentity.LALAPO_AURORA,
+                ModernArtworkIdentity.LALAPO_AURORA,
+            ),
+            Identity(
+                ModernThemePreset.SAKURA,
+                0xFFC6436A,
+                0xFFF7A092,
+                0xFFFD62A2,
+                ModernDecorativeIdentity.SAKURA_BLOSSOM,
+                ModernArtworkIdentity.SAKURA_BLOSSOM,
+            ),
+            Identity(
+                ModernThemePreset.VIOLET,
+                0xFF6F25C4,
+                0xFFA164E0,
+                0xFFD763F2,
+                ModernDecorativeIdentity.VIOLET_MOON_AURORA,
+                ModernArtworkIdentity.VIOLET_MOON_AURORA,
+            ),
+            Identity(
+                ModernThemePreset.CYAN,
+                0xFF048DA8,
+                0xFF6CCEE7,
+                0xFF0D638B,
+                ModernDecorativeIdentity.CYAN_WATER_SKY,
+                ModernArtworkIdentity.CYAN_WATER_SKY,
+            ),
+            Identity(
+                ModernThemePreset.EMERALD,
+                0xFF039B79,
+                0xFF7BDFC5,
+                0xFF0D958B,
+                ModernDecorativeIdentity.EMERALD_FOLIAGE,
+                ModernArtworkIdentity.EMERALD_FOLIAGE,
+            ),
+            Identity(
+                ModernThemePreset.AMBER,
+                0xFFCE6107,
+                0xFFFBA916,
+                0xFFFDE252,
+                ModernDecorativeIdentity.AMBER_MAPLE_SUNSET,
+                ModernArtworkIdentity.AMBER_MAPLE_SUNSET,
+            ),
         )
         assertEquals(expected.map { it.preset }, ModernThemeDefinitions.authoredBuiltIns.map { it.preset })
         for (entry in expected) {

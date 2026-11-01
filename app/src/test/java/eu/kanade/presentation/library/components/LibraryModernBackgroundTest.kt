@@ -28,14 +28,14 @@ class LibraryModernBackgroundTest {
                     definition = definition,
                 )
 
-            assertEquals(
-                listOf(
-                    palette.backgroundGradientStart,
-                    palette.backgroundGradientMiddle,
-                    palette.backgroundGradientEnd,
-                ),
-                modernLibraryBackgroundStops(palette),
-            )
+                assertEquals(
+                    listOf(
+                        palette.backgroundGradientStart,
+                        palette.backgroundGradientMiddle,
+                        palette.backgroundGradientEnd,
+                    ),
+                    modernLibraryBackgroundStops(palette),
+                )
                 assertTrue(modernLibraryBackgroundStops(palette)!!.all { it != Color.Unspecified })
             }
         }
