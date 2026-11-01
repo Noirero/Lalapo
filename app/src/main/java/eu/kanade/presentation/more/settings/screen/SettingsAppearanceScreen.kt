@@ -49,7 +49,7 @@ object SettingsAppearanceScreen : SearchableSettings {
                 Preference.PreferenceItem.CustomPreference(
                     title = stringResource(MR.strings.pref_app_theme),
                 ) {
-                    AppearanceSelectionWidget(uiPreferences)
+                    AppearanceSelectionWidget(uiPreferences, enableCustomEditor = true)
                 },
                 Preference.PreferenceItem.SwitchPreference(
                     preference = amoledPref,

@@ -19,8 +19,8 @@ internal fun resolveDesignStyleColorScheme(
     modernThemePreset: ModernThemePreset,
     isDark: Boolean,
     isAmoled: Boolean,
-    classicResolver: () -> ColorScheme,
     customColors: ModernCustomColors? = null,
+    classicResolver: () -> ColorScheme,
 ): ColorScheme {
     if (designStyle == DesignStyle.CLASSIC) return classicResolver()
     // Do not render Lalapo while an unsupported identity appears selected.

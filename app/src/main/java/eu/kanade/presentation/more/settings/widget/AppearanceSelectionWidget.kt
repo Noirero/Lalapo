@@ -33,7 +33,7 @@ import tachiyomi.presentation.core.util.collectAsState
 
 /** One preference owner and one selection hierarchy, reused by Settings and Onboarding. */
 @Composable
-internal fun AppearanceSelectionWidget(uiPreferences: UiPreferences) {
+internal fun AppearanceSelectionWidget(uiPreferences: UiPreferences, enableCustomEditor: Boolean = false) {
     val context = LocalContext.current
     val themeMode by uiPreferences.themeMode.collectAsState()
     val designStyle by uiPreferences.designStyle.collectAsState()
@@ -85,12 +85,26 @@ internal fun AppearanceSelectionWidget(uiPreferences: UiPreferences) {
                 value = modernPreset,
                 amoled = amoled,
                 onItemClick = { selected ->
-                    if (selected != modernPreset && ModernThemeDefinitions.find(selected) != null) {
+                    if (selected != modernPreset && (
+                            selected == ModernThemePreset.CUSTOM || ModernThemeDefinitions.find(selected) != null
+                        )
+                    ) {
                         uiPreferences.modernThemePreset.set(selected)
                         recreate()
                     }
                 },
             )
+            if (modernPreset == ModernThemePreset.CUSTOM) {
+                if (enableCustomEditor) {
+                    CustomModernColorEditor(uiPreferences = uiPreferences, onApplied = recreate)
+                } else {
+                    Text(
+                        text = "Custom uses your saved Primary color. Edit colors later in Appearance Settings.",
+                        modifier = Modifier.padding(horizontal = PrefsHorizontalPadding, vertical = 8.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         }
     }
 }
@@ -162,8 +176,11 @@ private fun ModernThemePreferenceWidget(
     amoled: Boolean,
     onItemClick: (ModernThemePreset) -> Unit,
 ) {
-    // Future authored identities become eligible here; unauthored entries cannot be selected.
-    val authored = remember { ModernThemePreset.entries.filter { ModernThemeDefinitions.find(it) != null } }
+    val authored = remember {
+        ModernThemePreset.entries.filter {
+            it == ModernThemePreset.CUSTOM || ModernThemeDefinitions.find(it) != null
+        }
+    }
     LazyRow(
         contentPadding = PaddingValues(horizontal = PrefsHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
