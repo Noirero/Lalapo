@@ -8,6 +8,7 @@ import eu.kanade.domain.ui.model.DesignStyle
 import eu.kanade.domain.ui.model.ModernThemePreset
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
+import tachiyomi.core.common.preference.Preference
 
 /**
  * Always eligible on a version upgrade: Lalapo build numbers may skip individual values.
@@ -21,19 +22,31 @@ class ModernAppearanceMigration(
     override val version: Float = Migration.ALWAYS
 
     override suspend fun invoke(migrationContext: MigrationContext): Boolean {
-        val legacy = uiPreferences.legacyModernAppearance
-        if (!legacy.isSet()) return true
-
-        if (!uiPreferences.designStyle.isSet()) {
-            val modern = legacy.get()
-            uiPreferences.designStyle.set(if (modern) DesignStyle.MODERN else DesignStyle.CLASSIC)
-            if (modern && !uiPreferences.modernThemePreset.isSet()) {
-                uiPreferences.modernThemePreset.set(ModernThemePreset.LALAPO)
-            }
-        }
-
-        // Delete last so a partially interrupted migration is safe to retry.
-        legacy.delete()
+        migrateLegacyModernAppearance(
+            legacy = uiPreferences.legacyModernAppearance,
+            designStyle = uiPreferences.designStyle,
+            modernPreset = uiPreferences.modernThemePreset,
+        )
         return true
     }
+}
+
+/** Pure preference-level migration, shared with deterministic unit coverage. */
+internal fun migrateLegacyModernAppearance(
+    legacy: Preference<Boolean>,
+    designStyle: Preference<DesignStyle>,
+    modernPreset: Preference<ModernThemePreset>,
+) {
+    if (!legacy.isSet()) return
+
+    if (!designStyle.isSet()) {
+        val modern = legacy.get()
+        designStyle.set(if (modern) DesignStyle.MODERN else DesignStyle.CLASSIC)
+        if (modern && !modernPreset.isSet()) {
+            modernPreset.set(ModernThemePreset.LALAPO)
+        }
+    }
+
+    // Delete last so a partially interrupted migration is safe to retry.
+    legacy.delete()
 }
