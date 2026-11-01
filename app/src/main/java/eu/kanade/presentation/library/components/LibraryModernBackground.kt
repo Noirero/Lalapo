@@ -6,8 +6,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernVisualPalette
+import eu.kanade.presentation.theme.modernIdentityMotif
 
 /** A single, static decoration behind the existing Pustaka layout and pager. */
 @Composable
@@ -15,7 +17,10 @@ internal fun Modifier.modernLibraryBackground(): Modifier {
     val palette = LocalModernVisualPalette.current
     val stops = remember(palette) { modernLibraryBackgroundStops(palette) } ?: return this
     val brush = remember(stops) { Brush.verticalGradient(stops) }
-    return background(brush)
+    val identity = LocalModernArtworkIdentity.current
+    return background(brush).then(
+        if (identity != null) Modifier.modernIdentityMotif(identity, palette) else Modifier,
+    )
 }
 
 /**

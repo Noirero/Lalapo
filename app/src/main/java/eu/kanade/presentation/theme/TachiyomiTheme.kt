@@ -108,7 +108,10 @@ private fun BaseTachiyomiTheme(
         )
     }
 
-    CompositionLocalProvider(LocalModernVisualPalette provides modernVisualPalette) {
+    CompositionLocalProvider(
+        LocalModernVisualPalette provides modernVisualPalette,
+        LocalModernArtworkIdentity provides modernDefinition?.artworkIdentity,
+    ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
             content = content,
