@@ -154,7 +154,7 @@ private fun CustomModernColorDialog(
                             draft =
                                 draft.copy(
                                     secondaryOverride =
-                                        draft.secondaryOverride ?: customColorHex(derived.secondary),
+                                    draft.secondaryOverride ?: customColorHex(derived.secondary),
                                 )
                             role = ColorRole.SECONDARY
                         },

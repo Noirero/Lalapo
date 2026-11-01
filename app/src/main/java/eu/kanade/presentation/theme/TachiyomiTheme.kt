@@ -109,16 +109,18 @@ private fun BaseTachiyomiTheme(
             },
         )
     }
-    val modernDefinition = if (designStyle == DesignStyle.MODERN) {
-        if (modernThemePreset == ModernThemePreset.CUSTOM) {
-            ModernThemeDefinitions.custom(requireNotNull(customColors))
-        } else {
-            requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
-                "Modern preset $modernThemePreset has no authored production definition"
+    val modernDefinition = remember(designStyle, modernThemePreset, customColors) {
+        if (designStyle == DesignStyle.MODERN) {
+            if (modernThemePreset == ModernThemePreset.CUSTOM) {
+                ModernThemeDefinitions.custom(requireNotNull(customColors))
+            } else {
+                requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
+                    "Modern preset $modernThemePreset has no authored production definition"
+                }
             }
+        } else {
+            null
         }
-    } else {
-        null
     }
     val modernVisualPalette = remember(colorScheme, modernDefinition, isDark, isAmoled) {
         resolveModernVisualPalette(

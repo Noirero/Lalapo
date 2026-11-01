@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import eu.kanade.presentation.theme.CinematicAccentPalette
+import eu.kanade.presentation.theme.ModernCustomColors
 import eu.kanade.presentation.theme.ModernThemeDefinitions
 import eu.kanade.presentation.theme.ModernThemeResolver
 import eu.kanade.presentation.theme.ModernVisualPalette
@@ -122,6 +123,38 @@ class AnimeModernThemeIntegrationTest {
                 assertEquals(
                     fallback,
                     palette.resolveAccentPalette(unavailableSeeds?.let { deriveCinematicAccentPalette(it, scheme) }),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `warm cool neutral Custom themes preserve local artwork and invalid fallback`() {
+        for (input in listOf("#F57015", "#00A9EA", "#7B7B7B")) {
+            val definition = ModernThemeDefinitions.custom(ModernCustomColors.fromStored(input, "", ""))
+            for ((dark, amoled) in listOf(false to false, true to false, true to true)) {
+                val scheme = ModernThemeResolver.resolve(definition, dark, amoled)
+                val initial = scheme.snapshot()
+                val visual = resolveModernVisualPalette(
+                    colorScheme = scheme,
+                    enabled = true,
+                    definition = definition,
+                    isAmoled = dark && amoled,
+                )
+                val noArtwork = visual.resolveAccentPalette(null)
+                for (artwork in listOf(warmArtwork, coolArtwork)) {
+                    val local = deriveCinematicAccentPalette(artwork, scheme)
+                    assertEquals(local, visual.resolveAccentPalette(local))
+                    assertContrast(local.accentGradientContentColor, local.accentGradientStart)
+                    assertContrast(local.accentGradientContentColor, local.accentGradientEnd)
+                    assertEquals(initial, scheme.snapshot())
+                    assertEquals(noArtwork, visual.resolveAccentPalette(null))
+                }
+                // Failed/monochrome extraction returns no seeds and cannot mutate Custom.
+                val invalidArtwork: AnimeArtworkPaletteSeeds? = null
+                assertEquals(
+                    noArtwork,
+                    visual.resolveAccentPalette(invalidArtwork?.let { deriveCinematicAccentPalette(it, scheme) }),
                 )
             }
         }
