@@ -81,6 +81,82 @@ internal data class CinematicAccentPalette(
     }
 }
 
+@Immutable
+internal data class ModernGlassPalette(
+    val surface: Color,
+    val surfaceStrong: Color,
+    val railSurface: Color,
+    val border: Color,
+    val borderStrong: Color,
+    val selectedSurface: Color,
+    val selectedBorder: Color,
+    val innerHighlight: Color,
+    val glow: Color,
+    val selectedGlow: Color,
+    val cardGlow: Color,
+    val content: Color,
+    val contentMuted: Color,
+)
+
+/**
+ * Miyorare-derived luminous glass roles resolved from Lalapo's canonical Material scheme.
+ * This is presentation-only: preset identity and semantic Material colors remain owned by the
+ * existing Modern theme resolver.
+ */
+internal fun ModernVisualPalette.resolveGlassPalette(colorScheme: ColorScheme): ModernGlassPalette {
+    val isLight = colorScheme.background.luminance() >= 0.5f
+    val luminousPrimary = if (isLight) {
+        lerp(colorScheme.primary, Color.White, 0.10f)
+    } else {
+        lerp(colorScheme.primary, Color.White, 0.22f)
+    }
+    val luminousAccent = if (isLight) {
+        lerp(colorScheme.primary, colorScheme.secondary, 0.38f)
+    } else {
+        lerp(lerp(colorScheme.primary, colorScheme.secondary, 0.32f), Color.White, 0.20f)
+    }
+    val hotEdge = lerp(luminousAccent, Color.White, if (isLight) 0.28f else 0.48f)
+    val selectedEdge = lerp(luminousAccent, Color.White, if (isLight) 0.42f else 0.64f)
+    val surfaceBase = if (isLight) {
+        lerp(colorScheme.surfaceContainer, luminousPrimary, 0.10f)
+    } else {
+        lerp(Color.Black, luminousPrimary, 0.30f)
+    }
+    val strongBase = if (isLight) {
+        lerp(colorScheme.surfaceContainerHigh, luminousPrimary, 0.14f)
+    } else {
+        lerp(Color.Black, luminousPrimary, 0.40f)
+    }
+    val railBase = if (isLight) {
+        lerp(colorScheme.surfaceContainerHigh, luminousAccent, 0.12f)
+    } else {
+        lerp(Color.Black, luminousAccent, 0.34f)
+    }
+    val selectedBase = if (isLight) {
+        lerp(Color.White, luminousAccent, 0.20f)
+    } else {
+        lerp(luminousAccent, Color.White, 0.22f)
+    }
+    val content = if (isLight) colorScheme.onSurface else Color.White
+    val contentMuted = content.copy(alpha = if (isLight) 0.78f else 0.92f)
+
+    return ModernGlassPalette(
+        surface = surfaceBase.copy(alpha = if (isLight) 0.58f else 0.34f),
+        surfaceStrong = strongBase.copy(alpha = if (isLight) 0.72f else 0.46f),
+        railSurface = railBase.copy(alpha = if (isLight) 0.68f else 0.44f),
+        border = luminousAccent.copy(alpha = if (isLight) 0.48f else 0.72f),
+        borderStrong = hotEdge.copy(alpha = if (isLight) 0.74f else 0.94f),
+        selectedSurface = selectedBase.copy(alpha = if (isLight) 0.78f else 0.70f),
+        selectedBorder = selectedEdge.copy(alpha = if (isLight) 0.92f else 1f),
+        innerHighlight = selectedEdge.copy(alpha = if (isLight) 0.56f else 0.86f),
+        glow = luminousAccent.copy(alpha = if (isLight) 0.24f else 0.42f),
+        selectedGlow = luminousAccent.copy(alpha = if (isLight) 0.36f else 0.58f),
+        cardGlow = luminousAccent.copy(alpha = if (isLight) 0.18f else 0.30f),
+        content = content,
+        contentMuted = contentMuted,
+    )
+}
+
 internal val LocalModernVisualPalette = staticCompositionLocalOf { ModernVisualPalette.Standard }
 internal val LocalCinematicAccentPalette = staticCompositionLocalOf<CinematicAccentPalette?> { null }
 

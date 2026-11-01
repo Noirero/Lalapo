@@ -2,6 +2,8 @@ package eu.kanade.presentation.theme
 
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
@@ -9,6 +11,7 @@ import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.model.AppTheme
@@ -44,6 +47,7 @@ fun TachiyomiTheme(
     amoled: Boolean? = null,
     designStyle: DesignStyle? = null,
     modernThemePreset: ModernThemePreset? = null,
+    wallpaperEnabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -53,6 +57,7 @@ fun TachiyomiTheme(
         isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),
         designStyle = designStyle ?: uiPreferences.designStyle.get(),
         modernThemePreset = modernThemePreset ?: uiPreferences.modernThemePreset.get(),
+        wallpaperEnabled = wallpaperEnabled,
         content = content,
     )
 }
@@ -64,7 +69,7 @@ fun TachiyomiPreviewTheme(
     designStyle: DesignStyle = DesignStyle.CLASSIC,
     modernThemePreset: ModernThemePreset = ModernThemePreset.LALAPO,
     content: @Composable () -> Unit,
-) = BaseTachiyomiTheme(appTheme, isAmoled, designStyle, modernThemePreset, content)
+) = BaseTachiyomiTheme(appTheme, isAmoled, designStyle, modernThemePreset, wallpaperEnabled = false, content = content)
 
 @Composable
 private fun BaseTachiyomiTheme(
@@ -72,6 +77,7 @@ private fun BaseTachiyomiTheme(
     isAmoled: Boolean,
     designStyle: DesignStyle,
     modernThemePreset: ModernThemePreset,
+    wallpaperEnabled: Boolean,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -131,15 +137,86 @@ private fun BaseTachiyomiTheme(
         )
     }
 
+    val builtInWallpaperEnabled = wallpaperEnabled &&
+        modernDefinition != null && modernDefinition.preset != ModernThemePreset.CUSTOM
+    val presentationColorScheme = remember(colorScheme, builtInWallpaperEnabled, isDark, isAmoled) {
+        resolveModernPresentationColorScheme(
+            colorScheme = colorScheme,
+            wallpaperEnabled = builtInWallpaperEnabled,
+            isDark = isDark,
+            isAmoled = isDark && isAmoled,
+        )
+    }
+
     CompositionLocalProvider(
         LocalModernVisualPalette provides modernVisualPalette,
         LocalModernArtworkIdentity provides modernDefinition?.artworkIdentity,
     ) {
-        MaterialExpressiveTheme(
-            colorScheme = colorScheme,
-            content = content,
-        )
+        MaterialExpressiveTheme(colorScheme = presentationColorScheme) {
+            if (builtInWallpaperEnabled) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    ModernGlobalBackground(modifier = Modifier.fillMaxSize())
+                    content()
+                }
+            } else {
+                content()
+            }
+        }
     }
+}
+
+internal fun resolveModernPresentationColorScheme(
+    colorScheme: ColorScheme,
+    wallpaperEnabled: Boolean,
+    isDark: Boolean,
+    isAmoled: Boolean,
+): ColorScheme {
+    if (!wallpaperEnabled) return colorScheme
+
+    val backgroundAlpha = when {
+        isAmoled -> 0.82f
+        isDark -> 0.52f
+        else -> 0.44f
+    }
+    return colorScheme.copy(
+        background = colorScheme.background.copy(alpha = backgroundAlpha),
+        surface = colorScheme.surface.copy(alpha = if (isAmoled) 0.86f else backgroundAlpha),
+        surfaceContainerLowest = colorScheme.surfaceContainerLowest.copy(
+            alpha = when {
+                isAmoled -> 0.92f
+                isDark -> 0.64f
+                else -> 0.58f
+            },
+        ),
+        surfaceContainerLow = colorScheme.surfaceContainerLow.copy(
+            alpha = when {
+                isAmoled -> 0.94f
+                isDark -> 0.70f
+                else -> 0.64f
+            },
+        ),
+        surfaceContainer = colorScheme.surfaceContainer.copy(
+            alpha = when {
+                isAmoled -> 0.96f
+                isDark -> 0.76f
+                else -> 0.70f
+            },
+        ),
+        surfaceContainerHigh = colorScheme.surfaceContainerHigh.copy(
+            alpha = when {
+                isAmoled -> 0.97f
+                isDark -> 0.82f
+                else -> 0.76f
+            },
+        ),
+        surfaceContainerHighest = colorScheme.surfaceContainerHighest.copy(
+            alpha = when {
+                isAmoled -> 0.98f
+                isDark -> 0.88f
+                else -> 0.82f
+            },
+        ),
+    )
 }
 
 private fun getThemeColorScheme(

@@ -25,8 +25,11 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.LocalCinematicAccentPalette
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernArtworkIdentity
 import eu.kanade.presentation.theme.resolveAccentPalette
+import eu.kanade.presentation.theme.resolveGlassPalette
 
 /**
  * Material-first presentation primitives for the optional Modern appearance.
@@ -43,20 +46,49 @@ internal fun Modifier.modernSurfaceTreatment(
     val palette = LocalModernVisualPalette.current
     if (!palette.isModern) return this
 
-    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+    if (LocalModernArtworkIdentity.current == ModernArtworkIdentity.CUSTOM_WAVES) {
+        val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+        val brush = if (selected) {
+            Brush.horizontalGradient(listOf(accent.activeGradientStart, accent.activeGradientEnd))
+        } else {
+            Brush.horizontalGradient(
+                listOf(
+                    palette.surfaceGradientStart.copy(alpha = palette.glassSurfaceAlpha),
+                    palette.surfaceGradientMiddle.copy(alpha = palette.glassSurfaceAlpha),
+                    palette.surfaceGradientEnd.copy(alpha = palette.glassSurfaceAlpha),
+                ),
+            )
+        }
+        return this
+            .background(brush = brush, shape = shape)
+            .then(
+                if (drawBorder) {
+                    Modifier.border(
+                        width = 1.dp,
+                        color = if (selected) accent.glow else accent.borderHighlight,
+                        shape = shape,
+                    )
+                } else {
+                    Modifier
+                },
+            )
+    }
+
+    val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
     val brush = if (selected) {
         Brush.horizontalGradient(
             listOf(
-                accent.activeGradientStart,
-                accent.activeGradientEnd,
+                glass.selectedSurface,
+                glass.innerHighlight.copy(alpha = glass.innerHighlight.alpha * 0.58f),
+                glass.selectedSurface,
             ),
         )
     } else {
         Brush.horizontalGradient(
             listOf(
-                palette.surfaceGradientStart.copy(alpha = palette.glassSurfaceAlpha),
-                palette.surfaceGradientMiddle.copy(alpha = palette.glassSurfaceAlpha),
-                palette.surfaceGradientEnd.copy(alpha = palette.glassSurfaceAlpha),
+                glass.surface,
+                glass.surfaceStrong,
+                glass.surface,
             ),
         )
     }
@@ -65,11 +97,17 @@ internal fun Modifier.modernSurfaceTreatment(
         .background(brush = brush, shape = shape)
         .then(
             if (drawBorder) {
-                Modifier.border(
-                    width = 1.dp,
-                    color = if (selected) accent.glow else accent.borderHighlight,
-                    shape = shape,
-                )
+                Modifier
+                    .border(
+                        width = 2.dp,
+                        color = if (selected) glass.selectedGlow.copy(alpha = glass.selectedGlow.alpha * 0.30f) else glass.glow.copy(alpha = glass.glow.alpha * 0.22f),
+                        shape = shape,
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (selected) glass.selectedBorder else glass.borderStrong,
+                        shape = shape,
+                    )
             } else {
                 Modifier
             },
@@ -84,10 +122,19 @@ internal fun Modifier.modernBorderHighlight(
     val palette = LocalModernVisualPalette.current
     if (!palette.isModern) return this
 
-    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+    if (LocalModernArtworkIdentity.current == ModernArtworkIdentity.CUSTOM_WAVES) {
+        val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+        return border(
+            width = 1.dp,
+            color = if (emphasized) accent.glow else accent.borderHighlight,
+            shape = shape,
+        )
+    }
+
+    val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
     return border(
         width = 1.dp,
-        color = if (emphasized) accent.glow else accent.borderHighlight,
+        color = if (emphasized) glass.selectedBorder else glass.borderStrong,
         shape = shape,
     )
 }
@@ -99,11 +146,21 @@ internal fun Modifier.modernCoverTreatment(
     val palette = LocalModernVisualPalette.current
     if (!palette.isModern) return this
 
-    val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+    if (LocalModernArtworkIdentity.current == ModernArtworkIdentity.CUSTOM_WAVES) {
+        val accent = palette.resolveAccentPalette(LocalCinematicAccentPalette.current)
+        return clip(shape).border(width = 1.dp, color = accent.borderHighlight, shape = shape)
+    }
+
+    val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
     return clip(shape)
         .border(
+            width = 2.dp,
+            color = glass.cardGlow.copy(alpha = glass.cardGlow.alpha * 0.42f),
+            shape = shape,
+        )
+        .border(
             width = 1.dp,
-            color = accent.borderHighlight,
+            color = glass.borderStrong,
             shape = shape,
         )
 }

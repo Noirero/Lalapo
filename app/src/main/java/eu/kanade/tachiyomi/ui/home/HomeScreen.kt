@@ -3,7 +3,11 @@ package eu.kanade.tachiyomi.ui.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,8 +36,12 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import eu.kanade.presentation.components.modernSurfaceTreatment
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernArtworkIdentity
 import eu.kanade.presentation.theme.modernNavigationContainerColor
+import eu.kanade.presentation.theme.resolveGlassPalette
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.anime.AnimeScreen
@@ -106,11 +114,27 @@ object HomeScreen : Screen() {
                     navigationSuiteType = navigationSuiteType,
                     state = navigationSuiteState,
                     navigationSuite = {
+                        val modernPalette = LocalModernVisualPalette.current
+                        val isModern = modernPalette.isModern
+                        val useMiyorareVisuals = isModern &&
+                            LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
+                        val navigationShape = RoundedCornerShape(30.dp)
                         NavigationSuite(
+                            modifier = if (useMiyorareVisuals) {
+                                Modifier
+                                    .padding(
+                                        horizontal = if (tabletUi) 8.dp else 18.dp,
+                                        vertical = 8.dp,
+                                    )
+                                    .modernSurfaceTreatment(shape = navigationShape)
+                            } else {
+                                Modifier
+                            },
                             navigationSuiteType = navigationSuiteType,
                             colors = modernNavigationContainerColor(
                                 scheme = MaterialTheme.colorScheme,
-                                isModern = LocalModernVisualPalette.current.isModern,
+                                isModern = isModern,
+                                useGlass = useMiyorareVisuals,
                             )?.let { modernContainer ->
                                 NavigationSuiteDefaults.colors(
                                     navigationBarContainerColor = modernContainer,
@@ -200,7 +224,24 @@ object HomeScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val selected = tabNavigator.current::class == tab::class
+        val modernPalette = LocalModernVisualPalette.current
+        val isModern = modernPalette.isModern
+        val useMiyorareVisuals = isModern &&
+            LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
+        val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
+        val itemShape = RoundedCornerShape(24.dp)
         NavigationSuiteItem(
+            modifier = if (useMiyorareVisuals && selected) {
+                Modifier
+                    .padding(horizontal = 2.dp, vertical = 3.dp)
+                    .background(
+                        color = glass.selectedSurface.copy(alpha = glass.selectedSurface.alpha * 0.82f),
+                        shape = itemShape,
+                    )
+                    .border(1.dp, glass.selectedBorder, itemShape)
+            } else {
+                Modifier
+            },
             navigationSuiteType = navigationSuiteType,
             selected = selected,
             onClick = {
@@ -211,18 +252,36 @@ object HomeScreen : Screen() {
                 }
             },
             icon = {
-                Icon(
-                    painter = tab.options.icon!!,
-                    contentDescription = tab.options.title,
-                )
+                if (useMiyorareVisuals) {
+                    Icon(
+                        painter = tab.options.icon!!,
+                        contentDescription = tab.options.title,
+                        tint = if (selected) glass.content else glass.contentMuted,
+                    )
+                } else {
+                    Icon(
+                        painter = tab.options.icon!!,
+                        contentDescription = tab.options.title,
+                    )
+                }
             },
             label = {
-                Text(
-                    text = tab.options.title,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (useMiyorareVisuals) {
+                    Text(
+                        text = tab.options.title,
+                        color = if (selected) glass.content else glass.contentMuted,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else {
+                    Text(
+                        text = tab.options.title,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             },
             badge = tabBadge(tab),
         )
