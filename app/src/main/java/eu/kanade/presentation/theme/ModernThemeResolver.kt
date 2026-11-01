@@ -20,11 +20,16 @@ internal fun resolveDesignStyleColorScheme(
     isDark: Boolean,
     isAmoled: Boolean,
     classicResolver: () -> ColorScheme,
+    customColors: ModernCustomColors? = null,
 ): ColorScheme {
     if (designStyle == DesignStyle.CLASSIC) return classicResolver()
     // Do not render Lalapo while an unsupported identity appears selected.
-    val definition = requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
-        "Modern preset $modernThemePreset has no authored production definition"
+    val definition = if (modernThemePreset == ModernThemePreset.CUSTOM) {
+        ModernThemeDefinitions.custom(requireNotNull(customColors) { "Custom colors are required" })
+    } else {
+        requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
+            "Modern preset $modernThemePreset has no authored production definition"
+        }
     }
     return ModernThemeResolver.resolve(definition, isDark, isAmoled)
 }
@@ -44,10 +49,18 @@ internal object ModernThemeResolver {
         isDark: Boolean,
         isAmoled: Boolean,
     ): ColorScheme {
-        require(ModernThemeDefinitions.find(definition.preset) == definition) {
-            "The selected Modern preset does not have an authored production definition"
+        val scheme = if (definition.preset == ModernThemePreset.CUSTOM) {
+            // Root remembers Custom resolution by its persisted RGB values; no unbounded cache.
+            object : BaseColorScheme() {
+                override val lightScheme = buildScheme(definition, dark = false)
+                override val darkScheme = buildScheme(definition, dark = true)
+            }
+        } else {
+            require(ModernThemeDefinitions.find(definition.preset) == definition) {
+                "The selected Modern preset does not have an authored production definition"
+            }
+            requireNotNull(schemes[definition.preset])
         }
-        val scheme = requireNotNull(schemes[definition.preset])
         return scheme.getColorScheme(
             isDark = isDark,
             isAmoled = isAmoled,

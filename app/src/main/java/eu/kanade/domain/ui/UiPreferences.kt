@@ -44,6 +44,13 @@ class UiPreferences(
         ModernThemePreset.LALAPO,
     )
 
+    // Custom v1: opaque RGB HEX; empty string means AUTO (no override).
+    val modernCustomPrimary: Preference<String> = preferenceStore.getString("pref_modern_custom_primary", "#485CE0")
+    val modernCustomSecondaryOverride: Preference<String> =
+        preferenceStore.getString("pref_modern_custom_secondary_override", "")
+    val modernCustomTertiaryOverride: Preference<String> =
+        preferenceStore.getString("pref_modern_custom_tertiary_override", "")
+
     // Read only by the formal preference migration; never the active appearance selector.
     internal val legacyModernAppearance: Preference<Boolean> = preferenceStore.getBoolean(
         "pref_modern_appearance",

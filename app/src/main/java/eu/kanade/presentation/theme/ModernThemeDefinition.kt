@@ -22,6 +22,7 @@ internal enum class ModernDecorativeIdentity {
     CYAN_WATER_SKY,
     EMERALD_FOLIAGE,
     AMBER_MAPLE_SUNSET,
+    CUSTOM_WAVES,
 }
 
 internal enum class ModernArtworkIdentity {
@@ -31,6 +32,7 @@ internal enum class ModernArtworkIdentity {
     CYAN_WATER_SKY,
     EMERALD_FOLIAGE,
     AMBER_MAPLE_SUNSET,
+    CUSTOM_WAVES,
 }
 
 internal object ModernThemeDefinitions {
@@ -101,7 +103,17 @@ internal object ModernThemeDefinitions {
         Amber,
     )
 
-    /** Custom is deliberately unresolved until the separately authorized Custom stage. */
+    /** A dynamic definition sourced from explicit user Custom colors, not a frozen built-in. */
+    fun custom(colors: ModernCustomColors): ModernThemeDefinition = ModernThemeDefinition(
+        preset = ModernThemePreset.CUSTOM,
+        primarySeed = colors.primary,
+        secondarySeed = colors.secondary,
+        tertiarySeed = colors.tertiary,
+        decorativeIdentity = ModernDecorativeIdentity.CUSTOM_WAVES,
+        artworkIdentity = ModernArtworkIdentity.CUSTOM_WAVES,
+    )
+
+    /** Static lookup remains for the six authored built-ins. Custom requires user colors. */
     fun find(preset: ModernThemePreset): ModernThemeDefinition? = when (preset) {
         ModernThemePreset.LALAPO -> Lalapo
         ModernThemePreset.SAKURA -> Sakura
