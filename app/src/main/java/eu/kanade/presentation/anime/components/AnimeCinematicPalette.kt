@@ -12,9 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.graphics.ColorUtils
 import androidx.palette.graphics.Palette
 import coil3.asDrawable
 import coil3.imageLoader
@@ -259,9 +257,9 @@ private fun contrastRatio(
     foreground: Color,
     background: Color,
 ): Float {
-    val foregroundArgb = foreground.toArgb()
-    val backgroundArgb = background.toArgb()
-    return ColorUtils.calculateContrast(foregroundArgb, backgroundArgb).toFloat()
+    val lighter = maxOf(foreground.luminance(), background.luminance())
+    val darker = minOf(foreground.luminance(), background.luminance())
+    return (lighter + 0.05f) / (darker + 0.05f)
 }
 
 private fun hueDistance(
