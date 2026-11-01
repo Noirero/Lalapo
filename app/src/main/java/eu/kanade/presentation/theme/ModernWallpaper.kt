@@ -118,19 +118,19 @@ private object ModernBlurredWallpaperCache {
     private const val BlurHeight = 301
     private const val BlurRadius = 7
     private const val BlurPasses = 2
-    private val cache = LruCache<Int, Bitmap>(2)
+    private val CACHE = LruCache<Int, Bitmap>(2)
 
     fun getOrCreate(resources: Resources, @DrawableRes resourceId: Int): Bitmap? {
-        synchronized(cache) {
-            cache.get(resourceId)?.let { return it }
+        synchronized(CACHE) {
+            CACHE.get(resourceId)?.let { return it }
         }
         val decoded = decodeSampled(resources, resourceId) ?: return null
         val scaled = Bitmap.createScaledBitmap(decoded, BlurWidth, BlurHeight, true)
         if (scaled !== decoded) decoded.recycle()
         val blurred = boxBlur(scaled, BlurRadius, BlurPasses)
         if (blurred !== scaled) scaled.recycle()
-        synchronized(cache) {
-            cache.put(resourceId, blurred)
+        synchronized(CACHE) {
+            CACHE.put(resourceId, blurred)
         }
         return blurred
     }

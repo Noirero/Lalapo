@@ -336,7 +336,11 @@ private fun LibraryRegularToolbar(
                         if (isModern) {
                             Text(
                                 text = " //",
-                                color = if (useMiyorareVisuals) glass.selectedBorder else MaterialTheme.colorScheme.secondary,
+                                color = if (useMiyorareVisuals) {
+                                    glass.selectedBorder
+                                } else {
+                                    MaterialTheme.colorScheme.secondary
+                                },
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                                 modifier = Modifier.clearAndSetSemantics {},
                             )
