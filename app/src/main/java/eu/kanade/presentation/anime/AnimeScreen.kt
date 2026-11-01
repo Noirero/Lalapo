@@ -86,8 +86,6 @@ import eu.kanade.tachiyomi.ui.anime.AnimeSeasonItem
 import eu.kanade.tachiyomi.ui.anime.AnimeViewModel
 import eu.kanade.tachiyomi.ui.anime.EpisodeList
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
@@ -107,6 +105,8 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.source.local.isLocal
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun AnimeScreen(
@@ -765,7 +765,6 @@ private fun AnimeScreenSmallImpl(
                             )
                         }
                     }
-
                 }
             }
         }
@@ -966,20 +965,20 @@ fun AnimeScreenLargeImpl(
                                     .padding(bottom = contentPadding.calculateBottomPadding()),
                             ) {
                                 AnimeInfoBox(
-                                isTabletUi = true,
-                                appBarPadding = contentPadding.calculateTopPadding(),
-                                anime = state.anime,
-                                sourceName = remember { state.source.getNameForAnimeInfo() },
-                                isStubSource = remember { state.source is StubSource },
-                                onCoverClick = onCoverClicked,
-                                doSearch = onSearch,
-                            )
-                            if (episodes.fastAny { !it.episode.seen } && !isAnySelected) {
-                                AnimePrimaryAction(
-                                    isWatching = episodes.fastAny { it.episode.seen },
-                                    onClick = onContinueWatching,
+                                    isTabletUi = true,
+                                    appBarPadding = contentPadding.calculateTopPadding(),
+                                    anime = state.anime,
+                                    sourceName = remember { state.source.getNameForAnimeInfo() },
+                                    isStubSource = remember { state.source is StubSource },
+                                    onCoverClick = onCoverClicked,
+                                    doSearch = onSearch,
                                 )
-                            }
+                                if (episodes.fastAny { !it.episode.seen } && !isAnySelected) {
+                                    AnimePrimaryAction(
+                                        isWatching = episodes.fastAny { it.episode.seen },
+                                        onClick = onContinueWatching,
+                                    )
+                                }
                                 AnimeActionRow(
                                     favorite = state.anime.favorite,
                                     trackingCount = state.trackingCount,
@@ -1001,17 +1000,17 @@ fun AnimeScreenLargeImpl(
                                     )
                                 }
                                 ExpandableAnimeDescription(
-                                defaultExpandState = true,
-                                description = state.anime.description,
-                                tagsProvider = { state.anime.genre },
-                                notes = state.anime.notes,
-                                onTagSearch = onTagSearch,
-                                onCopyTagToClipboard = onCopyTagToClipboard,
-                                onEditNotes = onEditNotesClicked,
-                                // AY -->
-                                relations = state.relatedAnime,
-                                onRelatedClick = onRelatedAnimeClicked,
-                                onRelatedLongClick = onRelatedAnimeLongClicked,
+                                    defaultExpandState = true,
+                                    description = state.anime.description,
+                                    tagsProvider = { state.anime.genre },
+                                    notes = state.anime.notes,
+                                    onTagSearch = onTagSearch,
+                                    onCopyTagToClipboard = onCopyTagToClipboard,
+                                    onEditNotes = onEditNotesClicked,
+                                    // AY -->
+                                    relations = state.relatedAnime,
+                                    onRelatedClick = onRelatedAnimeClicked,
+                                    onRelatedLongClick = onRelatedAnimeLongClicked,
                                     relatedDisplayMode = relatedAnimeDisplayMode,
                                     // <-- AY
                                 )
