@@ -336,7 +336,7 @@
     <string name="am_label_private_session">Private session</string>
     <string name="am_label_offline_mode">Offline mode</string>
     <string name="am_anime_detail_tab_detail">Detail</string>
-    <string name="am_anime_detail_tab_episode">Episodes</string>
+    <string name="am_anime_detail_tab_episode">Episode</string>
     <string name="am_anime_detail_tab_info">Info</string>
     <string name="am_anime_detail_synopsis">Synopsis</string>
     <string name="am_anime_detail_progress">Watching progress</string>
