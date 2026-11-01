@@ -99,7 +99,6 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.coil.useBackground
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import kotlin.math.roundToInt
 import mihon.app.di.appGraph
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
@@ -114,6 +113,8 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import kotlin.math.roundToInt
+
 
 @Composable
 fun AnimeInfoBox(
