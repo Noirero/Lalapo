@@ -105,7 +105,7 @@ internal fun Modifier.modernSurfaceTreatment(
                         } else {
                             glass.glow.copy(
                                 alpha =
-                                    glass.glow.alpha * 0.22f,
+                                glass.glow.alpha * 0.22f,
                             )
                         },
                         shape = shape,
