@@ -211,7 +211,7 @@ internal fun ModernMetadataChip(
 }
 
 @Composable
-internal fun ModernSegmentedButton(
+internal fun RowScope.ModernSegmentedButton(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     shape: Shape,
