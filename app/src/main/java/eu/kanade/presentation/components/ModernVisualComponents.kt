@@ -100,7 +100,14 @@ internal fun Modifier.modernSurfaceTreatment(
                 Modifier
                     .border(
                         width = 2.dp,
-                        color = if (selected) glass.selectedGlow.copy(alpha = glass.selectedGlow.alpha * 0.30f) else glass.glow.copy(alpha = glass.glow.alpha * 0.22f),
+                        color = if (selected) {
+                            glass.selectedGlow.copy(alpha = glass.selectedGlow.alpha * 0.30f)
+                        } else {
+                            glass.glow.copy(
+                                alpha =
+                                    glass.glow.alpha * 0.22f,
+                            )
+                        },
                         shape = shape,
                     )
                     .border(

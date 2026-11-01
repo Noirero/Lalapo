@@ -1,8 +1,7 @@
 package eu.kanade.presentation.theme
 
-import androidx.compose.ui.graphics.Color
-
 import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.graphics.Color
 /**
  * Built-in Modern can opt into a transparent Material container while its outer glass shell owns
  * the visible surface. Other Modern identities retain the previous semantic container.
