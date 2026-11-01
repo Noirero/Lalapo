@@ -81,6 +81,33 @@ class ModernVisualPaletteTest {
     }
 
     @Test
+    fun `cinematic accent override stays local and Standard mode ignores it`() {
+        val scheme = TachiyomiColorScheme.lightScheme
+        val snapshot = scheme.authoritySnapshot()
+        val modernPalette = resolveModernVisualPalette(
+            colorScheme = scheme,
+            enabled = true,
+        )
+        val cinematicAccent = CinematicAccentPalette(
+            accentGradientStart = Color(0xFF4A3AA3),
+            accentGradientMiddle = Color(0xFF6D4CB4),
+            accentGradientEnd = Color(0xFF8B5BB8),
+            activeGradientStart = Color(0xFF4A3AA3),
+            activeGradientEnd = Color(0xFF6D4CB4),
+            borderHighlight = Color(0xFFB8A7F0),
+            glow = Color(0x336D4CB4),
+            accentGradientContentColor = Color.White,
+        )
+
+        assertEquals(cinematicAccent, modernPalette.resolveAccentPalette(cinematicAccent))
+        assertEquals(
+            CinematicAccentPalette.Standard,
+            ModernVisualPalette.Standard.resolveAccentPalette(cinematicAccent),
+        )
+        assertEquals(snapshot, scheme.authoritySnapshot())
+    }
+
+    @Test
     fun `dynamic color schemes can derive readable modern roles`() {
         listOf(false, true).forEach { dark ->
             val scheme = MonetCompatColorScheme.generateColorSchemeFromSeed(
@@ -163,6 +190,13 @@ class ModernVisualPaletteTest {
                 palette.accentGradientStart,
                 palette.accentGradientMiddle,
                 palette.accentGradientEnd,
+            ),
+        )
+        assertContrast(
+            foreground = palette.accentGradientContentColor,
+            backgrounds = listOf(
+                palette.activeGradientStart,
+                palette.activeGradientEnd,
             ),
         )
         assertContrast(
