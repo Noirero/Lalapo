@@ -45,7 +45,10 @@ class UiPreferences(
     )
 
     // Read only by the formal preference migration; never the active appearance selector.
-    internal val legacyModernAppearance: Preference<Boolean> = preferenceStore.getBoolean("pref_modern_appearance", false)
+    internal val legacyModernAppearance: Preference<Boolean> = preferenceStore.getBoolean(
+        "pref_modern_appearance",
+        false,
+    )
 
     val relativeTime: Preference<Boolean> = preferenceStore.getBoolean("relative_time_v2", true)
 
