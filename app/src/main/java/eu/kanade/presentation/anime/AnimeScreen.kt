@@ -27,7 +27,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -40,6 +39,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,16 +59,23 @@ import aniyomi.domain.anime.model.SeasonAnime
 import aniyomi.domain.anime.model.SeasonDisplayMode
 import eu.kanade.presentation.anime.components.AnimeActionRow
 import eu.kanade.presentation.anime.components.AnimeBottomActionMenu
+import eu.kanade.presentation.anime.components.AnimeDetailsSection
+import eu.kanade.presentation.anime.components.AnimeDetailsSegmentedNavigation
 import eu.kanade.presentation.anime.components.AnimeEpisodeListItem
 import eu.kanade.presentation.anime.components.AnimeInfoBox
 import eu.kanade.presentation.anime.components.AnimeSeasonListItem
 import eu.kanade.presentation.anime.components.AnimeToolbar
+import eu.kanade.presentation.anime.components.AnimeWatchingProgressCard
 import eu.kanade.presentation.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.anime.components.ExpandableAnimeDescription
 import eu.kanade.presentation.anime.components.ItemHeader
 import eu.kanade.presentation.anime.components.MissingEpisodeCountListItem
 import eu.kanade.presentation.anime.components.NextEpisodeAiringListItem
+import eu.kanade.presentation.anime.components.rememberAnimeCinematicAccentPalette
+import eu.kanade.presentation.components.ModernPrimaryButton
 import eu.kanade.presentation.components.relativeDateText
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ProvideCinematicAccentPalette
 import eu.kanade.presentation.util.formatEpisodeNumber
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.FetchType
@@ -80,6 +87,7 @@ import eu.kanade.tachiyomi.ui.anime.AnimeViewModel
 import eu.kanade.tachiyomi.ui.anime.EpisodeList
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.anime.model.Anime
@@ -403,6 +411,28 @@ private fun AnimeScreenSmallImpl(
         )
     }
 
+    val modernAppearanceEnabled = LocalModernVisualPalette.current.isModern
+    val cinematicAccentPalette = rememberAnimeCinematicAccentPalette(state.anime)
+    val screenScope = rememberCoroutineScope()
+    val hasPrimaryAction = episodes.fastAny { !it.episode.seen } && !isAnySelected
+    val hasProgressCard = state.anime.fetchType == FetchType.Episodes && state.episodes.isNotEmpty()
+    val descriptionItemIndex = 2 + if (hasPrimaryAction) 1 else 0
+    val navigationItemIndex = descriptionItemIndex + 1 + if (hasProgressCard) 1 else 0
+    val episodeHeaderItemIndex = navigationItemIndex + 1
+    val selectedDetailsSection by remember(
+        itemListState,
+        descriptionItemIndex,
+        episodeHeaderItemIndex,
+    ) {
+        derivedStateOf {
+            when {
+                itemListState.firstVisibleItemIndex >= episodeHeaderItemIndex -> AnimeDetailsSection.Episodes
+                itemListState.firstVisibleItemIndex >= descriptionItemIndex -> AnimeDetailsSection.Info
+                else -> AnimeDetailsSection.Detail
+            }
+        }
+    }
+
     var toolbarHeight by remember { mutableIntStateOf(0) }
     // <-- AY
 
@@ -515,32 +545,33 @@ private fun AnimeScreenSmallImpl(
                         span = { GridItemSpan(maxLineSpan) },
                         // <-- AY
                     ) {
-                        AnimeInfoBox(
-                            isTabletUi = false,
-                            appBarPadding = topPadding,
-                            anime = state.anime,
-                            sourceName = remember { state.source.getNameForAnimeInfo() },
-                            isStubSource = remember { state.source is StubSource },
-                            onCoverClick = onCoverClicked,
-                            doSearch = onSearch,
-                            // AY -->
-                            modifier = Modifier.ignorePadding(offsetGridPaddingPx),
-                            // <-- AY
-                        )
+                        ProvideCinematicAccentPalette(cinematicAccentPalette) {
+                            AnimeInfoBox(
+                                isTabletUi = false,
+                                appBarPadding = topPadding,
+                                anime = state.anime,
+                                sourceName = remember { state.source.getNameForAnimeInfo() },
+                                isStubSource = remember { state.source is StubSource },
+                                onCoverClick = onCoverClicked,
+                                doSearch = onSearch,
+                                modifier = Modifier.ignorePadding(offsetGridPaddingPx),
+                            )
+                        }
                     }
 
-                    val hasUnseenEpisodes = episodes.fastAny { !it.episode.seen }
-                    if (hasUnseenEpisodes && !isAnySelected) {
+                    if (hasPrimaryAction) {
                         item(
                             key = EXACT_HEIGHT_KEY_PREFIX + AnimeScreenItem.PRIMARY_ACTION,
                             contentType = AnimeScreenItem.PRIMARY_ACTION,
                             span = { GridItemSpan(maxLineSpan) },
                         ) {
-                            AnimePrimaryAction(
-                                isWatching = episodes.fastAny { it.episode.seen },
-                                onClick = onContinueWatching,
-                                modifier = Modifier.ignorePadding(offsetGridPaddingPx),
-                            )
+                            ProvideCinematicAccentPalette(cinematicAccentPalette) {
+                                AnimePrimaryAction(
+                                    isWatching = episodes.fastAny { it.episode.seen },
+                                    onClick = onContinueWatching,
+                                    modifier = Modifier.ignorePadding(offsetGridPaddingPx),
+                                )
+                            }
                         }
                     }
 
@@ -551,23 +582,88 @@ private fun AnimeScreenSmallImpl(
                         span = { GridItemSpan(maxLineSpan) },
                         // <-- AY
                     ) {
-                        AnimeActionRow(
-                            favorite = state.anime.favorite,
-                            trackingCount = state.trackingCount,
-                            // AM -->
-                            isSyncingTrackers = state.isSyncingTrackers,
-                            // <-- AM
-                            onAddToLibraryClicked = onAddToLibraryClicked,
-                            onWebViewClicked = onWebViewClicked,
-                            onWebViewLongClicked = onWebViewLongClicked,
-                            onTrackingClicked = onTrackingClicked,
-                            onShareClicked = onShareClicked,
-                            onEditIntervalClicked = onEditIntervalClicked,
-                            onEditCategory = onEditCategoryClicked,
-                            // AY -->
-                            modifier = Modifier.ignorePadding(offsetGridPaddingPx),
-                            // <-- AY
-                        )
+                        ProvideCinematicAccentPalette(cinematicAccentPalette) {
+                            AnimeActionRow(
+                                favorite = state.anime.favorite,
+                                trackingCount = state.trackingCount,
+                                isSyncingTrackers = state.isSyncingTrackers,
+                                onAddToLibraryClicked = onAddToLibraryClicked,
+                                onDownloadActionClicked = onDownloadActionClicked,
+                                onWebViewClicked = onWebViewClicked,
+                                onWebViewLongClicked = onWebViewLongClicked,
+                                onTrackingClicked = onTrackingClicked,
+                                onShareClicked = onShareClicked,
+                                onEditIntervalClicked = onEditIntervalClicked,
+                                onEditCategory = onEditCategoryClicked,
+                                modifier = Modifier.ignorePadding(offsetGridPaddingPx),
+                            )
+                        }
+                    }
+
+                    item(
+                        key = EXACT_HEIGHT_KEY_PREFIX + AnimeScreenItem.DESCRIPTION_WITH_TAG,
+                        contentType = AnimeScreenItem.DESCRIPTION_WITH_TAG,
+                        span = { GridItemSpan(maxLineSpan) },
+                    ) {
+                        ProvideCinematicAccentPalette(cinematicAccentPalette) {
+                            ExpandableAnimeDescription(
+                                defaultExpandState = if (modernAppearanceEnabled) false else state.isFromSource,
+                                description = state.anime.description,
+                                tagsProvider = { state.anime.genre },
+                                notes = state.anime.notes,
+                                onTagSearch = onTagSearch,
+                                onCopyTagToClipboard = onCopyTagToClipboard,
+                                onEditNotes = onEditNotesClicked,
+                                relations = state.relatedAnime,
+                                onRelatedClick = onRelatedAnimeClicked,
+                                onRelatedLongClick = onRelatedAnimeLongClicked,
+                                relatedDisplayMode = relatedAnimeDisplayMode,
+                                modifier = Modifier.ignorePadding(offsetGridPaddingPx),
+                            )
+                        }
+                    }
+
+                    if (hasProgressCard) {
+                        item(
+                            key = "anime-cinematic-progress",
+                            contentType = "anime-cinematic-progress",
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            ProvideCinematicAccentPalette(cinematicAccentPalette) {
+                                AnimeWatchingProgressCard(
+                                    watched = state.episodes.count { it.episode.seen },
+                                    total = state.episodes.size,
+                                    modifier = Modifier
+                                        .ignorePadding(offsetGridPaddingPx)
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                )
+                            }
+                        }
+                    }
+
+                    item(
+                        key = "anime-cinematic-navigation",
+                        contentType = "anime-cinematic-navigation",
+                        span = { GridItemSpan(maxLineSpan) },
+                    ) {
+                        ProvideCinematicAccentPalette(cinematicAccentPalette) {
+                            AnimeDetailsSegmentedNavigation(
+                                selected = selectedDetailsSection,
+                                onSelect = { section ->
+                                    val target = when (section) {
+                                        AnimeDetailsSection.Detail -> 0
+                                        AnimeDetailsSection.Episodes -> episodeHeaderItemIndex
+                                        AnimeDetailsSection.Info -> descriptionItemIndex
+                                    }
+                                    screenScope.launch {
+                                        itemListState.animateScrollToItem(target)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .ignorePadding(offsetGridPaddingPx)
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                            )
+                        }
                     }
 
                     item(
@@ -669,33 +765,6 @@ private fun AnimeScreenSmallImpl(
                             )
                         }
                     }
-
-                    item(
-                        key = EXACT_HEIGHT_KEY_PREFIX + AnimeScreenItem.DESCRIPTION_WITH_TAG,
-                        contentType = AnimeScreenItem.DESCRIPTION_WITH_TAG,
-                        // AY -->
-                        span = { GridItemSpan(maxLineSpan) },
-                        // <-- AY
-                    ) {
-                        ExpandableAnimeDescription(
-                            defaultExpandState = state.isFromSource,
-                            description = state.anime.description,
-                            tagsProvider = { state.anime.genre },
-                            notes = state.anime.notes,
-                            onTagSearch = onTagSearch,
-                            onCopyTagToClipboard = onCopyTagToClipboard,
-                            onEditNotes = onEditNotesClicked,
-                            // AY -->
-                            relations = state.relatedAnime,
-                            onRelatedClick = onRelatedAnimeClicked,
-                            onRelatedLongClick = onRelatedAnimeLongClicked,
-                            relatedDisplayMode = relatedAnimeDisplayMode,
-                            // <-- AY
-                            // AY -->
-                            modifier = Modifier.ignorePadding(offsetGridPaddingPx),
-                            // <-- AY
-                        )
-                    }
                 }
             }
         }
@@ -793,6 +862,7 @@ fun AnimeScreenLargeImpl(
             isAnySelected = state.isAnySelected,
         )
     }
+    val cinematicAccentPalette = rememberAnimeCinematicAccentPalette(state.anime)
 
     val insetPadding = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal).asPaddingValues()
     var topBarHeight by remember { mutableIntStateOf(0) }
@@ -888,55 +958,63 @@ fun AnimeScreenLargeImpl(
                         end = contentPadding.calculateEndPadding(layoutDirection),
                     ),
                     startContent = {
-                        Column(
-                            modifier = Modifier
-                                .verticalScroll(rememberScrollState())
-                                .padding(bottom = contentPadding.calculateBottomPadding()),
-                        ) {
-                            AnimeInfoBox(
-                                isTabletUi = true,
-                                appBarPadding = contentPadding.calculateTopPadding(),
-                                anime = state.anime,
-                                sourceName = remember { state.source.getNameForAnimeInfo() },
-                                isStubSource = remember { state.source is StubSource },
-                                onCoverClick = onCoverClicked,
-                                doSearch = onSearch,
-                            )
-                            if (episodes.fastAny { !it.episode.seen } && !isAnySelected) {
-                                AnimePrimaryAction(
-                                    isWatching = episodes.fastAny { it.episode.seen },
-                                    onClick = onContinueWatching,
+                        ProvideCinematicAccentPalette(cinematicAccentPalette) {
+                            Column(
+                                modifier = Modifier
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(bottom = contentPadding.calculateBottomPadding()),
+                            ) {
+                                AnimeInfoBox(
+                                    isTabletUi = true,
+                                    appBarPadding = contentPadding.calculateTopPadding(),
+                                    anime = state.anime,
+                                    sourceName = remember { state.source.getNameForAnimeInfo() },
+                                    isStubSource = remember { state.source is StubSource },
+                                    onCoverClick = onCoverClicked,
+                                    doSearch = onSearch,
+                                )
+                                if (episodes.fastAny { !it.episode.seen } && !isAnySelected) {
+                                    AnimePrimaryAction(
+                                        isWatching = episodes.fastAny { it.episode.seen },
+                                        onClick = onContinueWatching,
+                                    )
+                                }
+                                AnimeActionRow(
+                                    favorite = state.anime.favorite,
+                                    trackingCount = state.trackingCount,
+                                    isSyncingTrackers = state.isSyncingTrackers,
+                                    onAddToLibraryClicked = onAddToLibraryClicked,
+                                    onDownloadActionClicked = onDownloadActionClicked,
+                                    onWebViewClicked = onWebViewClicked,
+                                    onWebViewLongClicked = onWebViewLongClicked,
+                                    onTrackingClicked = onTrackingClicked,
+                                    onShareClicked = onShareClicked,
+                                    onEditIntervalClicked = onEditIntervalClicked,
+                                    onEditCategory = onEditCategoryClicked,
+                                )
+                                if (state.anime.fetchType == FetchType.Episodes && state.episodes.isNotEmpty()) {
+                                    AnimeWatchingProgressCard(
+                                        watched = state.episodes.count { it.episode.seen },
+                                        total = state.episodes.size,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    )
+                                }
+                                ExpandableAnimeDescription(
+                                    defaultExpandState = true,
+                                    description = state.anime.description,
+                                    tagsProvider = { state.anime.genre },
+                                    notes = state.anime.notes,
+                                    onTagSearch = onTagSearch,
+                                    onCopyTagToClipboard = onCopyTagToClipboard,
+                                    onEditNotes = onEditNotesClicked,
+                                    // AY -->
+                                    relations = state.relatedAnime,
+                                    onRelatedClick = onRelatedAnimeClicked,
+                                    onRelatedLongClick = onRelatedAnimeLongClicked,
+                                    relatedDisplayMode = relatedAnimeDisplayMode,
+                                    // <-- AY
                                 )
                             }
-                            AnimeActionRow(
-                                favorite = state.anime.favorite,
-                                trackingCount = state.trackingCount,
-                                // AM -->
-                                isSyncingTrackers = state.isSyncingTrackers,
-                                // <-- AM
-                                onAddToLibraryClicked = onAddToLibraryClicked,
-                                onWebViewClicked = onWebViewClicked,
-                                onWebViewLongClicked = onWebViewLongClicked,
-                                onTrackingClicked = onTrackingClicked,
-                                onShareClicked = onShareClicked,
-                                onEditIntervalClicked = onEditIntervalClicked,
-                                onEditCategory = onEditCategoryClicked,
-                            )
-                            ExpandableAnimeDescription(
-                                defaultExpandState = true,
-                                description = state.anime.description,
-                                tagsProvider = { state.anime.genre },
-                                notes = state.anime.notes,
-                                onTagSearch = onTagSearch,
-                                onCopyTagToClipboard = onCopyTagToClipboard,
-                                onEditNotes = onEditNotesClicked,
-                                // AY -->
-                                relations = state.relatedAnime,
-                                onRelatedClick = onRelatedAnimeClicked,
-                                onRelatedLongClick = onRelatedAnimeLongClicked,
-                                relatedDisplayMode = relatedAnimeDisplayMode,
-                                // <-- AY
-                            )
                         }
                     },
                     endContent = {
@@ -1068,7 +1146,7 @@ private fun AnimePrimaryAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Button(
+    ModernPrimaryButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
