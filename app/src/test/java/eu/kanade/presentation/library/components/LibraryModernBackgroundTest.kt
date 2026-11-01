@@ -20,12 +20,13 @@ class LibraryModernBackgroundTest {
     @Test
     fun `Lalapo Modern Library background uses canonical palette stops`() {
         for (dark in listOf(false, true)) {
-            val scheme = ModernThemeResolver.resolve(ModernThemeDefinitions.Lalapo, dark, false)
-            val palette = resolveModernVisualPalette(
-                colorScheme = scheme,
-                enabled = true,
-                definition = ModernThemeDefinitions.Lalapo,
-            )
+            for (definition in ModernThemeDefinitions.authoredBuiltIns) {
+                val scheme = ModernThemeResolver.resolve(definition, dark, false)
+                val palette = resolveModernVisualPalette(
+                    colorScheme = scheme,
+                    enabled = true,
+                    definition = definition,
+                )
 
             assertEquals(
                 listOf(
@@ -35,25 +36,28 @@ class LibraryModernBackgroundTest {
                 ),
                 modernLibraryBackgroundStops(palette),
             )
-            assertTrue(modernLibraryBackgroundStops(palette)!!.all { it != Color.Unspecified })
+                assertTrue(modernLibraryBackgroundStops(palette)!!.all { it != Color.Unspecified })
+            }
         }
     }
 
     @Test
     fun `Modern AMOLED Library background has no tinted fullscreen stops`() {
-        val scheme = ModernThemeResolver.resolve(ModernThemeDefinitions.Lalapo, true, true)
-        val palette = resolveModernVisualPalette(
-            colorScheme = scheme,
-            enabled = true,
-            definition = ModernThemeDefinitions.Lalapo,
-            isAmoled = true,
-        )
+        for (definition in ModernThemeDefinitions.authoredBuiltIns) {
+            val scheme = ModernThemeResolver.resolve(definition, true, true)
+            val palette = resolveModernVisualPalette(
+                colorScheme = scheme,
+                enabled = true,
+                definition = definition,
+                isAmoled = true,
+            )
 
-        assertEquals(Color.Black, scheme.background)
-        assertEquals(Color.Black, scheme.surface)
-        assertEquals(
-            listOf(Color.Black, Color.Black, Color.Black),
-            modernLibraryBackgroundStops(palette),
-        )
+            assertEquals(Color.Black, scheme.background)
+            assertEquals(Color.Black, scheme.surface)
+            assertEquals(
+                listOf(Color.Black, Color.Black, Color.Black),
+                modernLibraryBackgroundStops(palette),
+            )
+        }
     }
 }

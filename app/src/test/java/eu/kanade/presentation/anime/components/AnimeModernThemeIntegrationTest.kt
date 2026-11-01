@@ -94,6 +94,39 @@ class AnimeModernThemeIntegrationTest {
         )
     }
 
+    @Test
+    fun `warm Amber and cool Cyan preserve local artwork and fallback across Light Dark AMOLED`() {
+        for (definition in listOf(ModernThemeDefinitions.Amber, ModernThemeDefinitions.Cyan)) {
+            for ((dark, amoled) in listOf(false to false, true to false, true to true)) {
+                val scheme = ModernThemeResolver.resolve(definition, dark, amoled)
+                val snapshot = scheme.snapshot()
+                val palette = resolveModernVisualPalette(
+                    colorScheme = scheme,
+                    enabled = true,
+                    definition = definition,
+                    isAmoled = dark && amoled,
+                )
+                val fallback = palette.resolveAccentPalette(null)
+
+                for (seeds in listOf(warmArtwork, coolArtwork)) {
+                    val cinematic = deriveCinematicAccentPalette(seeds, scheme)
+                    assertContrast(cinematic.accentGradientContentColor, cinematic.accentGradientStart)
+                    assertContrast(cinematic.accentGradientContentColor, cinematic.activeGradientEnd)
+                    assertEquals(cinematic, palette.resolveAccentPalette(cinematic))
+                    assertEquals(fallback, palette.resolveAccentPalette(null))
+                    assertEquals(snapshot, scheme.snapshot())
+                }
+
+                // Invalid / missing and monochrome artwork extraction yields null seeds.
+                val unavailableSeeds: AnimeArtworkPaletteSeeds? = null
+                assertEquals(
+                    fallback,
+                    palette.resolveAccentPalette(unavailableSeeds?.let { deriveCinematicAccentPalette(it, scheme) }),
+                )
+            }
+        }
+    }
+
     private fun ColorScheme.snapshot(): List<Color> = listOf(
         primary,
         onPrimary,

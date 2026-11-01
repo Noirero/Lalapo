@@ -86,10 +86,18 @@ class AppearanceSelectionWidgetTest {
     @Test
     fun `only real authored production presets may be shown or selected`() {
         val authored = ModernThemePreset.entries.filter { ModernThemeDefinitions.find(it) != null }
-        assertEquals(listOf(ModernThemePreset.LALAPO), authored)
-        ModernThemePreset.entries.filterNot { it == ModernThemePreset.LALAPO }.forEach { preset ->
-            assertFalse(preset in authored)
-            assertEquals(null, ModernThemeDefinitions.find(preset))
-        }
+        assertEquals(
+            listOf(
+                ModernThemePreset.LALAPO,
+                ModernThemePreset.SAKURA,
+                ModernThemePreset.VIOLET,
+                ModernThemePreset.CYAN,
+                ModernThemePreset.EMERALD,
+                ModernThemePreset.AMBER,
+            ),
+            authored,
+        )
+        assertFalse(ModernThemePreset.CUSTOM in authored)
+        assertEquals(null, ModernThemeDefinitions.find(ModernThemePreset.CUSTOM))
     }
 }

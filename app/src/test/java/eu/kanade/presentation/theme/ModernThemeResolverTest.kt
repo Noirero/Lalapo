@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 class ModernThemeResolverTest {
 
     @Test
-    fun `Lalapo identity is stable and future presets are not authored yet`() {
+    fun `Lalapo identity is stable and Custom remains unauthored` {
         val definition = ModernThemeDefinitions.Lalapo
 
         assertEquals(ModernThemePreset.LALAPO, definition.preset)
@@ -27,7 +27,6 @@ class ModernThemeResolverTest {
         assertEquals(ModernDecorativeIdentity.LALAPO_AURORA, definition.decorativeIdentity)
         assertEquals(ModernArtworkIdentity.LALAPO_AURORA, definition.artworkIdentity)
         assertEquals(definition, ModernThemeDefinitions.find(ModernThemePreset.LALAPO))
-        assertEquals(null, ModernThemeDefinitions.find(ModernThemePreset.SAKURA))
         assertEquals(null, ModernThemeDefinitions.find(ModernThemePreset.CUSTOM))
     }
 
@@ -122,7 +121,7 @@ class ModernThemeResolverTest {
 
     @Test
     fun `unimplemented Modern identities are rejected instead of masquerading as Lalapo`() {
-        ModernThemePreset.entries.filterNot { it == ModernThemePreset.LALAPO }.forEach { preset ->
+        listOf(ModernThemePreset.CUSTOM).forEach { preset ->
             assertThrows(IllegalArgumentException::class.java) {
                 resolveDesignStyleColorScheme(
                     designStyle = DesignStyle.MODERN,
