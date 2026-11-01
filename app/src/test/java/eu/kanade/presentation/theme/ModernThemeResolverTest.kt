@@ -9,6 +9,7 @@ import eu.kanade.presentation.theme.colorscheme.CatppuccinColorScheme
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -120,17 +121,19 @@ class ModernThemeResolverTest {
     }
 
     @Test
-    fun `unimplemented Modern identities cannot introduce placeholder colors`() {
-        val lalapo = ModernThemeResolver.resolve(ModernThemeDefinitions.Lalapo, false, false)
-        val unsupported = resolveDesignStyleColorScheme(
-            designStyle = DesignStyle.MODERN,
-            modernThemePreset = ModernThemePreset.AMBER,
-            isDark = false,
-            isAmoled = false,
-            classicResolver = { error("Classic resolver must not be called") },
-        )
-        assertEquals(lalapo, unsupported)
-        assertFalse(ModernThemeDefinitions.find(ModernThemePreset.AMBER) != null)
+    fun `unimplemented Modern identities are rejected instead of masquerading as Lalapo`() {
+        ModernThemePreset.entries.filterNot { it == ModernThemePreset.LALAPO }.forEach { preset ->
+            assertThrows(IllegalArgumentException::class.java) {
+                resolveDesignStyleColorScheme(
+                    designStyle = DesignStyle.MODERN,
+                    modernThemePreset = preset,
+                    isDark = false,
+                    isAmoled = false,
+                    classicResolver = { error("Classic resolver must not be called") },
+                )
+            }
+            assertFalse(ModernThemeDefinitions.find(preset) != null)
+        }
     }
 
     private fun assertMaterialContrast(scheme: ColorScheme) {
