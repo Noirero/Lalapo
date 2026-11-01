@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -35,6 +37,8 @@ import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
+import eu.kanade.presentation.library.components.modernLibraryBackground
+import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
@@ -151,7 +155,11 @@ data object LibraryTab : Tab {
             }
         }
 
+        val isModern = LocalModernVisualPalette.current.isModern
+
         Scaffold(
+            modifier = Modifier.modernLibraryBackground(),
+            containerColor = if (isModern) Color.Transparent else MaterialTheme.colorScheme.background,
             topBar = { scrollBehavior ->
                 val title = LibraryToolbarTitle(
                     text = stringResource(MR.strings.label_library),

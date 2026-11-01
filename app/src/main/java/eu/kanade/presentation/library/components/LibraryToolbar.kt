@@ -1,6 +1,7 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,10 +30,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -43,13 +46,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.components.modernBorderHighlight
+import eu.kanade.presentation.components.modernSurfaceTreatment
+import eu.kanade.presentation.theme.LocalModernVisualPalette
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategorySet
 import tachiyomi.domain.library.model.LibraryGroup
@@ -159,6 +167,8 @@ private fun LibraryRegularToolbar(
         else -> stringResource(MR.strings.categories)
     }
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
+    val modernPalette = LocalModernVisualPalette.current
+    val isModern = modernPalette.isModern
 
     Column {
         TopAppBar(
@@ -178,6 +188,15 @@ private fun LibraryRegularToolbar(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    colors = if (isModern) {
+                        OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.70f),
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
+                            unfocusedBorderColor = modernPalette.borderHighlight,
+                        )
+                    } else {
+                        OutlinedTextFieldDefaults.colors()
+                    },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Search,
@@ -224,6 +243,14 @@ private fun LibraryRegularToolbar(
                 )
             },
             scrollBehavior = scrollBehavior,
+            colors = if (isModern) {
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                )
+            } else {
+                TopAppBarDefaults.topAppBarColors()
+            },
         )
 
         Row(
@@ -233,12 +260,22 @@ private fun LibraryRegularToolbar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title.text,
-                    style = MaterialTheme.typography.headlineSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title.text,
+                        style = MaterialTheme.typography.headlineSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (isModern) {
+                        Text(
+                            text = " //",
+                            color = MaterialTheme.colorScheme.secondary,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.clearAndSetSemantics {},
+                        )
+                    }
+                }
                 Text(
                     text = "Koleksi anime kamu",
                     style = MaterialTheme.typography.bodyMedium,
@@ -264,10 +301,17 @@ private fun LibraryRegularToolbar(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .then(
+                        if (isModern) {
+                            Modifier.modernSurfaceTreatment(shape = RoundedCornerShape(28.dp))
+                        } else {
+                            Modifier
+                        },
+                    ),
                 shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
+                border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -329,7 +373,10 @@ private fun LibraryRegularToolbar(
                     }
 
                     if (selectedSet != null && hasCategoryNavigation) {
-                        VerticalDivider(modifier = Modifier.height(32.dp))
+                        VerticalDivider(
+                            modifier = Modifier.height(32.dp),
+                            color = if (isModern) modernPalette.borderHighlight else MaterialTheme.colorScheme.outlineVariant,
+                        )
                     }
 
                     if (showTabRail) {
@@ -410,8 +457,17 @@ private fun LibraryRegularToolbar(
         ) {
             OutlinedButton(
                 onClick = onClickFilter,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                    ),
                 colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (isModern) {
+                        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f)
+                    } else {
+                        Color.Transparent
+                    },
                     contentColor = if (hasFilters) {
                         MaterialTheme.colorScheme.active
                     } else {
@@ -430,7 +486,18 @@ private fun LibraryRegularToolbar(
             }
             OutlinedButton(
                 onClick = onClickSort,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                    ),
+                colors = if (isModern) {
+                    ButtonDefaults.outlinedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f),
+                    )
+                } else {
+                    ButtonDefaults.outlinedButtonColors()
+                },
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.Sort,

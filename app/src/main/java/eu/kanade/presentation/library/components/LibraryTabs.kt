@@ -1,6 +1,7 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -15,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.category.visualName
+import eu.kanade.presentation.components.modernSurfaceTreatment
+import eu.kanade.presentation.theme.LocalModernVisualPalette
 import tachiyomi.domain.category.model.Category
 import tachiyomi.presentation.core.components.material.TabText
 
@@ -30,6 +33,7 @@ internal fun LibraryTabs(
 
     val currentIndex = selectedIndex.coerceIn(0, categories.lastIndex)
     val listState = rememberLazyListState()
+    val modernPalette = LocalModernVisualPalette.current
 
     LaunchedEffect(currentIndex) {
         listState.animateScrollToItem(currentIndex)
@@ -46,18 +50,29 @@ internal fun LibraryTabs(
             val selected = currentIndex == index
             TextButton(
                 onClick = { onTabItemClick(index) },
-                modifier = Modifier.heightIn(min = 48.dp),
-                shape = RectangleShape,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .then(
+                        if (modernPalette.isModern && selected) {
+                            Modifier.modernSurfaceTreatment(
+                                shape = RoundedCornerShape(22.dp),
+                                selected = true,
+                            )
+                        } else {
+                            Modifier
+                        },
+                    ),
+                shape = if (modernPalette.isModern) RoundedCornerShape(22.dp) else RectangleShape,
                 colors = ButtonDefaults.textButtonColors(
-                    containerColor = if (selected) {
+                    containerColor = if (selected && !modernPalette.isModern) {
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                     } else {
                         Color.Transparent
                     },
-                    contentColor = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
+                    contentColor = when {
+                        selected && modernPalette.isModern -> modernPalette.accentGradientContentColor
+                        selected -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onSurface
                     },
                 ),
                 contentPadding = PaddingValues(horizontal = 16.dp),
