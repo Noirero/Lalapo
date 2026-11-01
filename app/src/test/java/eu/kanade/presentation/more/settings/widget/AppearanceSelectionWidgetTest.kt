@@ -6,8 +6,8 @@ import eu.kanade.domain.ui.model.DesignStyle
 import eu.kanade.domain.ui.model.ModernThemePreset
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.presentation.theme.ModernThemeDefinitions
-import eu.kanade.presentation.theme.resolveDesignStyleColorScheme
 import eu.kanade.presentation.theme.colorscheme.CatppuccinColorScheme
+import eu.kanade.presentation.theme.resolveDesignStyleColorScheme
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
