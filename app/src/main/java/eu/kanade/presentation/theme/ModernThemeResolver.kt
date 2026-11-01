@@ -22,8 +22,10 @@ internal fun resolveDesignStyleColorScheme(
     classicResolver: () -> ColorScheme,
 ): ColorScheme {
     if (designStyle == DesignStyle.CLASSIC) return classicResolver()
-    // Unauthored identities cannot accidentally acquire placeholder production colors.
-    val definition = ModernThemeDefinitions.find(modernThemePreset) ?: ModernThemeDefinitions.Lalapo
+    // Do not render Lalapo while an unsupported identity appears selected.
+    val definition = requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
+        "Modern preset $modernThemePreset has no authored production definition"
+    }
     return ModernThemeResolver.resolve(definition, isDark, isAmoled)
 }
 

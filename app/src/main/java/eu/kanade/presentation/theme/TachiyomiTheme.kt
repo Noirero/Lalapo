@@ -93,7 +93,9 @@ private fun BaseTachiyomiTheme(
         )
     }
     val modernDefinition = if (designStyle == DesignStyle.MODERN) {
-        ModernThemeDefinitions.find(modernThemePreset) ?: ModernThemeDefinitions.Lalapo
+        requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
+            "Modern preset $modernThemePreset has no authored production definition"
+        }
     } else {
         null
     }

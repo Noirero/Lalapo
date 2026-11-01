@@ -2,7 +2,7 @@ package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
@@ -25,15 +25,15 @@ internal fun AppThemeModePreferenceWidget(
 ) {
     BasePreferenceWidget(
         subcomponent = {
-            MultiChoiceSegmentedButtonRow(
+            SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = PrefsHorizontalPadding),
             ) {
                 options.onEachIndexed { index, (mode, labelRes) ->
                     SegmentedButton(
-                        checked = mode == value,
-                        onCheckedChange = { onItemClick(mode) },
+                        selected = mode == value,
+                        onClick = { onItemClick(mode) },
                         shape = SegmentedButtonDefaults.itemShape(
                             index,
                             options.size,
