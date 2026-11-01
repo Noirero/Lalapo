@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -57,6 +58,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.modernBorderHighlight
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernHeaderArtwork
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategorySet
 import tachiyomi.domain.library.model.LibraryGroup
@@ -169,347 +171,352 @@ private fun LibraryRegularToolbar(
     val modernPalette = LocalModernVisualPalette.current
     val isModern = modernPalette.isModern
 
-    Column {
-        TopAppBar(
-            navigationIcon = {
-                IconButton(onClick = onClickSettings) {
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = stringResource(AYMR.strings.settings),
-                    )
-                }
-            },
-            title = {
-                OutlinedTextField(
-                    value = searchQuery.orEmpty(),
-                    onValueChange = { query ->
-                        onSearchQueryChange(query.takeIf { it.isNotEmpty() })
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = if (isModern) {
-                        OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.70f),
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
-                            unfocusedBorderColor = modernPalette.borderHighlight,
-                        )
-                    } else {
-                        OutlinedTextFieldDefaults.colors()
-                    },
-                    leadingIcon = {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        if (isModern) {
+            ModernHeaderArtwork(modifier = Modifier.matchParentSize())
+        }
+        Column {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onClickSettings) {
                         Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = null,
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = stringResource(AYMR.strings.settings),
                         )
-                    },
-                    trailingIcon = if (!searchQuery.isNullOrEmpty()) {
-                        {
-                            IconButton(onClick = { onSearchQueryChange(null) }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Close,
-                                    contentDescription = stringResource(MR.strings.action_reset),
-                                )
+                    }
+                },
+                title = {
+                    OutlinedTextField(
+                        value = searchQuery.orEmpty(),
+                        onValueChange = { query ->
+                            onSearchQueryChange(query.takeIf { it.isNotEmpty() })
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = if (isModern) {
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.70f),
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
+                                unfocusedBorderColor = modernPalette.borderHighlight,
+                            )
+                        } else {
+                            OutlinedTextFieldDefaults.colors()
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Search,
+                                contentDescription = null,
+                            )
+                        },
+                        trailingIcon = if (!searchQuery.isNullOrEmpty()) {
+                            {
+                                IconButton(onClick = { onSearchQueryChange(null) }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Close,
+                                        contentDescription = stringResource(MR.strings.action_reset),
+                                    )
+                                }
                             }
-                        }
-                    } else {
-                        null
-                    },
-                    placeholder = {
+                        } else {
+                            null
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(MR.strings.action_search_hint),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                    )
+                },
+                actions = {
+                    AppBarActions(
+                        listOf(
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_update_library),
+                                onClick = onClickGlobalUpdate,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_update_category),
+                                onClick = onClickRefresh,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_open_random_manga),
+                                onClick = onClickOpenRandomAnime,
+                            ),
+                        ),
+                    )
+                },
+                scrollBehavior = scrollBehavior,
+                colors = if (isModern) {
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    )
+                } else {
+                    TopAppBarDefaults.topAppBarColors()
+                },
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = stringResource(MR.strings.action_search_hint),
+                            text = title.text,
+                            style = MaterialTheme.typography.headlineSmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                    },
-                )
-            },
-            actions = {
-                AppBarActions(
-                    listOf(
-                        AppBar.OverflowAction(
-                            title = stringResource(MR.strings.action_update_library),
-                            onClick = onClickGlobalUpdate,
-                        ),
-                        AppBar.OverflowAction(
-                            title = stringResource(MR.strings.action_update_category),
-                            onClick = onClickRefresh,
-                        ),
-                        AppBar.OverflowAction(
-                            title = stringResource(MR.strings.action_open_random_manga),
-                            onClick = onClickOpenRandomAnime,
-                        ),
-                    ),
-                )
-            },
-            scrollBehavior = scrollBehavior,
-            colors = if (isModern) {
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                )
-            } else {
-                TopAppBarDefaults.topAppBarColors()
-            },
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (isModern) {
+                            Text(
+                                text = " //",
+                                color = MaterialTheme.colorScheme.secondary,
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.clearAndSetSemantics {},
+                            )
+                        }
+                    }
                     Text(
-                        text = title.text,
-                        style = MaterialTheme.typography.headlineSmall,
+                        text = "Koleksi anime kamu",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (isModern) {
-                        Text(
-                            text = " //",
-                            color = MaterialTheme.colorScheme.secondary,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.clearAndSetSemantics {},
-                        )
-                    }
                 }
-                Text(
-                    text = "Koleksi anime kamu",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (title.numberOfAnime != null) {
+                    Pill(
+                        text = "${title.numberOfAnime}",
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = pillAlpha),
+                        fontSize = 14.sp,
+                    )
+                }
             }
-            if (title.numberOfAnime != null) {
-                Pill(
-                    text = "${title.numberOfAnime}",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = pillAlpha),
-                    fontSize = 14.sp,
-                )
-            }
-        }
 
-        val showTabRail = showCategoryTabs && categories.size > 1
-        val showCategoryPicker = !showCategoryTabs && selectedCategory != null
-        val hasCategoryNavigation = showTabRail || showCategoryPicker
+            val showTabRail = showCategoryTabs && categories.size > 1
+            val showCategoryPicker = !showCategoryTabs && selectedCategory != null
+            val hasCategoryNavigation = showTabRail || showCategoryPicker
 
-        if (selectedSet != null || hasCategoryNavigation) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .then(
-                        if (isModern) {
-                            Modifier.modernSurfaceTreatment(shape = RoundedCornerShape(28.dp))
-                        } else {
-                            Modifier
-                        },
-                    ),
-                shape = RoundedCornerShape(28.dp),
-                color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
-                border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (selectedSet != null) {
-                        Box(
-                            modifier = if (hasCategoryNavigation) {
-                                Modifier.weight(0.42f)
+            if (selectedSet != null || hasCategoryNavigation) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .then(
+                            if (isModern) {
+                                Modifier.modernSurfaceTreatment(shape = RoundedCornerShape(28.dp))
                             } else {
-                                Modifier.fillMaxWidth()
+                                Modifier
                             },
-                        ) {
-                            TextButton(
-                                onClick = { setMenuExpanded = true },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RectangleShape,
+                        ),
+                    shape = RoundedCornerShape(28.dp),
+                    color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (selectedSet != null) {
+                            Box(
+                                modifier = if (hasCategoryNavigation) {
+                                    Modifier.weight(0.42f)
+                                } else {
+                                    Modifier.fillMaxWidth()
+                                },
                             ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Outlined.Label,
-                                    contentDescription = null,
-                                )
-                                Text(
-                                    text = "Set: ${selectedSet.name}",
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Icon(
-                                    imageVector = Icons.Outlined.ArrowDropDown,
-                                    contentDescription = null,
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = setMenuExpanded,
-                                onDismissRequest = { setMenuExpanded = false },
-                            ) {
-                                sets.forEach { set ->
+                                TextButton(
+                                    onClick = { setMenuExpanded = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RectangleShape,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.Label,
+                                        contentDescription = null,
+                                    )
+                                    Text(
+                                        text = "Set: ${selectedSet.name}",
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(start = 8.dp),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Outlined.ArrowDropDown,
+                                        contentDescription = null,
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = setMenuExpanded,
+                                    onDismissRequest = { setMenuExpanded = false },
+                                ) {
+                                    sets.forEach { set ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
+                                            },
+                                            onClick = {
+                                                setMenuExpanded = false
+                                                onSelectSet(set.syncKey)
+                                            },
+                                        )
+                                    }
                                     DropdownMenuItem(
-                                        text = {
-                                            Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
-                                        },
+                                        text = { Text("Kelola Set") },
                                         onClick = {
                                             setMenuExpanded = false
-                                            onSelectSet(set.syncKey)
+                                            onManageSets()
                                         },
                                     )
                                 }
-                                DropdownMenuItem(
-                                    text = { Text("Kelola Set") },
-                                    onClick = {
-                                        setMenuExpanded = false
-                                        onManageSets()
-                                    },
-                                )
                             }
                         }
-                    }
 
-                    if (selectedSet != null && hasCategoryNavigation) {
-                        VerticalDivider(
-                            modifier = Modifier.height(32.dp),
-                            color = if (isModern) {
-                                modernPalette.borderHighlight
-                            } else {
-                                MaterialTheme.colorScheme.outlineVariant
-                            },
-                        )
-                    }
+                        if (selectedSet != null && hasCategoryNavigation) {
+                            VerticalDivider(
+                                modifier = Modifier.height(32.dp),
+                                color = if (isModern) {
+                                    modernPalette.borderHighlight
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant
+                                },
+                            )
+                        }
 
-                    if (showTabRail) {
-                        LibraryTabs(
-                            categories = categories,
-                            selectedIndex = selectedCategoryIndex,
-                            getItemCountForCategory = getItemCountForCategory,
-                            onTabItemClick = onSelectCategory,
-                            modifier = if (selectedSet != null) {
-                                Modifier.weight(0.58f)
-                            } else {
-                                Modifier.fillMaxWidth()
-                            },
-                        )
-                    } else if (showCategoryPicker && selectedCategory != null) {
-                        Box(
-                            modifier = if (selectedSet != null) {
-                                Modifier.weight(0.58f)
-                            } else {
-                                Modifier.fillMaxWidth()
-                            },
-                        ) {
-                            TextButton(
-                                onClick = { categoryMenuExpanded = true },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RectangleShape,
+                        if (showTabRail) {
+                            LibraryTabs(
+                                categories = categories,
+                                selectedIndex = selectedCategoryIndex,
+                                getItemCountForCategory = getItemCountForCategory,
+                                onTabItemClick = onSelectCategory,
+                                modifier = if (selectedSet != null) {
+                                    Modifier.weight(0.58f)
+                                } else {
+                                    Modifier.fillMaxWidth()
+                                },
+                            )
+                        } else if (showCategoryPicker && selectedCategory != null) {
+                            Box(
+                                modifier = if (selectedSet != null) {
+                                    Modifier.weight(0.58f)
+                                } else {
+                                    Modifier.fillMaxWidth()
+                                },
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Layers,
-                                    contentDescription = null,
-                                )
-                                Text(
-                                    text = "$categoryGroupLabel: ${selectedCategory.visualName}",
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Icon(
-                                    imageVector = Icons.Outlined.ArrowDropDown,
-                                    contentDescription = null,
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = categoryMenuExpanded,
-                                onDismissRequest = { categoryMenuExpanded = false },
-                            ) {
-                                categories.forEachIndexed { index, category ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                if (index == selectedCategoryIndex) {
-                                                    "✓ ${category.visualName}"
-                                                } else {
-                                                    category.visualName
-                                                },
-                                            )
-                                        },
-                                        onClick = {
-                                            categoryMenuExpanded = false
-                                            onSelectCategory(index)
-                                        },
+                                TextButton(
+                                    onClick = { categoryMenuExpanded = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RectangleShape,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Layers,
+                                        contentDescription = null,
                                     )
+                                    Text(
+                                        text = "$categoryGroupLabel: ${selectedCategory.visualName}",
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(start = 8.dp),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Outlined.ArrowDropDown,
+                                        contentDescription = null,
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = categoryMenuExpanded,
+                                    onDismissRequest = { categoryMenuExpanded = false },
+                                ) {
+                                    categories.forEachIndexed { index, category ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    if (index == selectedCategoryIndex) {
+                                                        "✓ ${category.visualName}"
+                                                    } else {
+                                                        category.visualName
+                                                    },
+                                                )
+                                            },
+                                            onClick = {
+                                                categoryMenuExpanded = false
+                                                onSelectCategory(index)
+                                            },
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlinedButton(
-                onClick = onClickFilter,
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .then(
-                        if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
-                    ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (isModern) {
-                        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f)
-                    } else {
-                        Color.Transparent
-                    },
-                    contentColor = if (hasFilters) {
-                        MaterialTheme.colorScheme.active
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                ),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.FilterList,
-                    contentDescription = null,
-                )
-                Text(
-                    text = stringResource(MR.strings.action_filter),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
-            OutlinedButton(
-                onClick = onClickSort,
-                modifier = Modifier
-                    .weight(1f)
-                    .then(
-                        if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                OutlinedButton(
+                    onClick = onClickFilter,
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                        ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (isModern) {
+                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f)
+                        } else {
+                            Color.Transparent
+                        },
+                        contentColor = if (hasFilters) {
+                            MaterialTheme.colorScheme.active
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                     ),
-                colors = if (isModern) {
-                    ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.FilterList,
+                        contentDescription = null,
                     )
-                } else {
-                    ButtonDefaults.outlinedButtonColors()
-                },
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Sort,
-                    contentDescription = null,
-                )
-                Text(
-                    text = stringResource(MR.strings.action_sort),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
+                    Text(
+                        text = stringResource(MR.strings.action_filter),
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+                OutlinedButton(
+                    onClick = onClickSort,
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                        ),
+                    colors = if (isModern) {
+                        ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f),
+                        )
+                    } else {
+                        ButtonDefaults.outlinedButtonColors()
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.Sort,
+                        contentDescription = null,
+                    )
+                    Text(
+                        text = stringResource(MR.strings.action_sort),
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
             }
         }
     }
