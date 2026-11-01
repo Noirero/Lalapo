@@ -76,12 +76,29 @@ private fun BaseTachiyomiTheme(
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    val colorScheme = remember(context, appTheme, isDark, isAmoled, designStyle, modernThemePreset) {
+    val customColors = if (designStyle == DesignStyle.MODERN && modernThemePreset == ModernThemePreset.CUSTOM) {
+        val preferences = remember(context) { context.appGraph.uiPreferences }
+        remember(
+            preferences.modernCustomPrimary.get(),
+            preferences.modernCustomSecondaryOverride.get(),
+            preferences.modernCustomTertiaryOverride.get(),
+        ) {
+            ModernCustomColors.fromStored(
+                preferences.modernCustomPrimary.get(),
+                preferences.modernCustomSecondaryOverride.get(),
+                preferences.modernCustomTertiaryOverride.get(),
+            )
+        }
+    } else {
+        null
+    }
+    val colorScheme = remember(context, appTheme, isDark, isAmoled, designStyle, modernThemePreset, customColors) {
         resolveDesignStyleColorScheme(
             designStyle = designStyle,
             modernThemePreset = modernThemePreset,
             isDark = isDark,
             isAmoled = isAmoled,
+            customColors = customColors,
             classicResolver = {
                 getThemeColorScheme(
                     context = context,
@@ -93,8 +110,12 @@ private fun BaseTachiyomiTheme(
         )
     }
     val modernDefinition = if (designStyle == DesignStyle.MODERN) {
-        requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
-            "Modern preset $modernThemePreset has no authored production definition"
+        if (modernThemePreset == ModernThemePreset.CUSTOM) {
+            ModernThemeDefinitions.custom(requireNotNull(customColors))
+        } else {
+            requireNotNull(ModernThemeDefinitions.find(modernThemePreset)) {
+                "Modern preset $modernThemePreset has no authored production definition"
+            }
         }
     } else {
         null

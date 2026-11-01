@@ -36,6 +36,7 @@ internal fun modernHeaderArtworkResource(
         ModernArtworkIdentity.CYAN_WATER_SKY -> R.drawable.modern_header_cyan
         ModernArtworkIdentity.EMERALD_FOLIAGE -> R.drawable.modern_header_emerald
         ModernArtworkIdentity.AMBER_MAPLE_SUNSET -> R.drawable.modern_header_amber
+        ModernArtworkIdentity.CUSTOM_WAVES -> null
     }
 }
 

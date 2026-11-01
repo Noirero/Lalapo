@@ -74,6 +74,17 @@ internal fun Modifier.modernIdentityMotif(
                 size = Size(radius * 1.1f, radius * 1.5f),
             )
         }
+        ModernArtworkIdentity.CUSTOM_WAVES -> {
+            // Static abstract concentric lights: confined to the top, inexpensive to draw.
+            repeat(3) { index ->
+                drawCircle(
+                    color = color.copy(alpha = 0.10f),
+                    radius = radius * (1.5f + index * 0.9f),
+                    center = anchor,
+                    style = Stroke(1.dp.toPx()),
+                )
+            }
+        }
         ModernArtworkIdentity.AMBER_MAPLE_SUNSET -> {
             drawCircle(color = faint, radius = radius * 1.25f, center = anchor)
             for (index in 0 until 6) {
