@@ -21,10 +21,10 @@ import eu.kanade.presentation.theme.CinematicAccentPalette
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.tachiyomi.data.coil.useBackground
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
+import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tachiyomi.domain.anime.model.Anime
-import kotlin.math.abs
 
 private const val PALETTE_BITMAP_SIZE = 96
 private const val MINIMUM_ARTWORK_SATURATION = 0.18f
