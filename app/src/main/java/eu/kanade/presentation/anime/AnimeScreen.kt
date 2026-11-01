@@ -74,6 +74,7 @@ import eu.kanade.presentation.anime.components.NextEpisodeAiringListItem
 import eu.kanade.presentation.anime.components.rememberAnimeCinematicAccentPalette
 import eu.kanade.presentation.components.ModernPrimaryButton
 import eu.kanade.presentation.components.relativeDateText
+import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ProvideCinematicAccentPalette
 import eu.kanade.presentation.util.formatEpisodeNumber
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -410,6 +411,7 @@ private fun AnimeScreenSmallImpl(
         )
     }
 
+    val modernAppearanceEnabled = LocalModernVisualPalette.current.isModern
     val cinematicAccentPalette = rememberAnimeCinematicAccentPalette(state.anime)
     val screenScope = rememberCoroutineScope()
     val hasPrimaryAction = episodes.fastAny { !it.episode.seen } && !isAnySelected
@@ -605,7 +607,7 @@ private fun AnimeScreenSmallImpl(
                     ) {
                         ProvideCinematicAccentPalette(cinematicAccentPalette) {
                             ExpandableAnimeDescription(
-                                defaultExpandState = state.isFromSource,
+                                defaultExpandState = if (modernAppearanceEnabled) false else state.isFromSource,
                                 description = state.anime.description,
                                 tagsProvider = { state.anime.genre },
                                 notes = state.anime.notes,
