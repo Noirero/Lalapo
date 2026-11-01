@@ -129,7 +129,9 @@ internal fun ModernSurface(
         ),
         shape = shape,
         color = if (palette.isModern) Color.Transparent else fallbackColor,
-        contentColor = if (selected) {
+        contentColor = if (selected && palette.isModern) {
+            palette.accentGradientContentColor
+        } else if (selected) {
             MaterialTheme.colorScheme.onPrimaryContainer
         } else {
             MaterialTheme.colorScheme.onSurface
@@ -198,7 +200,7 @@ internal fun ModernMetadataChip(
         label = label,
         modifier = modifier.then(
             if (enabled) {
-                Modifier.modernSurfaceTreatment(
+                Modifier.modernBorderHighlight(
                     shape = shape,
                     selected = selected,
                 )
