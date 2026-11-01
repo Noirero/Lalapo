@@ -374,7 +374,11 @@ private fun LibraryRegularToolbar(
                     if (selectedSet != null && hasCategoryNavigation) {
                         VerticalDivider(
                             modifier = Modifier.height(32.dp),
-                            color = if (isModern) modernPalette.borderHighlight else MaterialTheme.colorScheme.outlineVariant,
+                            color = if (isModern) {
+                                modernPalette.borderHighlight
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant
+                            },
                         )
                     }
 
