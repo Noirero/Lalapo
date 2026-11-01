@@ -338,6 +338,7 @@
     <string name="am_anime_detail_tab_detail">Detail</string>
     <string name="am_anime_detail_tab_episode">Episodes</string>
     <string name="am_anime_detail_tab_info">Info</string>
+    <string name="am_anime_detail_synopsis">Synopsis</string>
     <string name="am_anime_detail_progress">Watching progress</string>
     <string name="am_anime_detail_progress_format">%1$d of %2$d episodes watched</string>
     <string name="am_label_sync_backup">Sync &amp; backup</string>
