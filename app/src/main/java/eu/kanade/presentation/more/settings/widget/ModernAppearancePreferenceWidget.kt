@@ -34,7 +34,7 @@ internal fun ModernAppearancePreferenceWidget(
                 TachiyomiTheme(
                     appTheme = appTheme,
                     amoled = amoled,
-                    modernAppearance = true,
+                    modernAppearance = checked,
                 ) {
                     ModernAppearancePreview()
                 }
