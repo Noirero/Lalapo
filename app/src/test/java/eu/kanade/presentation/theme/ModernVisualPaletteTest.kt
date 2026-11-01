@@ -161,7 +161,7 @@ class ModernVisualPaletteTest {
     ) {
         backgrounds.forEach { background ->
             val ratio = contrastRatio(foreground, background)
-            assertTrue("contrast $ratio is below 4.5", ratio >= 4.5f)
+            assertTrue(ratio >= 4.5f, "contrast $ratio is below 4.5")
         }
     }
 
