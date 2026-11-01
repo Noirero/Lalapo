@@ -246,7 +246,6 @@ fun AnimeActionRow(
             item {
                 ModernTonalButton(
                     onClick = onTrackingClicked,
-                    enabled = !isSyncingTrackers,
                 ) {
                     if (isSyncingTrackers) {
                         CircularProgressIndicator(
@@ -389,22 +388,55 @@ fun ExpandableAnimeDescription(
         val desc =
             description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
 
-        AnimeSummary(
-            description = desc,
-            expanded = expanded,
-            notes = notes,
-            // AY -->
-            onEditNotesClicked = onEditNotes,
-            relations = relations,
-            onRelatedClick = onRelatedClick,
-            onRelatedLongClick = onRelatedLongClick,
-            relatedDisplayMode = relatedDisplayMode,
-            // <-- AY
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .padding(horizontal = 16.dp)
-                .clickableNoIndication { onExpanded(!expanded) },
-        )
+        val summaryModifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickableNoIndication { onExpanded(!expanded) }
+
+        if (LocalModernVisualPalette.current.isModern) {
+            ModernSurface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Column(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(AMMR.strings.am_anime_detail_synopsis),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    AnimeSummary(
+                        description = desc,
+                        expanded = expanded,
+                        notes = notes,
+                        onEditNotesClicked = onEditNotes,
+                        relations = relations,
+                        onRelatedClick = onRelatedClick,
+                        onRelatedLongClick = onRelatedLongClick,
+                        relatedDisplayMode = relatedDisplayMode,
+                        modifier = summaryModifier,
+                    )
+                }
+            }
+        } else {
+            AnimeSummary(
+                description = desc,
+                expanded = expanded,
+                notes = notes,
+                onEditNotesClicked = onEditNotes,
+                relations = relations,
+                onRelatedClick = onRelatedClick,
+                onRelatedLongClick = onRelatedLongClick,
+                relatedDisplayMode = relatedDisplayMode,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .padding(horizontal = 16.dp)
+                    .clickableNoIndication { onExpanded(!expanded) },
+            )
+        }
         val tags = tagsProvider()
         if (!tags.isNullOrEmpty()) {
             Box(
