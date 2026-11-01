@@ -87,16 +87,32 @@ internal fun rememberAnimeCinematicAccentPalette(
 }
 
 internal fun animeArtworkPaletteKey(anime: Anime): String {
+    return animeArtworkPaletteKey(
+        animeId = anime.id,
+        backgroundUrl = anime.backgroundUrl,
+        backgroundLastModified = anime.backgroundLastModified,
+        thumbnailUrl = anime.thumbnailUrl,
+        coverLastModified = anime.coverLastModified,
+    )
+}
+
+internal fun animeArtworkPaletteKey(
+    animeId: Long,
+    backgroundUrl: String?,
+    backgroundLastModified: Long,
+    thumbnailUrl: String?,
+    coverLastModified: Long,
+): String {
     return buildString {
-        append(anime.id)
+        append(animeId)
         append(';')
-        append(anime.backgroundUrl.orEmpty())
+        append(backgroundUrl.orEmpty())
         append(';')
-        append(anime.backgroundLastModified)
+        append(backgroundLastModified)
         append(';')
-        append(anime.thumbnailUrl.orEmpty())
+        append(thumbnailUrl.orEmpty())
         append(';')
-        append(anime.coverLastModified)
+        append(coverLastModified)
     }
 }
 
