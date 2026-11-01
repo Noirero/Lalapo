@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,12 +28,11 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun LibraryContent(
     categories: List<Category>,
+    pagerState: PagerState,
     searchQuery: String?,
     selection: Set<Long>,
     contentPadding: PaddingValues,
-    currentPage: Int,
     hasActiveFilters: Boolean,
-    showPageTabs: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onClickAnime: (Long) -> Unit,
     continueWatchingItems: List<LibraryItem>,
@@ -42,7 +41,6 @@ fun LibraryContent(
     onToggleRangeSelection: (Category, LibraryAnime) -> Unit,
     onRefresh: () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
-    getItemCountForCategory: (Category) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForCategory: (Category) -> List<LibraryItem>,
@@ -54,8 +52,6 @@ fun LibraryContent(
             end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
         ),
     ) {
-        val pagerState = rememberPagerState(currentPage) { categories.size }
-
         val scope = rememberCoroutineScope()
         var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
 
@@ -73,22 +69,10 @@ fun LibraryContent(
             )
         }
 
-        if (showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)) {
-            LaunchedEffect(categories) {
-                if (categories.size <= pagerState.currentPage) {
-                    pagerState.scrollToPage(categories.size - 1)
-                }
+        LaunchedEffect(categories.size) {
+            if (categories.isNotEmpty() && pagerState.currentPage > categories.lastIndex) {
+                pagerState.scrollToPage(categories.lastIndex)
             }
-            LibraryTabs(
-                categories = categories,
-                pagerState = pagerState,
-                getItemCountForCategory = getItemCountForCategory,
-                onTabItemClick = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(it)
-                    }
-                },
-            )
         }
 
         PullRefresh(

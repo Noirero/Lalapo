@@ -27,6 +27,7 @@ import tachiyomi.domain.category.interactor.HideCategory
 import tachiyomi.domain.category.interactor.RenameCategory
 import tachiyomi.domain.category.interactor.ReorderCategory
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.repository.CategorySetRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import kotlin.time.Duration.Companion.seconds
@@ -36,6 +37,7 @@ import kotlin.time.Duration.Companion.seconds
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 class CategoryViewModel(
     private val getCategories: GetCategories,
+    private val categorySetRepository: CategorySetRepository,
     private val createCategoryWithName: CreateCategoryWithName,
     private val deleteCategory: DeleteCategory,
     private val reorderCategory: ReorderCategory,
@@ -46,6 +48,42 @@ class CategoryViewModel(
     private val libraryPreferences: LibraryPreferences,
     // <-- AY
 ) : ViewModel() {
+
+    val categorySets = categorySetRepository.observeSets()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
+
+    val activeSetKey = libraryPreferences.activeCategorySetKey.changes()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5.seconds),
+            libraryPreferences.activeCategorySetKey.get(),
+        )
+
+    fun createSet(name: String) = runSetOperation { categorySetRepository.create(name) }
+
+    fun renameSet(id: Long, name: String) = runSetOperation { categorySetRepository.rename(id, name) }
+
+    fun selectSet(key: String) = runSetOperation { categorySetRepository.selectActiveSet(key) }
+
+    fun deleteSet(id: Long, destinationId: Long?) = runSetOperation {
+        categorySetRepository.delete(id, destinationId)
+    }
+
+    fun moveCategory(categoryId: Long, destinationId: Long) = runSetOperation {
+        categorySetRepository.moveCategories(listOf(categoryId), destinationId)
+    }
+
+    fun reorderSets(ids: List<Long>) = runSetOperation { categorySetRepository.reorder(ids) }
+
+    private fun runSetOperation(operation: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                operation()
+            } catch (e: Exception) {
+                _events.send(CategoryEvent.InternalError)
+            }
+        }
+    }
 
     private val _events: Channel<CategoryEvent> = Channel()
     val events = _events.receiveAsFlow()

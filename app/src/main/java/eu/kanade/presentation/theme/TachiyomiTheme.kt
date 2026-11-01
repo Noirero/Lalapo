@@ -7,6 +7,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +40,7 @@ import mihon.app.di.appGraph
 fun TachiyomiTheme(
     appTheme: AppTheme? = null,
     amoled: Boolean? = null,
+    modernAppearance: Boolean? = null,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -46,6 +48,7 @@ fun TachiyomiTheme(
     BaseTachiyomiTheme(
         appTheme = appTheme ?: uiPreferences.appTheme.get(),
         isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),
+        modernAppearance = modernAppearance ?: uiPreferences.modernAppearance.get(),
         content = content,
     )
 }
@@ -54,28 +57,40 @@ fun TachiyomiTheme(
 fun TachiyomiPreviewTheme(
     appTheme: AppTheme = AppTheme.DEFAULT,
     isAmoled: Boolean = false,
+    modernAppearance: Boolean = false,
     content: @Composable () -> Unit,
-) = BaseTachiyomiTheme(appTheme, isAmoled, content)
+) = BaseTachiyomiTheme(appTheme, isAmoled, modernAppearance, content)
 
 @Composable
 private fun BaseTachiyomiTheme(
     appTheme: AppTheme,
     isAmoled: Boolean,
+    modernAppearance: Boolean,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    MaterialExpressiveTheme(
-        colorScheme = remember(appTheme, isDark, isAmoled) {
-            getThemeColorScheme(
-                context = context,
-                appTheme = appTheme,
-                isDark = isDark,
-                isAmoled = isAmoled,
-            )
-        },
-        content = content,
-    )
+    val colorScheme = remember(appTheme, isDark, isAmoled) {
+        getThemeColorScheme(
+            context = context,
+            appTheme = appTheme,
+            isDark = isDark,
+            isAmoled = isAmoled,
+        )
+    }
+    val modernVisualPalette = remember(colorScheme, modernAppearance) {
+        resolveModernVisualPalette(
+            colorScheme = colorScheme,
+            enabled = modernAppearance,
+        )
+    }
+
+    CompositionLocalProvider(LocalModernVisualPalette provides modernVisualPalette) {
+        MaterialExpressiveTheme(
+            colorScheme = colorScheme,
+            content = content,
+        )
+    }
 }
 
 private fun getThemeColorScheme(

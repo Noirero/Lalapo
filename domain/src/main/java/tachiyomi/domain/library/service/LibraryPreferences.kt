@@ -141,6 +141,12 @@ class LibraryPreferences(
 
     val lastUsedCategory: Preference<Int> = preferenceStore.getInt(Preference.appStateKey("last_used_category"), 0)
 
+    // Stable Set identity survives Set reordering and database ID changes on restore.
+    val activeCategorySetKey: Preference<String> = preferenceStore.getString(
+        Preference.appStateKey("active_category_set_key"),
+        "lalapo:category-set:default",
+    )
+
     val categoryTabs: Preference<Boolean> = preferenceStore.getBoolean("display_category_tabs", true)
 
     val categoryNumberOfItems: Preference<Boolean> = preferenceStore.getBoolean("display_number_of_items", false)

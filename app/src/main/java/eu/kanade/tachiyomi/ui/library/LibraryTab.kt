@@ -5,6 +5,7 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material3.SnackbarHost
@@ -33,6 +34,7 @@ import eu.kanade.presentation.library.DeleteLibraryAnimeDialog
 import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryToolbar
+import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.connection.discord.DiscordRPCService
@@ -43,6 +45,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -93,6 +96,11 @@ data object LibraryTab : Tab {
         val viewModel = metroViewModel<LibraryViewModel>()
         val settingsViewModel = metroViewModel<LibrarySettingsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val sets by viewModel.categorySets.collectAsStateWithLifecycle()
+        val activeSetKey by viewModel.activeSetKey.collectAsStateWithLifecycle()
+        val pagerState = rememberPagerState(
+            initialPage = state.coercedActiveCategoryIndex,
+        ) { state.displayedCategories.size }
 
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -145,26 +153,49 @@ data object LibraryTab : Tab {
 
         Scaffold(
             topBar = { scrollBehavior ->
-                val title = state.getToolbarTitle(
-                    defaultTitle = stringResource(MR.strings.label_library),
-                    defaultCategoryTitle = stringResource(MR.strings.label_default),
-                    page = state.coercedActiveCategoryIndex,
+                val title = LibraryToolbarTitle(
+                    text = stringResource(MR.strings.label_library),
+                    numberOfAnime = state.libraryData.favorites.size.takeIf { state.showAnimeCount },
                 )
                 LibraryToolbar(
                     hasActiveFilters = state.hasActiveFilters,
                     selectedCount = state.selection.size,
                     title = title,
+                    sets = sets,
+                    activeSetKey = activeSetKey,
+                    categories = state.displayedCategories,
+                    activeCategoryIndex = pagerState.currentPage,
+                    showCategoryTabs = state.showCategoryTabs,
+                    groupType = state.groupType,
+                    hasCategories = state.hasCategories,
+                    getItemCountForCategory = state::getItemCountForCategory,
+                    onClickSettings = {
+                        navigator.push(SettingsScreen())
+                    },
                     onClickUnselectAll = viewModel::clearSelection,
                     onClickSelectAll = viewModel::selectAll,
                     onClickInvertSelection = viewModel::invertSelection,
-                    onClickFilter = viewModel::showSettingsDialog,
+                    onSelectSet = viewModel::selectSet,
+                    onManageSets = { navigator.push(CategoryScreen()) },
+                    onSelectCategory = { index ->
+                        if (index in state.displayedCategories.indices) {
+                            scope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        }
+                    },
+                    onClickFilter = {
+                        viewModel.showSettingsDialog(LibraryViewModel.SettingsPage.Filter)
+                    },
+                    onClickSort = {
+                        viewModel.showSettingsDialog(LibraryViewModel.SettingsPage.Sort)
+                    },
                     onClickRefresh = { onClickRefresh(state.activeCategory) },
                     onClickGlobalUpdate = { onClickRefresh(null) },
                     onClickOpenRandomAnime = ::openRandomAnime,
                     searchQuery = state.searchQuery,
                     onSearchQueryChange = viewModel::search,
-                    // For scroll overlay when no tab
-                    scrollBehavior = scrollBehavior.takeIf { !state.showCategoryTabs },
+                    scrollBehavior = scrollBehavior,
                 )
             },
             bottomBar = {
@@ -209,12 +240,11 @@ data object LibraryTab : Tab {
                 else -> {
                     LibraryContent(
                         categories = state.displayedCategories,
+                        pagerState = pagerState,
                         searchQuery = state.searchQuery,
                         selection = state.selection,
                         contentPadding = contentPadding,
-                        currentPage = state.coercedActiveCategoryIndex,
                         hasActiveFilters = state.hasActiveFilters,
-                        showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
                         onChangeCurrentPage = viewModel::updateActiveCategoryIndex,
                         onClickAnime = { navigator.push(AnimeScreen(it)) },
                         continueWatchingItems = state.continueWatchingItems,
@@ -236,7 +266,6 @@ data object LibraryTab : Tab {
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
                         },
-                        getItemCountForCategory = { state.getItemCountForCategory(it) },
                         getDisplayMode = { viewModel.getDisplayMode() },
                         getColumnsForOrientation = { viewModel.getColumnsForOrientation(it) },
                         getItemsForCategory = { state.getItemsForCategory(it) },
@@ -252,6 +281,7 @@ data object LibraryTab : Tab {
                     onDismissRequest = onDismissRequest,
                     viewModel = settingsViewModel,
                     category = state.activeCategory,
+                    initialPage = dialog.initialPage,
                     // AM (GROUPING) -->
                     hasCategories = state.hasCategories,
                     // <-- AM (GROUPING)
@@ -284,6 +314,12 @@ data object LibraryTab : Tab {
             null -> {}
         }
 
+        LaunchedEffect(state.libraryData.isInitialized) {
+            if (state.libraryData.isInitialized && state.displayedCategories.isNotEmpty()) {
+                pagerState.scrollToPage(state.coercedActiveCategoryIndex)
+            }
+        }
+
         BackHandler(enabled = state.selectionMode || state.searchQuery != null) {
             when {
                 state.selectionMode -> viewModel.clearSelection()
@@ -308,7 +344,11 @@ data object LibraryTab : Tab {
             }
             // <-- AM (DISCORD_RPC)
             launch { queryEvent.receiveAsFlow().collect(viewModel::search) }
-            launch { requestSettingsSheetEvent.receiveAsFlow().collectLatest { viewModel.showSettingsDialog() } }
+            launch {
+                requestSettingsSheetEvent.receiveAsFlow().collectLatest {
+                    viewModel.showSettingsDialog(LibraryViewModel.SettingsPage.Display)
+                }
+            }
         }
     }
 

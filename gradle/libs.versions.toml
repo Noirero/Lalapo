@@ -16,6 +16,7 @@ androidx-glance = "1.2.0"
 androidx-interpolator = "1.0.0"
 androidx-lifecycle = "2.11.0"
 androidx-paging = "3.5.1"
+androidx-palette = "1.1.0"
 androidx-preference = "1.2.1"
 androidx-profileInstaller = "1.4.1"
 androidx-recyclerView = "1.4.0"
@@ -112,6 +113,7 @@ androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmode
 androidx-lifecycle-viewmodelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
+androidx-palette = { module = "androidx.palette:palette", version.ref = "androidx-palette" }
 androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "androidx-preference" }
 androidx-profileInstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "androidx-profileInstaller" }
 androidx-recyclerView = { module = "androidx.recyclerview:recyclerview", version.ref = "androidx-recyclerView" }
