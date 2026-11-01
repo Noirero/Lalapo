@@ -31,9 +31,12 @@ internal fun resolveDesignStyleColorScheme(
 
 /** An authored, deterministic M3 scheme generated from the canonical Modern identity. */
 internal object ModernThemeResolver {
-    private val lalapoScheme = object : BaseColorScheme() {
-        override val lightScheme = buildScheme(ModernThemeDefinitions.Lalapo, dark = false)
-        override val darkScheme = buildScheme(ModernThemeDefinitions.Lalapo, dark = true)
+    // One cached semantic resolver for each authored definition; no palette work on recomposition.
+    private val schemes = ModernThemeDefinitions.authoredBuiltIns.associate { definition ->
+        definition.preset to object : BaseColorScheme() {
+            override val lightScheme = buildScheme(definition, dark = false)
+            override val darkScheme = buildScheme(definition, dark = true)
+        }
     }
 
     fun resolve(
@@ -41,10 +44,11 @@ internal object ModernThemeResolver {
         isDark: Boolean,
         isAmoled: Boolean,
     ): ColorScheme {
-        require(definition.preset == ModernThemePreset.LALAPO && definition == ModernThemeDefinitions.Lalapo) {
-            "The selected Modern preset does not yet have an authored ColorScheme"
+        require(ModernThemeDefinitions.find(definition.preset) == definition) {
+            "The selected Modern preset does not have an authored production definition"
         }
-        return lalapoScheme.getColorScheme(
+        val scheme = requireNotNull(schemes[definition.preset])
+        return scheme.getColorScheme(
             isDark = isDark,
             isAmoled = isAmoled,
             overrideDarkSurfaceContainers = true,
@@ -80,17 +84,17 @@ private fun buildScheme(definition: ModernThemeDefinition, dark: Boolean): Color
             onTertiary = ink,
             tertiaryContainer = tertiaryContainer,
             onTertiaryContainer = containerContent,
-            background = Color(0xFF131527),
+            background = identityNeutral(Color(0xFF131527), definition, 0.11f),
             onBackground = Color(0xFFF4F3FF),
-            surface = Color(0xFF131527),
+            surface = identityNeutral(Color(0xFF131527), definition, 0.11f),
             onSurface = Color(0xFFF4F3FF),
             surfaceVariant = Color(0xFF30324A),
             onSurfaceVariant = Color(0xFFE1E1F3),
-            surfaceContainerLowest = Color(0xFF0E1020),
-            surfaceContainerLow = Color(0xFF191B30),
-            surfaceContainer = Color(0xFF202239),
-            surfaceContainerHigh = Color(0xFF292B43),
-            surfaceContainerHighest = Color(0xFF34364E),
+            surfaceContainerLowest = identityNeutral(Color(0xFF0E1020), definition, 0.08f),
+            surfaceContainerLow = identityNeutral(Color(0xFF191B30), definition, 0.09f),
+            surfaceContainer = identityNeutral(Color(0xFF202239), definition, 0.10f),
+            surfaceContainerHigh = identityNeutral(Color(0xFF292B43), definition, 0.11f),
+            surfaceContainerHighest = identityNeutral(Color(0xFF34364E), definition, 0.12f),
             outline = Color(0xFFA8AAC8),
             outlineVariant = Color(0xFF60637D),
             inverseSurface = Color(0xFFF4F3FF),
@@ -112,17 +116,17 @@ private fun buildScheme(definition: ModernThemeDefinition, dark: Boolean): Color
             onTertiary = ink,
             tertiaryContainer = tertiaryContainer,
             onTertiaryContainer = containerContent,
-            background = Color(0xFFF4F3FF),
+            background = identityNeutral(Color(0xFFF4F3FF), definition, 0.07f),
             onBackground = Color(0xFF171829),
-            surface = Color(0xFFF4F3FF),
+            surface = identityNeutral(Color(0xFFF4F3FF), definition, 0.07f),
             onSurface = Color(0xFF171829),
             surfaceVariant = Color(0xFFE5E5FA),
             onSurfaceVariant = Color(0xFF393A55),
-            surfaceContainerLowest = Color.White,
-            surfaceContainerLow = Color(0xFFF8F7FF),
-            surfaceContainer = Color(0xFFEDEDFE),
-            surfaceContainerHigh = Color(0xFFE4E5FA),
-            surfaceContainerHighest = Color(0xFFDBDCF5),
+            surfaceContainerLowest = identityNeutral(Color.White, definition, 0.03f),
+            surfaceContainerLow = identityNeutral(Color(0xFFF8F7FF), definition, 0.05f),
+            surfaceContainer = identityNeutral(Color(0xFFEDEDFE), definition, 0.07f),
+            surfaceContainerHigh = identityNeutral(Color(0xFFE4E5FA), definition, 0.08f),
+            surfaceContainerHighest = identityNeutral(Color(0xFFDBDCF5), definition, 0.09f),
             outline = Color(0xFF71728D),
             outlineVariant = Color(0xFFC5C6E1),
             inverseSurface = Color(0xFF282A41),
@@ -131,6 +135,20 @@ private fun buildScheme(definition: ModernThemeDefinition, dark: Boolean): Color
             surfaceTint = primary,
         )
     }
+}
+
+/**
+ * Retain the accepted Lalapo neutral surfaces byte-for-byte. For other authored
+ * identities, gently tint only semantic neutrals from the canonical primary seed.
+ */
+private fun identityNeutral(
+    base: Color,
+    definition: ModernThemeDefinition,
+    strength: Float,
+): Color = if (definition.preset == ModernThemePreset.LALAPO) {
+    base
+} else {
+    lerp(base, definition.primarySeed, strength)
 }
 
 private fun accessibleAccent(seed: Color, foreground: Color, dark: Boolean): Color {
