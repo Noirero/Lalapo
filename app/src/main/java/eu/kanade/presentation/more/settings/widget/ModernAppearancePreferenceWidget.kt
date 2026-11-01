@@ -27,25 +27,27 @@ internal fun ModernAppearancePreferenceWidget(
     amoled: Boolean,
     onCheckedChanged: (Boolean) -> Unit,
 ) {
-    BasePreferenceWidget(
-        title = stringResource(AMMR.strings.am_modern_appearance_preview),
-        subcomponent = {
-            TachiyomiTheme(
-                appTheme = appTheme,
-                amoled = amoled,
-                modernAppearance = true,
-            ) {
-                ModernAppearancePreview()
-            }
-        },
-    )
+    Column {
+        BasePreferenceWidget(
+            title = stringResource(AMMR.strings.am_modern_appearance_preview),
+            subcomponent = {
+                TachiyomiTheme(
+                    appTheme = appTheme,
+                    amoled = amoled,
+                    modernAppearance = true,
+                ) {
+                    ModernAppearancePreview()
+                }
+            },
+        )
 
-    SwitchPreferenceWidget(
-        title = stringResource(AMMR.strings.am_modern_appearance),
-        subtitle = stringResource(AMMR.strings.am_modern_appearance_summary),
-        checked = checked,
-        onCheckedChanged = onCheckedChanged,
-    )
+        SwitchPreferenceWidget(
+            title = stringResource(AMMR.strings.am_modern_appearance),
+            subtitle = stringResource(AMMR.strings.am_modern_appearance_summary),
+            checked = checked,
+            onCheckedChanged = onCheckedChanged,
+        )
+    }
 }
 
 @Composable
