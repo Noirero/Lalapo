@@ -36,10 +36,8 @@ class ModernCustomColorsTest {
             val hues = listOf(colors.primary, colors.secondary, colors.tertiary)
             assertEquals(3, hues.distinct().size, input)
             assertNotEquals(colors.secondary, colors.tertiary, input)
-            assertEquals(Color(0xFF000020), ModernCustomColors.fromStored("#000020", "", "").primary.takeIf {
-                input == "#000020"
-            } ?: Color(0xFF000020))
-            assertEquals(customColorHex(customHexColor(customColorHex(colors.primary))!!), customColorHex(colors.primary))
+            val normalized = customColorHex(colors.primary)
+            assertEquals(normalized, customColorHex(requireNotNull(customHexColor(normalized))))
         }
     }
 

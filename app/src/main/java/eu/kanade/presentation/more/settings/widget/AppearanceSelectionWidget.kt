@@ -87,7 +87,7 @@ internal fun AppearanceSelectionWidget(uiPreferences: UiPreferences, enableCusto
                 onItemClick = { selected ->
                     if (selected != modernPreset && (
                             selected == ModernThemePreset.CUSTOM || ModernThemeDefinitions.find(selected) != null
-                        )
+                            )
                     ) {
                         uiPreferences.modernThemePreset.set(selected)
                         recreate()

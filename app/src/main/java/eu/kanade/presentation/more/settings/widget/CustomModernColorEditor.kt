@@ -15,10 +15,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -151,7 +151,11 @@ private fun CustomModernColorDialog(
                         value = draft.secondaryOverride,
                         automatic = customColorHex(derived.secondary),
                         onEdit = {
-                            draft = draft.copy(secondaryOverride = draft.secondaryOverride ?: customColorHex(derived.secondary))
+                            draft =
+                                draft.copy(
+                                    secondaryOverride =
+                                        draft.secondaryOverride ?: customColorHex(derived.secondary),
+                                )
                             role = ColorRole.SECONDARY
                         },
                         onAuto = {
@@ -164,7 +168,10 @@ private fun CustomModernColorDialog(
                         value = draft.tertiaryOverride,
                         automatic = customColorHex(derived.tertiary),
                         onEdit = {
-                            draft = draft.copy(tertiaryOverride = draft.tertiaryOverride ?: customColorHex(derived.tertiary))
+                            draft =
+                                draft.copy(
+                                    tertiaryOverride = draft.tertiaryOverride ?: customColorHex(derived.tertiary),
+                                )
                             role = ColorRole.TERTIARY
                         },
                         onAuto = {
