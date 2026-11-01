@@ -39,6 +39,7 @@ class AnimeModernThemeIntegrationTest {
                 definition = ModernThemeDefinitions.Lalapo,
                 isAmoled = dark && amoled,
             )
+            val globalFallback = base.resolveAccentPalette(null)
             for (seeds in listOf(warmArtwork, coolArtwork)) {
                 val local = deriveCinematicAccentPalette(seeds, material)
                 assertEquals(local, base.resolveAccentPalette(local))
@@ -49,10 +50,12 @@ class AnimeModernThemeIntegrationTest {
                 assertContrast(local.accentGradientContentColor, local.activeGradientEnd)
                 assertEquals(snapshot, material.snapshot(), "Scoped artwork accent mutated global Material")
                 assertEquals(
-                    base.resolveAccentPalette(null),
+                    globalFallback,
                     base.resolveAccentPalette(null),
                     "Scoped artwork accent leaked into an unscoped palette",
                 )
+                assertEquals(base.accentGradientStart, globalFallback.accentGradientStart)
+                assertEquals(base.accentGradientEnd, globalFallback.accentGradientEnd)
             }
         }
     }
