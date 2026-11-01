@@ -83,35 +83,59 @@ internal fun resolveModernVisualPalette(
 
     return ModernVisualPalette(
         isModern = true,
-        backgroundGradientStart = lerp(
-            colorScheme.background,
-            colorScheme.primary,
-            gradientStrength * 0.22f,
+        backgroundGradientStart = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.background,
+                colorScheme.primary,
+                gradientStrength * 0.22f,
+            ),
+            foreground = colorScheme.onBackground,
+            fallback = colorScheme.background,
         ),
-        backgroundGradientMiddle = lerp(
-            colorScheme.background,
-            colorScheme.secondary,
-            gradientStrength * 0.12f,
+        backgroundGradientMiddle = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.background,
+                colorScheme.secondary,
+                gradientStrength * 0.12f,
+            ),
+            foreground = colorScheme.onBackground,
+            fallback = colorScheme.background,
         ),
-        backgroundGradientEnd = lerp(
-            colorScheme.background,
-            colorScheme.tertiary,
-            gradientStrength * 0.18f,
+        backgroundGradientEnd = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.background,
+                colorScheme.tertiary,
+                gradientStrength * 0.18f,
+            ),
+            foreground = colorScheme.onBackground,
+            fallback = colorScheme.background,
         ),
-        surfaceGradientStart = lerp(
-            colorScheme.surfaceContainer,
-            colorScheme.primary,
-            gradientStrength * 0.28f,
+        surfaceGradientStart = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.surfaceContainer,
+                colorScheme.primary,
+                gradientStrength * 0.28f,
+            ),
+            foreground = colorScheme.onSurface,
+            fallback = colorScheme.surface,
         ),
-        surfaceGradientMiddle = lerp(
-            colorScheme.surfaceContainerHigh,
-            colorScheme.tertiary,
-            gradientStrength * 0.10f,
+        surfaceGradientMiddle = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.surfaceContainerHigh,
+                colorScheme.tertiary,
+                gradientStrength * 0.10f,
+            ),
+            foreground = colorScheme.onSurface,
+            fallback = colorScheme.surface,
         ),
-        surfaceGradientEnd = lerp(
-            colorScheme.surfaceContainerHigh,
-            colorScheme.secondary,
-            gradientStrength * 0.32f,
+        surfaceGradientEnd = ensureBackgroundContrast(
+            background = lerp(
+                colorScheme.surfaceContainerHigh,
+                colorScheme.secondary,
+                gradientStrength * 0.32f,
+            ),
+            foreground = colorScheme.onSurface,
+            fallback = colorScheme.surface,
         ),
         accentGradientStart = accentGradientStart,
         accentGradientMiddle = accentGradientMiddle,
