@@ -32,6 +32,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.modernNavigationContainerColor
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.anime.AnimeScreen
@@ -106,7 +108,15 @@ object HomeScreen : Screen() {
                     navigationSuite = {
                         NavigationSuite(
                             navigationSuiteType = navigationSuiteType,
-                            colors = NavigationSuiteDefaults.colors(
+                            colors = modernNavigationContainerColor(
+                                scheme = MaterialTheme.colorScheme,
+                                isModern = LocalModernVisualPalette.current.isModern,
+                            )?.let { modernContainer ->
+                                NavigationSuiteDefaults.colors(
+                                    navigationBarContainerColor = modernContainer,
+                                    navigationRailContainerColor = modernContainer,
+                                )
+                            } ?: NavigationSuiteDefaults.colors(
                                 navigationRailContainerColor = MaterialTheme.colorScheme
                                     .surfaceColorAtElevation(3.dp),
                             ),
