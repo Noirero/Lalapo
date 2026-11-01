@@ -10,6 +10,45 @@ import org.junit.jupiter.api.Test
 class AnimeCinematicPaletteTest {
 
     @Test
+    fun `artwork cache key changes when artwork identity changes`() {
+        val base = animeArtworkPaletteKey(
+            animeId = 42L,
+            backgroundUrl = "https://example.test/background.jpg",
+            backgroundLastModified = 10L,
+            thumbnailUrl = "https://example.test/cover.jpg",
+            coverLastModified = 20L,
+        )
+
+        assertTrue(
+            base != animeArtworkPaletteKey(
+                animeId = 42L,
+                backgroundUrl = "https://example.test/background-2.jpg",
+                backgroundLastModified = 10L,
+                thumbnailUrl = "https://example.test/cover.jpg",
+                coverLastModified = 20L,
+            ),
+        )
+        assertTrue(
+            base != animeArtworkPaletteKey(
+                animeId = 42L,
+                backgroundUrl = "https://example.test/background.jpg",
+                backgroundLastModified = 11L,
+                thumbnailUrl = "https://example.test/cover.jpg",
+                coverLastModified = 20L,
+            ),
+        )
+        assertTrue(
+            base != animeArtworkPaletteKey(
+                animeId = 42L,
+                backgroundUrl = "https://example.test/background.jpg",
+                backgroundLastModified = 10L,
+                thumbnailUrl = "https://example.test/cover.jpg",
+                coverLastModified = 21L,
+            ),
+        )
+    }
+
+    @Test
     fun `artwork accents remain readable across light and dark themes`() {
         val seedSets = listOf(
             AnimeArtworkPaletteSeeds(
