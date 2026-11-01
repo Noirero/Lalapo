@@ -1,15 +1,19 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.outlined.Sort
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.FlipToBack
@@ -25,9 +29,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -36,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,8 +69,10 @@ fun LibraryToolbar(
     activeSetKey: String,
     categories: List<Category>,
     activeCategoryIndex: Int,
+    showCategoryTabs: Boolean,
     groupType: Int,
     hasCategories: Boolean,
+    getItemCountForCategory: (Category) -> Int?,
     onClickSettings: () -> Unit,
     onClickUnselectAll: () -> Unit,
     onClickSelectAll: () -> Unit,
@@ -92,8 +102,10 @@ fun LibraryToolbar(
         activeSetKey = activeSetKey,
         categories = categories,
         activeCategoryIndex = activeCategoryIndex,
+        showCategoryTabs = showCategoryTabs,
         groupType = groupType,
         hasCategories = hasCategories,
+        getItemCountForCategory = getItemCountForCategory,
         onClickSettings = onClickSettings,
         onSelectSet = onSelectSet,
         onManageSets = onManageSets,
@@ -117,8 +129,10 @@ private fun LibraryRegularToolbar(
     activeSetKey: String,
     categories: List<Category>,
     activeCategoryIndex: Int,
+    showCategoryTabs: Boolean,
     groupType: Int,
     hasCategories: Boolean,
+    getItemCountForCategory: (Category) -> Int?,
     onClickSettings: () -> Unit,
     onSelectSet: (String) -> Unit,
     onManageSets: () -> Unit,
@@ -242,92 +256,146 @@ private fun LibraryRegularToolbar(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (selectedSet != null) {
-                Box(modifier = Modifier.weight(1f)) {
-                    OutlinedButton(
-                        onClick = { setMenuExpanded = true },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.Label,
-                            contentDescription = null,
-                        )
-                        Text(
-                            text = "Set: ${selectedSet.name}",
-                            modifier = Modifier.padding(start = 8.dp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = setMenuExpanded,
-                        onDismissRequest = { setMenuExpanded = false },
-                    ) {
-                        sets.forEach { set ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
-                                },
-                                onClick = {
-                                    setMenuExpanded = false
-                                    onSelectSet(set.syncKey)
-                                },
-                            )
-                        }
-                        DropdownMenuItem(
-                            text = { Text("Kelola Set") },
-                            onClick = {
-                                setMenuExpanded = false
-                                onManageSets()
-                            },
-                        )
-                    }
-                }
-            }
+        val showTabRail = showCategoryTabs && categories.size > 1
+        val showCategoryPicker = !showCategoryTabs && selectedCategory != null
+        val hasCategoryNavigation = showTabRail || showCategoryPicker
 
-            if (selectedCategory != null) {
-                Box(modifier = Modifier.weight(1f)) {
-                    OutlinedButton(
-                        onClick = { categoryMenuExpanded = true },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Layers,
-                            contentDescription = null,
-                        )
-                        Text(
-                            text = "$categoryGroupLabel: ${selectedCategory.visualName}",
-                            modifier = Modifier.padding(start = 8.dp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = categoryMenuExpanded,
-                        onDismissRequest = { categoryMenuExpanded = false },
-                    ) {
-                        categories.forEachIndexed { index, category ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (index == selectedCategoryIndex) {
-                                            "✓ ${category.visualName}"
-                                        } else {
-                                            category.visualName
+        if (selectedSet != null || hasCategoryNavigation) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (selectedSet != null) {
+                        Box(
+                            modifier = if (hasCategoryNavigation) {
+                                Modifier.weight(0.42f)
+                            } else {
+                                Modifier.fillMaxWidth()
+                            },
+                        ) {
+                            TextButton(
+                                onClick = { setMenuExpanded = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RectangleShape,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Outlined.Label,
+                                    contentDescription = null,
+                                )
+                                Text(
+                                    text = "Set: ${selectedSet.name}",
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 8.dp),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Icon(
+                                    imageVector = Icons.Outlined.ArrowDropDown,
+                                    contentDescription = null,
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = setMenuExpanded,
+                                onDismissRequest = { setMenuExpanded = false },
+                            ) {
+                                sets.forEach { set ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
+                                        },
+                                        onClick = {
+                                            setMenuExpanded = false
+                                            onSelectSet(set.syncKey)
                                         },
                                     )
-                                },
-                                onClick = {
-                                    categoryMenuExpanded = false
-                                    onSelectCategory(index)
-                                },
-                            )
+                                }
+                                DropdownMenuItem(
+                                    text = { Text("Kelola Set") },
+                                    onClick = {
+                                        setMenuExpanded = false
+                                        onManageSets()
+                                    },
+                                )
+                            }
+                        }
+                    }
+
+                    if (selectedSet != null && hasCategoryNavigation) {
+                        VerticalDivider(modifier = Modifier.height(32.dp))
+                    }
+
+                    if (showTabRail) {
+                        LibraryTabs(
+                            categories = categories,
+                            selectedIndex = selectedCategoryIndex,
+                            getItemCountForCategory = getItemCountForCategory,
+                            onTabItemClick = onSelectCategory,
+                            modifier = if (selectedSet != null) {
+                                Modifier.weight(0.58f)
+                            } else {
+                                Modifier.fillMaxWidth()
+                            },
+                        )
+                    } else if (showCategoryPicker && selectedCategory != null) {
+                        Box(
+                            modifier = if (selectedSet != null) {
+                                Modifier.weight(0.58f)
+                            } else {
+                                Modifier.fillMaxWidth()
+                            },
+                        ) {
+                            TextButton(
+                                onClick = { categoryMenuExpanded = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RectangleShape,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Layers,
+                                    contentDescription = null,
+                                )
+                                Text(
+                                    text = "$categoryGroupLabel: ${selectedCategory.visualName}",
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 8.dp),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Icon(
+                                    imageVector = Icons.Outlined.ArrowDropDown,
+                                    contentDescription = null,
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = categoryMenuExpanded,
+                                onDismissRequest = { categoryMenuExpanded = false },
+                            ) {
+                                categories.forEachIndexed { index, category ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                if (index == selectedCategoryIndex) {
+                                                    "✓ ${category.visualName}"
+                                                } else {
+                                                    category.visualName
+                                                },
+                                            )
+                                        },
+                                        onClick = {
+                                            categoryMenuExpanded = false
+                                            onSelectCategory(index)
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
                 }

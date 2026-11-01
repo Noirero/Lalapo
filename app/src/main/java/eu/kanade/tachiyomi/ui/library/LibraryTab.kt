@@ -165,8 +165,10 @@ data object LibraryTab : Tab {
                     activeSetKey = activeSetKey,
                     categories = state.displayedCategories,
                     activeCategoryIndex = pagerState.currentPage,
+                    showCategoryTabs = state.showCategoryTabs,
                     groupType = state.groupType,
                     hasCategories = state.hasCategories,
+                    getItemCountForCategory = state::getItemCountForCategory,
                     onClickSettings = {
                         navigator.push(SettingsScreen())
                     },

@@ -348,6 +348,10 @@ private fun ColumnScope.DisplayPage(
 
     HeadingItem(MR.strings.tabs_header)
     CheckboxItem(
+        label = stringResource(MR.strings.action_display_show_tabs),
+        pref = viewModel.libraryPreferences.categoryTabs,
+    )
+    CheckboxItem(
         label = stringResource(MR.strings.action_display_show_number_of_items),
         pref = viewModel.libraryPreferences.categoryNumberOfItems,
     )
