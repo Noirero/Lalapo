@@ -115,7 +115,6 @@ import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 import kotlin.math.roundToInt
 
-
 @Composable
 fun AnimeInfoBox(
     isTabletUi: Boolean,
