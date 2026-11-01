@@ -30,6 +30,7 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -49,6 +51,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import eu.kanade.presentation.components.modernSurfaceTreatment
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.resolveAccentPalette
 import eu.kanade.tachiyomi.data.download.model.Download
 import me.saket.swipe.SwipeableActionsBox
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -123,18 +128,36 @@ fun AnimeEpisodeListItem(
         swipeThreshold = swipeActionThreshold,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        Row(
-            // AY -->
-            verticalAlignment = Alignment.CenterVertically,
-            // <-- AY
-            modifier = Modifier
-                .selectedBackground(selected)
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                )
-                .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
-        ) {
+        val modernPalette = LocalModernVisualPalette.current
+        val shape = MaterialTheme.shapes.large
+        val rowContentColor = if (modernPalette.isModern && selected) {
+            modernPalette.resolveAccentPalette(null).accentGradientContentColor
+        } else {
+            LocalContentColor.current
+        }
+
+        CompositionLocalProvider(LocalContentColor provides rowContentColor) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .then(
+                        if (modernPalette.isModern) {
+                            Modifier
+                                .clip(shape)
+                                .modernSurfaceTreatment(
+                                    shape = shape,
+                                    selected = selected,
+                                )
+                        } else {
+                            Modifier.selectedBackground(selected)
+                        },
+                    )
+                    .combinedClickable(
+                        onClick = onClick,
+                        onLongClick = onLongClick,
+                    )
+                    .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+            ) {
             // AY -->
             if (previewUrl.isNullOrBlank() && summary.isNullOrBlank()) {
                 SimpleEpisodeListItemImpl(
@@ -229,7 +252,8 @@ fun AnimeEpisodeListItem(
                     }
                 }
             }
-            // <-- AY
+                // <-- AY
+            }
         }
     }
 }
