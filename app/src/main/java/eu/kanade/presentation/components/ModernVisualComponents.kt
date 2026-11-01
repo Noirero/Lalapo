@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SingleChoiceSegmentedButtonRowScope
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -211,20 +212,20 @@ internal fun ModernMetadataChip(
 }
 
 @Composable
-internal fun RowScope.ModernSegmentedButton(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+internal fun SingleChoiceSegmentedButtonRowScope.ModernSegmentedButton(
+    selected: Boolean,
+    onClick: () -> Unit,
     shape: Shape,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit,
+    label: @Composable () -> Unit,
 ) {
     SegmentedButton(
-        checked = checked,
-        onCheckedChange = onCheckedChange,
+        selected = selected,
+        onClick = onClick,
         shape = shape,
         modifier = modifier.then(
-            if (enabled && checked) {
+            if (enabled && selected) {
                 Modifier.modernBorderHighlight(
                     shape = shape,
                     selected = true,
@@ -234,7 +235,7 @@ internal fun RowScope.ModernSegmentedButton(
             },
         ),
         enabled = enabled,
-        content = content,
+        label = label,
     )
 }
 
