@@ -307,6 +307,7 @@ dependencies {
     // <-- AY
     implementation(libs.androidx.core)
     implementation(libs.androidx.coreSplashScreen)
+    implementation(libs.androidx.palette)
     implementation(libs.androidx.recyclerView)
     // AM (REMOVE_LIBRARIES) -->
     // implementation(libs.androidx.viewPager)
