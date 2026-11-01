@@ -84,7 +84,10 @@ class ModernBuiltInPresetTest {
             for (dark in listOf(false, true)) {
                 for (amoled in listOf(false, true)) {
                     val scheme = ModernThemeResolver.resolve(definition, dark, amoled)
-                    assertEquals(scheme.semanticSnapshot(), ModernThemeResolver.resolve(definition, dark, amoled).semanticSnapshot())
+                    assertEquals(
+                        scheme.semanticSnapshot(),
+                        ModernThemeResolver.resolve(definition, dark, amoled).semanticSnapshot(),
+                    )
                     listOf(
                         scheme.primary to scheme.onPrimary,
                         scheme.primaryContainer to scheme.onPrimaryContainer,
