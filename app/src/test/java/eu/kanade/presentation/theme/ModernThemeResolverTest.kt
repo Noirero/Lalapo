@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 class ModernThemeResolverTest {
 
     @Test
-    fun `Lalapo identity is stable and Custom remains unauthored` {
+    fun `Lalapo identity is stable and Custom remains unauthored`() {
         val definition = ModernThemeDefinitions.Lalapo
 
         assertEquals(ModernThemePreset.LALAPO, definition.preset)
