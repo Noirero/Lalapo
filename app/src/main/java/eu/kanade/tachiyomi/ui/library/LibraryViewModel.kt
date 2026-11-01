@@ -62,6 +62,7 @@ import tachiyomi.domain.anime.model.applyFilter
 import tachiyomi.domain.category.interactor.GetVisibleCategories
 import tachiyomi.domain.category.interactor.SetAnimeCategories
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.repository.CategorySetRepository
 import tachiyomi.domain.episode.interactor.GetBookmarkedEpisodesByAnimeId
 import tachiyomi.domain.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.episode.model.Episode
@@ -90,6 +91,7 @@ class LibraryViewModel(
     private val getLibraryAnime: GetLibraryAnime,
     // AY -->
     private val getVisibleCategories: GetVisibleCategories,
+    private val categorySetRepository: CategorySetRepository,
     // <-- AY
     private val getTracksPerAnime: GetTracksPerAnime,
     private val getNextEpisodes: GetNextEpisodes,
@@ -112,6 +114,22 @@ class LibraryViewModel(
     private val getTracks: GetTracks,
     // <-- AM (GROUPING)
 ) : ViewModel() {
+
+    val categorySets = categorySetRepository.observeSets()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
+
+    val activeSetKey = libraryPreferences.activeCategorySetKey.changes()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5.seconds),
+            libraryPreferences.activeCategorySetKey.get(),
+        )
+
+    fun selectSet(syncKey: String) {
+        viewModelScope.launchIO {
+            categorySetRepository.selectActiveSet(syncKey)
+        }
+    }
 
     private val searchQuery = MutableStateFlow<String?>(null)
 
@@ -150,7 +168,7 @@ class LibraryViewModel(
     private val library = eu.kanade.core.util.combine(
         searchQuery.debounce(0.25.seconds),
         // AY -->
-        getVisibleCategories.subscribe(),
+        categorySetRepository.observeVisibleCategoriesInActiveSet(),
         // <-- AY
         getFavoritesFlow(),
         combine(getTracksPerAnime.subscribe(), getTrackingFiltersFlow(), ::Pair),
@@ -205,7 +223,7 @@ class LibraryViewModel(
         combine(activeCategoryIndex, displayPreferences, hasActiveFilters, ::Triple),
         // AM (GROUPING) -->
         libraryPreferences.groupLibraryBy.changes(),
-        getVisibleCategories.subscribe(),
+        categorySetRepository.observeVisibleCategoriesInActiveSet(),
         // <-- AM (GROUPING)
     ) {
             library,
@@ -732,8 +750,8 @@ class LibraryViewModel(
         return state.getItemsForCategoryId(state.activeCategory?.id).randomOrNull()
     }
 
-    fun showSettingsDialog() {
-        dialog.update { Dialog.SettingsSheet }
+    fun showSettingsDialog(page: SettingsPage = SettingsPage.Display) {
+        dialog.update { Dialog.SettingsSheet(page) }
     }
 
     private var lastSelectionCategory: Long? = null
@@ -962,8 +980,15 @@ class LibraryViewModel(
     }
     // <-- AM (GROUPING)
 
+    enum class SettingsPage(val index: Int) {
+        Filter(0),
+        Sort(1),
+        Display(2),
+        Group(3),
+    }
+
     sealed interface Dialog {
-        data object SettingsSheet : Dialog
+        data class SettingsSheet(val initialPage: SettingsPage) : Dialog
         data class ChangeCategory(
             val anime: List<Anime>,
             val initialSelection: List<CheckboxState<Category>>,

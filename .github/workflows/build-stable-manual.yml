@@ -1,0 +1,158 @@
+name: Build Stable APK (Manual)
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: lalapo-stable-manual-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    if: github.repository == 'Noirero/Lalapo' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Validate signing secrets
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for key in SIGNING_KEY KEY_STORE_PASSWORD ALIAS KEY_PASSWORD; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "::error::Missing required signing secret: $key"
+              exit 1
+            fi
+          done
+          signing_store="$RUNNER_TEMP/lalapo-signing-check.keystore"
+          if ! printf '%s' "$SIGNING_KEY" | base64 --decode > "$signing_store" 2>/dev/null ||
+             ! keytool -list -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" >/dev/null 2>&1; then
+            decoded_once="$RUNNER_TEMP/lalapo-signing-once.txt"
+            if ! printf '%s' "$SIGNING_KEY" | base64 --decode > "$decoded_once" 2>/dev/null ||
+               ! base64 --decode "$decoded_once" > "$signing_store" 2>/dev/null ||
+               ! keytool -list -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" >/dev/null 2>&1; then
+              echo "::error::SIGNING_KEY is not a valid base64 JKS/PKCS12 keystore"
+              exit 1
+            fi
+          fi
+
+      - name: Set build version code
+        shell: bash
+        run: |
+          set -euo pipefail
+          # GitHub run IDs are unique across workflows; reserve a bounded range for Android.
+          # Fail closed if GitHub's run ID allocation leaves this range.
+          version_code=$(( GITHUB_RUN_ID - 41000000000 ))
+          if (( version_code <= 148 || version_code > 2100000000 )); then
+            echo "::error::Workflow run ID outside supported versionCode allocation range"
+            exit 1
+          fi
+          echo "LALAPO_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
+          echo "APK versionCode: $version_code" >> "$GITHUB_STEP_SUMMARY"
+          echo "Distribution policy: publish only APKs built from the current protected branch tip; historical commit artifacts are for testing, not app updates." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Assemble APK
+        run: ./gradlew assembleRelease -Pinclude-cast
+        env:
+          LALAPO_GITHUB_RELEASE: 'true'
+          storeFileBase64: ${{ secrets.SIGNING_KEY }}
+          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyAlias: ${{ secrets.ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Report APK signing certificate
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+        run: |
+          set -euo pipefail
+          signing_store="$RUNNER_TEMP/lalapo-signing-check.keystore"
+          # The earlier validation step already decoded the keystore into this path.
+          fingerprint="$(keytool -list -v -keystore "$signing_store" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | grep -m1 'SHA256:' | sed 's/^[[:space:]]*//')"
+          if [[ -z "$fingerprint" ]]; then
+            echo "::error::Unable to read signing certificate fingerprint"
+            exit 1
+          fi
+          echo "$fingerprint" >> "$GITHUB_STEP_SUMMARY"
+          echo "Baseline installed CI APK: 92:A9:4C:3E:C5:00:76:4C:67:28:8D:8F:A6:2F:64:30:0D:5D:BE:E2:50:AE:F7:68:42:38:39:6F:FB:2E:C9:2F" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${fingerprint#SHA256: }" != "92:A9:4C:3E:C5:00:76:4C:67:28:8D:8F:A6:2F:64:30:0D:5D:BE:E2:50:AE:F7:68:42:38:39:6F:FB:2E:C9:2F" ]]; then
+            echo "::warning::Signing certificate differs from the installed CI APK baseline. Update-in-place may be rejected; back up app data before reinstalling."
+          fi
+
+      - name: Verify APK signing matches configured keystore
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+        run: |
+          set -euo pipefail
+          apk="app/build/outputs/apk/release/app-arm64-v8a-release.apk"
+          test -s "$apk"
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [[ -z "$sdk" ]]; then echo "::error::Android SDK not found"; exit 1; fi
+          apksigner="$(find "$sdk/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          if [[ -z "$apksigner" ]]; then echo "::error::apksigner not found"; exit 1; fi
+          "$apksigner" verify --verbose "$apk"
+          # apksigner emits an unseparated hex digest; keytool emits colon-separated hex.
+          # Normalize both and distinguish parsing failures from genuine mismatches.
+          # Print only certificate metadata (public); no keystore or secret material.
+          cert_output="$("$apksigner" verify --print-certs "$apk")"
+          printf '%s\n' "$cert_output"
+          # Match both "Signer #1 certificate SHA-256 digest:" and "Signer #1 certificate SHA-256 digest: ..."
+          # while tolerating leading whitespace and minor label spacing differences.
+          actual_raw="$(printf '%s\n' "$cert_output" | sed -nE 's/^[[:space:]]*(V[0-9]+[[:space:]]+Signer|Signer[[:space:]]*#[[:space:]]*1)[[:space:]]*:?[[:space:]]*certificate[[:space:]]+SHA-?256[[:space:]]+digest[[:space:]]*:[[:space:]]*//Ip' | head -n 1)"
+          expected_raw="$(keytool -list -v -keystore "$RUNNER_TEMP/lalapo-signing-check.keystore" -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | head -n 1)"
+          actual="$(printf '%s' "$actual_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          expected="$(printf '%s' "$expected_raw" | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          # Certificate SHA-256 fingerprints are public identifiers; never print secret values.
+          echo "APK signer SHA-256: ${actual:-<missing>}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Keystore alias SHA-256: ${expected:-<missing>}" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [[ -z "$actual" ]]; then
+            echo "::error::Unable to parse APK signer SHA-256 from apksigner output"
+            exit 1
+          fi
+          if [[ -z "$expected" ]]; then
+            echo "::error::Unable to parse keystore alias SHA-256 from keytool output"
+            exit 1
+          fi
+          if [[ ! "$actual" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Invalid APK signer SHA-256 format"
+            exit 1
+          fi
+          if [[ ! "$expected" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Invalid keystore alias SHA-256 format"
+            exit 1
+          fi
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::APK signing certificate does not match configured keystore alias"
+            exit 1
+          fi
+          echo "Verified APK signing SHA-256: $actual" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: Lalapo-Stable-${{ github.sha }}-${{ github.run_number }}
+          path: app/build/outputs/apk/release/app-arm64-v8a-release.apk
+          if-no-files-found: error

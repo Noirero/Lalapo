@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,10 +34,10 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Pause
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Sync
@@ -46,11 +45,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -82,7 +79,6 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import aniyomi.domain.anime.model.AnimeRelationGroup
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -90,7 +86,15 @@ import coil3.request.crossfade
 import com.mikepenz.markdown.model.markdownAnnotator
 import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
+import eu.kanade.presentation.anime.DownloadAction
+import eu.kanade.presentation.components.DownloadDropdownMenu
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.components.ModernHeroBackground
+import eu.kanade.presentation.components.ModernMetadataChip
+import eu.kanade.presentation.components.ModernSurface
+import eu.kanade.presentation.components.ModernTonalButton
+import eu.kanade.presentation.components.modernCoverTreatment
+import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.coil.useBackground
@@ -102,9 +106,8 @@ import org.intellij.markdown.ast.findChildOfType
 import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
-import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
-import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -123,35 +126,40 @@ fun AnimeInfoBox(
     doSearch: (query: String, global: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier) {
-        // Backdrop
-        val backdropGradientColors = listOf(
-            Color.Transparent,
-            MaterialTheme.colorScheme.background,
-        )
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(anime)
-                // AY -->
-                .useBackground(true)
-                // <-- AY
-                .crossfade(true)
-                .build(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .matchParentSize()
-                .drawWithContent {
-                    drawContent()
-                    drawRect(
-                        brush = Brush.verticalGradient(colors = backdropGradientColors),
-                    )
-                }
-                .blur(4.dp)
-                .alpha(0.2f),
-        )
+    val modernEnabled = LocalModernVisualPalette.current.isModern
+    val backdropGradientColors = listOf(
+        Color.Transparent,
+        if (modernEnabled) {
+            MaterialTheme.colorScheme.background.copy(alpha = 0.96f)
+        } else {
+            MaterialTheme.colorScheme.background
+        },
+    )
 
-        // Anime & source info
+    ModernHeroBackground(
+        modifier = modifier.fillMaxWidth(),
+        backgroundContent = {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(anime)
+                    .useBackground(true)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(
+                            brush = Brush.verticalGradient(colors = backdropGradientColors),
+                        )
+                    }
+                    .blur(if (modernEnabled) 2.dp else 4.dp)
+                    .alpha(if (modernEnabled) 0.62f else 0.2f),
+            )
+        },
+    ) {
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
             if (!isTabletUi) {
                 AnimeAndSourceTitlesSmall(
@@ -180,68 +188,99 @@ fun AnimeInfoBox(
 fun AnimeActionRow(
     favorite: Boolean,
     trackingCount: Int,
-    // AM -->
     isSyncingTrackers: Boolean,
-    // <-- AM
     onAddToLibraryClicked: () -> Unit,
+    onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    // AY -->
     onTrackingClicked: (() -> Unit)?,
-    // <-- AY
     onShareClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
-
-    Row(modifier = modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
-        AnimeActionButton(
-            title = if (favorite) {
-                stringResource(MR.strings.in_library)
-            } else {
-                stringResource(MR.strings.add_to_library)
-            },
-            icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-            onClick = onAddToLibraryClicked,
-            onLongClick = onEditCategory,
-        )
-
-        if (onTrackingClicked != null) {
-            if (isSyncingTrackers) {
-                AnimeActionButton(
-                    title = stringResource(MR.strings.loading),
-                    color = MaterialTheme.colorScheme.primary,
-                    onClick = onTrackingClicked,
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 3.dp,
-                    )
-                }
-            } else {
-                AnimeActionButton(
-                    title = if (trackingCount == 0) {
-                        stringResource(MR.strings.manga_tracking_tab)
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item {
+            ModernTonalButton(onClick = onAddToLibraryClicked) {
+                Icon(
+                    imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                )
+                Spacer(Modifier.size(6.dp))
+                Text(
+                    text = if (favorite) {
+                        stringResource(MR.strings.in_library)
                     } else {
-                        pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
+                        stringResource(MR.strings.add_to_library)
                     },
-                    icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
-                    color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
-                    onClick = onTrackingClicked,
                 )
             }
         }
 
+        if (onDownloadActionClicked != null) {
+            item {
+                var expanded by remember { mutableStateOf(false) }
+                Box {
+                    ModernTonalButton(onClick = { expanded = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Download,
+                            contentDescription = null,
+                        )
+                        Spacer(Modifier.size(6.dp))
+                        Text(stringResource(MR.strings.action_download))
+                    }
+                    DownloadDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        onDownloadClicked = onDownloadActionClicked,
+                    )
+                }
+            }
+        }
+
+        if (onTrackingClicked != null) {
+            item {
+                ModernTonalButton(
+                    onClick = onTrackingClicked,
+                ) {
+                    if (isSyncingTrackers) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
+                            contentDescription = null,
+                        )
+                    }
+                    Spacer(Modifier.size(6.dp))
+                    Text(
+                        text = if (trackingCount == 0) {
+                            stringResource(MR.strings.manga_tracking_tab)
+                        } else {
+                            pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
+                        },
+                    )
+                }
+            }
+        }
+
         if (onShareClicked != null) {
-            AnimeActionButton(
-                title = stringResource(MR.strings.action_share),
-                icon = Icons.Outlined.Share,
-                color = defaultActionButtonColor,
-                onClick = onShareClicked,
-            )
+            item {
+                ModernTonalButton(onClick = onShareClicked) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = null,
+                    )
+                    Spacer(Modifier.size(6.dp))
+                    Text(stringResource(MR.strings.action_share))
+                }
+            }
         }
 
         if (
@@ -250,20 +289,20 @@ fun AnimeActionRow(
             onEditIntervalClicked != null ||
             onEditCategory != null
         ) {
-            AnimeMoreActionButton(
-                color = defaultActionButtonColor,
-                onWebViewClicked = onWebViewClicked,
-                onCopyLinkClicked = onWebViewLongClicked,
-                onEditIntervalClicked = onEditIntervalClicked,
-                onEditCategory = onEditCategory,
-            )
+            item {
+                AnimeMoreActionButton(
+                    onWebViewClicked = onWebViewClicked,
+                    onCopyLinkClicked = onWebViewLongClicked,
+                    onEditIntervalClicked = onEditIntervalClicked,
+                    onEditCategory = onEditCategory,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun RowScope.AnimeMoreActionButton(
-    color: Color,
+private fun AnimeMoreActionButton(
     onWebViewClicked: (() -> Unit)?,
     onCopyLinkClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
@@ -271,26 +310,14 @@ private fun RowScope.AnimeMoreActionButton(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.weight(1f)) {
-        TextButton(
-            onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Outlined.MoreVert,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = stringResource(MR.strings.label_more),
-                    color = color,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                )
-            }
+    Box {
+        ModernTonalButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Outlined.MoreVert,
+                contentDescription = null,
+            )
+            Spacer(Modifier.size(6.dp))
+            Text(stringResource(MR.strings.label_more))
         }
 
         DropdownMenu(
@@ -361,22 +388,55 @@ fun ExpandableAnimeDescription(
         val desc =
             description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
 
-        AnimeSummary(
-            description = desc,
-            expanded = expanded,
-            notes = notes,
-            // AY -->
-            onEditNotesClicked = onEditNotes,
-            relations = relations,
-            onRelatedClick = onRelatedClick,
-            onRelatedLongClick = onRelatedLongClick,
-            relatedDisplayMode = relatedDisplayMode,
-            // <-- AY
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .padding(horizontal = 16.dp)
-                .clickableNoIndication { onExpanded(!expanded) },
-        )
+        val summaryModifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickableNoIndication { onExpanded(!expanded) }
+
+        if (LocalModernVisualPalette.current.isModern) {
+            ModernSurface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Column(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(AMMR.strings.am_anime_detail_synopsis),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    AnimeSummary(
+                        description = desc,
+                        expanded = expanded,
+                        notes = notes,
+                        onEditNotesClicked = onEditNotes,
+                        relations = relations,
+                        onRelatedClick = onRelatedClick,
+                        onRelatedLongClick = onRelatedLongClick,
+                        relatedDisplayMode = relatedDisplayMode,
+                        modifier = summaryModifier,
+                    )
+                }
+            }
+        } else {
+            AnimeSummary(
+                description = desc,
+                expanded = expanded,
+                notes = notes,
+                onEditNotesClicked = onEditNotes,
+                relations = relations,
+                onRelatedClick = onRelatedClick,
+                onRelatedLongClick = onRelatedLongClick,
+                relatedDisplayMode = relatedDisplayMode,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .padding(horizontal = 16.dp)
+                    .clickableNoIndication { onExpanded(!expanded) },
+            )
+        }
         val tags = tagsProvider()
         if (!tags.isNullOrEmpty()) {
             Box(
@@ -460,26 +520,34 @@ private fun AnimeAndSourceTitlesLarge(
             .padding(start = 16.dp, top = appBarPadding + 16.dp, end = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val coverShape = MaterialTheme.shapes.large
         AnimeCover.Book(
-            modifier = Modifier.fillMaxWidth(0.65f),
+            modifier = Modifier
+                .fillMaxWidth(0.72f)
+                .modernCoverTreatment(coverShape),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(anime)
                 .crossfade(true)
                 .build(),
             contentDescription = stringResource(MR.strings.manga_cover),
+            shape = coverShape,
             onClick = onCoverClick,
         )
         Spacer(modifier = Modifier.height(16.dp))
-        AnimeContentInfo(
-            title = anime.title,
-            author = anime.author,
-            artist = anime.artist,
-            status = anime.status,
-            sourceName = sourceName,
-            isStubSource = isStubSource,
-            doSearch = doSearch,
-            textAlign = TextAlign.Center,
-        )
+        AnimeMetadataPanel(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            AnimeContentInfo(
+                title = anime.title,
+                author = anime.author,
+                artist = anime.artist,
+                status = anime.status,
+                sourceName = sourceName,
+                isStubSource = isStubSource,
+                doSearch = doSearch,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -499,19 +567,22 @@ private fun AnimeAndSourceTitlesSmall(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val coverShape = MaterialTheme.shapes.large
         AnimeCover.Book(
             modifier = Modifier
-                .sizeIn(maxWidth = 100.dp)
-                .align(Alignment.Top),
+                .sizeIn(maxWidth = 116.dp)
+                .align(Alignment.Top)
+                .modernCoverTreatment(coverShape),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(anime)
                 .crossfade(true)
                 .build(),
             contentDescription = stringResource(MR.strings.manga_cover),
+            shape = coverShape,
             onClick = onCoverClick,
         )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+        AnimeMetadataPanel(
+            modifier = Modifier.weight(1f),
         ) {
             AnimeContentInfo(
                 title = anime.title,
@@ -523,6 +594,31 @@ private fun AnimeAndSourceTitlesSmall(
                 doSearch = doSearch,
             )
         }
+    }
+}
+
+@Composable
+private fun AnimeMetadataPanel(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    if (LocalModernVisualPalette.current.isModern) {
+        ModernSurface(
+            modifier = modifier,
+            shape = MaterialTheme.shapes.extraLarge,
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                content = content,
+            )
+        }
+    } else {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            content = content,
+        )
     }
 }
 
@@ -849,62 +945,14 @@ private fun TagsChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-        SuggestionChip(
-            modifier = modifier,
-            onClick = onClick,
-            label = { Text(text = text, style = MaterialTheme.typography.bodySmall) },
-        )
-    }
-}
-
-// AM -->
-@Composable
-private fun RowScope.AnimeActionButton(
-    title: String,
-    icon: ImageVector,
-    color: Color,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-) {
-    AnimeActionButton(
-        title = title,
-        color = color,
+    ModernMetadataChip(
+        modifier = modifier,
         onClick = onClick,
-        onLongClick = onLongClick,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(20.dp),
-        )
-    }
-}
-// <-- AM
-
-@Composable
-private fun RowScope.AnimeActionButton(
-    title: String,
-    color: Color,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.weight(1f),
-        onLongClick = onLongClick,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            content()
-            Spacer(Modifier.height(4.dp))
+        label = {
             Text(
-                text = title,
-                color = color,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
             )
-        }
-    }
+        },
+    )
 }

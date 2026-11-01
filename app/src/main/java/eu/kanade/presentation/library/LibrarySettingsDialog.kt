@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,6 +29,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
+import eu.kanade.tachiyomi.ui.library.LibraryViewModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
@@ -55,20 +57,25 @@ fun LibrarySettingsDialog(
     onDismissRequest: () -> Unit,
     viewModel: LibrarySettingsViewModel,
     category: Category?,
+    initialPage: LibraryViewModel.SettingsPage,
     // AM (GROUPING) -->
     hasCategories: Boolean,
     // <-- AM (GROUPING)
 ) {
+    val tabTitles = listOf(
+        stringResource(MR.strings.action_filter),
+        stringResource(MR.strings.action_sort),
+        stringResource(MR.strings.action_display),
+        // AM (GROUPING) -->
+        stringResource(AMMR.strings.group),
+        // <-- AM (GROUPING)
+    )
+    val pagerState = rememberPagerState(initialPage = initialPage.index) { tabTitles.size }
+
     TabbedDialog(
         onDismissRequest = onDismissRequest,
-        tabTitles = listOf(
-            stringResource(MR.strings.action_filter),
-            stringResource(MR.strings.action_sort),
-            stringResource(MR.strings.action_display),
-            // AM (GROUPING) -->
-            stringResource(AMMR.strings.group),
-            // <-- AM (GROUPING)
-        ),
+        tabTitles = tabTitles,
+        pagerState = pagerState,
     ) { page ->
         Column(
             modifier = Modifier
