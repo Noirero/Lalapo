@@ -413,7 +413,7 @@ private fun AnimeScreenSmallImpl(
     val cinematicAccentPalette = rememberAnimeCinematicAccentPalette(state.anime)
     val screenScope = rememberCoroutineScope()
     val hasPrimaryAction = episodes.fastAny { !it.episode.seen } && !isAnySelected
-    val hasProgressCard = state.anime.fetchType == FetchType.Episodes && episodes.isNotEmpty()
+    val hasProgressCard = state.anime.fetchType == FetchType.Episodes && state.episodes.isNotEmpty()
     val descriptionItemIndex = 2 + if (hasPrimaryAction) 1 else 0
     val navigationItemIndex = descriptionItemIndex + 1 + if (hasProgressCard) 1 else 0
     val episodeHeaderItemIndex = navigationItemIndex + 1
@@ -629,8 +629,8 @@ private fun AnimeScreenSmallImpl(
                         ) {
                             ProvideCinematicAccentPalette(cinematicAccentPalette) {
                                 AnimeWatchingProgressCard(
-                                    watched = episodes.count { it.episode.seen },
-                                    total = episodes.size,
+                                    watched = state.episodes.count { it.episode.seen },
+                                    total = state.episodes.size,
                                     modifier = Modifier
                                         .ignorePadding(offsetGridPaddingPx)
                                         .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -991,10 +991,10 @@ fun AnimeScreenLargeImpl(
                                     onEditIntervalClicked = onEditIntervalClicked,
                                     onEditCategory = onEditCategoryClicked,
                                 )
-                                if (state.anime.fetchType == FetchType.Episodes && episodes.isNotEmpty()) {
+                                if (state.anime.fetchType == FetchType.Episodes && state.episodes.isNotEmpty()) {
                                     AnimeWatchingProgressCard(
-                                        watched = episodes.count { it.episode.seen },
-                                        total = episodes.size,
+                                        watched = state.episodes.count { it.episode.seen },
+                                        total = state.episodes.size,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                     )
                                 }
