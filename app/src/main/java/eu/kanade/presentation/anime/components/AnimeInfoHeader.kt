@@ -534,16 +534,20 @@ private fun AnimeAndSourceTitlesLarge(
             onClick = onCoverClick,
         )
         Spacer(modifier = Modifier.height(16.dp))
-        AnimeContentInfo(
-            title = anime.title,
-            author = anime.author,
-            artist = anime.artist,
-            status = anime.status,
-            sourceName = sourceName,
-            isStubSource = isStubSource,
-            doSearch = doSearch,
-            textAlign = TextAlign.Center,
-        )
+        AnimeMetadataPanel(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            AnimeContentInfo(
+                title = anime.title,
+                author = anime.author,
+                artist = anime.artist,
+                status = anime.status,
+                sourceName = sourceName,
+                isStubSource = isStubSource,
+                doSearch = doSearch,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -577,8 +581,8 @@ private fun AnimeAndSourceTitlesSmall(
             shape = coverShape,
             onClick = onCoverClick,
         )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+        AnimeMetadataPanel(
+            modifier = Modifier.weight(1f),
         ) {
             AnimeContentInfo(
                 title = anime.title,
@@ -590,6 +594,31 @@ private fun AnimeAndSourceTitlesSmall(
                 doSearch = doSearch,
             )
         }
+    }
+}
+
+@Composable
+private fun AnimeMetadataPanel(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    if (LocalModernVisualPalette.current.isModern) {
+        ModernSurface(
+            modifier = modifier,
+            shape = MaterialTheme.shapes.extraLarge,
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                content = content,
+            )
+        }
+    } else {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            content = content,
+        )
     }
 }
 
