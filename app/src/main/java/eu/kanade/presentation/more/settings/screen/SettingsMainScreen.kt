@@ -46,6 +46,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.setting.PlayerSettingsScreen
@@ -83,7 +84,11 @@ object SettingsMainScreen : Screen() {
     fun Content(twoPane: Boolean) {
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.currentOrThrow
-        val containerColor = if (twoPane) getPalerSurface() else MaterialTheme.colorScheme.surface
+        val containerColor = when {
+            !twoPane -> MaterialTheme.colorScheme.surface
+            LocalModernVisualPalette.current.isModern -> MaterialTheme.colorScheme.surfaceContainerLow
+            else -> getPalerSurface()
+        }
         val topBarState = rememberTopAppBarState()
 
         Scaffold(
