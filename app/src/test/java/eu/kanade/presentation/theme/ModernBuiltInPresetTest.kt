@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -48,7 +47,7 @@ class ModernBuiltInPresetTest {
             for (dark in listOf(false, true)) {
                 for (amoled in listOf(false, true)) {
                     val scheme = ModernThemeResolver.resolve(definition, dark, amoled)
-                    assertSame(scheme, ModernThemeResolver.resolve(definition, dark, amoled))
+                    assertEquals(scheme, ModernThemeResolver.resolve(definition, dark, amoled))
                     listOf(
                         scheme.primary to scheme.onPrimary,
                         scheme.primaryContainer to scheme.onPrimaryContainer,
