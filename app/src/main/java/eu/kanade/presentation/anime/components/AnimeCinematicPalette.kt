@@ -259,7 +259,14 @@ private fun ensureContrast(
         candidate = lerp(candidate, if (towardBlack) Color.White else Color.Black, 0.12f)
         if (contrastRatio(foreground, candidate) >= MINIMUM_TEXT_CONTRAST) return candidate
     }
-    return fallback
+
+    return if (contrastRatio(foreground, fallback) >= MINIMUM_TEXT_CONTRAST) {
+        fallback
+    } else if (foreground.luminance() >= 0.5f) {
+        Color.Black
+    } else {
+        Color.White
+    }
 }
 
 internal fun cinematicContrastRatio(
