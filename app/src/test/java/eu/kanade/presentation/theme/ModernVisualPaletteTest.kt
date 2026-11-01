@@ -68,14 +68,14 @@ class ModernVisualPaletteTest {
             isAmoled = true,
             overrideDarkSurfaceContainers = true,
         )
-        val snapshot = scheme.copy()
+        val snapshot = scheme.authoritySnapshot()
 
         resolveModernVisualPalette(
             colorScheme = scheme,
             enabled = true,
         )
 
-        assertEquals(snapshot, scheme)
+        assertEquals(snapshot, scheme.authoritySnapshot())
         assertEquals(Color.Black, scheme.background)
         assertEquals(Color.Black, scheme.surface)
     }
@@ -87,13 +87,13 @@ class ModernVisualPaletteTest {
                 seed = Color(0xFF6750A4),
                 dark = dark,
             )
-            val snapshot = scheme.copy()
+            val snapshot = scheme.authoritySnapshot()
             val palette = resolveModernVisualPalette(
                 colorScheme = scheme,
                 enabled = true,
             )
 
-            assertEquals(snapshot, scheme)
+            assertEquals(snapshot, scheme.authoritySnapshot())
             assertReadableGradients(scheme, palette)
         }
     }
