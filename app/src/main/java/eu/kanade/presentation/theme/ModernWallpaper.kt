@@ -185,9 +185,9 @@ private object ModernBlurredWallpaperCache {
                     }
                     horizontal[row + x] =
                         (a / count shl 24) or
-                            (r / count shl 16) or
-                            (g / count shl 8) or
-                            (b / count)
+                        (r / count shl 16) or
+                        (g / count shl 8) or
+                        (b / count)
                 }
             }
 
@@ -209,9 +209,9 @@ private object ModernBlurredWallpaperCache {
                     }
                     vertical[y * width + x] =
                         (a / count shl 24) or
-                            (r / count shl 16) or
-                            (g / count shl 8) or
-                            (b / count)
+                        (r / count shl 16) or
+                        (g / count shl 8) or
+                        (b / count)
                 }
             }
             pixels = vertical
