@@ -126,9 +126,14 @@ fun AnimeInfoBox(
     doSearch: (query: String, global: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val modernEnabled = LocalModernVisualPalette.current.isModern
     val backdropGradientColors = listOf(
         Color.Transparent,
-        MaterialTheme.colorScheme.background.copy(alpha = 0.96f),
+        if (modernEnabled) {
+            MaterialTheme.colorScheme.background.copy(alpha = 0.96f)
+        } else {
+            MaterialTheme.colorScheme.background
+        },
     )
 
     ModernHeroBackground(
@@ -150,8 +155,8 @@ fun AnimeInfoBox(
                             brush = Brush.verticalGradient(colors = backdropGradientColors),
                         )
                     }
-                    .blur(2.dp)
-                    .alpha(0.62f),
+                    .blur(if (modernEnabled) 2.dp else 4.dp)
+                    .alpha(if (modernEnabled) 0.62f else 0.2f),
             )
         },
     ) {
