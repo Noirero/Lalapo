@@ -194,7 +194,9 @@ private fun LibraryRegularToolbar(
                         singleLine = true,
                         colors = if (isModern) {
                             OutlinedTextFieldDefaults.colors(
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.70f),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                                alpha = 0.70f,
+                            ),
                                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
                                 unfocusedBorderColor = modernPalette.borderHighlight,
                             )
