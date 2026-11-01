@@ -292,6 +292,16 @@
     <string name="am_settings_storage_cleanup">Storage &amp; Cleanup</string>
     <string name="am_settings_backup">Backup</string>
     <string name="am_settings_power_user">Power User</string>
+    <string name="am_modern_appearance">Modern appearance</string>
+    <string name="am_modern_appearance_summary">Adds cinematic gradients and highlighted surfaces while keeping your selected theme colors.</string>
+    <string name="am_modern_appearance_preview">Modern preview</string>
+    <string name="am_modern_preview_title">Aurora Chronicle</string>
+    <string name="am_modern_preview_metadata">TV Anime · 2024 · Season 1</string>
+    <string name="am_modern_preview_action">Continue episode</string>
+    <string name="am_modern_preview_chip">Fantasy</string>
+    <string name="am_modern_preview_detail">Details</string>
+    <string name="am_modern_preview_episodes">Episodes</string>
+    <string name="am_modern_preview_info">Info</string>
     <string name="am_theme_more">More themes</string>
     <string name="am_theme_show_curated">Show curated themes</string>
     <string name="am_settings_destination">Destination</string>
