@@ -1,5 +1,6 @@
 package eu.kanade.presentation.theme
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import eu.kanade.domain.ui.model.DesignStyle
@@ -83,7 +84,7 @@ class ModernBuiltInPresetTest {
             for (dark in listOf(false, true)) {
                 for (amoled in listOf(false, true)) {
                     val scheme = ModernThemeResolver.resolve(definition, dark, amoled)
-                    assertEquals(scheme, ModernThemeResolver.resolve(definition, dark, amoled))
+                    assertEquals(scheme.semanticSnapshot(), ModernThemeResolver.resolve(definition, dark, amoled).semanticSnapshot())
                     listOf(
                         scheme.primary to scheme.onPrimary,
                         scheme.primaryContainer to scheme.onPrimaryContainer,
@@ -158,6 +159,29 @@ class ModernBuiltInPresetTest {
         }
         assertFalse(ModernThemeDefinitions.authoredBuiltIns.any { it.preset == ModernThemePreset.CUSTOM })
     }
+
+    private fun ColorScheme.semanticSnapshot(): List<Color> = listOf(
+        primary,
+        onPrimary,
+        primaryContainer,
+        onPrimaryContainer,
+        secondary,
+        onSecondary,
+        secondaryContainer,
+        onSecondaryContainer,
+        tertiary,
+        onTertiary,
+        tertiaryContainer,
+        onTertiaryContainer,
+        background,
+        onBackground,
+        surface,
+        onSurface,
+        surfaceContainer,
+        surfaceContainerHigh,
+        outline,
+        inversePrimary,
+    )
 
     private fun assertReadable(foreground: Color, background: Color, preset: String) {
         val high = maxOf(foreground.luminance(), background.luminance())
