@@ -26,7 +26,6 @@ import kotlinx.coroutines.withContext
 import tachiyomi.domain.anime.model.Anime
 import kotlin.math.abs
 
-
 private const val PALETTE_BITMAP_SIZE = 96
 private const val MINIMUM_ARTWORK_SATURATION = 0.18f
 private const val MINIMUM_TEXT_CONTRAST = 4.5f
