@@ -87,7 +87,7 @@ private fun ModernAppearancePreview() {
                 ModernMetadataChip(
                     onClick = {},
                     label = { Text(stringResource(AMMR.strings.am_modern_preview_chip)) },
-                    selected = true,
+                    emphasized = true,
                 )
             }
 
