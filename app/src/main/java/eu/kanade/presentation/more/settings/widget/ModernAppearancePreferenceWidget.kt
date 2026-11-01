@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -91,13 +91,13 @@ private fun ModernAppearancePreview() {
                 )
             }
 
-            MultiChoiceSegmentedButtonRow(
+            SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 segmentLabels.forEachIndexed { index, label ->
                     ModernSegmentedButton(
-                        checked = index == 0,
-                        onCheckedChange = {},
+                        selected = index == 0,
+                        onClick = {},
                         shape = SegmentedButtonDefaults.itemShape(
                             index = index,
                             count = segmentLabels.size,
