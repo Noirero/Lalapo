@@ -33,6 +33,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -52,6 +53,8 @@ import eu.kanade.presentation.theme.ModernArtworkIdentity
 import eu.kanade.presentation.theme.ModernSharpWallpaper
 import eu.kanade.presentation.theme.modernNavigationContainerColor
 import eu.kanade.presentation.theme.resolveGlassPalette
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
+import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.anime.AnimeScreen
@@ -130,9 +133,9 @@ object HomeScreen : Screen() {
                         navigationSuite = {
                             val modernPalette = LocalModernVisualPalette.current
                             val isModern = modernPalette.isModern
-                            val useMiyorareVisuals = isModern &&
-                                LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
-                            val navigationShape = RoundedCornerShape(30.dp)
+                            val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
+                            val useMiyorareVisuals = chrome != null
+                            val navigationShape = chrome?.navShape ?: RoundedCornerShape(30.dp)
                             val navigationColorScheme = if (useMiyorareVisuals) {
                                 MaterialTheme.colorScheme.copy(
                                     primaryContainer = Color.Transparent,
@@ -160,7 +163,7 @@ object HomeScreen : Screen() {
                                                     Modifier.heightIn(min = 70.dp)
                                                 },
                                             )
-                                            .modernSurfaceTreatment(shape = navigationShape)
+                                            .modernLibraryChromeSurface(chrome!!, shape = navigationShape)
                                     } else {
                                         Modifier
                                     },
@@ -262,8 +265,8 @@ object HomeScreen : Screen() {
         val selected = tabNavigator.current::class == tab::class
         val modernPalette = LocalModernVisualPalette.current
         val isModern = modernPalette.isModern
-        val useMiyorareVisuals = isModern &&
-            LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
+        val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
+        val useMiyorareVisuals = chrome != null
         val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
         NavigationSuiteItem(
             modifier = if (useMiyorareVisuals && selected) {
@@ -276,9 +279,7 @@ object HomeScreen : Screen() {
                     }
                     val top = (size.height - targetHeight) / 2f
                     val surfaceWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
-                    val surfaceColor = glass.selectedSurface.copy(
-                        alpha = glass.selectedSurface.alpha * 0.82f,
-                    )
+                    val selectedBrush = Brush.horizontalGradient(listOf(chrome!!.selectedStart, chrome.selectedEnd))
                     val cornerRadius = CornerRadius(24.dp.toPx())
                     val borderWidth = 1.dp.toPx()
 
@@ -286,13 +287,13 @@ object HomeScreen : Screen() {
                         val topLeft = Offset(horizontalInset, top)
                         val surfaceSize = Size(surfaceWidth, targetHeight)
                         drawRoundRect(
-                            color = surfaceColor,
+                            brush = selectedBrush,
                             topLeft = topLeft,
                             size = surfaceSize,
                             cornerRadius = cornerRadius,
                         )
                         drawRoundRect(
-                            color = glass.selectedBorder,
+                            color = chrome.selectedBorder,
                             topLeft = topLeft,
                             size = surfaceSize,
                             cornerRadius = cornerRadius,
@@ -317,7 +318,7 @@ object HomeScreen : Screen() {
                     Icon(
                         painter = tab.options.icon!!,
                         contentDescription = tab.options.title,
-                        tint = if (selected) glass.content else glass.contentMuted,
+                        tint = if (selected) chrome!!.selectedContent else chrome!!.content,
                         modifier = Modifier.size(if (selected) 22.dp else 20.dp),
                     )
                 } else {
@@ -331,7 +332,7 @@ object HomeScreen : Screen() {
                 if (useMiyorareVisuals) {
                     Text(
                         text = tab.options.title,
-                        color = if (selected) glass.content else glass.contentMuted,
+                        color = if (selected) chrome!!.selectedContent else chrome!!.content,
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontSize = 13.sp,
                             lineHeight = 16.sp,

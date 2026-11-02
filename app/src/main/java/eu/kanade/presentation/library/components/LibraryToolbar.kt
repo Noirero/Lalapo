@@ -1,6 +1,8 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +57,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,6 +71,8 @@ import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernArtworkIdentity
 import eu.kanade.presentation.theme.resolveGlassPalette
+import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategorySet
 import tachiyomi.domain.library.model.LibraryGroup
@@ -180,9 +185,11 @@ private fun LibraryRegularToolbar(
     val modernPalette = LocalModernVisualPalette.current
     val isModern = modernPalette.isModern
     val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
-    val useMiyorareVisuals = isModern &&
-        LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
-    val controlShape = RoundedCornerShape(22.dp)
+    val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
+    val useMiyorareVisuals = chrome != null
+    val controlShape = chrome?.controlShape ?: RoundedCornerShape(22.dp)
+    val searchInteraction = remember { MutableInteractionSource() }
+    val searchFocused by searchInteraction.collectIsFocusedAsState()
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Column {
@@ -193,7 +200,7 @@ private fun LibraryRegularToolbar(
                         modifier = if (useMiyorareVisuals) {
                             Modifier
                                 .size(44.dp)
-                                .modernSurfaceTreatment(shape = controlShape)
+                                .modernLibraryChromeSurface(chrome!!, shape = controlShape)
                         } else {
                             Modifier
                         },
@@ -201,7 +208,7 @@ private fun LibraryRegularToolbar(
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(AYMR.strings.settings),
-                            tint = if (useMiyorareVisuals) glass.content else MaterialTheme.colorScheme.onSurface,
+                            tint = chrome?.content ?: MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 },
@@ -215,12 +222,13 @@ private fun LibraryRegularToolbar(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(44.dp)
-                                .modernSurfaceTreatment(shape = controlShape),
+                                .modernLibraryChromeSurface(chrome!!, shape = controlShape, emphasized = searchFocused),
                             singleLine = true,
+                            interactionSource = searchInteraction,
                             textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                color = glass.content,
+                                color = chrome.content,
                             ),
-                            cursorBrush = SolidColor(glass.selectedBorder),
+                            cursorBrush = SolidColor(chrome.selectedBorder),
                             decorationBox = { innerTextField ->
                                 Row(
                                     modifier = Modifier
@@ -231,7 +239,7 @@ private fun LibraryRegularToolbar(
                                     Icon(
                                         imageVector = Icons.Outlined.Search,
                                         contentDescription = null,
-                                        tint = glass.contentMuted,
+                                        tint = chrome!!.contentMuted,
                                         modifier = Modifier.size(20.dp),
                                     )
                                     Box(
@@ -243,7 +251,7 @@ private fun LibraryRegularToolbar(
                                         if (searchQuery.isNullOrEmpty()) {
                                             Text(
                                                 text = stringResource(MR.strings.action_search_hint),
-                                                color = glass.contentMuted,
+                                                color = chrome!!.contentMuted,
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
@@ -259,7 +267,7 @@ private fun LibraryRegularToolbar(
                                             Icon(
                                                 imageVector = Icons.Outlined.Close,
                                                 contentDescription = stringResource(MR.strings.action_reset),
-                                                tint = glass.content,
+                                                tint = chrome!!.content,
                                                 modifier = Modifier.size(20.dp),
                                             )
                                         }
@@ -361,25 +369,22 @@ private fun LibraryRegularToolbar(
                             text = title.text,
                             style = if (useMiyorareVisuals) {
                                 MaterialTheme.typography.headlineMedium.copy(
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 32.sp,
+                                    fontWeight = if (chrome!!.serifTitle) FontWeight.Bold else FontWeight.ExtraBold,
+                                    fontFamily = if (chrome.serifTitle) FontFamily.Serif else FontFamily.SansSerif,
                                     fontStyle = FontStyle.Italic,
                                 )
                             } else {
                                 MaterialTheme.typography.headlineSmall
                             },
-                            color = if (useMiyorareVisuals) glass.content else Color.Unspecified,
+                            color = chrome?.titleColor ?: Color.Unspecified,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                         if (isModern) {
                             Text(
-                                text = " //",
-                                color = if (useMiyorareVisuals) {
-                                    glass.selectedBorder
-                                } else {
-                                    MaterialTheme.colorScheme.secondary
-                                },
+                                text = " ${chrome?.ornament ?: "//"}",
+                                color = chrome?.border ?: MaterialTheme.colorScheme.secondary,
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                                 modifier = Modifier.clearAndSetSemantics {},
                             )
@@ -389,7 +394,7 @@ private fun LibraryRegularToolbar(
                         text = "Koleksi anime kamu",
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (useMiyorareVisuals) {
-                            glass.contentMuted
+                            chrome!!.contentMuted
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },
@@ -400,13 +405,13 @@ private fun LibraryRegularToolbar(
                 if (title.numberOfAnime != null) {
                     if (useMiyorareVisuals) {
                         Surface(
-                            modifier = Modifier.modernSurfaceTreatment(shape = controlShape),
+                            modifier = Modifier.modernLibraryChromeSurface(chrome!!, shape = controlShape),
                             shape = controlShape,
                             color = Color.Transparent,
                         ) {
                             Text(
                                 text = "${title.numberOfAnime}",
-                                color = glass.content,
+                                color = chrome!!.content,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -433,14 +438,18 @@ private fun LibraryRegularToolbar(
                         .padding(horizontal = 16.dp)
                         .then(
                             if (isModern) {
-                                Modifier.modernSurfaceTreatment(shape = RoundedCornerShape(28.dp))
+                                if (chrome != null) {
+                                    Modifier.modernLibraryChromeSurface(chrome, shape = chrome.segmentedShape)
+                                } else {
+                                    Modifier.modernSurfaceTreatment(shape = RoundedCornerShape(28.dp))
+                                }
                             } else {
                                 Modifier
                             },
                         ),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = chrome?.segmentedShape ?: RoundedCornerShape(28.dp),
                     color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
-                    contentColor = if (isModern) glass.content else MaterialTheme.colorScheme.onSurface,
+                    contentColor = chrome?.content ?: if (isModern) glass.content else MaterialTheme.colorScheme.onSurface,
                     border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
                     Row(
@@ -458,6 +467,11 @@ private fun LibraryRegularToolbar(
                                     onClick = { setMenuExpanded = true },
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RectangleShape,
+                                    colors = if (chrome != null) {
+                                        ButtonDefaults.textButtonColors(contentColor = chrome.border)
+                                    } else {
+                                        ButtonDefaults.textButtonColors()
+                                    },
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Outlined.Label,
@@ -506,7 +520,7 @@ private fun LibraryRegularToolbar(
                             VerticalDivider(
                                 modifier = Modifier.height(32.dp),
                                 color = if (isModern) {
-                                    if (useMiyorareVisuals) glass.borderStrong else modernPalette.borderHighlight
+                                    if (useMiyorareVisuals) chrome!!.border else modernPalette.borderHighlight
                                 } else {
                                     MaterialTheme.colorScheme.outlineVariant
                                 },
@@ -673,30 +687,30 @@ private fun RowScope.ModernLibraryActionButton(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalModernVisualPalette.current
-    val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
-    val shape = RoundedCornerShape(17.dp)
+    val chrome = requireNotNull(resolveModernLibraryChrome(palette, LocalModernArtworkIdentity.current))
+    val shape = chrome.actionShape
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
-            .height(34.dp)
-            .modernSurfaceTreatment(shape = shape, selected = selected),
+            .height(42.dp)
+            .modernLibraryChromeSurface(chrome, shape = shape, selected = selected),
         shape = shape,
         border = BorderStroke(0.dp, Color.Transparent),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
-            contentColor = if (selected) glass.content else glass.contentMuted,
+            contentColor = if (selected) chrome.selectedContent else chrome.content,
         ),
         contentPadding = PaddingValues(horizontal = 9.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(18.dp),
         )
         Text(
             text = label,
             modifier = Modifier.padding(start = 4.dp),
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
         )
     }
