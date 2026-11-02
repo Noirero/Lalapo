@@ -61,6 +61,15 @@ object CommonAnimeItemDefaults {
     const val BrowseFavoriteCoverAlpha = 0.34f
 }
 
+@Composable
+private fun libraryCoverAspectRatio(useModernLibraryTreatment: Boolean): Float {
+    if (!useModernLibraryTreatment) return AnimeCover.Book.ratio
+    return resolveModernLibraryChrome(
+        LocalModernVisualPalette.current,
+        LocalModernArtworkIdentity.current,
+    )?.cardAspectRatio ?: AnimeCover.Book.ratio
+}
+
 private val ContinueWatchingButtonSizeSmall = 28.dp
 private val ContinueWatchingButtonSizeLarge = 32.dp
 
@@ -101,6 +110,7 @@ fun AnimeCompactGridItem(
                         .fillMaxWidth()
                         .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                     data = coverData,
+                    coverAspectRatio = libraryCoverAspectRatio(useModernLibraryTreatment),
                 )
             },
             badgesStart = coverBadgeStart,
@@ -167,7 +177,7 @@ private fun BoxScope.CoverTextOverlay(
                     )
                 },
             )
-            .fillMaxHeight(0.33f)
+            .fillMaxHeight(if (chrome != null) 0.42f else 0.33f)
             .fillMaxWidth()
             .align(Alignment.BottomCenter),
     )
@@ -188,6 +198,7 @@ private fun BoxScope.CoverTextOverlay(
                 ),
             ),
             minLines = 1,
+            fontSize = if (chrome != null) 14.sp else 12.sp,
         )
         if (onClickContinueWatching != null) {
             ContinueWatchingButton(
@@ -243,6 +254,7 @@ fun AnimeComfortableGridItem(
                             .fillMaxWidth()
                             .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                         data = coverData,
+                        coverAspectRatio = libraryCoverAspectRatio(useModernLibraryTreatment),
                     )
                 },
                 badgesStart = coverBadgeStart,
@@ -293,7 +305,7 @@ private fun AnimeGridCover(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(AnimeCover.Book.ratio)
+            .aspectRatio(chrome?.cardAspectRatio ?: AnimeCover.Book.ratio)
             .then(
                 when {
                     chrome != null -> Modifier.modernLibraryChromeCover(chrome, coverShape)
@@ -331,11 +343,12 @@ private fun GridItemTitle(
     minLines: Int,
     modifier: Modifier = Modifier,
     maxLines: Int = 2,
+    fontSize: androidx.compose.ui.unit.TextUnit = 12.sp,
 ) {
     Text(
         modifier = modifier,
         text = title,
-        fontSize = 12.sp,
+        fontSize = fontSize,
         lineHeight = 18.sp,
         minLines = minLines,
         maxLines = maxLines,

@@ -29,12 +29,12 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -275,25 +275,27 @@ object HomeScreen : Screen() {
                     val top = (size.height - targetHeight) / 2f
                     val surfaceWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
                     val selectedBrush = Brush.horizontalGradient(listOf(chrome!!.selectedStart, chrome.selectedEnd))
-                    val cornerRadius = CornerRadius(24.dp.toPx())
+                    val selectedPath = when (
+                        val outline = chrome.navSelectedShape.createOutline(
+                            androidx.compose.ui.geometry.Size(surfaceWidth, targetHeight),
+                            layoutDirection,
+                            this,
+                        )
+                    ) {
+                        is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
+                        is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
+                        is Outline.Generic -> outline.path
+                    }
                     val borderWidth = 1.dp.toPx()
-
                     onDrawBehind {
-                        val topLeft = Offset(horizontalInset, top)
-                        val surfaceSize = Size(surfaceWidth, targetHeight)
-                        drawRoundRect(
-                            brush = selectedBrush,
-                            topLeft = topLeft,
-                            size = surfaceSize,
-                            cornerRadius = cornerRadius,
-                        )
-                        drawRoundRect(
-                            color = chrome.selectedBorder,
-                            topLeft = topLeft,
-                            size = surfaceSize,
-                            cornerRadius = cornerRadius,
-                            style = Stroke(width = borderWidth),
-                        )
+                        translate(left = horizontalInset, top = top) {
+                            drawPath(path = selectedPath, brush = selectedBrush)
+                            drawPath(
+                                path = selectedPath,
+                                color = chrome.selectedBorder,
+                                style = Stroke(width = borderWidth),
+                            )
+                        }
                     }
                 }
             } else {
@@ -314,7 +316,7 @@ object HomeScreen : Screen() {
                         painter = tab.options.icon!!,
                         contentDescription = tab.options.title,
                         tint = if (selected) chrome!!.selectedContent else chrome!!.content,
-                        modifier = Modifier.size(if (selected) 22.dp else 20.dp),
+                        modifier = Modifier.size(if (selected) 25.dp else 23.dp),
                     )
                 } else {
                     Icon(
@@ -329,8 +331,8 @@ object HomeScreen : Screen() {
                         text = tab.options.title,
                         color = if (selected) chrome!!.selectedContent else chrome!!.content,
                         style = MaterialTheme.typography.labelLarge.copy(
-                            fontSize = 13.sp,
-                            lineHeight = 16.sp,
+                            fontSize = 14.sp,
+                            lineHeight = 17.sp,
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
