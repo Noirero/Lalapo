@@ -3,12 +3,11 @@ package eu.kanade.tachiyomi.ui.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.drawWithCache
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +29,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -154,7 +157,7 @@ object HomeScreen : Screen() {
                                                 if (tabletUi) {
                                                     Modifier
                                                 } else {
-                                                    Modifier.height(70.dp)
+                                                    Modifier.heightIn(min = 70.dp)
                                                 },
                                             )
                                             .modernSurfaceTreatment(shape = navigationShape)
@@ -262,23 +265,41 @@ object HomeScreen : Screen() {
         val useMiyorareVisuals = isModern &&
             LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
         val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
-        val itemShape = RoundedCornerShape(24.dp)
         NavigationSuiteItem(
             modifier = if (useMiyorareVisuals && selected) {
-                Modifier
-                    .padding(horizontal = 2.dp)
-                    .then(
-                        if (navigationSuiteType == NavigationSuiteType.NavigationBar) {
-                            Modifier.height(60.dp)
-                        } else {
-                            Modifier
-                        },
+                Modifier.drawWithCache {
+                    val horizontalInset = 2.dp.toPx()
+                    val targetHeight = if (navigationSuiteType == NavigationSuiteType.NavigationBar) {
+                        60.dp.toPx().coerceAtMost(size.height)
+                    } else {
+                        size.height
+                    }
+                    val top = (size.height - targetHeight) / 2f
+                    val surfaceWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
+                    val surfaceColor = glass.selectedSurface.copy(
+                        alpha = glass.selectedSurface.alpha * 0.82f,
                     )
-                    .background(
-                        color = glass.selectedSurface.copy(alpha = glass.selectedSurface.alpha * 0.82f),
-                        shape = itemShape,
-                    )
-                    .border(1.dp, glass.selectedBorder, itemShape)
+                    val cornerRadius = CornerRadius(24.dp.toPx())
+                    val borderWidth = 1.dp.toPx()
+
+                    onDrawBehind {
+                        val topLeft = Offset(horizontalInset, top)
+                        val surfaceSize = Size(surfaceWidth, targetHeight)
+                        drawRoundRect(
+                            color = surfaceColor,
+                            topLeft = topLeft,
+                            size = surfaceSize,
+                            cornerRadius = cornerRadius,
+                        )
+                        drawRoundRect(
+                            color = glass.selectedBorder,
+                            topLeft = topLeft,
+                            size = surfaceSize,
+                            cornerRadius = cornerRadius,
+                            style = Stroke(width = borderWidth),
+                        )
+                    }
+                }
             } else {
                 Modifier
             },
