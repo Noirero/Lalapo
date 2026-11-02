@@ -3,10 +3,14 @@ package tachiyomi.data.category
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
+import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
+import eu.kanade.tachiyomi.animesource.model.FetchType
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonObject
 import kotlinx.coroutines.withTimeout
 import mihon.app.di.AppBindings
 import org.junit.After
@@ -147,42 +151,55 @@ class CategorySetRepositoryIntegrationTest {
         val id = categoryId("Assigned")
         database.categoriesQueries.updateHidden(1L, id)
 
-        // Populate an actual anime/category FK membership and confirm it survives reassignment.
-        val sqlite = context.openOrCreateDatabase("tachiyomi.animedb", 0, null)
-        try {
-            sqlite.execSQL(
-                """INSERT INTO animes(source, url, title, status, favorite, initialized, viewer,
-                   episode_flags, cover_last_modified, date_added, season_flags, season_number,
-                   season_source_order, background_last_modified)
-                   VALUES (1, 'test://set-move', 'Test', 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)""",
-            )
-            val cursor = sqlite.rawQuery("SELECT _id FROM animes WHERE url = 'test://set-move'", null)
-            val animeId = cursor.use {
-                it.moveToFirst()
-                it.getLong(0)
-            }
-            sqlite.execSQL(
-                "INSERT INTO animes_categories(anime_id, category_id) VALUES (?, ?)",
-                arrayOf(animeId, id),
-            )
-            assertEquals(source, assignment(id))
-            repository.moveCategories(listOf(id), destination)
-            assertEquals(destination, assignment(id))
-            val category = CategoryRepositoryImpl(database).get(id)!!
-            assertEquals("Assigned", category.name)
-            assertEquals(3L, category.order)
-            assertTrue(category.hidden)
-            val membership = sqlite.rawQuery(
-                "SELECT category_id FROM animes_categories WHERE anime_id = ?",
-                arrayOf(animeId.toString()),
-            )
-            membership.use {
-                assertTrue(it.moveToFirst())
-                assertEquals(id, it.getLong(0))
-            }
-        } finally {
-            sqlite.close()
-        }
+        // Use the same SQLDelight database connection/driver as the repository.
+        // Android's framework SQLite driver must not open this bundled SQLite DB.
+        val animeId = database.animesQueries.insertReturningId(
+            source = 1L,
+            url = "test://set-move",
+            artist = null,
+            author = null,
+            description = null,
+            genre = null,
+            title = "Test",
+            status = 0L,
+            thumbnailUrl = null,
+            favorite = true,
+            lastUpdate = 0L,
+            nextUpdate = 0L,
+            calculateInterval = 0L,
+            initialized = true,
+            viewerFlags = 0L,
+            episodeFlags = 0L,
+            coverLastModified = 0L,
+            dateAdded = 0L,
+            updateStrategy = AnimeUpdateStrategy.ALWAYS_UPDATE,
+            version = 0L,
+            notes = "",
+            fetchType = FetchType.Episodes,
+            parentId = null,
+            seasonFlags = 0L,
+            seasonNumber = 0.0,
+            seasonSourceOrder = 0L,
+            backgroundUrl = null,
+            backgroundLastModified = 0L,
+            memo = JsonObject(emptyMap()),
+        ).awaitAsOne()
+        database.animes_categoriesQueries.insert(animeId, id)
+
+        assertEquals(source, assignment(id))
+        assertEquals(listOf(id), database.categoriesQueries.getCategoriesByAnimeId(animeId).awaitAsList().map { it.id })
+
+        repository.moveCategories(listOf(id), destination)
+
+        assertEquals(destination, assignment(id))
+        val category = CategoryRepositoryImpl(database).get(id)!!
+        assertEquals("Assigned", category.name)
+        assertEquals(3L, category.order)
+        assertTrue(category.hidden)
+        assertEquals(
+            listOf(id),
+            database.categoriesQueries.getCategoriesByAnimeId(animeId).awaitAsList().map { it.id },
+        )
     }
 
     @Test
