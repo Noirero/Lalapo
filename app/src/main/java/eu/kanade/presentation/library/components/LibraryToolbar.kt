@@ -542,82 +542,82 @@ private fun LibraryRegularToolbar(
                                 }
                             }
 
-                        if (selectedSet != null && hasCategoryNavigation) {
-                            VerticalDivider(
-                                modifier = Modifier.height(32.dp),
-                                color = if (isModern) {
-                                    if (useMiyorareVisuals) chrome!!.border else modernPalette.borderHighlight
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant
-                                },
-                            )
-                        }
-
-                        if (showTabRail) {
-                            LibraryTabs(
-                                categories = categories,
-                                selectedIndex = selectedCategoryIndex,
-                                getItemCountForCategory = getItemCountForCategory,
-                                onTabItemClick = onSelectCategory,
-                                modifier = when {
-                                    selectedSet == null -> Modifier.fillMaxWidth()
-                                    selectedSetWidth != null -> Modifier.weight(1f)
-                                    else -> Modifier.weight(1f - setSelectorWeight)
-                                },
-                            )
-                        } else if (showCategoryPicker && selectedCategory != null) {
-                            Box(
-                                modifier = when {
-                                    selectedSet == null -> Modifier.fillMaxWidth()
-                                    selectedSetWidth != null -> Modifier.weight(1f)
-                                    else -> Modifier.weight(1f - setSelectorWeight)
-                                },
-                            ) {
-                                TextButton(
-                                    onClick = { categoryMenuExpanded = true },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RectangleShape,
+                            if (selectedSet != null && hasCategoryNavigation) {
+                                VerticalDivider(
+                                    modifier = Modifier.height(32.dp),
+                                    color = if (isModern) {
+                                        if (useMiyorareVisuals) chrome!!.border else modernPalette.borderHighlight
+                                    } else {
+                                        MaterialTheme.colorScheme.outlineVariant
+                                    },
+                                )
+                            }
+    
+                            if (showTabRail) {
+                                LibraryTabs(
+                                    categories = categories,
+                                    selectedIndex = selectedCategoryIndex,
+                                    getItemCountForCategory = getItemCountForCategory,
+                                    onTabItemClick = onSelectCategory,
+                                    modifier = when {
+                                        selectedSet == null -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.weight(1f)
+                                        else -> Modifier.weight(1f - setSelectorWeight)
+                                    },
+                                )
+                            } else if (showCategoryPicker && selectedCategory != null) {
+                                Box(
+                                    modifier = when {
+                                        selectedSet == null -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.weight(1f)
+                                        else -> Modifier.weight(1f - setSelectorWeight)
+                                    },
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Layers,
-                                        contentDescription = null,
-                                    )
-                                    Text(
-                                        text = "$categoryGroupLabel: ${selectedCategory.visualName}",
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowDropDown,
-                                        contentDescription = null,
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = categoryMenuExpanded,
-                                    onDismissRequest = { categoryMenuExpanded = false },
-                                ) {
-                                    categories.forEachIndexed { index, category ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    if (index == selectedCategoryIndex) {
-                                                        "✓ ${category.visualName}"
-                                                    } else {
-                                                        category.visualName
-                                                    },
-                                                )
-                                            },
-                                            onClick = {
-                                                categoryMenuExpanded = false
-                                                onSelectCategory(index)
-                                            },
+                                    TextButton(
+                                        onClick = { categoryMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RectangleShape,
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Layers,
+                                            contentDescription = null,
+                                        )
+                                        Text(
+                                            text = "$categoryGroupLabel: ${selectedCategory.visualName}",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(start = 8.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Outlined.ArrowDropDown,
+                                            contentDescription = null,
                                         )
                                     }
+                                    DropdownMenu(
+                                        expanded = categoryMenuExpanded,
+                                        onDismissRequest = { categoryMenuExpanded = false },
+                                    ) {
+                                        categories.forEachIndexed { index, category ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        if (index == selectedCategoryIndex) {
+                                                            "✓ ${category.visualName}"
+                                                        } else {
+                                                            category.visualName
+                                                        },
+                                                    )
+                                                },
+                                                onClick = {
+                                                    categoryMenuExpanded = false
+                                                    onSelectCategory(index)
+                                                },
+                                            )
+                                        }
+                                    }
                                 }
-                            }
                         }
                         }
                     }
