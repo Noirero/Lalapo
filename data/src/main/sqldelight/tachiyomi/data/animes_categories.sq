@@ -25,3 +25,8 @@ VALUES (:animeId, :categoryId);
 deleteAnimeCategoryByAnimeId:
 DELETE FROM animes_categories
 WHERE anime_id = :animeId;
+
+-- Delta-only update: unrelated anime/category links and their triggers remain untouched.
+deleteOneMembership:
+DELETE FROM animes_categories
+WHERE anime_id = :animeId AND category_id = :categoryId;

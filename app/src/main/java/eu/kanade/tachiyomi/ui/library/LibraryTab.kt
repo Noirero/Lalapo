@@ -297,15 +297,11 @@ data object LibraryTab : Tab {
             }
             is LibraryViewModel.Dialog.ChangeCategory -> {
                 ChangeCategoryDialog(
-                    initialSelection = dialog.initialSelection,
+                    anime = dialog.anime,
                     onDismissRequest = onDismissRequest,
-                    onEditCategories = {
+                    onSaved = {
+                        viewModel.closeDialog()
                         viewModel.clearSelection()
-                        navigator.push(CategoryScreen())
-                    },
-                    onConfirm = { include, exclude ->
-                        viewModel.clearSelection()
-                        viewModel.setAnimeCategories(dialog.anime, include, exclude)
                     },
                 )
             }

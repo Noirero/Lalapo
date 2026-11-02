@@ -262,6 +262,18 @@ class BrowseSourceViewModel(
         }
     }
 
+    /**
+     * Only the side effects of the historical add-to-library path remain here.
+     * The category picker already committed Favorite and category membership atomically.
+     */
+    fun onCategoryPickerSaved(anime: Anime) {
+        if (anime.favorite) return
+        viewModelScope.launch {
+            setAnimeDefaultEpisodeFlags.await(anime)
+            addTracks.bindEnhancedTrackers(anime, source)
+        }
+    }
+
     fun addFavorite(anime: Anime) {
         viewModelScope.launch {
             val categories = getCategories()

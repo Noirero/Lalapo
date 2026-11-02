@@ -19,7 +19,6 @@ import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.components.HistoryDeleteDialog
 import eu.kanade.tachiyomi.ui.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.browse.migration.season.MigrateSeasonSelectScreen
-import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -86,12 +85,11 @@ fun Screen.HistoryHalfTab(
         }
         is HistoryViewModel.Dialog.ChangeCategory -> {
             ChangeCategoryDialog(
-                initialSelection = dialog.initialSelection,
+                anime = listOf(dialog.anime),
                 onDismissRequest = onDismissRequest,
-                onEditCategories = { navigator.push(CategoryScreen()) },
-                onConfirm = { include, _ ->
-                    viewModel.moveAnimeToCategoriesAndAddToLibrary(dialog.anime, include)
-                },
+                // Picker applies membership and Favorite in one transaction.
+                // History's addFavorite path already binds enhanced trackers.
+                onSaved = onDismissRequest,
             )
         }
         is HistoryViewModel.Dialog.Migrate -> {

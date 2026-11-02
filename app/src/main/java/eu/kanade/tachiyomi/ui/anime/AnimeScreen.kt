@@ -270,11 +270,11 @@ class AnimeScreen(
             null -> {}
             is AnimeViewModel.Dialog.ChangeCategory -> {
                 ChangeCategoryDialog(
-                    initialSelection = dialog.initialSelection,
+                    anime = listOf(dialog.anime),
                     onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoryScreen()) },
-                    onConfirm = { include, _ ->
-                        viewModel.moveAnimeToCategoriesAndAddToLibrary(dialog.anime, include)
+                    onSaved = {
+                        viewModel.refreshAfterCategoryPickerSave()
+                        onDismissRequest()
                     },
                 )
             }

@@ -40,6 +40,16 @@ interface AnimeRepository {
 
     suspend fun setAnimeCategories(animeId: Long, categoryIds: List<Long>)
 
+    /**
+     * Applies only explicit user changes across all anime in one transaction.
+     * Unmodified (including hidden and other-Set) memberships are retained.
+     */
+    suspend fun applyCategoryChanges(
+        animeIds: List<Long>,
+        categoryChanges: Map<Long, Boolean>,
+        addToLibrary: Boolean = false,
+    )
+
     suspend fun update(update: AnimeUpdate): Boolean
 
     suspend fun updateAll(animeUpdates: List<AnimeUpdate>): Boolean
