@@ -13,11 +13,11 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import tachiyomi.domain.category.model.Category
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import tachiyomi.core.common.preference.AndroidPreferenceStore
+import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences
 
 @RunWith(AndroidJUnit4::class)
@@ -154,7 +154,10 @@ class CategorySetRepositoryIntegrationTest {
                    VALUES (1, 'test://set-move', 'Test', 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)""",
             )
             val cursor = sqlite.rawQuery("SELECT _id FROM animes WHERE url = 'test://set-move'", null)
-            val animeId = cursor.use { it.moveToFirst(); it.getLong(0) }
+            val animeId = cursor.use {
+                it.moveToFirst()
+                it.getLong(0)
+            }
             sqlite.execSQL(
                 "INSERT INTO animes_categories(anime_id, category_id) VALUES (?, ?)",
                 arrayOf(animeId, id),
@@ -170,7 +173,10 @@ class CategorySetRepositoryIntegrationTest {
                 "SELECT category_id FROM animes_categories WHERE anime_id = ?",
                 arrayOf(animeId.toString()),
             )
-            membership.use { assertTrue(it.moveToFirst()); assertEquals(id, it.getLong(0)) }
+            membership.use {
+                assertTrue(it.moveToFirst())
+                assertEquals(id, it.getLong(0))
+            }
         } finally {
             sqlite.close()
         }
@@ -236,5 +242,4 @@ class CategorySetRepositoryIntegrationTest {
         assertEquals(before.mapValues { it.value.syncKey }, after.associate { it.id to it.syncKey })
         assertTrue(repository.observeCategoriesBySet().first().isEmpty())
     }
-
 }

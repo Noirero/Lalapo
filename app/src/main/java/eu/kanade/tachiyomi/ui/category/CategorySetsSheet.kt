@@ -40,8 +40,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -176,13 +176,22 @@ internal fun CategorySetsSheet(
                                         ids.add(index + 1, ids.removeAt(index))
                                         viewModel.reorderSets(ids)
                                     }) {
-                                        Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = "Turunkan ${set.name}")
+                                        Icon(
+                                            Icons.Outlined.KeyboardArrowDown,
+                                            contentDescription = "Turunkan ${set.name}",
+                                        )
                                     }
                                     androidx.compose.foundation.layout.Box {
                                         IconButton(enabled = !busy, onClick = { menuOpen = true }) {
-                                            Icon(Icons.Outlined.MoreVert, contentDescription = "Tindakan untuk ${set.name}")
+                                            Icon(
+                                                Icons.Outlined.MoreVert,
+                                                contentDescription = "Tindakan untuk ${set.name}",
+                                            )
                                         }
-                                        DropdownMenu(expanded = menuOpen && !busy, onDismissRequest = { menuOpen = false }) {
+                                        DropdownMenu(
+                                            expanded = menuOpen && !busy,
+                                            onDismissRequest = { menuOpen = false },
+                                        ) {
                                             if (set.syncKey != activeSetKey) {
                                                 DropdownMenuItem(
                                                     text = { Text("Jadikan aktif") },
