@@ -202,9 +202,9 @@ fun ChangeCategoryDialog(
                                 Box(
                                     Modifier.size(width = 48.dp, height = 68.dp)
                                         .background(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        RoundedCornerShape(10.dp),
-                                    ),
+                                            MaterialTheme.colorScheme.secondaryContainer,
+                                            RoundedCornerShape(10.dp),
+                                        ),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text("${anime.size}", style = MaterialTheme.typography.titleMedium)
@@ -494,8 +494,10 @@ internal fun toggleCategoryPending(
     current: LongArray,
     categoryId: Long,
     state: ToggleableState,
-): LongArray = (current.filter { abs(it) != categoryId } +
-    (if (state == ToggleableState.On) -categoryId else categoryId)).toLongArray()
+): LongArray = (
+    current.filter { abs(it) != categoryId } +
+        (if (state == ToggleableState.On) -categoryId else categoryId)
+    ).toLongArray()
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -508,8 +510,11 @@ private fun CategoryPickerRow(
     var showFullName by remember { mutableStateOf(false) }
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = if (state == ToggleableState.On) MaterialTheme.colorScheme.secondaryContainer
-        else MaterialTheme.colorScheme.surfaceContainer,
+        color = if (state == ToggleableState.On) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer
+        },
         modifier = Modifier.fillMaxWidth().height(44.dp)
             .combinedClickable(enabled = enabled, onClick = onToggle, onLongClick = { showFullName = true })
             .testTag("picker-category:${category.id}"),
