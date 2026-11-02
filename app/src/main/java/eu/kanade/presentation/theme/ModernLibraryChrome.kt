@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -31,6 +33,7 @@ internal data class ModernLibraryChrome(
     val contentMuted: Color,
     val selectedContent: Color,
     val titleColor: Color,
+    val headerSubtitleColor: Color,
     val ornament: String,
     val serifTitle: Boolean,
     val controlShape: Shape,
@@ -38,15 +41,19 @@ internal data class ModernLibraryChrome(
     val tabShape: Shape,
     val actionShape: Shape,
     val navShape: Shape,
+    val navSelectedShape: Shape,
     val cardShape: Shape,
+    val cardAspectRatio: Float,
 )
 
 private val roundControl = RoundedCornerShape(24.dp)
 private val roundSegment = RoundedCornerShape(28.dp)
 private val roundTab = RoundedCornerShape(24.dp)
-private val roundCard = RoundedCornerShape(14.dp)
 private val roundNav = RoundedCornerShape(32.dp)
 private val roundAction = RoundedCornerShape(24.dp)
+private val softAction = CutCornerShape(topStart = 6.dp, topEnd = 12.dp, bottomEnd = 6.dp, bottomStart = 12.dp)
+private val fluidShape = RoundedCornerShape(topStart = 28.dp, topEnd = 18.dp, bottomEnd = 28.dp, bottomStart = 18.dp)
+private val cyberShape = CutCornerShape(topStart = 10.dp, topEnd = 4.dp, bottomEnd = 10.dp, bottomStart = 4.dp)
 private val angularAction = CutCornerShape(topStart = 12.dp, topEnd = 3.dp, bottomEnd = 12.dp, bottomStart = 3.dp)
 private val ornamentalAction = CutCornerShape(topStart = 7.dp, topEnd = 14.dp, bottomEnd = 7.dp, bottomStart = 14.dp)
 
@@ -64,13 +71,16 @@ private object Presets {
         selectedContent = Color.White,
         titleColor = Color.White,
         ornament = "//",
+        headerSubtitleColor = Color(0xFFE4EDFF),
         serifTitle = true,
         controlShape = roundControl,
         segmentedShape = roundSegment,
         tabShape = roundTab,
-        actionShape = roundAction,
+        actionShape = angularAction,
         navShape = roundNav,
-        cardShape = roundCard,
+        navSelectedShape = RoundedCornerShape(28.dp),
+        cardShape = RoundedCornerShape(17.dp),
+        cardAspectRatio = 0.95f,
     )
 
     val sakura = ModernLibraryChrome(
@@ -84,15 +94,18 @@ private object Presets {
         content = Color(0xFF51152E),
         contentMuted = Color(0xFF6E2846),
         selectedContent = Color.White,
-        titleColor = Color(0xFF9C2257),
+        titleColor = Color(0xFFFFF1F7),
         ornament = "✿",
+        headerSubtitleColor = Color(0xFFFFEAF3),
         serifTitle = true,
-        controlShape = roundControl,
-        segmentedShape = roundSegment,
-        tabShape = roundTab,
-        actionShape = ornamentalAction,
-        navShape = roundNav,
-        cardShape = roundCard,
+        controlShape = RoundedCornerShape(28.dp),
+        segmentedShape = RoundedCornerShape(30.dp),
+        tabShape = RoundedCornerShape(23.dp),
+        actionShape = softAction,
+        navShape = RoundedCornerShape(34.dp),
+        navSelectedShape = RoundedCornerShape(29.dp),
+        cardShape = RoundedCornerShape(20.dp),
+        cardAspectRatio = 0.95f,
     )
 
     val violet = ModernLibraryChrome(
@@ -108,13 +121,16 @@ private object Presets {
         selectedContent = Color.White,
         titleColor = Color.White,
         ornament = "///",
+        headerSubtitleColor = Color(0xFFEAE0FF),
         serifTitle = false,
-        controlShape = roundControl,
-        segmentedShape = roundSegment,
-        tabShape = roundTab,
+        controlShape = RoundedCornerShape(20.dp),
+        segmentedShape = cyberShape,
+        tabShape = RoundedCornerShape(17.dp),
         actionShape = angularAction,
-        navShape = roundNav,
-        cardShape = roundCard,
+        navShape = RoundedCornerShape(26.dp),
+        navSelectedShape = CutCornerShape(topStart = 11.dp, bottomEnd = 11.dp),
+        cardShape = RoundedCornerShape(15.dp),
+        cardAspectRatio = 0.95f,
     )
 
     val cyan = ModernLibraryChrome(
@@ -130,13 +146,16 @@ private object Presets {
         selectedContent = Color(0xFF002E43),
         titleColor = Color.White,
         ornament = "〰",
+        headerSubtitleColor = Color(0xFFE1FDFF),
         serifTitle = true,
-        controlShape = roundControl,
-        segmentedShape = roundSegment,
-        tabShape = roundTab,
-        actionShape = roundAction,
-        navShape = roundNav,
-        cardShape = roundCard,
+        controlShape = RoundedCornerShape(27.dp),
+        segmentedShape = RoundedCornerShape(32.dp),
+        tabShape = RoundedCornerShape(27.dp),
+        actionShape = fluidShape,
+        navShape = RoundedCornerShape(38.dp),
+        navSelectedShape = RoundedCornerShape(32.dp),
+        cardShape = RoundedCornerShape(19.dp),
+        cardAspectRatio = 0.95f,
     )
 
     val emerald = ModernLibraryChrome(
@@ -152,13 +171,16 @@ private object Presets {
         selectedContent = Color(0xFF183B15),
         titleColor = Color.White,
         ornament = "❧",
+        headerSubtitleColor = Color(0xFFF0FFE4),
         serifTitle = true,
-        controlShape = roundControl,
-        segmentedShape = roundSegment,
-        tabShape = roundTab,
-        actionShape = roundAction,
-        navShape = roundNav,
-        cardShape = roundCard,
+        controlShape = RoundedCornerShape(22.dp),
+        segmentedShape = fluidShape,
+        tabShape = RoundedCornerShape(topStart = 25.dp, bottomEnd = 25.dp, topEnd = 14.dp, bottomStart = 14.dp),
+        actionShape = fluidShape,
+        navShape = fluidShape,
+        navSelectedShape = fluidShape,
+        cardShape = RoundedCornerShape(19.dp),
+        cardAspectRatio = 0.95f,
     )
 
     val amber = ModernLibraryChrome(
@@ -174,13 +196,16 @@ private object Presets {
         selectedContent = Color(0xFF2C1B04),
         titleColor = Color(0xFFFFD383),
         ornament = "//",
+        headerSubtitleColor = Color(0xFFFFE9C9),
         serifTitle = true,
-        controlShape = roundControl,
-        segmentedShape = roundSegment,
-        tabShape = roundTab,
-        actionShape = angularAction,
-        navShape = roundNav,
-        cardShape = roundCard,
+        controlShape = RoundedCornerShape(29.dp),
+        segmentedShape = RoundedCornerShape(31.dp),
+        tabShape = RoundedCornerShape(28.dp),
+        actionShape = ornamentalAction,
+        navShape = RoundedCornerShape(38.dp),
+        navSelectedShape = RoundedCornerShape(31.dp),
+        cardShape = RoundedCornerShape(19.dp),
+        cardAspectRatio = 0.95f,
     )
 }
 
@@ -227,6 +252,35 @@ internal fun Modifier.modernLibraryChromeSurface(
         color = if (selected || emphasized) chrome.selectedBorder else chrome.border,
         shape = shape,
     )
+
+/** Small, cached corner accents for the reference's ornamental filter/sort controls. */
+internal fun Modifier.modernLibraryActionSurface(
+    chrome: ModernLibraryChrome,
+    selected: Boolean,
+): Modifier = this
+    .modernLibraryChromeSurface(chrome, chrome.actionShape, selected = selected)
+    .drawWithCache {
+        val inset = 5.dp.toPx()
+        val accent = 14.dp.toPx()
+        val stroke = 1.25.dp.toPx()
+        onDrawWithContent {
+            drawContent()
+            drawLine(chrome.selectedBorder, Offset(inset, inset), Offset(accent, inset), stroke)
+            drawLine(chrome.selectedBorder, Offset(inset, inset), Offset(inset, accent), stroke)
+            drawLine(
+                chrome.selectedBorder,
+                Offset(size.width - accent, size.height - inset),
+                Offset(size.width - inset, size.height - inset),
+                stroke,
+            )
+            drawLine(
+                chrome.selectedBorder,
+                Offset(size.width - inset, size.height - accent),
+                Offset(size.width - inset, size.height - inset),
+                stroke,
+            )
+        }
+    }
 
 internal fun Modifier.modernLibraryChromeCover(
     chrome: ModernLibraryChrome,

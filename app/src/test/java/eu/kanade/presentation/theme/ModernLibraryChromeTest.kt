@@ -24,6 +24,23 @@ class ModernLibraryChromeTest {
     }
 
     @Test
+    fun `physical QA correction keeps square-ish cards and isolated title contrast`() {
+        val modern = ModernVisualPalette.Standard.copy(isModern = true)
+        val entries = ModernThemeDefinitions.authoredBuiltIns.map {
+            requireNotNull(resolveModernLibraryChrome(modern, it.artworkIdentity))
+        }
+        entries.forEach { chrome ->
+            org.junit.jupiter.api.Assertions.assertTrue(chrome.cardAspectRatio in 0.9f..1.0f)
+        }
+        assertNotEquals(entries[1].cardShape, entries[2].cardShape)
+        assertEquals(Color(0xFFFFF1F7), entries[1].titleColor)
+        assertEquals(Color(0xFFFFEAF3), entries[1].headerSubtitleColor)
+        assertNotEquals(entries[1].navSelectedShape, entries[2].navSelectedShape)
+        assertNotEquals(entries[1].segmentedShape, entries[2].segmentedShape)
+        assertNull(resolveModernLibraryChrome(modern, ModernArtworkIdentity.CUSTOM_WAVES))
+    }
+
+    @Test
     fun `reference identity ornaments and distinct selections are retained`() {
         val modern = ModernVisualPalette.Standard.copy(isModern = true)
         val expected = listOf("//", "✿", "///", "〰", "❧", "//")

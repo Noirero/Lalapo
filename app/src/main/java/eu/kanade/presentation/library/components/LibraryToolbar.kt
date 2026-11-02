@@ -59,6 +59,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +70,7 @@ import eu.kanade.presentation.components.modernBorderHighlight
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.modernLibraryActionSurface
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.theme.resolveGlassPalette
 import eu.kanade.presentation.theme.resolveModernLibraryChrome
@@ -373,10 +375,11 @@ private fun LibraryRegularToolbar(
                             text = title.text,
                             style = if (useMiyorareVisuals) {
                                 MaterialTheme.typography.headlineMedium.copy(
-                                    fontSize = 32.sp,
+                                    fontSize = if (chrome!!.serifTitle) 35.sp else 34.sp,
                                     fontWeight = if (chrome!!.serifTitle) FontWeight.Bold else FontWeight.ExtraBold,
                                     fontFamily = if (chrome.serifTitle) FontFamily.Serif else FontFamily.SansSerif,
                                     fontStyle = FontStyle.Italic,
+                                    shadow = Shadow(color = Color(0x99000000), blurRadius = 5f),
                                 )
                             } else {
                                 MaterialTheme.typography.headlineSmall
@@ -389,7 +392,10 @@ private fun LibraryRegularToolbar(
                             Text(
                                 text = " ${chrome?.ornament ?: "//"}",
                                 color = chrome?.border ?: MaterialTheme.colorScheme.secondary,
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontSize = if (chrome?.ornament == "✿") 30.sp else 26.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                ),
                                 modifier = Modifier.clearAndSetSemantics {},
                             )
                         }
@@ -398,7 +404,7 @@ private fun LibraryRegularToolbar(
                         text = "Koleksi anime kamu",
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (useMiyorareVisuals) {
-                            chrome!!.contentMuted
+                            chrome!!.headerSubtitleColor
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },
@@ -697,7 +703,7 @@ private fun RowScope.ModernLibraryActionButton(
         onClick = onClick,
         modifier = modifier
             .height(42.dp)
-            .modernLibraryChromeSurface(chrome, shape = shape, selected = selected),
+            .modernLibraryActionSurface(chrome, selected = selected),
         shape = shape,
         border = BorderStroke(0.dp, Color.Transparent),
         colors = ButtonDefaults.outlinedButtonColors(
