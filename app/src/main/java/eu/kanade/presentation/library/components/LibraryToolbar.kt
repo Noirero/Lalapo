@@ -5,10 +5,13 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
@@ -48,6 +51,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,8 +61,10 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.modernBorderHighlight
 import eu.kanade.presentation.components.modernSurfaceTreatment
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
-import eu.kanade.presentation.theme.ModernHeaderArtwork
+import eu.kanade.presentation.theme.ModernArtworkIdentity
+import eu.kanade.presentation.theme.resolveGlassPalette
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategorySet
 import tachiyomi.domain.library.model.LibraryGroup
@@ -169,18 +176,29 @@ private fun LibraryRegularToolbar(
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
     val modernPalette = LocalModernVisualPalette.current
     val isModern = modernPalette.isModern
+    val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
+    val useMiyorareVisuals = isModern &&
+        LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
+    val controlShape = RoundedCornerShape(22.dp)
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        if (isModern) {
-            ModernHeaderArtwork(modifier = Modifier.matchParentSize())
-        }
         Column {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onClickSettings) {
+                    IconButton(
+                        onClick = onClickSettings,
+                        modifier = if (useMiyorareVisuals) {
+                            Modifier
+                                .size(44.dp)
+                                .modernSurfaceTreatment(shape = controlShape)
+                        } else {
+                            Modifier
+                        },
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(AYMR.strings.settings),
+                            tint = if (useMiyorareVisuals) glass.content else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 },
@@ -190,9 +208,34 @@ private fun LibraryRegularToolbar(
                         onValueChange = { query ->
                             onSearchQueryChange(query.takeIf { it.isNotEmpty() })
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(if (useMiyorareVisuals) Modifier.height(44.dp) else Modifier)
+                            .then(
+                                if (useMiyorareVisuals) {
+                                    Modifier.modernSurfaceTreatment(shape = controlShape)
+                                } else {
+                                    Modifier
+                                },
+                            ),
                         singleLine = true,
-                        colors = if (isModern) {
+                        colors = if (useMiyorareVisuals) {
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                cursorColor = glass.selectedBorder,
+                                focusedTextColor = glass.content,
+                                unfocusedTextColor = glass.content,
+                                focusedLeadingIconColor = glass.content,
+                                unfocusedLeadingIconColor = glass.contentMuted,
+                                focusedTrailingIconColor = glass.content,
+                                unfocusedTrailingIconColor = glass.contentMuted,
+                                focusedPlaceholderColor = glass.contentMuted,
+                                unfocusedPlaceholderColor = glass.contentMuted,
+                            )
+                        } else if (isModern) {
                             OutlinedTextFieldDefaults.colors(
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
                                     alpha = 0.70f,
@@ -231,22 +274,33 @@ private fun LibraryRegularToolbar(
                     )
                 },
                 actions = {
-                    AppBarActions(
-                        listOf(
-                            AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_update_library),
-                                onClick = onClickGlobalUpdate,
+                    Box(
+                        modifier = if (useMiyorareVisuals) {
+                            Modifier
+                                .size(44.dp)
+                                .modernSurfaceTreatment(shape = controlShape)
+                        } else {
+                            Modifier
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        AppBarActions(
+                            listOf(
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_update_library),
+                                    onClick = onClickGlobalUpdate,
+                                ),
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_update_category),
+                                    onClick = onClickRefresh,
+                                ),
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_open_random_manga),
+                                    onClick = onClickOpenRandomAnime,
+                                ),
                             ),
-                            AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_update_category),
-                                onClick = onClickRefresh,
-                            ),
-                            AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_open_random_manga),
-                                onClick = onClickOpenRandomAnime,
-                            ),
-                        ),
-                    )
+                        )
+                    }
                 },
                 scrollBehavior = scrollBehavior,
                 colors = if (isModern) {
@@ -269,15 +323,28 @@ private fun LibraryRegularToolbar(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = title.text,
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = if (useMiyorareVisuals) {
+                                MaterialTheme.typography.headlineMedium.copy(
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontStyle = FontStyle.Italic,
+                                )
+                            } else {
+                                MaterialTheme.typography.headlineSmall
+                            },
+                            color = if (useMiyorareVisuals) glass.content else Color.Unspecified,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                         if (isModern) {
                             Text(
                                 text = " //",
-                                color = MaterialTheme.colorScheme.secondary,
-                                style = MaterialTheme.typography.titleLarge,
+                                color = if (useMiyorareVisuals) {
+                                    glass.selectedBorder
+                                } else {
+                                    MaterialTheme.colorScheme.secondary
+                                },
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                                 modifier = Modifier.clearAndSetSemantics {},
                             )
                         }
@@ -285,17 +352,37 @@ private fun LibraryRegularToolbar(
                     Text(
                         text = "Koleksi anime kamu",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (useMiyorareVisuals) {
+                            glass.contentMuted
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (title.numberOfAnime != null) {
-                    Pill(
-                        text = "${title.numberOfAnime}",
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = pillAlpha),
-                        fontSize = 14.sp,
-                    )
+                    if (useMiyorareVisuals) {
+                        Surface(
+                            modifier = Modifier.modernSurfaceTreatment(shape = controlShape),
+                            shape = controlShape,
+                            color = Color.Transparent,
+                        ) {
+                            Text(
+                                text = "${title.numberOfAnime}",
+                                color = glass.content,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            )
+                        }
+                    } else {
+                        Pill(
+                            text = "${title.numberOfAnime}",
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = pillAlpha),
+                            fontSize = 14.sp,
+                        )
+                    }
                 }
             }
 
@@ -317,6 +404,7 @@ private fun LibraryRegularToolbar(
                         ),
                     shape = RoundedCornerShape(28.dp),
                     color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
+                    contentColor = if (isModern) glass.content else MaterialTheme.colorScheme.onSurface,
                     border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
                     Row(
@@ -382,7 +470,7 @@ private fun LibraryRegularToolbar(
                             VerticalDivider(
                                 modifier = Modifier.height(32.dp),
                                 color = if (isModern) {
-                                    modernPalette.borderHighlight
+                                    if (useMiyorareVisuals) glass.borderStrong else modernPalette.borderHighlight
                                 } else {
                                     MaterialTheme.colorScheme.outlineVariant
                                 },
@@ -463,63 +551,118 @@ private fun LibraryRegularToolbar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (useMiyorareVisuals) 12.dp else 8.dp),
             ) {
-                OutlinedButton(
-                    onClick = onClickFilter,
-                    modifier = Modifier
-                        .weight(1f)
-                        .then(
-                            if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
-                        ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (isModern) {
-                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f)
-                        } else {
-                            Color.Transparent
-                        },
-                        contentColor = if (hasFilters) {
-                            MaterialTheme.colorScheme.active
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                    ),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.FilterList,
-                        contentDescription = null,
+                if (useMiyorareVisuals) {
+                    ModernLibraryActionButton(
+                        onClick = onClickFilter,
+                        icon = Icons.Outlined.FilterList,
+                        label = stringResource(MR.strings.action_filter),
+                        selected = hasFilters,
+                        modifier = Modifier.weight(1f),
                     )
-                    Text(
-                        text = stringResource(MR.strings.action_filter),
-                        modifier = Modifier.padding(start = 8.dp),
+                    ModernLibraryActionButton(
+                        onClick = onClickSort,
+                        icon = Icons.AutoMirrored.Outlined.Sort,
+                        label = stringResource(MR.strings.action_sort),
+                        selected = false,
+                        modifier = Modifier.weight(1f),
                     )
-                }
-                OutlinedButton(
-                    onClick = onClickSort,
-                    modifier = Modifier
-                        .weight(1f)
-                        .then(
-                            if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                } else {
+                    OutlinedButton(
+                        onClick = onClickFilter,
+                        modifier = Modifier
+                            .weight(1f)
+                            .then(
+                                if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                            ),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (isModern) {
+                                MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f)
+                            } else {
+                                Color.Transparent
+                            },
+                            contentColor = if (hasFilters) {
+                                MaterialTheme.colorScheme.active
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
                         ),
-                    colors = if (isModern) {
-                        ButtonDefaults.outlinedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FilterList,
+                            contentDescription = null,
                         )
-                    } else {
-                        ButtonDefaults.outlinedButtonColors()
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.Sort,
-                        contentDescription = null,
-                    )
-                    Text(
-                        text = stringResource(MR.strings.action_sort),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
+                        Text(
+                            text = stringResource(MR.strings.action_filter),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onClickSort,
+                        modifier = Modifier
+                            .weight(1f)
+                            .then(
+                                if (isModern) Modifier.modernBorderHighlight(RoundedCornerShape(24.dp)) else Modifier,
+                            ),
+                        colors = if (isModern) {
+                            ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f),
+                            )
+                        } else {
+                            ButtonDefaults.outlinedButtonColors()
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Sort,
+                            contentDescription = null,
+                        )
+                        Text(
+                            text = stringResource(MR.strings.action_sort),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.ModernLibraryActionButton(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalModernVisualPalette.current
+    val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
+    val shape = RoundedCornerShape(17.dp)
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier
+            .height(34.dp)
+            .modernSurfaceTreatment(shape = shape, selected = selected),
+        shape = shape,
+        border = BorderStroke(0.dp, Color.Transparent),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = if (selected) glass.content else glass.contentMuted,
+        ),
+        contentPadding = PaddingValues(horizontal = 9.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = label,
+            modifier = Modifier.padding(start = 4.dp),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 

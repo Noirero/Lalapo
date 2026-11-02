@@ -5,6 +5,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -51,12 +55,47 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.modernWallpaperResource
+import eu.kanade.presentation.theme.resolveGlassPalette
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clearFocusOnSoftKeyboardHide
 import tachiyomi.presentation.core.util.runOnEnterKeyPressed
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 import tachiyomi.presentation.core.util.showSoftKeyboard
+
+@Composable
+private fun useBuiltInModernChrome(): Boolean =
+    modernWallpaperResource(
+        isModern = LocalModernVisualPalette.current.isModern,
+        identity = LocalModernArtworkIdentity.current,
+    ) != null
+
+@Composable
+private fun ModernChromeIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val useModernChrome = useBuiltInModernChrome()
+    IconButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.then(
+            if (useModernChrome) {
+                Modifier
+                    .size(44.dp)
+                    .modernSurfaceTreatment(shape = RoundedCornerShape(22.dp))
+            } else {
+                Modifier
+            },
+        ),
+        content = content,
+    )
+}
 
 @Composable
 fun AppBar(
@@ -125,13 +164,28 @@ fun AppBar(
 
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
+    val useModernChrome = useBuiltInModernChrome()
+    val defaultContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
+        elevation = if (isActionMode) 3.dp else 0.dp,
+    )
+    val appBarContainerColor = backgroundColor ?: if (useModernChrome) {
+        Color.Transparent
+    } else {
+        defaultContainerColor
+    }
+    val appBarScrolledContainerColor = backgroundColor ?: if (useModernChrome) {
+        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.74f)
+    } else {
+        defaultContainerColor
+    }
+
     Column(
         modifier = modifier,
     ) {
         TopAppBar(
             navigationIcon = {
                 if (isActionMode) {
-                    IconButton(onClick = onCancelActionMode) {
+                    ModernChromeIconButton(onClick = onCancelActionMode) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
                             contentDescription = stringResource(MR.strings.action_cancel),
@@ -139,7 +193,7 @@ fun AppBar(
                     }
                 } else {
                     navigateUp?.let {
-                        IconButton(onClick = it) {
+                        ModernChromeIconButton(onClick = it) {
                             UpIcon(navigationIcon = navigationIcon)
                         }
                     }
@@ -148,9 +202,8 @@ fun AppBar(
             title = titleContent,
             actions = actions,
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(
-                    elevation = if (isActionMode) 3.dp else 0.dp,
-                ),
+                containerColor = appBarContainerColor,
+                scrolledContainerColor = appBarScrolledContainerColor,
             ),
             scrollBehavior = scrollBehavior,
         )
@@ -202,7 +255,7 @@ fun AppBarActions(
             state = rememberTooltipState(),
             focusable = false,
         ) {
-            IconButton(
+            ModernChromeIconButton(
                 onClick = it.onClick,
                 enabled = it.enabled,
             ) {
@@ -227,7 +280,7 @@ fun AppBarActions(
             state = rememberTooltipState(),
             focusable = false,
         ) {
-            IconButton(
+            ModernChromeIconButton(
                 onClick = { showMenu = !showMenu },
             ) {
                 Icon(
@@ -276,6 +329,10 @@ fun SearchToolbar(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     val focusRequester = remember { FocusRequester() }
+    val modernPalette = LocalModernVisualPalette.current
+    val useModernChrome = useBuiltInModernChrome()
+    val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
+    val searchShape = RoundedCornerShape(22.dp)
 
     AppBar(
         modifier = modifier,
@@ -298,19 +355,31 @@ fun SearchToolbar(
                 onValueChange = onChangeSearchQuery,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .then(
+                        if (useModernChrome) {
+                            Modifier
+                                .height(44.dp)
+                                .modernSurfaceTreatment(shape = searchShape)
+                                .padding(horizontal = 14.dp)
+                        } else {
+                            Modifier
+                        },
+                    )
                     .focusRequester(focusRequester)
                     .runOnEnterKeyPressed(action = searchAndClearFocus)
                     .showSoftKeyboard(remember { searchQuery.isEmpty() })
                     .clearFocusOnSoftKeyboardHide(),
                 textStyle = MaterialTheme.typography.titleMedium.copy(
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = if (useModernChrome) glass.content else MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Normal,
                     fontSize = 18.sp,
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { searchAndClearFocus() }),
                 singleLine = true,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+                cursorBrush = SolidColor(
+                    if (useModernChrome) glass.selectedBorder else MaterialTheme.colorScheme.onBackground,
+                ),
                 visualTransformation = visualTransformation,
                 interactionSource = interactionSource,
                 decorationBox = { innerTextField ->
@@ -328,6 +397,11 @@ fun SearchToolbar(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.titleMedium.copy(
+                                    color = if (useModernChrome) {
+                                        glass.contentMuted
+                                    } else {
+                                        MaterialTheme.colorScheme.onBackground
+                                    },
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Normal,
                                 ),
@@ -356,7 +430,7 @@ fun SearchToolbar(
                         state = rememberTooltipState(),
                         focusable = false,
                     ) {
-                        IconButton(
+                        ModernChromeIconButton(
                             onClick = onClick,
                         ) {
                             Icon(
@@ -376,7 +450,7 @@ fun SearchToolbar(
                         state = rememberTooltipState(),
                         focusable = false,
                     ) {
-                        IconButton(
+                        ModernChromeIconButton(
                             onClick = {
                                 onClick()
                                 focusRequester.requestFocus()

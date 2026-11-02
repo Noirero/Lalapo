@@ -20,6 +20,10 @@ class ModernNavigationSurfaceTest {
                     scheme.surfaceContainerHigh,
                     modernNavigationContainerColor(scheme, isModern = true),
                 )
+                assertEquals(
+                    scheme.surfaceContainerHigh.copy(alpha = 0f),
+                    modernNavigationContainerColor(scheme, isModern = true, useGlass = true),
+                )
                 if (dark && amoled) {
                     assertEquals(Color.Black, scheme.background)
                 }

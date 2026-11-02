@@ -193,6 +193,7 @@ private fun ModernThemePreferenceWidget(
                     designStyle = preview.designStyle,
                     modernThemePreset = preview.modernPreset,
                     amoled = amoled,
+                    wallpaperEnabled = false,
                 ) {
                     AppThemePreviewItem(
                         selected = value == preset,

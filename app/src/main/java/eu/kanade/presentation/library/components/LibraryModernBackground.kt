@@ -10,22 +10,34 @@ import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernVisualPalette
 import eu.kanade.presentation.theme.modernIdentityMotif
+import eu.kanade.presentation.theme.modernWallpaperResource
 
-/** A single, static decoration behind the existing Pustaka layout and pager. */
+/**
+ * Built-in Pustaka artwork is owned by the Home shell so it can continue behind NavigationSuite.
+ * This modifier only retains the existing procedural fallback for non-authored identities.
+ */
 @Composable
 internal fun Modifier.modernLibraryBackground(): Modifier {
     val palette = LocalModernVisualPalette.current
+    if (!palette.isModern) return this
+
+    val identity = LocalModernArtworkIdentity.current
+    val resource = modernWallpaperResource(isModern = true, identity = identity)
+    if (resource != null) {
+        // Built-in sharp artwork is owned by HomeScreen so it remains continuous behind navigation.
+        return this
+    }
+
     val stops = remember(palette) { modernLibraryBackgroundStops(palette) } ?: return this
     val brush = remember(stops) { Brush.verticalGradient(stops) }
-    val identity = LocalModernArtworkIdentity.current
     return background(brush).then(
         if (identity != null) Modifier.modernIdentityMotif(identity, palette) else Modifier,
     )
 }
 
 /**
- * No Classic decoration. Modern AMOLED receives black stops from the canonical
- * palette and therefore cannot tint the body behind the scrolling content.
+ * Retained for Custom and deterministic palette tests. Built-in Pustaka now renders authored
+ * portraits and therefore does not use these stops as its primary visual source.
  */
 internal fun modernLibraryBackgroundStops(palette: ModernVisualPalette): List<Color>? {
     if (!palette.isModern) return null
