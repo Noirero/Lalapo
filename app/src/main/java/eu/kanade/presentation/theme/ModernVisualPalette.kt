@@ -108,8 +108,13 @@ internal fun ModernVisualPalette.resolveGlassPalette(colorScheme: ColorScheme): 
 
     // Port the approved Normal-Favourites role strengths while keeping Lalapo's semantic scheme
     // as the hue/source authority.
-    val luminousPrimary = lerp(colorScheme.primary, Color.White, 0.12f)
-    val luminousAccent = lerp(colorScheme.primary, colorScheme.secondary, 0.25f)
+    val luminousPrimary = luminousThemeColor(colorScheme.primary)
+    val luminousAccent = luminousThemeColor(
+        color = lerp(colorScheme.primary, colorScheme.secondary, 0.25f),
+        saturationFloor = 0.86f,
+        valueFloor = 1.00f,
+        valueBoost = 0.14f,
+    )
     val hotEdge = lerp(luminousAccent, Color.White, 0.42f)
     val selectedEdge = lerp(luminousAccent, Color.White, 0.62f)
     val glassBase = lerp(Color.Black, luminousPrimary, 0.30f)
@@ -134,6 +139,51 @@ internal fun ModernVisualPalette.resolveGlassPalette(colorScheme: ColorScheme): 
         contentMuted = content.copy(alpha = if (isLight) 0.82f else 234f / 255f),
     )
 }
+private fun luminousThemeColor(
+    color: Color,
+    saturationFloor: Float = 0.74f,
+    valueFloor: Float = 0.94f,
+    valueBoost: Float = 0.12f,
+): Color {
+    val red = color.red.coerceIn(0f, 1f)
+    val green = color.green.coerceIn(0f, 1f)
+    val blue = color.blue.coerceIn(0f, 1f)
+    val max = maxOf(red, green, blue)
+    val min = minOf(red, green, blue)
+    val delta = max - min
+    var saturation = if (max == 0f) 0f else delta / max
+    if (saturation > NEUTRAL_SATURATION_THRESHOLD) {
+        saturation = maxOf(saturation, saturationFloor).coerceIn(0f, 1f)
+    }
+    val value = maxOf(valueFloor, max + valueBoost).coerceIn(0f, 1f)
+    val hue = when {
+        delta == 0f -> 0f
+        max == red -> 60f * (((green - blue) / delta) % 6f)
+        max == green -> 60f * (((blue - red) / delta) + 2f)
+        else -> 60f * (((red - green) / delta) + 4f)
+    }.let { if (it < 0f) it + 360f else it }
+
+    val chroma = value * saturation
+    val x = chroma * (1f - kotlin.math.abs((hue / 60f) % 2f - 1f))
+    val m = value - chroma
+    val (r1, g1, b1) = when (hue) {
+        in 0f..<60f -> Triple(chroma, x, 0f)
+        in 60f..<120f -> Triple(x, chroma, 0f)
+        in 120f..<180f -> Triple(0f, chroma, x)
+        in 180f..<240f -> Triple(0f, x, chroma)
+        in 240f..<300f -> Triple(x, 0f, chroma)
+        else -> Triple(chroma, 0f, x)
+    }
+    return Color(
+        red = (r1 + m).coerceIn(0f, 1f),
+        green = (g1 + m).coerceIn(0f, 1f),
+        blue = (b1 + m).coerceIn(0f, 1f),
+        alpha = color.alpha,
+    )
+}
+
+private const val NEUTRAL_SATURATION_THRESHOLD = 0.08f
+
 internal val LocalModernVisualPalette = staticCompositionLocalOf { ModernVisualPalette.Standard }
 internal val LocalCinematicAccentPalette = staticCompositionLocalOf<CinematicAccentPalette?> { null }
 
