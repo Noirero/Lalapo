@@ -49,7 +49,7 @@ class ModernLibraryChromeTest {
 
     @Test
     fun `set selector protects Utama label without losing category scrolling space`() {
-        assertEquals(168.dp, modernLibrarySetSelectorWidth(400.dp, 0.34f))
+        assertEquals(184.dp, modernLibrarySetSelectorWidth(400.dp, 0.34f))
         assertEquals(560.dp * 0.34f, modernLibrarySetSelectorWidth(560.dp, 0.34f))
         assertEquals(280.dp * 0.52f, modernLibrarySetSelectorWidth(280.dp, 0.34f))
         val modern = ModernVisualPalette.Standard.copy(isModern = true)

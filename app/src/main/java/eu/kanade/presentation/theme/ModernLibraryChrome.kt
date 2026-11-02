@@ -240,7 +240,7 @@ internal fun resolveModernLibraryChrome(
  * unnecessarily on 9:16 references. Category tabs retain the remaining scrollable width.
  */
 internal fun modernLibrarySetSelectorWidth(availableWidth: Dp, referenceFraction: Float): Dp =
-    maxOf(availableWidth * referenceFraction, minOf(168.dp, availableWidth * 0.52f))
+    maxOf(availableWidth * referenceFraction, minOf(184.dp, availableWidth * 0.52f))
 
 /** Inexpensive gradients and strokes; no per-item blur, shadow layers, or animation. */
 internal fun Modifier.modernLibraryChromeSurface(
