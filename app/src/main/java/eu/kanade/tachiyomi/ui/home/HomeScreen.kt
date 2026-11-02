@@ -32,8 +32,8 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -46,15 +46,12 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
-import eu.kanade.presentation.theme.ModernArtworkIdentity
 import eu.kanade.presentation.theme.ModernSharpWallpaper
 import eu.kanade.presentation.theme.modernNavigationContainerColor
-import eu.kanade.presentation.theme.resolveGlassPalette
-import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.anime.AnimeScreen
@@ -264,10 +261,8 @@ object HomeScreen : Screen() {
         val scope = rememberCoroutineScope()
         val selected = tabNavigator.current::class == tab::class
         val modernPalette = LocalModernVisualPalette.current
-        val isModern = modernPalette.isModern
         val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
         val useMiyorareVisuals = chrome != null
-        val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
         NavigationSuiteItem(
             modifier = if (useMiyorareVisuals && selected) {
                 Modifier.drawWithCache {

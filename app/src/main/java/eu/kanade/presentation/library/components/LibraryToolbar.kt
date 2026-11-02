@@ -56,8 +56,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -69,9 +69,8 @@ import eu.kanade.presentation.components.modernBorderHighlight
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
-import eu.kanade.presentation.theme.ModernArtworkIdentity
-import eu.kanade.presentation.theme.resolveGlassPalette
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.resolveGlassPalette
 import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategorySet

@@ -19,9 +19,8 @@ import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
-import eu.kanade.presentation.theme.ModernArtworkIdentity
-import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.domain.category.model.Category
 import tachiyomi.presentation.core.components.material.TabText
 
