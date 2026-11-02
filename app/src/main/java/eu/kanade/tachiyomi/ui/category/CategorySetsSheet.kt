@@ -348,8 +348,11 @@ internal fun CategorySetsSheet(
             confirmButton = {
                 TextButton(enabled = !busy && normalized.isNotEmpty() && !duplicate, onClick = {
                     val id = editId
-                    if (id == null) viewModel.createSet(normalized) { editOpen = false }
-                    else viewModel.renameSet(id, normalized) { editOpen = false }
+                    if (id == null) {
+                        viewModel.createSet(normalized) { editOpen = false }
+                    } else {
+                        viewModel.renameSet(id, normalized) { editOpen = false }
+                    }
                 }) { Text("Simpan") }
             },
             dismissButton = {
