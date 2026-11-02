@@ -377,8 +377,11 @@ fun ChangeCategoryDialog(
                                                     Modifier.padding(horizontal = 3.dp)
                                                         .size(if (index == pager.currentPage) 8.dp else 6.dp)
                                                         .background(
-                                                            if (index == pager.currentPage) MaterialTheme.colorScheme.primary
-                                                            else MaterialTheme.colorScheme.outlineVariant,
+                                                            if (index == pager.currentPage) {
+                                                                MaterialTheme.colorScheme.primary
+                                                            } else {
+                                                                MaterialTheme.colorScheme.outlineVariant
+                                                            },
                                                             CircleShape,
                                                         ),
                                                 )
@@ -398,7 +401,11 @@ fun ChangeCategoryDialog(
                         TextButton(enabled = !busy, onClick = onDismissRequest) { Text("Batal") }
                         IconButton(
                             enabled = !busy && activeSet != null,
-                            onClick = { newName = ""; error = null; createOpen = true },
+                            onClick = {
+                                newName = ""
+                                error = null
+                                createOpen = true
+                            },
                             modifier = Modifier.size(48.dp)
                                 .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
                                 .testTag("picker-create-category"),
@@ -408,7 +415,13 @@ fun ChangeCategoryDialog(
                         Button(
                             onClick = {
                                 runMutation(
-                                    action = { picker.save(anime, changes, addToLibrary = anime.size == 1 && !anime.first().favorite) },
+                                    action = {
+                                        picker.save(
+                                            anime,
+                                            changes,
+                                            addToLibrary = anime.size == 1 && !anime.first().favorite,
+                                        )
+                                    },
                                     success = onSaved,
                                 )
                             },
@@ -431,7 +444,10 @@ fun ChangeCategoryDialog(
                 Column {
                 OutlinedTextField(
                     value = newName,
-                    onValueChange = { newName = it; error = null },
+                    onValueChange = {
+                        newName = it
+                        error = null
+                    },
                     enabled = !busy,
                     singleLine = true,
                     label = { Text("Nama kategori") },

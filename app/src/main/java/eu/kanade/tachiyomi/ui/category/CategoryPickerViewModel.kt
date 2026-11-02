@@ -15,6 +15,7 @@ import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.category.interactor.CreateCategoryWithName
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.SetAnimeCategories
+import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategorySetRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -33,7 +34,7 @@ class CategoryPickerViewModel(
 
     // Null distinguishes an uninitialized DB flow from a genuinely empty Set.
     val categoriesBySet = categorySets.observeCategoriesBySet()
-        .map<Map<Long, List<tachiyomi.domain.category.model.Category>>, Map<Long, List<tachiyomi.domain.category.model.Category>>?> {
+        .map<Map<Long, List<Category>>, Map<Long, List<Category>>?> {
             it
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
