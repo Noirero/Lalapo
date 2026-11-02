@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -110,6 +111,54 @@ internal fun ModernGlobalBackground(modifier: Modifier = Modifier) {
                 },
             )
         }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(Brush.verticalGradient(wash)),
+        )
+    }
+}
+
+/** Sharp authored portrait used only while Pustaka is the active Home destination. */
+@Composable
+internal fun ModernSharpWallpaper(modifier: Modifier = Modifier) {
+    val palette = LocalModernVisualPalette.current
+    val resourceId = modernWallpaperResource(
+        isModern = palette.isModern,
+        identity = LocalModernArtworkIdentity.current,
+    ) ?: return
+    val scheme = MaterialTheme.colorScheme
+    val isLight = scheme.background.luminance() >= 0.5f
+    val isAmoled = scheme.background.red == 0f &&
+        scheme.background.green == 0f && scheme.background.blue == 0f
+    val washColor = if (isAmoled) Color.Black else scheme.background.copy(alpha = 1f)
+    val wash = when {
+        isAmoled -> listOf(
+            Color.Transparent,
+            washColor.copy(alpha = 0.24f),
+            washColor.copy(alpha = 0.70f),
+        )
+        isLight -> listOf(
+            washColor.copy(alpha = 0.04f),
+            washColor.copy(alpha = 0.11f),
+            washColor.copy(alpha = 0.22f),
+        )
+        else -> listOf(
+            washColor.copy(alpha = 0.08f),
+            washColor.copy(alpha = 0.18f),
+            washColor.copy(alpha = 0.34f),
+        )
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(resourceId),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+            alignment = Alignment.TopCenter,
+            modifier = Modifier.matchParentSize(),
+            alpha = if (isAmoled) 0.82f else 1f,
+        )
         Box(
             modifier = Modifier
                 .matchParentSize()

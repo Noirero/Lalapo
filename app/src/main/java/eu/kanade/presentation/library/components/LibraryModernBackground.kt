@@ -1,17 +1,11 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.background
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernVisualPalette
@@ -19,9 +13,8 @@ import eu.kanade.presentation.theme.modernIdentityMotif
 import eu.kanade.presentation.theme.modernWallpaperResource
 
 /**
- * Modern Pustaka owns the sharp authored portrait. Other destinations see the shared diffused
- * derivative from the root theme; keeping this override here reproduces Miyorare's sharp-library /
- * blurred-everywhere-else split without creating another state or theme engine.
+ * Built-in Pustaka artwork is owned by the Home shell so it can continue behind NavigationSuite.
+ * This modifier only retains the existing procedural fallback for non-authored identities.
  */
 @Composable
 internal fun Modifier.modernLibraryBackground(): Modifier {
@@ -30,47 +23,15 @@ internal fun Modifier.modernLibraryBackground(): Modifier {
 
     val identity = LocalModernArtworkIdentity.current
     val resource = modernWallpaperResource(isModern = true, identity = identity)
-    if (resource == null) {
-        // Custom intentionally keeps Lalapo's existing lightweight procedural presentation.
-        val stops = remember(palette) { modernLibraryBackgroundStops(palette) } ?: return this
-        val brush = remember(stops) { Brush.verticalGradient(stops) }
-        return background(brush).then(
-            if (identity != null) Modifier.modernIdentityMotif(identity, palette) else Modifier,
-        )
+    if (resource != null) {
+        // Built-in sharp artwork is owned by HomeScreen so it remains continuous behind navigation.
+        return this
     }
 
-    val scheme = MaterialTheme.colorScheme
-    val isLight = scheme.background.luminance() >= 0.5f
-    val isAmoled = scheme.background.red == 0f &&
-        scheme.background.green == 0f && scheme.background.blue == 0f
-    val washColor = if (isAmoled) Color.Black else scheme.background.copy(alpha = 1f)
-    val washStops = remember(washColor, isLight, isAmoled) {
-        when {
-            isAmoled -> listOf(
-                Color.Transparent,
-                washColor.copy(alpha = 0.24f),
-                washColor.copy(alpha = 0.70f),
-            )
-            isLight -> listOf(
-                washColor.copy(alpha = 0.04f),
-                washColor.copy(alpha = 0.11f),
-                washColor.copy(alpha = 0.22f),
-            )
-            else -> listOf(
-                washColor.copy(alpha = 0.08f),
-                washColor.copy(alpha = 0.18f),
-                washColor.copy(alpha = 0.34f),
-            )
-        }
-    }
-
-    return paint(
-        painter = painterResource(resource),
-        alignment = Alignment.TopCenter,
-        contentScale = ContentScale.FillWidth,
-        sizeToIntrinsics = false,
-    ).background(
-        brush = Brush.verticalGradient(washStops),
+    val stops = remember(palette) { modernLibraryBackgroundStops(palette) } ?: return this
+    val brush = remember(stops) { Brush.verticalGradient(stops) }
+    return background(brush).then(
+        if (identity != null) Modifier.modernIdentityMotif(identity, palette) else Modifier,
     )
 }
 
