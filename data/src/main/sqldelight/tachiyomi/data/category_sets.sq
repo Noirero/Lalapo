@@ -67,3 +67,6 @@ SELECT count(*) FROM category_set_assignments WHERE set_id = :setId;
 getSetCount:
 SELECT count(*) FROM category_sets;
 
+-- Must be read on the same connection and transaction immediately after category insertion.
+getLastInsertedCategoryId:
+SELECT last_insert_rowid();
