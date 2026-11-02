@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -73,6 +75,7 @@ import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernLibraryTitleMotif
 import eu.kanade.presentation.theme.modernLibraryActionSurface
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.modernLibrarySetSelectorWidth
 import eu.kanade.presentation.theme.resolveGlassPalette
 import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.domain.category.model.Category
@@ -334,7 +337,7 @@ private fun LibraryRegularToolbar(
                 },
                 actions = {
                     AppBarActions(
-                        listOf(
+                        actions = listOf(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_update_library),
                                 onClick = onClickGlobalUpdate,
@@ -348,6 +351,7 @@ private fun LibraryRegularToolbar(
                                 onClick = onClickOpenRandomAnime,
                             ),
                         ),
+                        overflowIconTint = chrome?.content,
                     )
                 },
                 scrollBehavior = scrollBehavior,
@@ -467,143 +471,151 @@ private fun LibraryRegularToolbar(
                     contentColor = segmentContentColor,
                     border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (selectedSet != null) {
-                            Box(
-                                modifier = if (hasCategoryNavigation) {
-                                    Modifier.weight(setSelectorWeight)
-                                } else {
-                                    Modifier.fillMaxWidth()
-                                },
-                            ) {
-                                TextButton(
-                                    onClick = { setMenuExpanded = true },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RectangleShape,
-                                    colors = if (chrome != null) {
-                                        ButtonDefaults.textButtonColors(contentColor = chrome.border)
-                                    } else {
-                                        ButtonDefaults.textButtonColors()
+                    BoxWithConstraints {
+                        val selectedSetWidth = if (chrome != null && selectedSet != null && hasCategoryNavigation) {
+                            modernLibrarySetSelectorWidth(maxWidth, setSelectorWeight)
+                        } else {
+                            null
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (selectedSet != null) {
+                                Box(
+                                    modifier = when {
+                                        !hasCategoryNavigation -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.width(selectedSetWidth)
+                                        else -> Modifier.weight(setSelectorWeight)
                                     },
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.Label,
-                                        contentDescription = null,
-                                    )
-                                    Text(
-                                        text = "Set: ${selectedSet.name}",
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowDropDown,
-                                        contentDescription = null,
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = setMenuExpanded,
-                                    onDismissRequest = { setMenuExpanded = false },
-                                ) {
-                                    sets.forEach { set ->
+                                    TextButton(
+                                        onClick = { setMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RectangleShape,
+                                        colors = if (chrome != null) {
+                                            ButtonDefaults.textButtonColors(contentColor = chrome.border)
+                                        } else {
+                                            ButtonDefaults.textButtonColors()
+                                        },
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.Label,
+                                            contentDescription = null,
+                                        )
+                                        Text(
+                                            text = "Set: ${selectedSet.name}",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(start = 8.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Outlined.ArrowDropDown,
+                                            contentDescription = null,
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = setMenuExpanded,
+                                        onDismissRequest = { setMenuExpanded = false },
+                                    ) {
+                                        sets.forEach { set ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
+                                                },
+                                                onClick = {
+                                                    setMenuExpanded = false
+                                                    onSelectSet(set.syncKey)
+                                                },
+                                            )
+                                        }
                                         DropdownMenuItem(
-                                            text = {
-                                                Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
-                                            },
+                                            text = { Text("Kelola Set") },
                                             onClick = {
                                                 setMenuExpanded = false
-                                                onSelectSet(set.syncKey)
+                                                onManageSets()
                                             },
                                         )
                                     }
-                                    DropdownMenuItem(
-                                        text = { Text("Kelola Set") },
-                                        onClick = {
-                                            setMenuExpanded = false
-                                            onManageSets()
-                                        },
-                                    )
                                 }
                             }
-                        }
 
-                        if (selectedSet != null && hasCategoryNavigation) {
-                            VerticalDivider(
-                                modifier = Modifier.height(32.dp),
-                                color = if (isModern) {
-                                    if (useMiyorareVisuals) chrome!!.border else modernPalette.borderHighlight
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant
-                                },
-                            )
-                        }
+                            if (selectedSet != null && hasCategoryNavigation) {
+                                VerticalDivider(
+                                    modifier = Modifier.height(32.dp),
+                                    color = if (isModern) {
+                                        if (useMiyorareVisuals) chrome!!.border else modernPalette.borderHighlight
+                                    } else {
+                                        MaterialTheme.colorScheme.outlineVariant
+                                    },
+                                )
+                            }
 
-                        if (showTabRail) {
-                            LibraryTabs(
-                                categories = categories,
-                                selectedIndex = selectedCategoryIndex,
-                                getItemCountForCategory = getItemCountForCategory,
-                                onTabItemClick = onSelectCategory,
-                                modifier = if (selectedSet != null) {
-                                    Modifier.weight(1f - setSelectorWeight)
-                                } else {
-                                    Modifier.fillMaxWidth()
-                                },
-                            )
-                        } else if (showCategoryPicker && selectedCategory != null) {
-                            Box(
-                                modifier = if (selectedSet != null) {
-                                    Modifier.weight(1f - setSelectorWeight)
-                                } else {
-                                    Modifier.fillMaxWidth()
-                                },
-                            ) {
-                                TextButton(
-                                    onClick = { categoryMenuExpanded = true },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RectangleShape,
+                            if (showTabRail) {
+                                LibraryTabs(
+                                    categories = categories,
+                                    selectedIndex = selectedCategoryIndex,
+                                    getItemCountForCategory = getItemCountForCategory,
+                                    onTabItemClick = onSelectCategory,
+                                    modifier = when {
+                                        selectedSet == null -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.weight(1f)
+                                        else -> Modifier.weight(1f - setSelectorWeight)
+                                    },
+                                )
+                            } else if (showCategoryPicker && selectedCategory != null) {
+                                Box(
+                                    modifier = when {
+                                        selectedSet == null -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.weight(1f)
+                                        else -> Modifier.weight(1f - setSelectorWeight)
+                                    },
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Layers,
-                                        contentDescription = null,
-                                    )
-                                    Text(
-                                        text = "$categoryGroupLabel: ${selectedCategory.visualName}",
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowDropDown,
-                                        contentDescription = null,
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = categoryMenuExpanded,
-                                    onDismissRequest = { categoryMenuExpanded = false },
-                                ) {
-                                    categories.forEachIndexed { index, category ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    if (index == selectedCategoryIndex) {
-                                                        "✓ ${category.visualName}"
-                                                    } else {
-                                                        category.visualName
-                                                    },
-                                                )
-                                            },
-                                            onClick = {
-                                                categoryMenuExpanded = false
-                                                onSelectCategory(index)
-                                            },
+                                    TextButton(
+                                        onClick = { categoryMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RectangleShape,
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Layers,
+                                            contentDescription = null,
                                         )
+                                        Text(
+                                            text = "$categoryGroupLabel: ${selectedCategory.visualName}",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(start = 8.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Outlined.ArrowDropDown,
+                                            contentDescription = null,
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = categoryMenuExpanded,
+                                        onDismissRequest = { categoryMenuExpanded = false },
+                                    ) {
+                                        categories.forEachIndexed { index, category ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        if (index == selectedCategoryIndex) {
+                                                            "✓ ${category.visualName}"
+                                                        } else {
+                                                            category.visualName
+                                                        },
+                                                    )
+                                                },
+                                                onClick = {
+                                                    categoryMenuExpanded = false
+                                                    onSelectCategory(index)
+                                                },
+                                            )
+                                        }
                                     }
                                 }
                             }
