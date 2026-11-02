@@ -304,64 +304,33 @@ fun ChangeCategoryDialog(
                                         userScrollEnabled = !busy,
                                     ) { page ->
                                         val items = pages[page.coerceIn(0, pages.lastIndex)]
-                                        if (columns == 1) {
-                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                items.forEach { category ->
-                                                    CategoryPickerRow(
-                                                        category = category,
-                                                        pickerState(
-                                                                    category.id,
-                                                                    baseline.orEmpty(),
-                                                                    animeIds.size,
-                                                                    changes,
-                                                                ),
-                                                        enabled = !busy,
-                                                        onToggle = {
-                                                            pending = toggleCategoryPending(
-                                                                pending,
-                                                                category.id,
-                                                                pickerState(
-                                                                    category.id,
-                                                                    baseline.orEmpty(),
-                                                                    animeIds.size,
-                                                                    changes,
-                                                                ),
-                                                            )
-                                                        },
-                                                    )
-                                                }
-                                            }
-                                        } else {
-                                            val columnsContent = pickerColumnMajor(items)
-                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                listOf(columnsContent.first, columnsContent.second).forEach { column ->
-                                                    Column(
-                                                        Modifier.weight(1f),
-                                                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                                                    ) {
-                                                        column.forEach { category ->
-                                                            CategoryPickerRow(
-                                                                category,
-                                                                pickerState(
-                                                                    category.id,
-                                                                    baseline.orEmpty(),
-                                                                    animeIds.size,
-                                                                    changes,
-                                                                ),
-                                                                !busy,
-                                                            ) {
+                                        val (left, right) = pickerColumnMajor(items)
+                                        val columnsContent = if (columns == 1) listOf(items) else listOf(left, right)
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            columnsContent.forEach { column ->
+                                                Column(
+                                                    Modifier.weight(1f),
+                                                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                                                ) {
+                                                    column.forEach { category ->
+                                                        val state = pickerState(
+                                                            category.id,
+                                                            baseline.orEmpty(),
+                                                            animeIds.size,
+                                                            changes,
+                                                        )
+                                                        CategoryPickerRow(
+                                                            category = category,
+                                                            state = state,
+                                                            enabled = !busy,
+                                                            onToggle = {
                                                                 pending = toggleCategoryPending(
                                                                     pending,
                                                                     category.id,
-                                                                    pickerState(
-                                                                    category.id,
-                                                                    baseline.orEmpty(),
-                                                                    animeIds.size,
-                                                                    changes,
-                                                                ),
+                                                                    state,
                                                                 )
-                                                            }
-                                                        }
+                                                            },
+                                                        )
                                                     }
                                                 }
                                             }
@@ -446,26 +415,33 @@ fun ChangeCategoryDialog(
             title = { Text("Tambah kategori · ${target?.name ?: "Set tidak tersedia"}") },
             text = {
                 Column {
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = {
-                        newName = it
-                        error = null
-                    },
-                    enabled = !busy,
-                    singleLine = true,
-                    label = { Text("Nama kategori") },
-                    isError = name.isEmpty() || duplicate,
-                    supportingText = {
-                        if (name.isEmpty() || duplicate) {
-                            Text(if (duplicate) "Nama kategori sudah digunakan." else "Nama kategori wajib diisi.")
-                        }
-                    },
-                )
-                if (target == null) {
-                    Text("Set asal sudah dihapus. Tutup dan pilih Set yang tersedia.", color = MaterialTheme.colorScheme.error)
-                }
-                if (error != null) Text(error.orEmpty(), color = MaterialTheme.colorScheme.error)
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = {
+                            newName = it
+                            error = null
+                        },
+                        enabled = !busy,
+                        singleLine = true,
+                        label = { Text("Nama kategori") },
+                        isError = name.isEmpty() || duplicate || target == null,
+                        supportingText = {
+                            if (name.isEmpty() || duplicate) {
+                                Text(
+                                    if (duplicate) "Nama kategori sudah digunakan." else "Nama kategori wajib diisi.",
+                                )
+                            }
+                        },
+                    )
+                    if (target == null) {
+                        Text(
+                            "Set asal sudah dihapus. Tutup dan pilih Set yang tersedia.",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    if (error != null) {
+                        Text(error.orEmpty(), color = MaterialTheme.colorScheme.error)
+                    }
                 }
             },
             confirmButton = {
