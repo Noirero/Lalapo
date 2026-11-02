@@ -228,7 +228,7 @@ fun ChangeCategoryDialog(
                                         selectorOpen = false
                                         if (activeSet?.id != set.id) {
                                             query = ""
-                                            runMutation { picker.selectSet(set.syncKey) }
+                                            runMutation(action = { picker.selectSet(set.syncKey) })
                                         }
                                     },
                                 )

@@ -52,7 +52,6 @@ import eu.kanade.tachiyomi.ui.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.browse.migration.season.MigrateSeasonSelectScreen
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
-import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -296,12 +295,13 @@ data class BrowseSourceScreen(
             }
             is BrowseSourceViewModel.Dialog.ChangeAnimeCategory -> {
                 ChangeCategoryDialog(
-                    initialSelection = dialog.initialSelection,
+                    anime = listOf(dialog.anime),
                     onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoryScreen()) },
-                    onConfirm = { include, _ ->
-                        viewModel.changeAnimeFavorite(dialog.anime)
-                        viewModel.moveAnimeToCategories(dialog.anime, include)
+                    onSaved = {
+                        // Membership and Favorite were committed together by the picker.
+                        // Preserve the legacy post-add initialization without repeating writes.
+                        viewModel.onCategoryPickerSaved(dialog.anime)
+                        onDismissRequest()
                     },
                 )
             }
