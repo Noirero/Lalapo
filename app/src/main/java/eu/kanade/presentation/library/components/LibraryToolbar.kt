@@ -482,65 +482,65 @@ private fun LibraryRegularToolbar(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             if (selectedSet != null) {
-                            Box(
-                                modifier = when {
-                                    !hasCategoryNavigation -> Modifier.fillMaxWidth()
-                                    selectedSetWidth != null -> Modifier.width(selectedSetWidth)
-                                    else -> Modifier.weight(setSelectorWeight)
-                                },
-                            ) {
-                                TextButton(
-                                    onClick = { setMenuExpanded = true },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RectangleShape,
-                                    colors = if (chrome != null) {
-                                        ButtonDefaults.textButtonColors(contentColor = chrome.border)
-                                    } else {
-                                        ButtonDefaults.textButtonColors()
+                                Box(
+                                    modifier = when {
+                                        !hasCategoryNavigation -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.width(selectedSetWidth)
+                                        else -> Modifier.weight(setSelectorWeight)
                                     },
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.Label,
-                                        contentDescription = null,
-                                    )
-                                    Text(
-                                        text = "Set: ${selectedSet.name}",
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowDropDown,
-                                        contentDescription = null,
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = setMenuExpanded,
-                                    onDismissRequest = { setMenuExpanded = false },
-                                ) {
-                                    sets.forEach { set ->
+                                    TextButton(
+                                        onClick = { setMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RectangleShape,
+                                        colors = if (chrome != null) {
+                                            ButtonDefaults.textButtonColors(contentColor = chrome.border)
+                                        } else {
+                                            ButtonDefaults.textButtonColors()
+                                        },
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.Label,
+                                            contentDescription = null,
+                                        )
+                                        Text(
+                                            text = "Set: ${selectedSet.name}",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(start = 8.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Outlined.ArrowDropDown,
+                                            contentDescription = null,
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = setMenuExpanded,
+                                        onDismissRequest = { setMenuExpanded = false },
+                                    ) {
+                                        sets.forEach { set ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
+                                                },
+                                                onClick = {
+                                                    setMenuExpanded = false
+                                                    onSelectSet(set.syncKey)
+                                                },
+                                            )
+                                        }
                                         DropdownMenuItem(
-                                            text = {
-                                                Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
-                                            },
+                                            text = { Text("Kelola Set") },
                                             onClick = {
                                                 setMenuExpanded = false
-                                                onSelectSet(set.syncKey)
+                                                onManageSets()
                                             },
                                         )
                                     }
-                                    DropdownMenuItem(
-                                        text = { Text("Kelola Set") },
-                                        onClick = {
-                                            setMenuExpanded = false
-                                            onManageSets()
-                                        },
-                                    )
                                 }
                             }
-                        }
 
                         if (selectedSet != null && hasCategoryNavigation) {
                             VerticalDivider(
