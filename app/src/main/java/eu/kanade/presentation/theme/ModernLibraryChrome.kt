@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.anime.components.AnimeCover
 
 /**
  * Pustaka chrome authored for the six owner reference images.
@@ -84,7 +85,7 @@ private object Presets {
         navShape = roundNav,
         navSelectedShape = RoundedCornerShape(28.dp),
         cardShape = RoundedCornerShape(17.dp),
-        cardAspectRatio = 0.95f,
+        cardAspectRatio = AnimeCover.Book.ratio,
         setSelectorWeight = 0.38f,
     )
 
@@ -110,7 +111,7 @@ private object Presets {
         navShape = RoundedCornerShape(34.dp),
         navSelectedShape = RoundedCornerShape(29.dp),
         cardShape = RoundedCornerShape(20.dp),
-        cardAspectRatio = 0.95f,
+        cardAspectRatio = AnimeCover.Book.ratio,
         setSelectorWeight = 0.34f,
     )
 
@@ -136,7 +137,7 @@ private object Presets {
         navShape = RoundedCornerShape(26.dp),
         navSelectedShape = RoundedCornerShape(28.dp),
         cardShape = RoundedCornerShape(15.dp),
-        cardAspectRatio = 0.95f,
+        cardAspectRatio = AnimeCover.Book.ratio,
         setSelectorWeight = 0.39f,
     )
 
@@ -162,7 +163,7 @@ private object Presets {
         navShape = RoundedCornerShape(38.dp),
         navSelectedShape = RoundedCornerShape(32.dp),
         cardShape = RoundedCornerShape(19.dp),
-        cardAspectRatio = 0.95f,
+        cardAspectRatio = AnimeCover.Book.ratio,
         setSelectorWeight = 0.39f,
     )
 
@@ -188,7 +189,7 @@ private object Presets {
         navShape = fluidShape,
         navSelectedShape = fluidShape,
         cardShape = RoundedCornerShape(19.dp),
-        cardAspectRatio = 0.95f,
+        cardAspectRatio = AnimeCover.Book.ratio,
         setSelectorWeight = 0.37f,
     )
 
@@ -214,7 +215,7 @@ private object Presets {
         navShape = RoundedCornerShape(38.dp),
         navSelectedShape = RoundedCornerShape(31.dp),
         cardShape = RoundedCornerShape(19.dp),
-        cardAspectRatio = 0.95f,
+        cardAspectRatio = AnimeCover.Book.ratio,
         setSelectorWeight = 0.40f,
     )
 }
