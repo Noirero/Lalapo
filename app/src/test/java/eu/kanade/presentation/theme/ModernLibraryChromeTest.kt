@@ -3,6 +3,7 @@ package eu.kanade.presentation.theme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.anime.components.AnimeCover
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -28,13 +29,10 @@ class ModernLibraryChromeTest {
     }
 
     @Test
-    fun `physical QA correction keeps square-ish cards and isolated title contrast`() {
+    fun `Stage 1 theme contrast and distinct chrome are retained`() {
         val modern = ModernVisualPalette.Standard.copy(isModern = true)
         val entries = ModernThemeDefinitions.authoredBuiltIns.map {
             requireNotNull(resolveModernLibraryChrome(modern, it.artworkIdentity))
-        }
-        entries.forEach { chrome ->
-            org.junit.jupiter.api.Assertions.assertTrue(chrome.cardAspectRatio in 0.9f..1.0f)
         }
         assertNotEquals(entries[1].cardShape, entries[2].cardShape)
         assertEquals(Color(0xFF9C2257), entries[1].titleColor)
@@ -50,6 +48,20 @@ class ModernLibraryChromeTest {
     }
 
     @Test
+    fun `all six Modern grid covers use the original Book image ratio`() {
+        assertEquals(2f / 3f, AnimeCover.Book.ratio)
+        val modern = ModernVisualPalette.Standard.copy(isModern = true)
+        assertEquals(6, ModernThemeDefinitions.authoredBuiltIns.size)
+        ModernThemeDefinitions.authoredBuiltIns.forEach { definition ->
+            val chrome = requireNotNull(resolveModernLibraryChrome(modern, definition.artworkIdentity))
+            assertEquals(AnimeCover.Book.ratio, chrome.cardAspectRatio, definition.preset.toString())
+            assertNull(resolveModernLibraryChrome(ModernVisualPalette.Standard, definition.artworkIdentity))
+        }
+        assertNull(resolveModernLibraryChrome(modern, ModernArtworkIdentity.CUSTOM_WAVES))
+        assertNull(resolveModernLibraryChrome(modern, null))
+    }
+
+    @Test
     fun `set selector protects Utama label without losing category scrolling space`() {
         assertEquals(184.dp, modernLibrarySetSelectorWidth(400.dp, 0.34f))
         assertEquals(560.dp * 0.34f, modernLibrarySetSelectorWidth(560.dp, 0.34f))
@@ -59,7 +71,7 @@ class ModernLibraryChromeTest {
             resolveModernLibraryChrome(modern, ModernArtworkIdentity.VIOLET_MOON_AURORA),
         )
         assertEquals(RoundedCornerShape(28.dp), violet.navSelectedShape)
-        assertEquals(0.95f, violet.cardAspectRatio)
+        assertEquals(AnimeCover.Book.ratio, violet.cardAspectRatio)
         assertNull(resolveModernLibraryChrome(modern, ModernArtworkIdentity.CUSTOM_WAVES))
     }
 
