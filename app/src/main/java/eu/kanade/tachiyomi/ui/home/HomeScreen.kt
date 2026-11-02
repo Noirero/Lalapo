@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
@@ -312,12 +314,21 @@ object HomeScreen : Screen() {
             },
             icon = {
                 if (useMiyorareVisuals) {
-                    Icon(
-                        painter = tab.options.icon!!,
-                        contentDescription = tab.options.title,
-                        tint = if (selected) chrome!!.selectedContent else chrome!!.content,
-                        modifier = Modifier.size(if (selected) 25.dp else 23.dp),
-                    )
+                    if (tab is RecentsTab) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = tab.options.title,
+                            tint = if (selected) chrome!!.selectedContent else chrome!!.content,
+                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                        )
+                    } else {
+                        Icon(
+                            painter = tab.options.icon!!,
+                            contentDescription = tab.options.title,
+                            tint = if (selected) chrome!!.selectedContent else chrome!!.content,
+                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                        )
+                    }
                 } else {
                     Icon(
                         painter = tab.options.icon!!,

@@ -70,6 +70,7 @@ import eu.kanade.presentation.components.modernBorderHighlight
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernLibraryTitleMotif
 import eu.kanade.presentation.theme.modernLibraryActionSurface
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.theme.resolveGlassPalette
@@ -388,14 +389,17 @@ private fun LibraryRegularToolbar(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        if (isModern) {
+                        if (chrome != null) {
+                            ModernLibraryTitleMotif(
+                                identity = LocalModernArtworkIdentity.current!!,
+                                color = chrome.border,
+                                modifier = Modifier.padding(start = 6.dp),
+                            )
+                        } else if (isModern) {
                             Text(
-                                text = " ${chrome?.ornament ?: "//"}",
-                                color = chrome?.border ?: MaterialTheme.colorScheme.secondary,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontSize = if (chrome?.ornament == "✿") 30.sp else 26.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                ),
+                                text = " //",
+                                color = MaterialTheme.colorScheme.secondary,
+                                style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.clearAndSetSemantics {},
                             )
                         }
