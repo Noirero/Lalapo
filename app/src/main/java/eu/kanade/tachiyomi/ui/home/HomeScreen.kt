@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -312,12 +314,21 @@ object HomeScreen : Screen() {
             },
             icon = {
                 if (useMiyorareVisuals) {
-                    Icon(
-                        painter = tab.options.icon!!,
-                        contentDescription = tab.options.title,
-                        tint = if (selected) chrome!!.selectedContent else chrome!!.content,
-                        modifier = Modifier.size(if (selected) 25.dp else 23.dp),
-                    )
+                    if (tab is RecentsTab) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = tab.options.title,
+                            tint = if (selected) chrome!!.selectedContent else chrome!!.content,
+                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                        )
+                    } else {
+                        Icon(
+                            painter = tab.options.icon!!,
+                            contentDescription = tab.options.title,
+                            tint = if (selected) chrome!!.selectedContent else chrome!!.content,
+                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                        )
+                    }
                 } else {
                     Icon(
                         painter = tab.options.icon!!,

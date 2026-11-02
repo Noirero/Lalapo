@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -59,11 +60,14 @@ internal fun LibraryTabs(
                     .heightIn(min = 48.dp)
                     .then(
                         when {
-                            useMiyorareVisuals && selected -> Modifier.modernLibraryChromeSurface(
-                                chrome = chrome!!,
-                                shape = chrome.tabShape,
-                                selected = true,
-                            )
+                            useMiyorareVisuals && selected ->
+                                Modifier
+                                    .padding(vertical = 4.dp)
+                                    .modernLibraryChromeSurface(
+                                        chrome = chrome!!,
+                                        shape = chrome.tabShape,
+                                        selected = true,
+                                    )
                             modernPalette.isModern && selected -> Modifier.modernSurfaceTreatment(
                                 shape = RoundedCornerShape(22.dp),
                                 selected = true,
