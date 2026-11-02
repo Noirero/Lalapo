@@ -52,9 +52,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.ColorPainter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -66,10 +63,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import eu.kanade.presentation.util.rememberResourceBitmapPainter
-import eu.kanade.tachiyomi.R
+import eu.kanade.presentation.anime.components.AnimeCover
 import eu.kanade.tachiyomi.ui.category.CategoryPickerViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -188,15 +183,11 @@ fun ChangeCategoryDialog(
                         ) {
                             if (anime.size == 1) {
                                 val item = anime.first()
-                                AsyncImage(
-                                    model = item.thumbnailUrl,
-                                    placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceVariant),
-                                    error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
+                                AnimeCover.Book(
+                                    data = item,
                                     contentDescription = "Cover ${item.title}",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.size(width = 48.dp, height = 68.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    modifier = Modifier.width(48.dp),
+                                    shape = RoundedCornerShape(10.dp),
                                 )
                             } else {
                                 Box(
