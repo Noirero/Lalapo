@@ -42,8 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.anime.components.AnimeCover
 import eu.kanade.presentation.components.modernCoverTreatment
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.modernLibraryChromeCover
 import eu.kanade.presentation.theme.resolveGlassPalette
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
@@ -134,7 +137,13 @@ private fun BoxScope.CoverTextOverlay(
     onClickContinueWatching: (() -> Unit)? = null,
     useModernLibraryTreatment: Boolean = false,
 ) {
-    val glass = LocalModernVisualPalette.current.resolveGlassPalette(MaterialTheme.colorScheme)
+    val palette = LocalModernVisualPalette.current
+    val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
+    val chrome = if (useModernLibraryTreatment) {
+        resolveModernLibraryChrome(palette, LocalModernArtworkIdentity.current)
+    } else {
+        null
+    }
     Box(
         modifier = Modifier
             .clip(
@@ -199,7 +208,7 @@ private fun BoxScope.CoverTextOverlay(
                 .padding(start = 8.dp, bottom = 4.dp)
                 .width(28.dp)
                 .height(3.dp)
-                .background(glass.selectedBorder, RoundedCornerShape(2.dp)),
+                .background(chrome?.selectedBorder ?: glass.selectedBorder, RoundedCornerShape(2.dp)),
         )
     }
 }
@@ -275,16 +284,21 @@ private fun AnimeGridCover(
     content: @Composable (BoxScope.() -> Unit)? = null,
     useModernLibraryTreatment: Boolean = false,
 ) {
-    val coverShape = RoundedCornerShape(14.dp)
+    val chrome = if (useModernLibraryTreatment) {
+        resolveModernLibraryChrome(LocalModernVisualPalette.current, LocalModernArtworkIdentity.current)
+    } else {
+        null
+    }
+    val coverShape = chrome?.cardShape ?: RoundedCornerShape(14.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(AnimeCover.Book.ratio)
             .then(
-                if (useModernLibraryTreatment) {
-                    Modifier.modernCoverTreatment(coverShape)
-                } else {
-                    Modifier
+                when {
+                    chrome != null -> Modifier.modernLibraryChromeCover(chrome, coverShape)
+                    useModernLibraryTreatment -> Modifier.modernCoverTreatment(coverShape)
+                    else -> Modifier
                 },
             ),
     ) {
