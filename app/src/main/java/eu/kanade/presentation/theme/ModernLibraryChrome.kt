@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
@@ -133,7 +134,7 @@ private object Presets {
         tabShape = RoundedCornerShape(17.dp),
         actionShape = angularAction,
         navShape = RoundedCornerShape(26.dp),
-        navSelectedShape = CutCornerShape(topStart = 11.dp, bottomEnd = 11.dp),
+        navSelectedShape = RoundedCornerShape(28.dp),
         cardShape = RoundedCornerShape(15.dp),
         cardAspectRatio = 0.95f,
         setSelectorWeight = 0.39f,
@@ -233,6 +234,13 @@ internal fun resolveModernLibraryChrome(
         ModernArtworkIdentity.CUSTOM_WAVES, null -> null
     }
 }
+
+/**
+ * Reserve readable space for the Set label on narrow viewports without widening it
+ * unnecessarily on 9:16 references. Category tabs retain the remaining scrollable width.
+ */
+internal fun modernLibrarySetSelectorWidth(availableWidth: Dp, referenceFraction: Float): Dp =
+    maxOf(availableWidth * referenceFraction, minOf(168.dp, availableWidth * 0.52f))
 
 /** Inexpensive gradients and strokes; no per-item blur, shadow layers, or animation. */
 internal fun Modifier.modernLibraryChromeSurface(

@@ -153,7 +153,7 @@ object HomeScreen : Screen() {
                                         Modifier
                                             .padding(
                                                 horizontal = if (tabletUi) 8.dp else 18.dp,
-                                                vertical = 8.dp,
+                                                vertical = if (tabletUi) 8.dp else 4.dp,
                                             )
                                             .then(
                                                 if (tabletUi) {
