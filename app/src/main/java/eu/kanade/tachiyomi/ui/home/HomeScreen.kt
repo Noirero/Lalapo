@@ -266,6 +266,7 @@ object HomeScreen : Screen() {
         NavigationSuiteItem(
             modifier = if (useMiyorareVisuals && selected) {
                 Modifier
+                    .padding(horizontal = 2.dp)
                     .then(
                         if (navigationSuiteType == NavigationSuiteType.NavigationBar) {
                             Modifier.height(60.dp)
@@ -273,7 +274,6 @@ object HomeScreen : Screen() {
                             Modifier
                         },
                     )
-                    .padding(horizontal = 2.dp, vertical = 3.dp)
                     .background(
                         color = glass.selectedSurface.copy(alpha = glass.selectedSurface.alpha * 0.82f),
                         shape = itemShape,
