@@ -11,6 +11,9 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
@@ -76,7 +79,7 @@ private object Presets {
         controlShape = roundControl,
         segmentedShape = roundSegment,
         tabShape = roundTab,
-        actionShape = angularAction,
+        actionShape = RoundedCornerShape(24.dp),
         navShape = roundNav,
         navSelectedShape = RoundedCornerShape(28.dp),
         cardShape = RoundedCornerShape(17.dp),
@@ -259,32 +262,30 @@ internal fun Modifier.modernLibraryChromeSurface(
         shape = shape,
     )
 
-/** Small, cached corner accents for the reference's ornamental filter/sort controls. */
+/**
+ * Draw a highlight *on the actual button outline*, including cut corners.
+ * The old free-standing corner strokes were visibly detached from the reference silhouette.
+ */
 internal fun Modifier.modernLibraryActionSurface(
     chrome: ModernLibraryChrome,
     selected: Boolean,
 ): Modifier = this
     .modernLibraryChromeSurface(chrome, chrome.actionShape, selected = selected)
     .drawWithCache {
-        val inset = 5.dp.toPx()
-        val accent = 14.dp.toPx()
-        val stroke = 1.25.dp.toPx()
+        val outline = chrome.actionShape.createOutline(size, layoutDirection, this)
+        val path = when (outline) {
+            is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
+            is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
+            is Outline.Generic -> outline.path
+        }
+        val highlight = Brush.linearGradient(
+            colors = listOf(chrome.selectedBorder, chrome.borderGlow, chrome.selectedBorder),
+            start = Offset.Zero,
+            end = Offset(size.width, size.height),
+        )
         onDrawWithContent {
             drawContent()
-            drawLine(chrome.selectedBorder, Offset(inset, inset), Offset(accent, inset), stroke)
-            drawLine(chrome.selectedBorder, Offset(inset, inset), Offset(inset, accent), stroke)
-            drawLine(
-                chrome.selectedBorder,
-                Offset(size.width - accent, size.height - inset),
-                Offset(size.width - inset, size.height - inset),
-                stroke,
-            )
-            drawLine(
-                chrome.selectedBorder,
-                Offset(size.width - inset, size.height - accent),
-                Offset(size.width - inset, size.height - inset),
-                stroke,
-            )
+            drawPath(path, highlight, style = Stroke(width = 1.5.dp.toPx()))
         }
     }
 
