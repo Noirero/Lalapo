@@ -327,3 +327,8 @@ insertNetworkAnime {
     AND url = :url
     LIMIT 1;
 }
+
+-- Used by the picker within the same transaction as membership changes.
+addAnimeToLibraryFromPicker:
+UPDATE animes SET favorite = 1, date_added = :dateAdded
+WHERE _id = :animeId AND favorite = 0;

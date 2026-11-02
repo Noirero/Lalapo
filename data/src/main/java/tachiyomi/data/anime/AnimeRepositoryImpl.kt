@@ -129,6 +129,48 @@ class AnimeRepositoryImpl(
         }
     }
 
+    override suspend fun applyCategoryChanges(
+        animeIds: List<Long>,
+        categoryChanges: Map<Long, Boolean>,
+        addToLibrary: Boolean,
+    ) {
+        require(animeIds.isNotEmpty() && animeIds.all { it > 0L }) { "No valid anime selected" }
+        require(categoryChanges.keys.all { it > 0L }) { "Invalid category ID" }
+        val distinctAnimeIds = animeIds.distinct()
+
+        database.transaction {
+            // Validate inside the transaction so deleted IDs cannot result in partial writes.
+            distinctAnimeIds.forEach { animeId ->
+                require(database.animesQueries.getAnimeById(animeId).awaitAsList().isNotEmpty()) {
+                    "Anime no longer exists"
+                }
+            }
+            categoryChanges.keys.forEach { categoryId ->
+                require(database.categoriesQueries.getCategory(categoryId).awaitAsList().isNotEmpty()) {
+                    "Category no longer exists. Refresh the picker."
+                }
+            }
+            distinctAnimeIds.forEach { animeId ->
+                // This query includes hidden categories and membership from every Set.
+                val previous = database.categoriesQueries.getCategoriesByAnimeId(animeId).awaitAsList()
+                    .mapTo(linkedSetOf()) { it.id }
+                val updated = previous.toMutableSet()
+                categoryChanges.forEach { (categoryId, checked) ->
+                    if (checked) updated.add(categoryId) else updated.remove(categoryId)
+                }
+                if (updated != previous) {
+                    database.animes_categoriesQueries.deleteAnimeCategoryByAnimeId(animeId)
+                    updated.forEach { categoryId ->
+                        database.animes_categoriesQueries.insert(animeId, categoryId)
+                    }
+                }
+                if (addToLibrary) {
+                    database.animesQueries.addAnimeToLibraryFromPicker(System.currentTimeMillis(), animeId)
+                }
+            }
+        }
+    }
+
     override suspend fun update(update: AnimeUpdate): Boolean {
         return try {
             partialUpdate(update)
