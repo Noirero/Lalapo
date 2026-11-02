@@ -31,8 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawOutline
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -274,17 +275,23 @@ object HomeScreen : Screen() {
                     val top = (size.height - targetHeight) / 2f
                     val surfaceWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
                     val selectedBrush = Brush.horizontalGradient(listOf(chrome!!.selectedStart, chrome.selectedEnd))
-                    val selectedOutline = chrome.navSelectedShape.createOutline(
-                        androidx.compose.ui.geometry.Size(surfaceWidth, targetHeight),
-                        layoutDirection,
-                        this,
-                    )
+                    val selectedPath = when (
+                        val outline = chrome.navSelectedShape.createOutline(
+                            androidx.compose.ui.geometry.Size(surfaceWidth, targetHeight),
+                            layoutDirection,
+                            this,
+                        )
+                    ) {
+                        is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
+                        is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
+                        is Outline.Generic -> outline.path
+                    }
                     val borderWidth = 1.dp.toPx()
                     onDrawBehind {
                         translate(left = horizontalInset, top = top) {
-                            drawOutline(outline = selectedOutline, brush = selectedBrush)
-                            drawOutline(
-                                outline = selectedOutline,
+                            drawPath(path = selectedPath, brush = selectedBrush)
+                            drawPath(
+                                path = selectedPath,
                                 color = chrome.selectedBorder,
                                 style = Stroke(width = borderWidth),
                             )
