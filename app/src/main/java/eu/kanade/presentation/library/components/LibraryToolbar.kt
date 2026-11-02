@@ -448,7 +448,8 @@ private fun LibraryRegularToolbar(
                         ),
                     shape = chrome?.segmentedShape ?: RoundedCornerShape(28.dp),
                     color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
-                    contentColor = chrome?.content ?: if (isModern) glass.content else MaterialTheme.colorScheme.onSurface,
+                    contentColor =
+                        chrome?.content ?: if (isModern) glass.content else MaterialTheme.colorScheme.onSurface,
                     border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
                     Row(

@@ -42,11 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.anime.components.AnimeCover
 import eu.kanade.presentation.components.modernCoverTreatment
-import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
+import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.modernLibraryChromeCover
-import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.presentation.theme.resolveGlassPalette
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource

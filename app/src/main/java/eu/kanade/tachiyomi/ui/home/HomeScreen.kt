@@ -49,8 +49,8 @@ import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernSharpWallpaper
-import eu.kanade.presentation.theme.modernNavigationContainerColor
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.modernNavigationContainerColor
 import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
