@@ -134,31 +134,31 @@ object HomeScreen : Screen() {
                             typography = MaterialTheme.typography,
                         ) {
                             NavigationSuite(
-                            modifier = if (useMiyorareVisuals) {
-                                Modifier
-                                    .padding(
-                                        horizontal = if (tabletUi) 8.dp else 18.dp,
-                                        vertical = 8.dp,
+                                modifier = if (useMiyorareVisuals) {
+                                    Modifier
+                                        .padding(
+                                            horizontal = if (tabletUi) 8.dp else 18.dp,
+                                            vertical = 8.dp,
+                                        )
+                                        .modernSurfaceTreatment(shape = navigationShape)
+                                } else {
+                                    Modifier
+                                },
+                                navigationSuiteType = navigationSuiteType,
+                                colors = modernNavigationContainerColor(
+                                    scheme = MaterialTheme.colorScheme,
+                                    isModern = isModern,
+                                    useGlass = useMiyorareVisuals,
+                                )?.let { modernContainer ->
+                                    NavigationSuiteDefaults.colors(
+                                        navigationBarContainerColor = modernContainer,
+                                        navigationRailContainerColor = modernContainer,
                                     )
-                                    .modernSurfaceTreatment(shape = navigationShape)
-                            } else {
-                                Modifier
-                            },
-                            navigationSuiteType = navigationSuiteType,
-                            colors = modernNavigationContainerColor(
-                                scheme = MaterialTheme.colorScheme,
-                                isModern = isModern,
-                                useGlass = useMiyorareVisuals,
-                            )?.let { modernContainer ->
-                                NavigationSuiteDefaults.colors(
-                                    navigationBarContainerColor = modernContainer,
-                                    navigationRailContainerColor = modernContainer,
-                                )
-                            } ?: NavigationSuiteDefaults.colors(
-                                navigationRailContainerColor = MaterialTheme.colorScheme
-                                    .surfaceColorAtElevation(3.dp),
-                            ),
-                            verticalArrangement = Arrangement.Center,
+                                } ?: NavigationSuiteDefaults.colors(
+                                    navigationRailContainerColor = MaterialTheme.colorScheme
+                                        .surfaceColorAtElevation(3.dp),
+                                ),
+                                verticalArrangement = Arrangement.Center,
                             ) {
                                 TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
                             }
