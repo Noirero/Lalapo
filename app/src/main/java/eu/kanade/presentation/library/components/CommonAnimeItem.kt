@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -40,6 +41,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.anime.components.AnimeCover
+import eu.kanade.presentation.components.modernCoverTreatment
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.resolveGlassPalette
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
@@ -80,6 +84,7 @@ fun AnimeCompactGridItem(
     coverAlpha: Float = 1f,
     coverBadgeStart: @Composable (RowScope.() -> Unit)? = null,
     coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
+    useModernLibraryTreatment: Boolean = false,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -97,11 +102,13 @@ fun AnimeCompactGridItem(
             },
             badgesStart = coverBadgeStart,
             badgesEnd = coverBadgeEnd,
+            useModernLibraryTreatment = useModernLibraryTreatment,
             content = {
                 if (title != null) {
                     CoverTextOverlay(
                         title = title,
                         onClickContinueWatching = onClickContinueWatching,
+                        useModernLibraryTreatment = useModernLibraryTreatment,
                     )
                 } else if (onClickContinueWatching != null) {
                     ContinueWatchingButton(
@@ -125,15 +132,31 @@ fun AnimeCompactGridItem(
 private fun BoxScope.CoverTextOverlay(
     title: String,
     onClickContinueWatching: (() -> Unit)? = null,
+    useModernLibraryTreatment: Boolean = false,
 ) {
+    val glass = LocalModernVisualPalette.current.resolveGlassPalette(MaterialTheme.colorScheme)
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
+            .clip(
+                if (useModernLibraryTreatment) {
+                    RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
+                } else {
+                    RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
+                },
+            )
             .background(
-                Brush.verticalGradient(
-                    0f to Color.Transparent,
-                    1f to Color(0xAA000000),
-                ),
+                if (useModernLibraryTreatment) {
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.46f to Color(0x3A000000),
+                        1f to Color(0xD8000000),
+                    )
+                } else {
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        1f to Color(0xAA000000),
+                    )
+                },
             )
             .fillMaxHeight(0.33f)
             .fillMaxWidth()
@@ -169,6 +192,16 @@ private fun BoxScope.CoverTextOverlay(
             )
         }
     }
+    if (useModernLibraryTreatment) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 8.dp, bottom = 4.dp)
+                .width(28.dp)
+                .height(3.dp)
+                .background(glass.selectedBorder, RoundedCornerShape(2.dp)),
+        )
+    }
 }
 
 /**
@@ -186,6 +219,7 @@ fun AnimeComfortableGridItem(
     coverBadgeStart: (@Composable RowScope.() -> Unit)? = null,
     coverBadgeEnd: (@Composable RowScope.() -> Unit)? = null,
     onClickContinueWatching: (() -> Unit)? = null,
+    useModernLibraryTreatment: Boolean = false,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -204,6 +238,7 @@ fun AnimeComfortableGridItem(
                 },
                 badgesStart = coverBadgeStart,
                 badgesEnd = coverBadgeEnd,
+                useModernLibraryTreatment = useModernLibraryTreatment,
                 content = {
                     if (onClickContinueWatching != null) {
                         ContinueWatchingButton(
@@ -238,11 +273,20 @@ private fun AnimeGridCover(
     badgesStart: (@Composable RowScope.() -> Unit)? = null,
     badgesEnd: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable (BoxScope.() -> Unit)? = null,
+    useModernLibraryTreatment: Boolean = false,
 ) {
+    val coverShape = RoundedCornerShape(14.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(AnimeCover.Book.ratio),
+            .aspectRatio(AnimeCover.Book.ratio)
+            .then(
+                if (useModernLibraryTreatment) {
+                    Modifier.modernCoverTreatment(coverShape)
+                } else {
+                    Modifier
+                },
+            ),
     ) {
         cover()
         content?.invoke(this)

@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernArtworkIdentity
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.anime.model.AnimeCover
 import tachiyomi.domain.library.model.LibraryAnime
@@ -22,6 +25,8 @@ internal fun LibraryCompactGrid(
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
 ) {
+    val useModernLibraryTreatment = LocalModernVisualPalette.current.isModern &&
+        LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
     LazyLibraryGrid(
         modifier = Modifier.fillMaxSize(),
         columns = columns,
@@ -54,6 +59,7 @@ internal fun LibraryCompactGrid(
                         sourceLanguage = libraryItem.badges.sourceLanguage,
                     )
                 },
+                useModernLibraryTreatment = useModernLibraryTreatment,
                 onLongClick = { onLongClick(libraryItem.libraryAnime) },
                 onClick = { onClick(libraryItem.libraryAnime) },
                 onClickContinueWatching = if (onClickContinueWatching != null && libraryItem.unseenCount > 0) {

@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.widget
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,11 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.anime.components.AnimeCover
@@ -81,7 +78,6 @@ private fun AppThemesList(
     amoled: Boolean,
     onItemClick: (AppTheme) -> Unit,
 ) {
-    val context = LocalContext.current
     val appThemes = remember {
         AppTheme.entries
             .filterNot { it.titleRes == null || (it == AppTheme.MONET && !DeviceUtil.isDynamicColorAvailable) }
@@ -119,15 +115,17 @@ private fun AppThemesList(
                         .width(114.dp)
                         .padding(top = 8.dp),
                 ) {
+                    val preview = AppearancePreviewSelection.classic(appTheme)
                     TachiyomiTheme(
-                        appTheme = appTheme,
+                        appTheme = preview.appTheme,
                         amoled = amoled,
+                        designStyle = preview.designStyle,
+                        modernThemePreset = preview.modernPreset,
                     ) {
                         AppThemePreviewItem(
                             selected = currentTheme == appTheme,
                             onClick = {
                                 onItemClick(appTheme)
-                                (context as? Activity)?.let { ActivityCompat.recreate(it) }
                             },
                         )
                     }
