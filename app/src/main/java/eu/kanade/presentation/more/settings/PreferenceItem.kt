@@ -6,6 +6,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -76,7 +81,7 @@ internal fun PreferenceItem(
                 SwitchPreferenceWidget(
                     title = item.title,
                     subtitle = item.subtitle,
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.ToggleOn,
                     checked = value,
                     onCheckedChanged = { newValue ->
                         scope.launch {
@@ -113,7 +118,7 @@ internal fun PreferenceItem(
                     value = value,
                     title = item.title,
                     subtitle = item.internalSubtitleProvider(value, item.entries),
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.List,
                     entries = item.entries,
                     onValueChange = { newValue ->
                         scope.launch {
@@ -129,7 +134,7 @@ internal fun PreferenceItem(
                     value = item.value,
                     title = item.title,
                     subtitle = item.subtitleProvider(item.value, item.entries),
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.List,
                     entries = item.entries,
                     onValueChange = { scope.launch { item.onValueChanged(it) } },
                 )
@@ -152,7 +157,7 @@ internal fun PreferenceItem(
                 TextPreferenceWidget(
                     title = item.title,
                     subtitle = item.subtitle,
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.Info,
                     widget = item.widget,
                     onPreferenceClick = item.onClick,
                 )
@@ -162,7 +167,7 @@ internal fun PreferenceItem(
                 EditTextPreferenceWidget(
                     title = item.title,
                     subtitle = item.subtitle,
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.Edit,
                     value = values,
                     onConfirm = {
                         val accepted = item.onValueChanged(it)
@@ -177,7 +182,7 @@ internal fun PreferenceItem(
                 EditTextPreferenceWidget(
                     title = item.title,
                     subtitle = item.subtitle,
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.Edit,
                     value = values,
                     onConfirm = {
                         val accepted = item.onValueChanged(it)
@@ -193,7 +198,7 @@ internal fun PreferenceItem(
                 EditTextPreferenceWidget(
                     title = item.title,
                     subtitle = item.subtitle,
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.Edit,
                     value = values,
                     onConfirm = {
                         val accepted = item.onValueChanged(it)
@@ -211,7 +216,7 @@ internal fun PreferenceItem(
                     title = item.title,
                     subtitle = item.subtitle,
                     dialogSubtitle = item.dialogSubtitle,
-                    icon = item.icon,
+                    icon = item.icon ?: Icons.Outlined.Edit,
                     value = values,
                     onConfirm = {
                         val accepted = item.onValueChanged(it)
