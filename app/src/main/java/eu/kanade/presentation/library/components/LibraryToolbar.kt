@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.outlined.Sort
@@ -50,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -203,110 +206,143 @@ private fun LibraryRegularToolbar(
                     }
                 },
                 title = {
-                    OutlinedTextField(
-                        value = searchQuery.orEmpty(),
-                        onValueChange = { query ->
-                            onSearchQueryChange(query.takeIf { it.isNotEmpty() })
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(if (useMiyorareVisuals) Modifier.height(44.dp) else Modifier)
-                            .then(
-                                if (useMiyorareVisuals) {
-                                    Modifier.modernSurfaceTreatment(shape = controlShape)
-                                } else {
-                                    Modifier
-                                },
+                    if (useMiyorareVisuals) {
+                        BasicTextField(
+                            value = searchQuery.orEmpty(),
+                            onValueChange = { query ->
+                                onSearchQueryChange(query.takeIf { it.isNotEmpty() })
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .modernSurfaceTreatment(shape = controlShape),
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                color = glass.content,
                             ),
-                        singleLine = true,
-                        colors = if (useMiyorareVisuals) {
-                            OutlinedTextFieldDefaults.colors(
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedBorderColor = Color.Transparent,
-                                focusedBorderColor = Color.Transparent,
-                                cursorColor = glass.selectedBorder,
-                                focusedTextColor = glass.content,
-                                unfocusedTextColor = glass.content,
-                                focusedLeadingIconColor = glass.content,
-                                unfocusedLeadingIconColor = glass.contentMuted,
-                                focusedTrailingIconColor = glass.content,
-                                unfocusedTrailingIconColor = glass.contentMuted,
-                                focusedPlaceholderColor = glass.contentMuted,
-                                unfocusedPlaceholderColor = glass.contentMuted,
-                            )
-                        } else if (isModern) {
-                            OutlinedTextFieldDefaults.colors(
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
-                                    alpha = 0.70f,
-                                ),
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
-                                unfocusedBorderColor = modernPalette.borderHighlight,
-                            )
-                        } else {
-                            OutlinedTextFieldDefaults.colors()
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Search,
-                                contentDescription = null,
-                            )
-                        },
-                        trailingIcon = if (!searchQuery.isNullOrEmpty()) {
-                            {
-                                IconButton(onClick = { onSearchQueryChange(null) }) {
+                            cursorBrush = SolidColor(glass.selectedBorder),
+                            decorationBox = { innerTextField ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(start = 14.dp, end = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Close,
-                                        contentDescription = stringResource(MR.strings.action_reset),
+                                        imageVector = Icons.Outlined.Search,
+                                        contentDescription = null,
+                                        tint = glass.contentMuted,
+                                        modifier = Modifier.size(20.dp),
                                     )
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(horizontal = 10.dp),
+                                        contentAlignment = Alignment.CenterStart,
+                                    ) {
+                                        if (searchQuery.isNullOrEmpty()) {
+                                            Text(
+                                                text = stringResource(MR.strings.action_search_hint),
+                                                color = glass.contentMuted,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                    if (!searchQuery.isNullOrEmpty()) {
+                                        IconButton(
+                                            onClick = { onSearchQueryChange(null) },
+                                            modifier = Modifier.size(40.dp),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Close,
+                                                contentDescription = stringResource(MR.strings.action_reset),
+                                                tint = glass.content,
+                                                modifier = Modifier.size(20.dp),
+                                            )
+                                        }
+                                    }
                                 }
-                            }
-                        } else {
-                            null
-                        },
-                        placeholder = {
-                            Text(
-                                text = stringResource(MR.strings.action_search_hint),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                    )
-                },
-                actions = {
-                    Box(
-                        modifier = if (useMiyorareVisuals) {
-                            Modifier
-                                .size(44.dp)
-                                .modernSurfaceTreatment(shape = controlShape)
-                        } else {
-                            Modifier
-                        },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        AppBarActions(
-                            listOf(
-                                AppBar.OverflowAction(
-                                    title = stringResource(MR.strings.action_update_library),
-                                    onClick = onClickGlobalUpdate,
-                                ),
-                                AppBar.OverflowAction(
-                                    title = stringResource(MR.strings.action_update_category),
-                                    onClick = onClickRefresh,
-                                ),
-                                AppBar.OverflowAction(
-                                    title = stringResource(MR.strings.action_open_random_manga),
-                                    onClick = onClickOpenRandomAnime,
-                                ),
-                            ),
+                            },
+                        )
+                    } else {
+                        OutlinedTextField(
+                            value = searchQuery.orEmpty(),
+                            onValueChange = { query ->
+                                onSearchQueryChange(query.takeIf { it.isNotEmpty() })
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = if (isModern) {
+                                OutlinedTextFieldDefaults.colors(
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                                        alpha = 0.70f,
+                                    ),
+                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                                        alpha = 0.86f,
+                                    ),
+                                    unfocusedBorderColor = modernPalette.borderHighlight,
+                                )
+                            } else {
+                                OutlinedTextFieldDefaults.colors()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Search,
+                                    contentDescription = null,
+                                )
+                            },
+                            trailingIcon = if (!searchQuery.isNullOrEmpty()) {
+                                {
+                                    IconButton(onClick = { onSearchQueryChange(null) }) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Close,
+                                            contentDescription = stringResource(MR.strings.action_reset),
+                                        )
+                                    }
+                                }
+                            } else {
+                                null
+                            },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(MR.strings.action_search_hint),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
                         )
                     }
+                },
+                actions = {
+                    AppBarActions(
+                        listOf(
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_update_library),
+                                onClick = onClickGlobalUpdate,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_update_category),
+                                onClick = onClickRefresh,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_open_random_manga),
+                                onClick = onClickOpenRandomAnime,
+                            ),
+                        ),
+                    )
                 },
                 scrollBehavior = scrollBehavior,
                 colors = if (isModern) {
                     TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
-                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        scrolledContainerColor = if (useMiyorareVisuals) {
+                            Color.Transparent
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainer
+                        },
                     )
                 } else {
                     TopAppBarDefaults.topAppBarColors()
