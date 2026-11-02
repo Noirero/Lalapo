@@ -5,6 +5,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -637,11 +638,11 @@ private fun RowScope.ModernLibraryActionButton(
 ) {
     val palette = LocalModernVisualPalette.current
     val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(17.dp)
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
-            .height(48.dp)
+            .height(34.dp)
             .modernSurfaceTreatment(shape = shape, selected = selected),
         shape = shape,
         border = BorderStroke(0.dp, Color.Transparent),
@@ -649,11 +650,17 @@ private fun RowScope.ModernLibraryActionButton(
             containerColor = Color.Transparent,
             contentColor = if (selected) glass.content else glass.contentMuted,
         ),
+        contentPadding = PaddingValues(horizontal = 9.dp),
     ) {
-        Icon(imageVector = icon, contentDescription = null)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+        )
         Text(
             text = label,
-            modifier = Modifier.padding(start = 8.dp),
+            modifier = Modifier.padding(start = 4.dp),
+            fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
         )
     }
