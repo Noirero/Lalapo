@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -119,7 +120,20 @@ object HomeScreen : Screen() {
                         val useMiyorareVisuals = isModern &&
                             LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
                         val navigationShape = RoundedCornerShape(30.dp)
-                        NavigationSuite(
+                        val navigationColorScheme = if (useMiyorareVisuals) {
+                            MaterialTheme.colorScheme.copy(
+                                primaryContainer = Color.Transparent,
+                                secondaryContainer = Color.Transparent,
+                            )
+                        } else {
+                            MaterialTheme.colorScheme
+                        }
+                        MaterialTheme(
+                            colorScheme = navigationColorScheme,
+                            shapes = MaterialTheme.shapes,
+                            typography = MaterialTheme.typography,
+                        ) {
+                            NavigationSuite(
                             modifier = if (useMiyorareVisuals) {
                                 Modifier
                                     .padding(
@@ -145,8 +159,9 @@ object HomeScreen : Screen() {
                                     .surfaceColorAtElevation(3.dp),
                             ),
                             verticalArrangement = Arrangement.Center,
-                        ) {
-                            TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
+                            ) {
+                                TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
+                            }
                         }
                     },
                 ) {

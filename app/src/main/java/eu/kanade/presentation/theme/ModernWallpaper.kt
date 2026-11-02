@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -62,7 +63,12 @@ internal fun ModernGlobalBackground(modifier: Modifier = Modifier) {
     val isLight = scheme.background.luminance() >= 0.5f
     val isAmoled = scheme.background.red == 0f &&
         scheme.background.green == 0f && scheme.background.blue == 0f
-    val baseColor = scheme.background.copy(alpha = 1f)
+    val semanticBackground = scheme.background.copy(alpha = 1f)
+    val baseColor = if (isLight) {
+        lerp(semanticBackground, Color.White, 0.30f)
+    } else {
+        semanticBackground
+    }
     val blurred by produceState<Bitmap?>(initialValue = null, key1 = resourceId) {
         value = withContext(Dispatchers.Default) {
             ModernBlurredWallpaperCache.getOrCreate(context.resources, resourceId)
