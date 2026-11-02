@@ -552,7 +552,7 @@ private fun LibraryRegularToolbar(
                                     },
                                 )
                             }
-    
+
                             if (showTabRail) {
                                 LibraryTabs(
                                     categories = categories,
@@ -618,7 +618,7 @@ private fun LibraryRegularToolbar(
                                         }
                                     }
                                 }
-                        }
+                            }
                         }
                     }
                 }
