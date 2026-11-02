@@ -190,6 +190,7 @@ private fun LibraryRegularToolbar(
     val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
     val useMiyorareVisuals = chrome != null
     val controlShape = chrome?.controlShape ?: RoundedCornerShape(22.dp)
+    val setSelectorWeight = chrome?.setSelectorWeight ?: 0.42f
     val segmentContentColor = when {
         chrome != null -> chrome.content
         isModern -> glass.content
@@ -472,7 +473,7 @@ private fun LibraryRegularToolbar(
                         if (selectedSet != null) {
                             Box(
                                 modifier = if (hasCategoryNavigation) {
-                                    Modifier.weight(0.42f)
+                                    Modifier.weight(setSelectorWeight)
                                 } else {
                                     Modifier.fillMaxWidth()
                                 },
@@ -548,7 +549,7 @@ private fun LibraryRegularToolbar(
                                 getItemCountForCategory = getItemCountForCategory,
                                 onTabItemClick = onSelectCategory,
                                 modifier = if (selectedSet != null) {
-                                    Modifier.weight(0.58f)
+                                    Modifier.weight(1f - setSelectorWeight)
                                 } else {
                                     Modifier.fillMaxWidth()
                                 },
@@ -556,7 +557,7 @@ private fun LibraryRegularToolbar(
                         } else if (showCategoryPicker && selectedCategory != null) {
                             Box(
                                 modifier = if (selectedSet != null) {
-                                    Modifier.weight(0.58f)
+                                    Modifier.weight(1f - setSelectorWeight)
                                 } else {
                                     Modifier.fillMaxWidth()
                                 },

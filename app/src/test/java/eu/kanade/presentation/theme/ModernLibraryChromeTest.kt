@@ -37,6 +37,11 @@ class ModernLibraryChromeTest {
         assertEquals(Color(0xFFFFEAF3), entries[1].headerSubtitleColor)
         assertNotEquals(entries[1].navSelectedShape, entries[2].navSelectedShape)
         assertNotEquals(entries[1].segmentedShape, entries[2].segmentedShape)
+        assertEquals(0.34f, entries[1].setSelectorWeight)
+        assertEquals(0.38f, entries[0].setSelectorWeight)
+        entries.forEach { chrome ->
+            org.junit.jupiter.api.Assertions.assertTrue(chrome.setSelectorWeight in 0.3f..0.5f)
+        }
         assertNull(resolveModernLibraryChrome(modern, ModernArtworkIdentity.CUSTOM_WAVES))
     }
 

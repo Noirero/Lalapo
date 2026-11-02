@@ -44,6 +44,7 @@ internal data class ModernLibraryChrome(
     val navSelectedShape: Shape,
     val cardShape: Shape,
     val cardAspectRatio: Float,
+    val setSelectorWeight: Float,
 )
 
 private val roundControl = RoundedCornerShape(24.dp)
@@ -80,6 +81,7 @@ private object Presets {
         navSelectedShape = RoundedCornerShape(28.dp),
         cardShape = RoundedCornerShape(17.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.38f,
     )
 
     val sakura = ModernLibraryChrome(
@@ -105,6 +107,7 @@ private object Presets {
         navSelectedShape = RoundedCornerShape(29.dp),
         cardShape = RoundedCornerShape(20.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.34f,
     )
 
     val violet = ModernLibraryChrome(
@@ -130,6 +133,7 @@ private object Presets {
         navSelectedShape = CutCornerShape(topStart = 11.dp, bottomEnd = 11.dp),
         cardShape = RoundedCornerShape(15.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.39f,
     )
 
     val cyan = ModernLibraryChrome(
@@ -155,6 +159,7 @@ private object Presets {
         navSelectedShape = RoundedCornerShape(32.dp),
         cardShape = RoundedCornerShape(19.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.39f,
     )
 
     val emerald = ModernLibraryChrome(
@@ -180,6 +185,7 @@ private object Presets {
         navSelectedShape = fluidShape,
         cardShape = RoundedCornerShape(19.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.37f,
     )
 
     val amber = ModernLibraryChrome(
@@ -205,6 +211,7 @@ private object Presets {
         navSelectedShape = RoundedCornerShape(31.dp),
         cardShape = RoundedCornerShape(19.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.40f,
     )
 }
 
