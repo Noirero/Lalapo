@@ -165,12 +165,13 @@ class CategoryViewModel(
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), CategoryScreenState.Loading)
 
-    fun createCategory(name: String) {
-        viewModelScope.launch {
-            when (createCategoryWithName.await(name)) {
-                is CreateCategoryWithName.Result.InternalError -> _events.send(CategoryEvent.InternalError)
-                else -> {}
-            }
+    fun createCategory(name: String, onSuccess: () -> Unit = {}) = runSetOperation(onSuccess) {
+        // The edit-categories action belongs to the currently selected Set.
+        // Other callers may continue using CreateCategoryWithName.await(name) unchanged.
+        val setId = categorySetRepository.getActiveSet().id
+        when (val result = createCategoryWithName.await(name, setId)) {
+            is CreateCategoryWithName.Result.InternalError -> throw result.error
+            CreateCategoryWithName.Result.Success -> Unit
         }
     }
 

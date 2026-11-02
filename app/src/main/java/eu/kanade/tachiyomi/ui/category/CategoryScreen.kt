@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -90,6 +90,8 @@ class CategoryScreen : Screen() {
                     onDismissRequest = viewModel::dismissDialog,
                     onCreate = viewModel::createCategory,
                     categories = successState.categories.fastMap { it.name },
+                    busy = setBusy,
+                    error = setError,
                 )
             }
             is CategoryDialog.Rename -> {

@@ -40,8 +40,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -195,12 +195,18 @@ internal fun CategorySetsSheet(
                                             if (set.syncKey != activeSetKey) {
                                                 DropdownMenuItem(
                                                     text = { Text("Jadikan aktif") },
-                                                    onClick = { menuOpen = false; viewModel.selectSet(set.syncKey) },
+                                                    onClick = {
+                                                        menuOpen = false
+                                                        viewModel.selectSet(set.syncKey)
+                                                    },
                                                 )
                                             }
                                             DropdownMenuItem(
                                                 text = { Text("Kelola kategori") },
-                                                onClick = { menuOpen = false; categorySetId = set.id },
+                                                onClick = {
+                                                    menuOpen = false
+                                                    categorySetId = set.id
+                                                },
                                             )
                                             DropdownMenuItem(
                                                 text = { Text("Ubah nama") },
@@ -318,7 +324,10 @@ internal fun CategorySetsSheet(
                 Column {
                     OutlinedTextField(
                         value = editName,
-                        onValueChange = { editName = it; viewModel.clearSetError() },
+                        onValueChange = {
+                            editName = it
+                            viewModel.clearSetError()
+                        },
                         label = { Text("Nama Set") },
                         singleLine = true,
                         enabled = !busy,
@@ -359,7 +368,10 @@ internal fun CategorySetsSheet(
                 Column {
                     OutlinedTextField(
                         value = categoryName,
-                        onValueChange = { categoryName = it; viewModel.clearSetError() },
+                        onValueChange = {
+                            categoryName = it
+                            viewModel.clearSetError()
+                        },
                         label = { Text("Nama kategori") },
                         isError = normalized.isEmpty() || duplicate,
                         supportingText = {

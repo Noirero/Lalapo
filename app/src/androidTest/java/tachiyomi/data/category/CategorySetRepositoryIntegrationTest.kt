@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import tachiyomi.core.common.preference.AndroidPreferenceStore
+import tachiyomi.domain.category.interactor.CreateCategoryWithName
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -112,7 +113,8 @@ class CategorySetRepositoryIntegrationTest {
     @Test
     fun scopedCreateAssignsNonDefaultSetAtomically() = runBlocking {
         val target = repository.create("Second")
-        repository.createCategoryInSet(newCategory("Target only"), target)
+        val create = CreateCategoryWithName(CategoryRepositoryImpl(database), repository, preferences)
+        assertEquals(CreateCategoryWithName.Result.Success, create.await("Target only", target))
         val category = categoryId("Target only")
 
         assertEquals(target, assignment(category))
@@ -124,7 +126,8 @@ class CategorySetRepositoryIntegrationTest {
     fun genericCreateStillUsesDatabaseDefaultAssignment() = runBlocking {
         val expectedDefault = repository.getSets().single().id
         repository.create("Second")
-        CategoryRepositoryImpl(database).insert(newCategory("Generic"))
+        val create = CreateCategoryWithName(CategoryRepositoryImpl(database), repository, preferences)
+        assertEquals(CreateCategoryWithName.Result.Success, create.await("Generic"))
 
         assertEquals(expectedDefault, assignment(categoryId("Generic")))
     }

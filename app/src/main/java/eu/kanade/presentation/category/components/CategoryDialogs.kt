@@ -36,29 +36,31 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun CategoryCreateDialog(
     onDismissRequest: () -> Unit,
-    onCreate: (String) -> Unit,
+    onCreate: (String, () -> Unit) -> Unit,
     categories: List<String>,
+    busy: Boolean = false,
+    error: String? = null,
 ) {
     var name by remember { mutableStateOf("") }
 
     val focusRequester = remember { FocusRequester() }
-    val nameAlreadyExists = remember(name) { categories.contains(name) }
+    val normalized = name.trim()
+    val nameAlreadyExists = remember(normalized, categories) {
+        categories.any { it.trim().equals(normalized, ignoreCase = true) }
+    }
 
     AlertDialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { if (!busy) onDismissRequest() },
         confirmButton = {
             TextButton(
-                enabled = name.isNotEmpty() && !nameAlreadyExists,
-                onClick = {
-                    onCreate(name)
-                    onDismissRequest()
-                },
+                enabled = normalized.isNotEmpty() && !nameAlreadyExists && !busy,
+                onClick = { onCreate(normalized, onDismissRequest) },
             ) {
                 Text(text = stringResource(MR.strings.action_add))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
+            TextButton(enabled = !busy, onClick = onDismissRequest) {
                 Text(text = stringResource(MR.strings.action_cancel))
             }
         },
@@ -71,18 +73,23 @@ fun CategoryCreateDialog(
                     .focusRequester(focusRequester),
                 value = name,
                 onValueChange = { name = it },
+                enabled = !busy,
                 label = {
                     Text(text = stringResource(MR.strings.name))
                 },
                 supportingText = {
-                    val msgRes = if (name.isNotEmpty() && nameAlreadyExists) {
-                        MR.strings.error_category_exists
+                    if (error != null) {
+                        Text(text = error)
                     } else {
-                        MR.strings.information_required_plain
+                        val msgRes = if (name.isNotEmpty() && nameAlreadyExists) {
+                            MR.strings.error_category_exists
+                        } else {
+                            MR.strings.information_required_plain
+                        }
+                        Text(text = stringResource(msgRes))
                     }
-                    Text(text = stringResource(msgRes))
                 },
-                isError = name.isNotEmpty() && nameAlreadyExists,
+                isError = error != null || (name.isNotEmpty() && nameAlreadyExists),
                 singleLine = true,
             )
         },
