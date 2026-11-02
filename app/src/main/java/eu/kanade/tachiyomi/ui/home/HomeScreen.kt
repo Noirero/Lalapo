@@ -8,7 +8,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
@@ -34,6 +36,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -147,6 +150,13 @@ object HomeScreen : Screen() {
                                                 horizontal = if (tabletUi) 8.dp else 18.dp,
                                                 vertical = 8.dp,
                                             )
+                                            .then(
+                                                if (tabletUi) {
+                                                    Modifier
+                                                } else {
+                                                    Modifier.height(70.dp)
+                                                },
+                                            )
                                             .modernSurfaceTreatment(shape = navigationShape)
                                     } else {
                                         Modifier
@@ -256,6 +266,13 @@ object HomeScreen : Screen() {
         NavigationSuiteItem(
             modifier = if (useMiyorareVisuals && selected) {
                 Modifier
+                    .then(
+                        if (navigationSuiteType == NavigationSuiteType.NavigationBar) {
+                            Modifier.height(60.dp)
+                        } else {
+                            Modifier
+                        },
+                    )
                     .padding(horizontal = 2.dp, vertical = 3.dp)
                     .background(
                         color = glass.selectedSurface.copy(alpha = glass.selectedSurface.alpha * 0.82f),
@@ -280,6 +297,7 @@ object HomeScreen : Screen() {
                         painter = tab.options.icon!!,
                         contentDescription = tab.options.title,
                         tint = if (selected) glass.content else glass.contentMuted,
+                        modifier = Modifier.size(if (selected) 22.dp else 20.dp),
                     )
                 } else {
                     Icon(
@@ -293,7 +311,10 @@ object HomeScreen : Screen() {
                     Text(
                         text = tab.options.title,
                         color = if (selected) glass.content else glass.contentMuted,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 13.sp,
+                            lineHeight = 16.sp,
+                        ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
