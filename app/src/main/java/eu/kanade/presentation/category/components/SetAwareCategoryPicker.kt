@@ -109,7 +109,7 @@ fun ChangeCategoryDialog(
     val allCategoryIds = categoriesBySet.orEmpty().values.flatten().mapTo(hashSetOf()) { it.id }
     LaunchedEffect(allCategoryIds, baseline) {
         if (baseline != null && sets.isNotEmpty() && categoriesBySet != null) {
-            val valid = pending.filter { abs(it) in allCategoryIds }.toLongArray()
+            val valid = retainValidCategoryPending(pending, allCategoryIds)
             if (!valid.contentEquals(pending)) {
                 pending = valid
                 error = "Kategori yang telah dihapus dikeluarkan dari pilihan tertunda."
@@ -426,6 +426,9 @@ fun ChangeCategoryDialog(
         )
     }
 }
+
+internal fun retainValidCategoryPending(pending: LongArray, validIds: Set<Long>): LongArray =
+    pending.filter { abs(it) in validIds }.toLongArray()
 
 internal fun pickerPageCapacity(heightDp: Int, count: Int): Int {
     val columns = if (count > 10) 2 else 1
