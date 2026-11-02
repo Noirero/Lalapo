@@ -41,6 +41,16 @@ class CategorySetRepositoryImpl(
         sets
     }.distinctUntilChanged()
 
+    override fun observeCategoriesBySet(): Flow<Map<Long, List<Category>>> = combine(
+        categoryRepository.getAllAsFlow(),
+        database.category_setsQueries.getSetAssignments().subscribeToList(),
+    ) { categories, assignments ->
+        val byId = categories.associateBy { it.id }
+        assignments.groupBy { it.set_id }.mapValues { (_, rows) ->
+            rows.mapNotNull { byId[it.category_id] }.sortedWith(compareBy(Category::order, Category::id))
+        }
+    }.distinctUntilChanged()
+
     override fun observeVisibleCategoriesInActiveSet(): Flow<List<Category>> = combine(
         categoryRepository.getAllVisibleAsFlow(),
         observeSets(),
@@ -96,6 +106,19 @@ class CategorySetRepositoryImpl(
         return createdId
     }
 
+    override suspend fun createCategoryInSet(category: Category, setId: Long) {
+        require(category.id == 0L && category.name.isNotBlank()) { "Category name is required" }
+        database.transaction {
+            require(getSets().any { it.id == setId }) { "Unknown target Set" }
+            // The existing trigger temporarily assigns the first Set; the explicit
+            // assignment supersedes it before this transaction commits.
+            database.categoriesQueries.insert(category.name.trim(), category.order, category.flags)
+            val newId = database.category_setsQueries.getLastInsertedCategoryId().awaitAsOne()
+            require(newId > 0L) { "Category insertion failed" }
+            database.category_setsQueries.assignCategory(newId, setId)
+        }
+    }
+
     override suspend fun rename(id: Long, name: String) {
         val normalized = name.trim()
         require(normalized.isNotEmpty())
@@ -143,12 +166,11 @@ class CategorySetRepositoryImpl(
             // Raw SQL here would bypass those side effects; reject until the explicit
             // destructive flow can coordinate both database and preference cleanup.
             require(!deleteCategories) { "Destructive Set deletion requires category cleanup" }
+            require(
+                destinationSetId == null || (destinationSetId != id && sets.any { it.id == destinationSetId }),
+            ) { "Invalid destination Set" }
             if (categories.isNotEmpty()) {
-                require(
-                    destinationSetId != null && destinationSetId != id && sets.any {
-                        it.id == destinationSetId
-                    },
-                )
+                requireNotNull(destinationSetId) { "Destination Set is required" }
                 database.category_setsQueries.moveSetCategories(destinationSetId, id)
             }
             database.category_setsQueries.deleteSet(id)
