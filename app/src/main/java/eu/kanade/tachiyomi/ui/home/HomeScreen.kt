@@ -1,15 +1,19 @@
 package eu.kanade.tachiyomi.ui.home
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,35 +27,39 @@ import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSui
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
+import androidx.core.view.WindowCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
-import eu.kanade.presentation.theme.ModernArtworkIdentity
 import eu.kanade.presentation.theme.ModernSharpWallpaper
+import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.modernLibraryNeedsLightStatusBarIcons
 import eu.kanade.presentation.theme.modernNavigationContainerColor
-import eu.kanade.presentation.theme.resolveGlassPalette
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.anime.AnimeScreen
@@ -97,6 +105,23 @@ object HomeScreen : Screen() {
             tab = LibraryTab,
             key = TabNavigatorKey,
         ) { tabNavigator ->
+            val activity = LocalContext.current as? Activity
+            val view = LocalView.current
+            val useLightStatusBarIcons = modernLibraryNeedsLightStatusBarIcons(
+                LocalModernVisualPalette.current,
+                LocalModernArtworkIdentity.current,
+            )
+            if (tabNavigator.current == LibraryTab && useLightStatusBarIcons && activity != null) {
+                // Sharp Modern wallpapers are dark at the status bar even when the Material
+                // surface is light. Restore the activity's previous icon mode on exit.
+                DisposableEffect(activity.window, view) {
+                    val controller = WindowCompat.getInsetsController(activity.window, view)
+                    val previous = controller.isAppearanceLightStatusBars
+                    controller.isAppearanceLightStatusBars = false
+                    onDispose { controller.isAppearanceLightStatusBars = previous }
+                }
+            }
+
             // AM (NAVIGATION_PILL) -->
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
@@ -130,9 +155,9 @@ object HomeScreen : Screen() {
                         navigationSuite = {
                             val modernPalette = LocalModernVisualPalette.current
                             val isModern = modernPalette.isModern
-                            val useMiyorareVisuals = isModern &&
-                                LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
-                            val navigationShape = RoundedCornerShape(30.dp)
+                            val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
+                            val useMiyorareVisuals = chrome != null
+                            val navigationShape = chrome?.navShape ?: RoundedCornerShape(30.dp)
                             val navigationColorScheme = if (useMiyorareVisuals) {
                                 MaterialTheme.colorScheme.copy(
                                     primaryContainer = Color.Transparent,
@@ -151,7 +176,7 @@ object HomeScreen : Screen() {
                                         Modifier
                                             .padding(
                                                 horizontal = if (tabletUi) 8.dp else 18.dp,
-                                                vertical = 8.dp,
+                                                vertical = if (tabletUi) 8.dp else 4.dp,
                                             )
                                             .then(
                                                 if (tabletUi) {
@@ -160,7 +185,7 @@ object HomeScreen : Screen() {
                                                     Modifier.heightIn(min = 70.dp)
                                                 },
                                             )
-                                            .modernSurfaceTreatment(shape = navigationShape)
+                                            .modernLibraryChromeSurface(chrome!!, shape = navigationShape)
                                     } else {
                                         Modifier
                                     },
@@ -261,10 +286,8 @@ object HomeScreen : Screen() {
         val scope = rememberCoroutineScope()
         val selected = tabNavigator.current::class == tab::class
         val modernPalette = LocalModernVisualPalette.current
-        val isModern = modernPalette.isModern
-        val useMiyorareVisuals = isModern &&
-            LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
-        val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
+        val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
+        val useMiyorareVisuals = chrome != null
         NavigationSuiteItem(
             modifier = if (useMiyorareVisuals && selected) {
                 Modifier.drawWithCache {
@@ -276,28 +299,28 @@ object HomeScreen : Screen() {
                     }
                     val top = (size.height - targetHeight) / 2f
                     val surfaceWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
-                    val surfaceColor = glass.selectedSurface.copy(
-                        alpha = glass.selectedSurface.alpha * 0.82f,
-                    )
-                    val cornerRadius = CornerRadius(24.dp.toPx())
+                    val selectedBrush = Brush.horizontalGradient(listOf(chrome!!.selectedStart, chrome.selectedEnd))
+                    val selectedPath = when (
+                        val outline = chrome.navSelectedShape.createOutline(
+                            androidx.compose.ui.geometry.Size(surfaceWidth, targetHeight),
+                            layoutDirection,
+                            this,
+                        )
+                    ) {
+                        is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
+                        is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
+                        is Outline.Generic -> outline.path
+                    }
                     val borderWidth = 1.dp.toPx()
-
                     onDrawBehind {
-                        val topLeft = Offset(horizontalInset, top)
-                        val surfaceSize = Size(surfaceWidth, targetHeight)
-                        drawRoundRect(
-                            color = surfaceColor,
-                            topLeft = topLeft,
-                            size = surfaceSize,
-                            cornerRadius = cornerRadius,
-                        )
-                        drawRoundRect(
-                            color = glass.selectedBorder,
-                            topLeft = topLeft,
-                            size = surfaceSize,
-                            cornerRadius = cornerRadius,
-                            style = Stroke(width = borderWidth),
-                        )
+                        translate(left = horizontalInset, top = top) {
+                            drawPath(path = selectedPath, brush = selectedBrush)
+                            drawPath(
+                                path = selectedPath,
+                                color = chrome.selectedBorder,
+                                style = Stroke(width = borderWidth),
+                            )
+                        }
                     }
                 }
             } else {
@@ -314,12 +337,21 @@ object HomeScreen : Screen() {
             },
             icon = {
                 if (useMiyorareVisuals) {
-                    Icon(
-                        painter = tab.options.icon!!,
-                        contentDescription = tab.options.title,
-                        tint = if (selected) glass.content else glass.contentMuted,
-                        modifier = Modifier.size(if (selected) 22.dp else 20.dp),
-                    )
+                    if (tab is RecentsTab) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = tab.options.title,
+                            tint = if (selected) chrome!!.selectedContent else chrome!!.content,
+                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                        )
+                    } else {
+                        Icon(
+                            painter = tab.options.icon!!,
+                            contentDescription = tab.options.title,
+                            tint = if (selected) chrome!!.selectedContent else chrome!!.content,
+                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                        )
+                    }
                 } else {
                     Icon(
                         painter = tab.options.icon!!,
@@ -331,10 +363,11 @@ object HomeScreen : Screen() {
                 if (useMiyorareVisuals) {
                     Text(
                         text = tab.options.title,
-                        color = if (selected) glass.content else glass.contentMuted,
+                        modifier = Modifier.padding(bottom = if (selected) 6.dp else 0.dp),
+                        color = if (selected) chrome!!.selectedContent else chrome!!.content,
                         style = MaterialTheme.typography.labelLarge.copy(
-                            fontSize = 13.sp,
-                            lineHeight = 16.sp,
+                            fontSize = 14.sp,
+                            lineHeight = 17.sp,
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -378,7 +411,7 @@ object HomeScreen : Screen() {
         }
         if (count <= 0) return null
         return {
-            Badge {
+            val badgeContent: @Composable RowScope.() -> Unit = {
                 val desc = when (tab) {
                     is RecentsTab -> pluralStringResource(
                         MR.plurals.notification_chapters_generic,
@@ -400,6 +433,21 @@ object HomeScreen : Screen() {
                         if (desc != null) contentDescription = desc
                     },
                 )
+            }
+            if (
+                tab is RecentsTab &&
+                resolveModernLibraryChrome(
+                    LocalModernVisualPalette.current,
+                    LocalModernArtworkIdentity.current,
+                ) != null
+            ) {
+                Badge(
+                    containerColor = Color(0xFFFFDDEB),
+                    contentColor = Color(0xFF5E254B),
+                    content = badgeContent,
+                )
+            } else {
+                Badge(content = badgeContent)
             }
         }
     }

@@ -1,9 +1,12 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -52,8 +56,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,8 +72,12 @@ import eu.kanade.presentation.components.modernBorderHighlight
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
-import eu.kanade.presentation.theme.ModernArtworkIdentity
+import eu.kanade.presentation.theme.ModernLibraryTitleMotif
+import eu.kanade.presentation.theme.modernLibraryActionSurface
+import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.modernLibrarySetSelectorWidth
 import eu.kanade.presentation.theme.resolveGlassPalette
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.model.CategorySet
 import tachiyomi.domain.library.model.LibraryGroup
@@ -180,9 +190,17 @@ private fun LibraryRegularToolbar(
     val modernPalette = LocalModernVisualPalette.current
     val isModern = modernPalette.isModern
     val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
-    val useMiyorareVisuals = isModern &&
-        LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
-    val controlShape = RoundedCornerShape(22.dp)
+    val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
+    val useMiyorareVisuals = chrome != null
+    val controlShape = chrome?.controlShape ?: RoundedCornerShape(22.dp)
+    val setSelectorWeight = chrome?.setSelectorWeight ?: 0.42f
+    val segmentContentColor = when {
+        chrome != null -> chrome.content
+        isModern -> glass.content
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    val searchInteraction = remember { MutableInteractionSource() }
+    val searchFocused by searchInteraction.collectIsFocusedAsState()
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Column {
@@ -193,7 +211,7 @@ private fun LibraryRegularToolbar(
                         modifier = if (useMiyorareVisuals) {
                             Modifier
                                 .size(44.dp)
-                                .modernSurfaceTreatment(shape = controlShape)
+                                .modernLibraryChromeSurface(chrome!!, shape = controlShape)
                         } else {
                             Modifier
                         },
@@ -201,7 +219,7 @@ private fun LibraryRegularToolbar(
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(AYMR.strings.settings),
-                            tint = if (useMiyorareVisuals) glass.content else MaterialTheme.colorScheme.onSurface,
+                            tint = chrome?.content ?: MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 },
@@ -215,12 +233,13 @@ private fun LibraryRegularToolbar(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(44.dp)
-                                .modernSurfaceTreatment(shape = controlShape),
+                                .modernLibraryChromeSurface(chrome!!, shape = controlShape, emphasized = searchFocused),
                             singleLine = true,
+                            interactionSource = searchInteraction,
                             textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                color = glass.content,
+                                color = chrome.content,
                             ),
-                            cursorBrush = SolidColor(glass.selectedBorder),
+                            cursorBrush = SolidColor(chrome.selectedBorder),
                             decorationBox = { innerTextField ->
                                 Row(
                                     modifier = Modifier
@@ -231,7 +250,7 @@ private fun LibraryRegularToolbar(
                                     Icon(
                                         imageVector = Icons.Outlined.Search,
                                         contentDescription = null,
-                                        tint = glass.contentMuted,
+                                        tint = chrome!!.contentMuted,
                                         modifier = Modifier.size(20.dp),
                                     )
                                     Box(
@@ -243,7 +262,7 @@ private fun LibraryRegularToolbar(
                                         if (searchQuery.isNullOrEmpty()) {
                                             Text(
                                                 text = stringResource(MR.strings.action_search_hint),
-                                                color = glass.contentMuted,
+                                                color = chrome!!.contentMuted,
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
@@ -259,7 +278,7 @@ private fun LibraryRegularToolbar(
                                             Icon(
                                                 imageVector = Icons.Outlined.Close,
                                                 contentDescription = stringResource(MR.strings.action_reset),
-                                                tint = glass.content,
+                                                tint = chrome!!.content,
                                                 modifier = Modifier.size(20.dp),
                                             )
                                         }
@@ -318,7 +337,7 @@ private fun LibraryRegularToolbar(
                 },
                 actions = {
                     AppBarActions(
-                        listOf(
+                        actions = listOf(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_update_library),
                                 onClick = onClickGlobalUpdate,
@@ -332,6 +351,7 @@ private fun LibraryRegularToolbar(
                                 onClick = onClickOpenRandomAnime,
                             ),
                         ),
+                        overflowIconTint = chrome?.content,
                     )
                 },
                 scrollBehavior = scrollBehavior,
@@ -361,26 +381,30 @@ private fun LibraryRegularToolbar(
                             text = title.text,
                             style = if (useMiyorareVisuals) {
                                 MaterialTheme.typography.headlineMedium.copy(
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = if (chrome!!.serifTitle) 35.sp else 34.sp,
+                                    fontWeight = if (chrome!!.serifTitle) FontWeight.Bold else FontWeight.ExtraBold,
+                                    fontFamily = if (chrome.serifTitle) FontFamily.Serif else FontFamily.SansSerif,
                                     fontStyle = FontStyle.Italic,
+                                    shadow = Shadow(color = Color(0x99000000), blurRadius = 5f),
                                 )
                             } else {
                                 MaterialTheme.typography.headlineSmall
                             },
-                            color = if (useMiyorareVisuals) glass.content else Color.Unspecified,
+                            color = chrome?.titleColor ?: Color.Unspecified,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        if (isModern) {
+                        if (chrome != null) {
+                            ModernLibraryTitleMotif(
+                                identity = LocalModernArtworkIdentity.current!!,
+                                color = chrome.border,
+                                modifier = Modifier.padding(start = 6.dp),
+                            )
+                        } else if (isModern) {
                             Text(
                                 text = " //",
-                                color = if (useMiyorareVisuals) {
-                                    glass.selectedBorder
-                                } else {
-                                    MaterialTheme.colorScheme.secondary
-                                },
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                color = MaterialTheme.colorScheme.secondary,
+                                style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.clearAndSetSemantics {},
                             )
                         }
@@ -389,7 +413,7 @@ private fun LibraryRegularToolbar(
                         text = "Koleksi anime kamu",
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (useMiyorareVisuals) {
-                            glass.contentMuted
+                            chrome!!.headerSubtitleColor
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },
@@ -400,13 +424,13 @@ private fun LibraryRegularToolbar(
                 if (title.numberOfAnime != null) {
                     if (useMiyorareVisuals) {
                         Surface(
-                            modifier = Modifier.modernSurfaceTreatment(shape = controlShape),
+                            modifier = Modifier.modernLibraryChromeSurface(chrome!!, shape = controlShape),
                             shape = controlShape,
                             color = Color.Transparent,
                         ) {
                             Text(
                                 text = "${title.numberOfAnime}",
-                                color = glass.content,
+                                color = chrome!!.content,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -433,148 +457,165 @@ private fun LibraryRegularToolbar(
                         .padding(horizontal = 16.dp)
                         .then(
                             if (isModern) {
-                                Modifier.modernSurfaceTreatment(shape = RoundedCornerShape(28.dp))
+                                if (chrome != null) {
+                                    Modifier.modernLibraryChromeSurface(chrome, shape = chrome.segmentedShape)
+                                } else {
+                                    Modifier.modernSurfaceTreatment(shape = RoundedCornerShape(28.dp))
+                                }
                             } else {
                                 Modifier
                             },
                         ),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = chrome?.segmentedShape ?: RoundedCornerShape(28.dp),
                     color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
-                    contentColor = if (isModern) glass.content else MaterialTheme.colorScheme.onSurface,
+                    contentColor = segmentContentColor,
                     border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (selectedSet != null) {
-                            Box(
-                                modifier = if (hasCategoryNavigation) {
-                                    Modifier.weight(0.42f)
-                                } else {
-                                    Modifier.fillMaxWidth()
-                                },
-                            ) {
-                                TextButton(
-                                    onClick = { setMenuExpanded = true },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RectangleShape,
+                    BoxWithConstraints {
+                        val selectedSetWidth = if (chrome != null && selectedSet != null && hasCategoryNavigation) {
+                            modernLibrarySetSelectorWidth(maxWidth, setSelectorWeight)
+                        } else {
+                            null
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (selectedSet != null) {
+                                Box(
+                                    modifier = when {
+                                        !hasCategoryNavigation -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.width(selectedSetWidth)
+                                        else -> Modifier.weight(setSelectorWeight)
+                                    },
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.Label,
-                                        contentDescription = null,
-                                    )
-                                    Text(
-                                        text = "Set: ${selectedSet.name}",
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowDropDown,
-                                        contentDescription = null,
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = setMenuExpanded,
-                                    onDismissRequest = { setMenuExpanded = false },
-                                ) {
-                                    sets.forEach { set ->
+                                    TextButton(
+                                        onClick = { setMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RectangleShape,
+                                        colors = if (chrome != null) {
+                                            ButtonDefaults.textButtonColors(contentColor = chrome.border)
+                                        } else {
+                                            ButtonDefaults.textButtonColors()
+                                        },
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.Label,
+                                            contentDescription = null,
+                                        )
+                                        Text(
+                                            text = "Set: ${selectedSet.name}",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(start = 8.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Outlined.ArrowDropDown,
+                                            contentDescription = null,
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = setMenuExpanded,
+                                        onDismissRequest = { setMenuExpanded = false },
+                                    ) {
+                                        sets.forEach { set ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
+                                                },
+                                                onClick = {
+                                                    setMenuExpanded = false
+                                                    onSelectSet(set.syncKey)
+                                                },
+                                            )
+                                        }
                                         DropdownMenuItem(
-                                            text = {
-                                                Text(if (set.id == selectedSet.id) "✓ ${set.name}" else set.name)
-                                            },
+                                            text = { Text("Kelola Set") },
                                             onClick = {
                                                 setMenuExpanded = false
-                                                onSelectSet(set.syncKey)
+                                                onManageSets()
                                             },
                                         )
                                     }
-                                    DropdownMenuItem(
-                                        text = { Text("Kelola Set") },
-                                        onClick = {
-                                            setMenuExpanded = false
-                                            onManageSets()
-                                        },
-                                    )
                                 }
                             }
-                        }
 
-                        if (selectedSet != null && hasCategoryNavigation) {
-                            VerticalDivider(
-                                modifier = Modifier.height(32.dp),
-                                color = if (isModern) {
-                                    if (useMiyorareVisuals) glass.borderStrong else modernPalette.borderHighlight
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant
-                                },
-                            )
-                        }
+                            if (selectedSet != null && hasCategoryNavigation) {
+                                VerticalDivider(
+                                    modifier = Modifier.height(32.dp),
+                                    color = if (isModern) {
+                                        if (useMiyorareVisuals) chrome!!.border else modernPalette.borderHighlight
+                                    } else {
+                                        MaterialTheme.colorScheme.outlineVariant
+                                    },
+                                )
+                            }
 
-                        if (showTabRail) {
-                            LibraryTabs(
-                                categories = categories,
-                                selectedIndex = selectedCategoryIndex,
-                                getItemCountForCategory = getItemCountForCategory,
-                                onTabItemClick = onSelectCategory,
-                                modifier = if (selectedSet != null) {
-                                    Modifier.weight(0.58f)
-                                } else {
-                                    Modifier.fillMaxWidth()
-                                },
-                            )
-                        } else if (showCategoryPicker && selectedCategory != null) {
-                            Box(
-                                modifier = if (selectedSet != null) {
-                                    Modifier.weight(0.58f)
-                                } else {
-                                    Modifier.fillMaxWidth()
-                                },
-                            ) {
-                                TextButton(
-                                    onClick = { categoryMenuExpanded = true },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RectangleShape,
+                            if (showTabRail) {
+                                LibraryTabs(
+                                    categories = categories,
+                                    selectedIndex = selectedCategoryIndex,
+                                    getItemCountForCategory = getItemCountForCategory,
+                                    onTabItemClick = onSelectCategory,
+                                    modifier = when {
+                                        selectedSet == null -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.weight(1f)
+                                        else -> Modifier.weight(1f - setSelectorWeight)
+                                    },
+                                )
+                            } else if (showCategoryPicker && selectedCategory != null) {
+                                Box(
+                                    modifier = when {
+                                        selectedSet == null -> Modifier.fillMaxWidth()
+                                        selectedSetWidth != null -> Modifier.weight(1f)
+                                        else -> Modifier.weight(1f - setSelectorWeight)
+                                    },
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Layers,
-                                        contentDescription = null,
-                                    )
-                                    Text(
-                                        text = "$categoryGroupLabel: ${selectedCategory.visualName}",
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowDropDown,
-                                        contentDescription = null,
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = categoryMenuExpanded,
-                                    onDismissRequest = { categoryMenuExpanded = false },
-                                ) {
-                                    categories.forEachIndexed { index, category ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    if (index == selectedCategoryIndex) {
-                                                        "✓ ${category.visualName}"
-                                                    } else {
-                                                        category.visualName
-                                                    },
-                                                )
-                                            },
-                                            onClick = {
-                                                categoryMenuExpanded = false
-                                                onSelectCategory(index)
-                                            },
+                                    TextButton(
+                                        onClick = { categoryMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RectangleShape,
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Layers,
+                                            contentDescription = null,
                                         )
+                                        Text(
+                                            text = "$categoryGroupLabel: ${selectedCategory.visualName}",
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(start = 8.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Outlined.ArrowDropDown,
+                                            contentDescription = null,
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = categoryMenuExpanded,
+                                        onDismissRequest = { categoryMenuExpanded = false },
+                                    ) {
+                                        categories.forEachIndexed { index, category ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        if (index == selectedCategoryIndex) {
+                                                            "✓ ${category.visualName}"
+                                                        } else {
+                                                            category.visualName
+                                                        },
+                                                    )
+                                                },
+                                                onClick = {
+                                                    categoryMenuExpanded = false
+                                                    onSelectCategory(index)
+                                                },
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -673,30 +714,30 @@ private fun RowScope.ModernLibraryActionButton(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalModernVisualPalette.current
-    val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
-    val shape = RoundedCornerShape(17.dp)
+    val chrome = requireNotNull(resolveModernLibraryChrome(palette, LocalModernArtworkIdentity.current))
+    val shape = chrome.actionShape
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
-            .height(34.dp)
-            .modernSurfaceTreatment(shape = shape, selected = selected),
+            .height(42.dp)
+            .modernLibraryActionSurface(chrome, selected = selected),
         shape = shape,
         border = BorderStroke(0.dp, Color.Transparent),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
-            contentColor = if (selected) glass.content else glass.contentMuted,
+            contentColor = if (selected) chrome.selectedContent else chrome.content,
         ),
         contentPadding = PaddingValues(horizontal = 9.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(18.dp),
         )
         Text(
             text = label,
             modifier = Modifier.padding(start = 4.dp),
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
         )
     }

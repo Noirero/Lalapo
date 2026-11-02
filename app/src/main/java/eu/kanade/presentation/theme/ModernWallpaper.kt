@@ -154,7 +154,9 @@ internal fun ModernSharpWallpaper(modifier: Modifier = Modifier) {
         Image(
             painter = painterResource(resourceId),
             contentDescription = null,
-            contentScale = ContentScale.FillWidth,
+            // Owner portraits are 941:1672 (approximately 9:16). Crop on narrow screens
+            // rather than leaving an uncovered lower strip; keep the subject at the top.
+            contentScale = ContentScale.Crop,
             alignment = Alignment.TopCenter,
             modifier = Modifier.matchParentSize(),
             alpha = if (isAmoled) 0.82f else 1f,

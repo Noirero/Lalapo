@@ -241,6 +241,7 @@ fun AppBarTitle(
 @Composable
 fun AppBarActions(
     actions: List<AppBar.AppBarAction>,
+    overflowIconTint: Color? = null,
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -286,6 +287,7 @@ fun AppBarActions(
                 Icon(
                     Icons.Outlined.MoreVert,
                     contentDescription = stringResource(MR.strings.action_menu_overflow_description),
+                    tint = overflowIconTint ?: LocalContentColor.current,
                 )
             }
         }

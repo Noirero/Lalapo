@@ -30,6 +30,7 @@ enum class AnimeCover(val ratio: Float) {
         modifier: Modifier = Modifier,
         contentDescription: String = "",
         shape: Shape = MaterialTheme.shapes.extraSmall,
+        coverAspectRatio: Float = ratio,
         onClick: (() -> Unit)? = null,
     ) {
         AsyncImage(
@@ -38,7 +39,7 @@ enum class AnimeCover(val ratio: Float) {
             error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
             contentDescription = contentDescription,
             modifier = modifier
-                .aspectRatio(ratio)
+                .aspectRatio(coverAspectRatio)
                 .clip(shape)
                 .then(
                     if (onClick != null) {
