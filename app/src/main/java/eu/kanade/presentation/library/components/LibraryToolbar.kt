@@ -51,8 +51,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -280,7 +280,9 @@ private fun LibraryRegularToolbar(
                                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
                                         alpha = 0.70f,
                                     ),
-                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
+                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                                        alpha = 0.86f,
+                                    ),
                                     unfocusedBorderColor = modernPalette.borderHighlight,
                                 )
                             } else {
