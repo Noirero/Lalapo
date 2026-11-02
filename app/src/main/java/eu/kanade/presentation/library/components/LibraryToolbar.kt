@@ -187,6 +187,11 @@ private fun LibraryRegularToolbar(
     val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
     val useMiyorareVisuals = chrome != null
     val controlShape = chrome?.controlShape ?: RoundedCornerShape(22.dp)
+    val segmentContentColor = when {
+        chrome != null -> chrome.content
+        isModern -> glass.content
+        else -> MaterialTheme.colorScheme.onSurface
+    }
     val searchInteraction = remember { MutableInteractionSource() }
     val searchFocused by searchInteraction.collectIsFocusedAsState()
 
@@ -448,8 +453,7 @@ private fun LibraryRegularToolbar(
                         ),
                     shape = chrome?.segmentedShape ?: RoundedCornerShape(28.dp),
                     color = if (isModern) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
-                    contentColor =
-                        chrome?.content ?: if (isModern) glass.content else MaterialTheme.colorScheme.onSurface,
+                    contentColor = segmentContentColor,
                     border = if (isModern) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
                     Row(
