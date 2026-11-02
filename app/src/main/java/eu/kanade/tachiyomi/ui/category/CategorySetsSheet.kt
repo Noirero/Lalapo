@@ -375,7 +375,7 @@ internal fun CategorySetsSheet(
 
     val deleted = sets.firstOrNull { it.id == deleteId }
     if (deleted != null) {
-        val count = categoriesBySet?.get(deleted.id)?.size
+        val count = categoriesBySet?.let { it[deleted.id].orEmpty().size }
         val destinations = sets.filterNot { it.id == deleted.id }
         val validTarget = destinations.any { it.id == deleteTargetId }
         AlertDialog(
