@@ -1,12 +1,10 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.CollectionsBookmark
@@ -22,16 +20,14 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VideoSettings
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -45,7 +41,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
@@ -95,7 +91,7 @@ object SettingsMainScreen : Screen() {
             topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topBarState),
             topBar = { scrollBehavior ->
                 AppBar(
-                    title = stringResource(MR.strings.label_settings),
+                    title = if (twoPane) stringResource(MR.strings.label_settings) else "",
                     navigateUp = backPress::invoke,
                     actions = {
                         AppBarActions(
@@ -142,6 +138,15 @@ object SettingsMainScreen : Screen() {
                     state = state,
                     contentPadding = contentPadding,
                 ) {
+                    if (!twoPane) {
+                        item {
+                            Text(
+                                text = stringResource(MR.strings.label_settings),
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+                                style = MaterialTheme.typography.headlineLarge,
+                            )
+                        }
+                    }
                     sections.forEach { section ->
                         item {
                             PreferenceGroupHeader(title = stringResource(section.titleRes))
@@ -150,33 +155,13 @@ object SettingsMainScreen : Screen() {
                             items = section.items,
                             key = { _, item -> item.hashCode() },
                         ) { _, item ->
-                            val selected = twoPane && item.screen::class == selectedClass
-                            var modifier: Modifier = Modifier
-                            var contentColor = LocalContentColor.current
-                            if (twoPane) {
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .then(
-                                        if (selected) {
-                                            Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                                        } else {
-                                            Modifier
-                                        },
-                                    )
-                                if (selected) {
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            }
-                            CompositionLocalProvider(LocalContentColor provides contentColor) {
-                                TextPreferenceWidget(
-                                    modifier = modifier,
-                                    title = stringResource(item.titleRes),
-                                    subtitle = item.formatSubtitle(),
-                                    icon = item.icon,
-                                    onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
-                                )
-                            }
+                            SettingsNavigationCard(
+                                title = stringResource(item.titleRes),
+                                subtitle = item.formatSubtitle(),
+                                icon = item.icon,
+                                selected = twoPane && item.screen::class == selectedClass,
+                                onClick = { navigator.navigate(item.screen, twoPane) },
+                            )
                         }
                     }
                 }

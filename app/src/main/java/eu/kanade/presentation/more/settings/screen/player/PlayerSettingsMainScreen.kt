@@ -1,12 +1,10 @@
 package eu.kanade.presentation.more.settings.screen.player
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Audiotrack
 import androidx.compose.material.icons.outlined.Code
@@ -17,16 +15,13 @@ import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -42,7 +37,7 @@ import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
 import eu.kanade.presentation.more.settings.screen.player.custombutton.PlayerSettingsCustomButtonScreen
 import eu.kanade.presentation.more.settings.screen.player.editor.PlayerSettingsEditorScreen
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR
@@ -145,35 +140,13 @@ class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
                             )
                         }
 
-                        val selected = indexSelected == index
-                        var modifier: Modifier = Modifier
-                        var contentColor = LocalContentColor.current
-                        if (twoPane) {
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .then(
-                                    if (selected) {
-                                        Modifier.background(
-                                            MaterialTheme.colorScheme.surfaceVariant,
-                                        )
-                                    } else {
-                                        Modifier
-                                    },
-                                )
-                            if (selected) {
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        }
-                        CompositionLocalProvider(LocalContentColor provides contentColor) {
-                            TextPreferenceWidget(
-                                modifier = modifier,
-                                title = stringResource(item.titleRes),
-                                subtitle = item.formatSubtitle(),
-                                icon = item.icon,
-                                onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
-                            )
-                        }
+                        SettingsNavigationCard(
+                            title = stringResource(item.titleRes),
+                            subtitle = item.formatSubtitle(),
+                            icon = item.icon,
+                            selected = twoPane && indexSelected == index,
+                            onClick = { navigator.navigate(item.screen, twoPane) },
+                        )
                     }
                 }
             },

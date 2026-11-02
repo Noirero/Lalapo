@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
+import eu.kanade.presentation.more.settings.widget.SettingsPreferenceSurface
 import kotlinx.coroutines.delay
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import kotlin.time.Duration.Companion.seconds
@@ -58,10 +59,19 @@ fun PreferenceScreen(
                         }
                     }
                     items(preference.preferenceItems) { item ->
-                        PreferenceItem(
-                            item = item,
-                            highlightKey = highlightKey,
-                        )
+                        // Custom content (for example the theme picker) and sliders own
+                        // their geometry. Keep those unwrapped to avoid nested clipping.
+                        if (
+                            item is Preference.PreferenceItem.CustomPreference ||
+                            item is Preference.PreferenceItem.SliderPreference ||
+                            item is Preference.PreferenceItem.InfoPreference
+                        ) {
+                            PreferenceItem(item = item, highlightKey = highlightKey)
+                        } else if (item.enabled) {
+                            SettingsPreferenceSurface {
+                                PreferenceItem(item = item, highlightKey = highlightKey)
+                            }
+                        }
                     }
                     item {
                         if (i < items.lastIndex) {
@@ -72,10 +82,11 @@ fun PreferenceScreen(
 
                 // Create Preference Item
                 is Preference.PreferenceItem<*, *> -> item {
-                    PreferenceItem(
-                        item = preference,
-                        highlightKey = highlightKey,
-                    )
+                    if (preference.enabled) {
+                        SettingsPreferenceSurface {
+                            PreferenceItem(item = preference, highlightKey = highlightKey)
+                        }
+                    }
                 }
             }
         }

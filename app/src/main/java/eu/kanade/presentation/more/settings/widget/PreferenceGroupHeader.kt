@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,13 +17,14 @@ fun PreferenceGroupHeader(title: String) {
         contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp, top = 14.dp),
+            .padding(bottom = 8.dp, top = 20.dp),
     ) {
         Text(
             text = title,
-            color = MaterialTheme.colorScheme.secondary,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
