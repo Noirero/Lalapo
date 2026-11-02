@@ -6,11 +6,13 @@ import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
+import tachiyomi.domain.category.repository.CategorySetRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 
 @Inject
 class CreateCategoryWithName(
     private val categoryRepository: CategoryRepository,
+    private val categorySetRepository: CategorySetRepository,
     private val preferences: LibraryPreferences,
 ) {
 
@@ -20,7 +22,7 @@ class CreateCategoryWithName(
             return sort.type.flag or sort.direction.flag
         }
 
-    suspend fun await(name: String): Result = withNonCancellableContext {
+    suspend fun await(name: String, setId: Long? = null): Result = withNonCancellableContext {
         val categories = categoryRepository.getAll()
         val nextOrder = categories.maxOfOrNull { it.order }?.plus(1) ?: 0
         val newCategory = Category(
@@ -34,7 +36,11 @@ class CreateCategoryWithName(
         )
 
         try {
-            categoryRepository.insert(newCategory)
+            if (setId == null) {
+                categoryRepository.insert(newCategory)
+            } else {
+                categorySetRepository.createCategoryInSet(newCategory, setId)
+            }
             Result.Success
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
