@@ -153,15 +153,13 @@ class AnimeRepositoryImpl(
             distinctAnimeIds.forEach { animeId ->
                 // This query includes hidden categories and membership from every Set.
                 val previous = database.categoriesQueries.getCategoriesByAnimeId(animeId).awaitAsList()
-                    .mapTo(linkedSetOf()) { it.id }
-                val updated = previous.toMutableSet()
+                    .mapTo(hashSetOf()) { it.id }
                 categoryChanges.forEach { (categoryId, checked) ->
-                    if (checked) updated.add(categoryId) else updated.remove(categoryId)
-                }
-                if (updated != previous) {
-                    database.animes_categoriesQueries.deleteAnimeCategoryByAnimeId(animeId)
-                    updated.forEach { categoryId ->
-                        database.animes_categoriesQueries.insert(animeId, categoryId)
+                    when {
+                        checked && categoryId !in previous ->
+                            database.animes_categoriesQueries.insert(animeId, categoryId)
+                        !checked && categoryId in previous ->
+                            database.animes_categoriesQueries.deleteOneMembership(animeId, categoryId)
                     }
                 }
                 if (addToLibrary) {
