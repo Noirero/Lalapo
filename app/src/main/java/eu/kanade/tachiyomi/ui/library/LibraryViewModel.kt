@@ -852,23 +852,9 @@ class LibraryViewModel(
             // Create a copy of selected anime
             val animeList = selectedAnime
 
-            // Hide the default category because it has a different behavior than the ones from db.
-            val categories = state.value.displayedCategories.filter { it.id != 0L }
-
-            // Get indexes of the common categories to preselect.
-            val common = getCommonCategories(animeList)
-            // Get indexes of the mix categories to preselect.
-            val mix = getMixCategories(animeList)
-            val preselected = categories
-                .map {
-                    when (it) {
-                        in common -> CheckboxState.State.Checked(it)
-                        in mix -> CheckboxState.TriState.Exclude(it)
-                        else -> CheckboxState.State.None(it)
-                    }
-                }
-
-            dialog.update { Dialog.ChangeCategory(animeList, preselected) }
+            // Picker reads all Set membership, including hidden categories, from DB.
+            // Displayed library tabs are not authoritative for editing membership.
+            dialog.update { Dialog.ChangeCategory(animeList, emptyList()) }
         }
     }
 

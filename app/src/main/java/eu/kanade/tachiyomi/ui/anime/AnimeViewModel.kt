@@ -693,6 +693,13 @@ class AnimeViewModel(
         }
     }
 
+    fun refreshAfterCategoryPickerSave() {
+        viewModelScope.launchIO {
+            val saved = animeRepository.getAnimeById(animeId)
+            updateSuccessState { it.copy(anime = saved) }
+        }
+    }
+
     fun showSetFetchIntervalDialog() {
         val anime = successState?.anime ?: return
         updateSuccessState {
