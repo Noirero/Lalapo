@@ -4,11 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -50,7 +50,6 @@ private val roundControl = RoundedCornerShape(24.dp)
 private val roundSegment = RoundedCornerShape(28.dp)
 private val roundTab = RoundedCornerShape(24.dp)
 private val roundNav = RoundedCornerShape(32.dp)
-private val roundAction = RoundedCornerShape(24.dp)
 private val softAction = CutCornerShape(topStart = 6.dp, topEnd = 12.dp, bottomEnd = 6.dp, bottomStart = 12.dp)
 private val fluidShape = RoundedCornerShape(topStart = 28.dp, topEnd = 18.dp, bottomEnd = 28.dp, bottomStart = 18.dp)
 private val cyberShape = CutCornerShape(topStart = 10.dp, topEnd = 4.dp, bottomEnd = 10.dp, bottomStart = 4.dp)
