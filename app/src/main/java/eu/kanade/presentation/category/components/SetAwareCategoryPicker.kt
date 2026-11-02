@@ -1,8 +1,8 @@
 package eu.kanade.presentation.category.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +53,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
@@ -67,6 +68,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import eu.kanade.presentation.util.rememberResourceBitmapPainter
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.CategoryPickerViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -186,6 +189,8 @@ fun ChangeCategoryDialog(
                                 val item = anime.first()
                                 AsyncImage(
                                     model = item.thumbnailUrl,
+                                    placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceVariant),
+                                    error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
                                     contentDescription = "Cover ${item.title}",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.size(width = 48.dp, height = 68.dp)
@@ -195,7 +200,10 @@ fun ChangeCategoryDialog(
                             } else {
                                 Box(
                                     Modifier.size(width = 48.dp, height = 68.dp)
-                                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(10.dp)),
+                                        .background(
+                                        MaterialTheme.colorScheme.secondaryContainer,
+                                        RoundedCornerShape(10.dp),
+                                    ),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text("${anime.size}", style = MaterialTheme.typography.titleMedium)
@@ -282,8 +290,11 @@ fun ChangeCategoryDialog(
                                 }
                                 Column {
                                     val displayedPage = pages[pager.currentPage.coerceIn(0, pages.lastIndex)]
-                                    val visibleRows = if (columns == 1) displayedPage.size
-                                    else (displayedPage.size + 1) / 2
+                                    val visibleRows = if (columns == 1) {
+                                        displayedPage.size
+                                    } else {
+                                        (displayedPage.size + 1) / 2
+                                    }
                                     HorizontalPager(
                                         state = pager,
                                         modifier = Modifier.fillMaxWidth()
@@ -297,13 +308,23 @@ fun ChangeCategoryDialog(
                                                 items.forEach { category ->
                                                     CategoryPickerRow(
                                                         category = category,
-                                                        state = pickerState(category.id, baseline.orEmpty(), animeIds.size, changes),
+                                                        pickerState(
+                                                                    category.id,
+                                                                    baseline.orEmpty(),
+                                                                    animeIds.size,
+                                                                    changes,
+                                                                ),
                                                         enabled = !busy,
                                                         onToggle = {
                                                             pending = toggleCategoryPending(
                                                                 pending,
                                                                 category.id,
-                                                                pickerState(category.id, baseline.orEmpty(), animeIds.size, changes),
+                                                                pickerState(
+                                                                    category.id,
+                                                                    baseline.orEmpty(),
+                                                                    animeIds.size,
+                                                                    changes,
+                                                                ),
                                                             )
                                                         },
                                                     )
@@ -320,13 +341,23 @@ fun ChangeCategoryDialog(
                                                         column.forEach { category ->
                                                             CategoryPickerRow(
                                                                 category,
-                                                                pickerState(category.id, baseline.orEmpty(), animeIds.size, changes),
+                                                                pickerState(
+                                                                    category.id,
+                                                                    baseline.orEmpty(),
+                                                                    animeIds.size,
+                                                                    changes,
+                                                                ),
                                                                 !busy,
                                                             ) {
                                                                 pending = toggleCategoryPending(
                                                                     pending,
                                                                     category.id,
-                                                                    pickerState(category.id, baseline.orEmpty(), animeIds.size, changes),
+                                                                    pickerState(
+                                                                    category.id,
+                                                                    baseline.orEmpty(),
+                                                                    animeIds.size,
+                                                                    changes,
+                                                                ),
                                                                 )
                                                             }
                                                         }
