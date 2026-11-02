@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -107,9 +106,9 @@ fun ChangeCategoryDialog(
         error = picker.invokeSafely { baseline = picker.membershipCounts(animeIds) }
     }
     val activeSet = sets.firstOrNull { it.syncKey == activeKey } ?: sets.firstOrNull()
-    val allCategoryIds = categoriesBySet.values.flatten().mapTo(hashSetOf()) { it.id }
+    val allCategoryIds = categoriesBySet.orEmpty().values.flatten().mapTo(hashSetOf()) { it.id }
     LaunchedEffect(allCategoryIds, baseline) {
-        if (baseline != null && sets.isNotEmpty()) {
+        if (baseline != null && sets.isNotEmpty() && categoriesBySet != null) {
             val valid = pending.filter { abs(it) in allCategoryIds }.toLongArray()
             if (!valid.contentEquals(pending)) {
                 pending = valid
@@ -119,7 +118,7 @@ fun ChangeCategoryDialog(
     }
 
     val changes = pending.associate { abs(it) to (it > 0) }
-    val categories = activeSet?.let { categoriesBySet[it.id] }.orEmpty()
+    val categories = activeSet?.let { categoriesBySet?.get(it.id) }.orEmpty()
     val filtered = categories.filter { it.name.contains(query.trim(), ignoreCase = true) }
     val screenMaxHeight = (LocalConfiguration.current.screenHeightDp * 0.90f).dp
 
@@ -256,12 +255,11 @@ fun ChangeCategoryDialog(
                     ) {
                         val columns = if (filtered.size > 10) 2 else 1
                         val availableHeight = maxHeight.value.toInt().coerceAtLeast(50)
-                        val rows = ((availableHeight + 6) / 50).coerceIn(1, 10)
-                        val capacity = (rows * columns).coerceAtMost(20)
+                        val capacity = pickerPageCapacity(availableHeight, filtered.size)
                         val pages = filtered.chunked(capacity).ifEmpty { listOf(emptyList()) }
                         val rememberedPage = pageMemory.toList().chunked(2)
                             .firstOrNull { it.size == 2 && it[0] == activeSet?.id }?.get(1)?.toInt() ?: 0
-                        if (baseline == null) {
+                        if (baseline == null || categoriesBySet == null) {
                             CircularProgressIndicator(Modifier.padding(24.dp))
                         } else {
                             key(activeSet?.id, query) {
@@ -283,8 +281,9 @@ fun ChangeCategoryDialog(
                                     if (pager.currentPage > pages.lastIndex) pager.scrollToPage(pages.lastIndex)
                                 }
                                 Column {
-                                    val visibleRows = if (columns == 1) pages[pager.currentPage].size
-                                    else (pages[pager.currentPage].size + 1) / 2
+                                    val displayedPage = pages[pager.currentPage.coerceIn(0, pages.lastIndex)]
+                                    val visibleRows = if (columns == 1) displayedPage.size
+                                    else (displayedPage.size + 1) / 2
                                     HorizontalPager(
                                         state = pager,
                                         modifier = Modifier.fillMaxWidth()
@@ -292,7 +291,7 @@ fun ChangeCategoryDialog(
                                             .testTag("picker-pages"),
                                         userScrollEnabled = !busy,
                                     ) { page ->
-                                        val items = pages[page]
+                                        val items = pages[page.coerceIn(0, pages.lastIndex)]
                                         if (columns == 1) {
                                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                                 items.forEach { category ->
@@ -311,9 +310,9 @@ fun ChangeCategoryDialog(
                                                 }
                                             }
                                         } else {
-                                            val split = (items.size + 1) / 2
+                                            val columnsContent = pickerColumnMajor(items)
                                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                listOf(items.take(split), items.drop(split)).forEach { column ->
+                                                listOf(columnsContent.first, columnsContent.second).forEach { column ->
                                                     Column(
                                                         Modifier.weight(1f),
                                                         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -398,6 +397,7 @@ fun ChangeCategoryDialog(
             onDismissRequest = { if (!busy) createOpen = false },
             title = { Text("Tambah kategori · ${activeSet.name}") },
             text = {
+                Column {
                 OutlinedTextField(
                     value = newName,
                     onValueChange = { newName = it; error = null },
@@ -411,6 +411,8 @@ fun ChangeCategoryDialog(
                         }
                     },
                 )
+                if (error != null) Text(error.orEmpty(), color = MaterialTheme.colorScheme.error)
+                }
             },
             confirmButton = {
                 TextButton(
@@ -423,6 +425,18 @@ fun ChangeCategoryDialog(
             },
         )
     }
+}
+
+internal fun pickerPageCapacity(heightDp: Int, count: Int): Int {
+    val columns = if (count > 10) 2 else 1
+    fun capacity(height: Int): Int = (((height + 6) / 50).coerceIn(1, 10) * columns).coerceAtMost(20)
+    val withoutDots = capacity(heightDp)
+    return if (count > withoutDots) capacity(heightDp - 16) else withoutDots
+}
+
+internal fun <T> pickerColumnMajor(items: List<T>): Pair<List<T>, List<T>> {
+    val split = (items.size + 1) / 2
+    return items.take(split) to items.drop(split)
 }
 
 internal fun pickerState(

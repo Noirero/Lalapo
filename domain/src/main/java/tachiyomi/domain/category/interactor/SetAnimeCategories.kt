@@ -1,6 +1,8 @@
 package tachiyomi.domain.category.interactor
 
 import dev.zacsweers.metro.Inject
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.anime.repository.AnimeRepository
 
 @Inject
@@ -8,9 +10,14 @@ class SetAnimeCategories(
     private val animeRepository: AnimeRepository,
 ) {
 
-    // Keep the legacy replacement entry point, but never conceal a failed write.
+    // Existing replacement API keeps its historical error contract.
+    // The picker uses awaitBatch, which propagates failures to the UI.
     suspend fun await(animeId: Long, categoryIds: List<Long>) {
-        animeRepository.setAnimeCategories(animeId, categoryIds)
+        try {
+            animeRepository.setAnimeCategories(animeId, categoryIds)
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e)
+        }
     }
 
     suspend fun awaitBatch(

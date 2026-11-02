@@ -9,6 +9,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import tachiyomi.domain.anime.model.Anime
 import tachiyomi.domain.category.interactor.CreateCategoryWithName
@@ -30,8 +31,12 @@ class CategoryPickerViewModel(
     val sets = categorySets.observeSets()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Null distinguishes an uninitialized DB flow from a genuinely empty Set.
     val categoriesBySet = categorySets.observeCategoriesBySet()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+        .map<Map<Long, List<tachiyomi.domain.category.model.Category>>, Map<Long, List<tachiyomi.domain.category.model.Category>>?> {
+            it
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val activeKey = preferences.activeCategorySetKey.changes()
         .stateIn(
