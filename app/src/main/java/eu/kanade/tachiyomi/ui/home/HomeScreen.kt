@@ -1,10 +1,12 @@
 package eu.kanade.tachiyomi.ui.home
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -25,6 +27,7 @@ import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSui
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -38,12 +41,14 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
+import androidx.core.view.WindowCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
@@ -52,6 +57,7 @@ import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernSharpWallpaper
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
+import eu.kanade.presentation.theme.modernLibraryNeedsLightStatusBarIcons
 import eu.kanade.presentation.theme.modernNavigationContainerColor
 import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.presentation.util.Screen
@@ -99,6 +105,23 @@ object HomeScreen : Screen() {
             tab = LibraryTab,
             key = TabNavigatorKey,
         ) { tabNavigator ->
+            val activity = LocalContext.current as? Activity
+            val view = LocalView.current
+            val useLightStatusBarIcons = modernLibraryNeedsLightStatusBarIcons(
+                LocalModernVisualPalette.current,
+                LocalModernArtworkIdentity.current,
+            )
+            if (tabNavigator.current == LibraryTab && useLightStatusBarIcons && activity != null) {
+                // Sharp Modern wallpapers are dark at the status bar even when the Material
+                // surface is light. Restore the activity's previous icon mode on exit.
+                DisposableEffect(activity.window, view) {
+                    val controller = WindowCompat.getInsetsController(activity.window, view)
+                    val previous = controller.isAppearanceLightStatusBars
+                    controller.isAppearanceLightStatusBars = false
+                    onDispose { controller.isAppearanceLightStatusBars = previous }
+                }
+            }
+
             // AM (NAVIGATION_PILL) -->
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
@@ -340,6 +363,7 @@ object HomeScreen : Screen() {
                 if (useMiyorareVisuals) {
                     Text(
                         text = tab.options.title,
+                        modifier = Modifier.padding(bottom = if (selected) 6.dp else 0.dp),
                         color = if (selected) chrome!!.selectedContent else chrome!!.content,
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontSize = 14.sp,
@@ -387,7 +411,7 @@ object HomeScreen : Screen() {
         }
         if (count <= 0) return null
         return {
-            Badge {
+            val badgeContent: @Composable RowScope.() -> Unit = {
                 val desc = when (tab) {
                     is RecentsTab -> pluralStringResource(
                         MR.plurals.notification_chapters_generic,
@@ -409,6 +433,21 @@ object HomeScreen : Screen() {
                         if (desc != null) contentDescription = desc
                     },
                 )
+            }
+            if (
+                tab is RecentsTab &&
+                resolveModernLibraryChrome(
+                    LocalModernVisualPalette.current,
+                    LocalModernArtworkIdentity.current,
+                ) != null
+            ) {
+                Badge(
+                    containerColor = Color(0xFFFFDDEB),
+                    contentColor = Color(0xFF5E254B),
+                    content = badgeContent,
+                )
+            } else {
+                Badge(content = badgeContent)
             }
         }
     }

@@ -219,6 +219,21 @@ private object Presets {
     )
 }
 
+/**
+ * The authored Sakura, Cyan and Emerald wallpaper headers are darker than their semantic
+ * Material surfaces. Use light status-bar glyphs only while their Library artwork is visible.
+ */
+internal fun modernLibraryNeedsLightStatusBarIcons(
+    palette: ModernVisualPalette,
+    identity: ModernArtworkIdentity?,
+): Boolean = palette.isModern && when (identity) {
+    ModernArtworkIdentity.SAKURA_BLOSSOM,
+    ModernArtworkIdentity.CYAN_WATER_SKY,
+    ModernArtworkIdentity.EMERALD_FOLIAGE,
+    -> true
+    else -> false
+}
+
 internal fun resolveModernLibraryChrome(
     palette: ModernVisualPalette,
     identity: ModernArtworkIdentity?,

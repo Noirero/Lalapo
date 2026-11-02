@@ -4,9 +4,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ModernLibraryChromeTest {
@@ -59,6 +61,28 @@ class ModernLibraryChromeTest {
         assertEquals(RoundedCornerShape(28.dp), violet.navSelectedShape)
         assertEquals(0.95f, violet.cardAspectRatio)
         assertNull(resolveModernLibraryChrome(modern, ModernArtworkIdentity.CUSTOM_WAVES))
+    }
+
+    @Test
+    fun `status bar glyph override is limited to three authored Modern wallpapers`() {
+        val modern = ModernVisualPalette.Standard.copy(isModern = true)
+        listOf(
+            ModernArtworkIdentity.SAKURA_BLOSSOM,
+            ModernArtworkIdentity.CYAN_WATER_SKY,
+            ModernArtworkIdentity.EMERALD_FOLIAGE,
+        ).forEach { identity ->
+            assertTrue(modernLibraryNeedsLightStatusBarIcons(modern, identity))
+            assertFalse(modernLibraryNeedsLightStatusBarIcons(ModernVisualPalette.Standard, identity))
+        }
+        listOf(
+            ModernArtworkIdentity.LALAPO_AURORA,
+            ModernArtworkIdentity.VIOLET_MOON_AURORA,
+            ModernArtworkIdentity.AMBER_MAPLE_SUNSET,
+            ModernArtworkIdentity.CUSTOM_WAVES,
+        ).forEach { identity ->
+            assertFalse(modernLibraryNeedsLightStatusBarIcons(modern, identity))
+        }
+        assertFalse(modernLibraryNeedsLightStatusBarIcons(modern, null))
     }
 
     @Test
