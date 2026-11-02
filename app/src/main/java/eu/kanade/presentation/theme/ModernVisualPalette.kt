@@ -81,6 +81,109 @@ internal data class CinematicAccentPalette(
     }
 }
 
+@Immutable
+internal data class ModernGlassPalette(
+    val surface: Color,
+    val surfaceStrong: Color,
+    val railSurface: Color,
+    val border: Color,
+    val borderStrong: Color,
+    val selectedSurface: Color,
+    val selectedBorder: Color,
+    val innerHighlight: Color,
+    val glow: Color,
+    val selectedGlow: Color,
+    val cardGlow: Color,
+    val content: Color,
+    val contentMuted: Color,
+)
+
+/**
+ * Miyorare-derived luminous glass roles resolved from Lalapo's canonical Material scheme.
+ * This is presentation-only: preset identity and semantic Material colors remain owned by the
+ * existing Modern theme resolver.
+ */
+internal fun ModernVisualPalette.resolveGlassPalette(colorScheme: ColorScheme): ModernGlassPalette {
+    val isLight = colorScheme.background.luminance() >= 0.5f
+
+    // Port the approved Normal-Favourites role strengths while keeping Lalapo's semantic scheme
+    // as the hue/source authority.
+    val luminousPrimary = luminousThemeColor(colorScheme.primary)
+    val luminousAccent = luminousThemeColor(
+        color = lerp(colorScheme.primary, colorScheme.secondary, 0.25f),
+        saturationFloor = 0.86f,
+        valueFloor = 1.00f,
+        valueBoost = 0.14f,
+    )
+    val hotEdge = lerp(luminousAccent, Color.White, 0.42f)
+    val selectedEdge = lerp(luminousAccent, Color.White, 0.62f)
+    val glassBase = lerp(Color.Black, luminousPrimary, 0.30f)
+    val strongBase = lerp(Color.Black, luminousPrimary, 0.40f)
+    val railBase = lerp(Color.Black, luminousAccent, 0.34f)
+    val selectedBase = lerp(luminousAccent, Color.White, 0.22f)
+    val content = if (isLight) colorScheme.onSurface else Color.White
+
+    return ModernGlassPalette(
+        surface = glassBase.copy(alpha = 84f / 255f),
+        surfaceStrong = strongBase.copy(alpha = 108f / 255f),
+        railSurface = railBase.copy(alpha = 106f / 255f),
+        border = luminousAccent.copy(alpha = 208f / 255f),
+        borderStrong = hotEdge.copy(alpha = 246f / 255f),
+        selectedSurface = selectedBase.copy(alpha = 176f / 255f),
+        selectedBorder = selectedEdge,
+        innerHighlight = selectedEdge.copy(alpha = 250f / 255f),
+        glow = luminousAccent.copy(alpha = 176f / 255f),
+        selectedGlow = luminousAccent.copy(alpha = 228f / 255f),
+        cardGlow = luminousAccent.copy(alpha = 104f / 255f),
+        content = content,
+        contentMuted = content.copy(alpha = if (isLight) 0.82f else 234f / 255f),
+    )
+}
+private fun luminousThemeColor(
+    color: Color,
+    saturationFloor: Float = 0.74f,
+    valueFloor: Float = 0.94f,
+    valueBoost: Float = 0.12f,
+): Color {
+    val red = color.red.coerceIn(0f, 1f)
+    val green = color.green.coerceIn(0f, 1f)
+    val blue = color.blue.coerceIn(0f, 1f)
+    val max = maxOf(red, green, blue)
+    val min = minOf(red, green, blue)
+    val delta = max - min
+    var saturation = if (max == 0f) 0f else delta / max
+    if (saturation > NEUTRAL_SATURATION_THRESHOLD) {
+        saturation = maxOf(saturation, saturationFloor).coerceIn(0f, 1f)
+    }
+    val value = maxOf(valueFloor, max + valueBoost).coerceIn(0f, 1f)
+    val hue = when {
+        delta == 0f -> 0f
+        max == red -> 60f * (((green - blue) / delta) % 6f)
+        max == green -> 60f * (((blue - red) / delta) + 2f)
+        else -> 60f * (((red - green) / delta) + 4f)
+    }.let { if (it < 0f) it + 360f else it }
+
+    val chroma = value * saturation
+    val x = chroma * (1f - kotlin.math.abs((hue / 60f) % 2f - 1f))
+    val m = value - chroma
+    val (r1, g1, b1) = when (hue) {
+        in 0f..<60f -> Triple(chroma, x, 0f)
+        in 60f..<120f -> Triple(x, chroma, 0f)
+        in 120f..<180f -> Triple(0f, chroma, x)
+        in 180f..<240f -> Triple(0f, x, chroma)
+        in 240f..<300f -> Triple(x, 0f, chroma)
+        else -> Triple(chroma, 0f, x)
+    }
+    return Color(
+        red = (r1 + m).coerceIn(0f, 1f),
+        green = (g1 + m).coerceIn(0f, 1f),
+        blue = (b1 + m).coerceIn(0f, 1f),
+        alpha = color.alpha,
+    )
+}
+
+private const val NEUTRAL_SATURATION_THRESHOLD = 0.08f
+
 internal val LocalModernVisualPalette = staticCompositionLocalOf { ModernVisualPalette.Standard }
 internal val LocalCinematicAccentPalette = staticCompositionLocalOf<CinematicAccentPalette?> { null }
 
