@@ -10,8 +10,8 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.JsonObject
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonObject
 import mihon.app.di.AppBindings
 import org.junit.After
 import org.junit.Assert.assertEquals
