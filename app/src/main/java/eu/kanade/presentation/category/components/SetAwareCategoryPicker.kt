@@ -99,6 +99,7 @@ fun ChangeCategoryDialog(
     var query by rememberSaveable(animeIds) { mutableStateOf("") }
     var showPreview by rememberSaveable(animeIds) { mutableStateOf(false) }
     var createOpen by rememberSaveable(animeIds) { mutableStateOf(false) }
+    var createTargetSetId by rememberSaveable(animeIds) { mutableStateOf<Long?>(null) }
     var newName by rememberSaveable(animeIds) { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -404,6 +405,7 @@ fun ChangeCategoryDialog(
                             onClick = {
                                 newName = ""
                                 error = null
+                                createTargetSetId = activeSet?.id
                                 createOpen = true
                             },
                             modifier = Modifier.size(48.dp)
@@ -434,12 +436,14 @@ fun ChangeCategoryDialog(
         }
     }
 
-    if (createOpen && activeSet != null) {
+    if (createOpen) {
+        val target = sets.firstOrNull { it.id == createTargetSetId }
         val name = newName.trim()
-        val duplicate = categories.any { it.name.trim().equals(name, ignoreCase = true) }
+        val duplicate = target?.let { categoriesBySet?.get(it.id).orEmpty() }
+            .orEmpty().any { it.name.trim().equals(name, ignoreCase = true) }
         AlertDialog(
             onDismissRequest = { if (!busy) createOpen = false },
-            title = { Text("Tambah kategori · ${activeSet.name}") },
+            title = { Text("Tambah kategori · ${target?.name ?: "Set tidak tersedia"}") },
             text = {
                 Column {
                 OutlinedTextField(
@@ -458,13 +462,19 @@ fun ChangeCategoryDialog(
                         }
                     },
                 )
+                if (target == null) {
+                    Text("Set asal sudah dihapus. Tutup dan pilih Set yang tersedia.", color = MaterialTheme.colorScheme.error)
+                }
                 if (error != null) Text(error.orEmpty(), color = MaterialTheme.colorScheme.error)
                 }
             },
             confirmButton = {
                 TextButton(
-                    enabled = !busy && name.isNotEmpty() && !duplicate,
-                    onClick = { runMutation({ picker.createInSet(name, activeSet.id) }) { createOpen = false } },
+                    enabled = !busy && target != null && name.isNotEmpty() && !duplicate,
+                    onClick = {
+                        val targetId = target?.id ?: return@TextButton
+                        runMutation({ picker.createInSet(name, targetId) }) { createOpen = false }
+                    },
                 ) { Text("Tambah") }
             },
             dismissButton = {
