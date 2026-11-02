@@ -33,8 +33,8 @@ class ModernLibraryChromeTest {
             org.junit.jupiter.api.Assertions.assertTrue(chrome.cardAspectRatio in 0.9f..1.0f)
         }
         assertNotEquals(entries[1].cardShape, entries[2].cardShape)
-        assertEquals(Color(0xFFFFF1F7), entries[1].titleColor)
-        assertEquals(Color(0xFFFFEAF3), entries[1].headerSubtitleColor)
+        assertEquals(Color(0xFF9C2257), entries[1].titleColor)
+        assertEquals(Color(0xFF51152E), entries[1].headerSubtitleColor)
         assertNotEquals(entries[1].navSelectedShape, entries[2].navSelectedShape)
         assertNotEquals(entries[1].segmentedShape, entries[2].segmentedShape)
         assertEquals(0.34f, entries[1].setSelectorWeight)
