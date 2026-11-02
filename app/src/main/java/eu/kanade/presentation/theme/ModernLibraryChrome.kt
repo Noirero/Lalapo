@@ -11,7 +11,10 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 
 /**
@@ -44,6 +47,7 @@ internal data class ModernLibraryChrome(
     val navSelectedShape: Shape,
     val cardShape: Shape,
     val cardAspectRatio: Float,
+    val setSelectorWeight: Float,
 )
 
 private val roundControl = RoundedCornerShape(24.dp)
@@ -75,11 +79,12 @@ private object Presets {
         controlShape = roundControl,
         segmentedShape = roundSegment,
         tabShape = roundTab,
-        actionShape = angularAction,
+        actionShape = RoundedCornerShape(24.dp),
         navShape = roundNav,
         navSelectedShape = RoundedCornerShape(28.dp),
         cardShape = RoundedCornerShape(17.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.38f,
     )
 
     val sakura = ModernLibraryChrome(
@@ -93,9 +98,9 @@ private object Presets {
         content = Color(0xFF51152E),
         contentMuted = Color(0xFF6E2846),
         selectedContent = Color.White,
-        titleColor = Color(0xFFFFF1F7),
+        titleColor = Color(0xFF9C2257),
         ornament = "✿",
-        headerSubtitleColor = Color(0xFFFFEAF3),
+        headerSubtitleColor = Color(0xFF51152E),
         serifTitle = true,
         controlShape = RoundedCornerShape(28.dp),
         segmentedShape = RoundedCornerShape(30.dp),
@@ -105,6 +110,7 @@ private object Presets {
         navSelectedShape = RoundedCornerShape(29.dp),
         cardShape = RoundedCornerShape(20.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.34f,
     )
 
     val violet = ModernLibraryChrome(
@@ -130,6 +136,7 @@ private object Presets {
         navSelectedShape = CutCornerShape(topStart = 11.dp, bottomEnd = 11.dp),
         cardShape = RoundedCornerShape(15.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.39f,
     )
 
     val cyan = ModernLibraryChrome(
@@ -155,6 +162,7 @@ private object Presets {
         navSelectedShape = RoundedCornerShape(32.dp),
         cardShape = RoundedCornerShape(19.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.39f,
     )
 
     val emerald = ModernLibraryChrome(
@@ -180,6 +188,7 @@ private object Presets {
         navSelectedShape = fluidShape,
         cardShape = RoundedCornerShape(19.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.37f,
     )
 
     val amber = ModernLibraryChrome(
@@ -205,6 +214,7 @@ private object Presets {
         navSelectedShape = RoundedCornerShape(31.dp),
         cardShape = RoundedCornerShape(19.dp),
         cardAspectRatio = 0.95f,
+        setSelectorWeight = 0.40f,
     )
 }
 
@@ -252,32 +262,30 @@ internal fun Modifier.modernLibraryChromeSurface(
         shape = shape,
     )
 
-/** Small, cached corner accents for the reference's ornamental filter/sort controls. */
+/**
+ * Draw a highlight *on the actual button outline*, including cut corners.
+ * The old free-standing corner strokes were visibly detached from the reference silhouette.
+ */
 internal fun Modifier.modernLibraryActionSurface(
     chrome: ModernLibraryChrome,
     selected: Boolean,
 ): Modifier = this
     .modernLibraryChromeSurface(chrome, chrome.actionShape, selected = selected)
     .drawWithCache {
-        val inset = 5.dp.toPx()
-        val accent = 14.dp.toPx()
-        val stroke = 1.25.dp.toPx()
+        val outline = chrome.actionShape.createOutline(size, layoutDirection, this)
+        val path = when (outline) {
+            is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
+            is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
+            is Outline.Generic -> outline.path
+        }
+        val highlight = Brush.linearGradient(
+            colors = listOf(chrome.selectedBorder, chrome.borderGlow, chrome.selectedBorder),
+            start = Offset.Zero,
+            end = Offset(size.width, size.height),
+        )
         onDrawWithContent {
             drawContent()
-            drawLine(chrome.selectedBorder, Offset(inset, inset), Offset(accent, inset), stroke)
-            drawLine(chrome.selectedBorder, Offset(inset, inset), Offset(inset, accent), stroke)
-            drawLine(
-                chrome.selectedBorder,
-                Offset(size.width - accent, size.height - inset),
-                Offset(size.width - inset, size.height - inset),
-                stroke,
-            )
-            drawLine(
-                chrome.selectedBorder,
-                Offset(size.width - inset, size.height - accent),
-                Offset(size.width - inset, size.height - inset),
-                stroke,
-            )
+            drawPath(path, highlight, style = Stroke(width = 1.5.dp.toPx()))
         }
     }
 
