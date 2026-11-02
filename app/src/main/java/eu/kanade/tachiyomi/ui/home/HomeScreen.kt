@@ -4,6 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,16 +28,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import eu.kanade.presentation.components.modernSurfaceTreatment
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernArtworkIdentity
+import eu.kanade.presentation.theme.ModernSharpWallpaper
+import eu.kanade.presentation.theme.modernNavigationContainerColor
+import eu.kanade.presentation.theme.resolveGlassPalette
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.anime.AnimeScreen
@@ -99,35 +119,85 @@ object HomeScreen : Screen() {
                 }
 
                 // AM -->
-                NavigationSuiteScaffoldLayout(
-                    // <-- AM
-                    navigationSuiteType = navigationSuiteType,
-                    state = navigationSuiteState,
-                    navigationSuite = {
-                        NavigationSuite(
-                            navigationSuiteType = navigationSuiteType,
-                            colors = NavigationSuiteDefaults.colors(
-                                navigationRailContainerColor = MaterialTheme.colorScheme
-                                    .surfaceColorAtElevation(3.dp),
-                            ),
-                            verticalArrangement = Arrangement.Center,
-                        ) {
-                            TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
-                        }
-                    },
-                ) {
-                    AnimatedContent(
-                        targetState = tabNavigator.current,
-                        transitionSpec = {
-                            materialFadeThroughIn(
-                                initialScale = 1f,
-                                durationMillis = TabFadeDuration,
-                            ) togetherWith materialFadeThroughOut(durationMillis = TabFadeDuration)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (tabNavigator.current::class == LibraryTab::class) {
+                        ModernSharpWallpaper(modifier = Modifier.fillMaxSize())
+                    }
+                    NavigationSuiteScaffoldLayout(
+                        // <-- AM
+                        navigationSuiteType = navigationSuiteType,
+                        state = navigationSuiteState,
+                        navigationSuite = {
+                            val modernPalette = LocalModernVisualPalette.current
+                            val isModern = modernPalette.isModern
+                            val useMiyorareVisuals = isModern &&
+                                LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
+                            val navigationShape = RoundedCornerShape(30.dp)
+                            val navigationColorScheme = if (useMiyorareVisuals) {
+                                MaterialTheme.colorScheme.copy(
+                                    primaryContainer = Color.Transparent,
+                                    secondaryContainer = Color.Transparent,
+                                )
+                            } else {
+                                MaterialTheme.colorScheme
+                            }
+                            MaterialTheme(
+                                colorScheme = navigationColorScheme,
+                                shapes = MaterialTheme.shapes,
+                                typography = MaterialTheme.typography,
+                            ) {
+                                NavigationSuite(
+                                    modifier = if (useMiyorareVisuals) {
+                                        Modifier
+                                            .padding(
+                                                horizontal = if (tabletUi) 8.dp else 18.dp,
+                                                vertical = 8.dp,
+                                            )
+                                            .then(
+                                                if (tabletUi) {
+                                                    Modifier
+                                                } else {
+                                                    Modifier.heightIn(min = 70.dp)
+                                                },
+                                            )
+                                            .modernSurfaceTreatment(shape = navigationShape)
+                                    } else {
+                                        Modifier
+                                    },
+                                    navigationSuiteType = navigationSuiteType,
+                                    colors = modernNavigationContainerColor(
+                                        scheme = MaterialTheme.colorScheme,
+                                        isModern = isModern,
+                                        useGlass = useMiyorareVisuals,
+                                    )?.let { modernContainer ->
+                                        NavigationSuiteDefaults.colors(
+                                            navigationBarContainerColor = modernContainer,
+                                            navigationRailContainerColor = modernContainer,
+                                        )
+                                    } ?: NavigationSuiteDefaults.colors(
+                                        navigationRailContainerColor = MaterialTheme.colorScheme
+                                            .surfaceColorAtElevation(3.dp),
+                                    ),
+                                    verticalArrangement = Arrangement.Center,
+                                ) {
+                                    TABS.fastForEach { NavigationSuiteItem(it, navigationSuiteType) }
+                                }
+                            }
                         },
-                        label = "tabContent",
                     ) {
-                        tabNavigator.saveableState(key = "currentTab", it) {
-                            it.Content()
+                        AnimatedContent(
+                            targetState = tabNavigator.current,
+                            transitionSpec = {
+                                materialFadeThroughIn(
+                                    initialScale = 1f,
+                                    durationMillis = TabFadeDuration,
+                                ) togetherWith materialFadeThroughOut(durationMillis = TabFadeDuration)
+                            },
+                            label = "tabContent",
+                        ) {
+                            tabNavigator.saveableState(key = "currentTab", it) {
+                                it.Content()
+                            }
                         }
                     }
                 }
@@ -190,7 +260,49 @@ object HomeScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val selected = tabNavigator.current::class == tab::class
+        val modernPalette = LocalModernVisualPalette.current
+        val isModern = modernPalette.isModern
+        val useMiyorareVisuals = isModern &&
+            LocalModernArtworkIdentity.current != ModernArtworkIdentity.CUSTOM_WAVES
+        val glass = modernPalette.resolveGlassPalette(MaterialTheme.colorScheme)
         NavigationSuiteItem(
+            modifier = if (useMiyorareVisuals && selected) {
+                Modifier.drawWithCache {
+                    val horizontalInset = 2.dp.toPx()
+                    val targetHeight = if (navigationSuiteType == NavigationSuiteType.NavigationBar) {
+                        60.dp.toPx().coerceAtMost(size.height)
+                    } else {
+                        size.height
+                    }
+                    val top = (size.height - targetHeight) / 2f
+                    val surfaceWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
+                    val surfaceColor = glass.selectedSurface.copy(
+                        alpha = glass.selectedSurface.alpha * 0.82f,
+                    )
+                    val cornerRadius = CornerRadius(24.dp.toPx())
+                    val borderWidth = 1.dp.toPx()
+
+                    onDrawBehind {
+                        val topLeft = Offset(horizontalInset, top)
+                        val surfaceSize = Size(surfaceWidth, targetHeight)
+                        drawRoundRect(
+                            color = surfaceColor,
+                            topLeft = topLeft,
+                            size = surfaceSize,
+                            cornerRadius = cornerRadius,
+                        )
+                        drawRoundRect(
+                            color = glass.selectedBorder,
+                            topLeft = topLeft,
+                            size = surfaceSize,
+                            cornerRadius = cornerRadius,
+                            style = Stroke(width = borderWidth),
+                        )
+                    }
+                }
+            } else {
+                Modifier
+            },
             navigationSuiteType = navigationSuiteType,
             selected = selected,
             onClick = {
@@ -201,18 +313,40 @@ object HomeScreen : Screen() {
                 }
             },
             icon = {
-                Icon(
-                    painter = tab.options.icon!!,
-                    contentDescription = tab.options.title,
-                )
+                if (useMiyorareVisuals) {
+                    Icon(
+                        painter = tab.options.icon!!,
+                        contentDescription = tab.options.title,
+                        tint = if (selected) glass.content else glass.contentMuted,
+                        modifier = Modifier.size(if (selected) 22.dp else 20.dp),
+                    )
+                } else {
+                    Icon(
+                        painter = tab.options.icon!!,
+                        contentDescription = tab.options.title,
+                    )
+                }
             },
             label = {
-                Text(
-                    text = tab.options.title,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (useMiyorareVisuals) {
+                    Text(
+                        text = tab.options.title,
+                        color = if (selected) glass.content else glass.contentMuted,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 13.sp,
+                            lineHeight = 16.sp,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else {
+                    Text(
+                        text = tab.options.title,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             },
             badge = tabBadge(tab),
         )
