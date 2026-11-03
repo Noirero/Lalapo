@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.Audiotrack
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Gesture
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
@@ -36,7 +37,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
 import eu.kanade.presentation.more.settings.screen.player.custombutton.PlayerSettingsCustomButtonScreen
 import eu.kanade.presentation.more.settings.screen.player.editor.PlayerSettingsEditorScreen
-import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
+import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
@@ -45,8 +46,6 @@ import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.icons.CustomIcons
-import tachiyomi.presentation.core.icons.Magnet
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
@@ -131,12 +130,14 @@ class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
                         if (index == 0) {
-                            PreferenceGroupHeader(
+                            SettingsSectionHeading(
                                 title = stringResource(AMMR.strings.am_player_group_playback),
+                                icon = Icons.Outlined.PlayCircleOutline,
                             )
                         } else if (index == POWER_USER_START_INDEX) {
-                            PreferenceGroupHeader(
+                            SettingsSectionHeading(
                                 title = stringResource(AMMR.strings.am_settings_power_user),
+                                icon = Icons.Outlined.Code,
                             )
                         }
 
@@ -212,7 +213,7 @@ private val items = listOf(
     Item(
         titleRes = AYMR.strings.pref_player_torrents,
         subtitleRes = AYMR.strings.pref_player_torrents_summary,
-        icon = CustomIcons.Magnet,
+        icon = Icons.Outlined.Link,
         screen = PlayerSettingsTorrentScreen,
     ),
     Item(

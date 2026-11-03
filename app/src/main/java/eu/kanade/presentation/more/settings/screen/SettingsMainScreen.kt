@@ -40,7 +40,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
-import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
+import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.util.LocalBackPress
@@ -149,7 +149,7 @@ object SettingsMainScreen : Screen() {
                     }
                     sections.forEach { section ->
                         item {
-                            PreferenceGroupHeader(title = stringResource(section.titleRes))
+                            SettingsSectionHeading(title = stringResource(section.titleRes), icon = section.icon)
                         }
                         itemsIndexed(
                             items = section.items,
@@ -176,6 +176,7 @@ object SettingsMainScreen : Screen() {
 
 private data class SettingsSection(
     val titleRes: StringResource,
+    val icon: ImageVector,
     val items: List<Item>,
 )
 
@@ -190,6 +191,7 @@ private data class Item(
 private val sections = listOf(
     SettingsSection(
         titleRes = AMMR.strings.am_settings_group_app,
+        icon = Icons.Outlined.Palette,
         items = listOf(
             Item(
                 titleRes = MR.strings.pref_category_appearance,
@@ -212,6 +214,7 @@ private val sections = listOf(
     ),
     SettingsSection(
         titleRes = AMMR.strings.am_settings_group_watching,
+        icon = Icons.Outlined.VideoSettings,
         items = listOf(
             Item(
                 titleRes = AYMR.strings.label_player,
@@ -229,6 +232,7 @@ private val sections = listOf(
     ),
     SettingsSection(
         titleRes = AMMR.strings.am_settings_group_services,
+        icon = Icons.Outlined.Sync,
         items = listOf(
             Item(
                 titleRes = AMMR.strings.am_settings_sources_extensions,
@@ -256,6 +260,7 @@ private val sections = listOf(
     ),
     SettingsSection(
         titleRes = AMMR.strings.am_settings_group_system,
+        icon = Icons.Outlined.Security,
         items = listOf(
             Item(
                 titleRes = MR.strings.pref_category_security,
@@ -283,6 +288,7 @@ private val sections = listOf(
     ),
     SettingsSection(
         titleRes = AMMR.strings.am_settings_group_about,
+        icon = Icons.Outlined.Info,
         items = listOf(
             Item(
                 titleRes = MR.strings.pref_category_about,

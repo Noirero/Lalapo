@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -117,4 +118,35 @@ fun SettingsPreferenceSurface(content: @Composable () -> Unit) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         content = content,
     )
+}
+
+/**
+ * Section heading for the Settings navigation screens; the heading is marked
+ * for accessibility and its icon is decorative because the title names the group.
+ */
+@Composable
+fun SettingsSectionHeading(
+    title: String,
+    icon: ImageVector,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 16.dp, top = 18.dp, bottom = 6.dp)
+            .semantics { heading() },
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            tint = MaterialTheme.colorScheme.primary,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
 }

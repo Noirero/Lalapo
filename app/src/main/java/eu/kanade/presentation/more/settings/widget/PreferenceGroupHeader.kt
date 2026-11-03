@@ -8,6 +8,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -22,7 +24,9 @@ fun PreferenceGroupHeader(title: String) {
         Text(
             text = title,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
+            modifier = Modifier
+                .padding(horizontal = PrefsHorizontalPadding)
+                .semantics { heading() },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
