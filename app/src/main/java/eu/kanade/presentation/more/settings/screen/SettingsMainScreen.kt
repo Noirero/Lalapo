@@ -28,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -112,17 +114,7 @@ object SettingsMainScreen : Screen() {
                 val state = rememberLazyListState()
                 val selectedClass = if (twoPane) navigator.items.first()::class else null
                 val selectedListIndex = if (selectedClass != null) {
-                    var cursor = 0
-                    var found = 0
-                    sections.forEach { section ->
-                        cursor += 1
-                        val itemIndex = section.items.indexOfFirst { it.screen::class == selectedClass }
-                        if (itemIndex >= 0) {
-                            found = cursor + itemIndex
-                        }
-                        cursor += section.items.size
-                    }
-                    found
+                    settingsRootSelectedListIndex(selectedClass.java)
                 } else {
                     0
                 }
@@ -142,7 +134,9 @@ object SettingsMainScreen : Screen() {
                         item {
                             Text(
                                 text = stringResource(MR.strings.label_settings),
-                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+                                modifier = Modifier
+                                    .padding(horizontal = 24.dp, vertical = 18.dp)
+                                    .semantics { heading() },
                                 style = MaterialTheme.typography.headlineLarge,
                             )
                         }
@@ -174,6 +168,24 @@ object SettingsMainScreen : Screen() {
     }
 }
 
+/**
+ * The LazyColumn in tablet mode has one heading before each group's items.
+ * The large page title is phone-only and therefore does not shift these indexes.
+ */
+internal fun settingsRootSelectedListIndex(screenClass: Class<*>): Int {
+    var index = 0
+    sections.forEach { section ->
+        index += 1 // Section heading
+        val itemIndex = section.items.indexOfFirst { it.screen::class.java == screenClass }
+        if (itemIndex >= 0) return index + itemIndex
+        index += section.items.size
+    }
+    return 0
+}
+
+internal fun settingsRootDestinationNamesByGroup(): List<List<String>> =
+    sections.map { group -> group.items.map { it.screen::class.java.simpleName } }
+
 private data class SettingsSection(
     val titleRes: StringResource,
     val icon: ImageVector,
@@ -190,7 +202,7 @@ private data class Item(
 
 private val sections = listOf(
     SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_app,
+        titleRes = AMMR.strings.am_settings_group_appearance_usage,
         icon = Icons.Outlined.Palette,
         items = listOf(
             Item(
@@ -204,16 +216,28 @@ private val sections = listOf(
                 icon = Icons.Outlined.Tune,
                 screen = SettingsGeneralScreen,
             ),
+        ),
+    ),
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_content_library,
+        icon = Icons.Outlined.CollectionsBookmark,
+        items = listOf(
             Item(
                 titleRes = MR.strings.pref_category_library,
                 subtitleRes = AMMR.strings.am_pref_library_summary,
                 icon = Icons.Outlined.CollectionsBookmark,
                 screen = SettingsLibraryScreen,
             ),
+            Item(
+                titleRes = AMMR.strings.am_settings_sources_extensions,
+                subtitleRes = MR.strings.pref_browse_summary,
+                icon = Icons.Outlined.Explore,
+                screen = SettingsBrowseScreen,
+            ),
         ),
     ),
     SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_watching,
+        titleRes = AMMR.strings.am_settings_group_watching_downloads,
         icon = Icons.Outlined.VideoSettings,
         items = listOf(
             Item(
@@ -231,15 +255,9 @@ private val sections = listOf(
         ),
     ),
     SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_services,
+        titleRes = AMMR.strings.am_settings_group_sync_connectivity,
         icon = Icons.Outlined.Sync,
         items = listOf(
-            Item(
-                titleRes = AMMR.strings.am_settings_sources_extensions,
-                subtitleRes = MR.strings.pref_browse_summary,
-                icon = Icons.Outlined.Explore,
-                screen = SettingsBrowseScreen,
-            ),
             Item(
                 titleRes = MR.strings.pref_category_tracking,
                 subtitleRes = MR.strings.pref_tracking_summary,
@@ -256,27 +274,27 @@ private val sections = listOf(
                 icon = Icons.Outlined.Link,
                 screen = SettingsConnectionScreen,
             ),
-        ),
-    ),
-    SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_system,
-        icon = Icons.Outlined.Security,
-        items = listOf(
-            Item(
-                titleRes = MR.strings.pref_category_security,
-                subtitleRes = MR.strings.pref_security_summary,
-                icon = Icons.Outlined.Security,
-                screen = SettingsSecurityScreen,
-            ),
             Item(
                 titleRes = AMMR.strings.am_settings_network,
                 icon = Icons.Outlined.Public,
                 screen = SettingsNetworkScreen,
             ),
+        ),
+    ),
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_data_system,
+        icon = Icons.Outlined.Storage,
+        items = listOf(
             Item(
                 titleRes = AMMR.strings.am_settings_storage_cleanup,
                 icon = Icons.Outlined.Storage,
                 screen = SettingsDataScreen,
+            ),
+            Item(
+                titleRes = MR.strings.pref_category_security,
+                subtitleRes = MR.strings.pref_security_summary,
+                icon = Icons.Outlined.Security,
+                screen = SettingsSecurityScreen,
             ),
             Item(
                 titleRes = MR.strings.pref_category_advanced,
