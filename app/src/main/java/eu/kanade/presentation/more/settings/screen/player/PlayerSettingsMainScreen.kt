@@ -37,8 +37,8 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
 import eu.kanade.presentation.more.settings.screen.player.custombutton.PlayerSettingsCustomButtonScreen
 import eu.kanade.presentation.more.settings.screen.player.editor.PlayerSettingsEditorScreen
-import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
+import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR

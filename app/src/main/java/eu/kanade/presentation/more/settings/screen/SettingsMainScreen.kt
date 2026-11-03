@@ -40,8 +40,8 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
-import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
+import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
