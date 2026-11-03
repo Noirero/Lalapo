@@ -1,6 +1,8 @@
 package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.List
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,7 +29,7 @@ fun MultiSelectListPreferenceWidget(
     TextPreferenceWidget(
         title = preference.title,
         subtitle = preference.subtitleProvider(values, preference.entries),
-        icon = preference.icon,
+        icon = preference.icon ?: Icons.Outlined.List,
         onPreferenceClick = { isDialogShown = true },
     )
 

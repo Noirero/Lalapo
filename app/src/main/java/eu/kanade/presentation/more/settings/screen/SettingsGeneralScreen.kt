@@ -1,5 +1,7 @@
 package eu.kanade.presentation.more.settings.screen
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -52,6 +54,7 @@ object SettingsGeneralScreen : SearchableSettings {
                 preferenceItems = listOf(
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_app_language),
+                        icon = Icons.Outlined.Language,
                         onClick = { navigator.push(AppLanguageScreen()) },
                     ),
                     Preference.PreferenceItem.ListPreference(

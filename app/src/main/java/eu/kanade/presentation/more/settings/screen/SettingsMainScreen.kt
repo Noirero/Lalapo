@@ -1,12 +1,10 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.CollectionsBookmark
@@ -22,19 +20,19 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VideoSettings
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -44,8 +42,8 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
-import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
+import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
@@ -95,7 +93,7 @@ object SettingsMainScreen : Screen() {
             topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topBarState),
             topBar = { scrollBehavior ->
                 AppBar(
-                    title = stringResource(MR.strings.label_settings),
+                    title = if (twoPane) stringResource(MR.strings.label_settings) else "",
                     navigateUp = backPress::invoke,
                     actions = {
                         AppBarActions(
@@ -116,17 +114,7 @@ object SettingsMainScreen : Screen() {
                 val state = rememberLazyListState()
                 val selectedClass = if (twoPane) navigator.items.first()::class else null
                 val selectedListIndex = if (selectedClass != null) {
-                    var cursor = 0
-                    var found = 0
-                    sections.forEach { section ->
-                        cursor += 1
-                        val itemIndex = section.items.indexOfFirst { it.screen::class == selectedClass }
-                        if (itemIndex >= 0) {
-                            found = cursor + itemIndex
-                        }
-                        cursor += section.items.size
-                    }
-                    found
+                    settingsRootSelectedListIndex(selectedClass.java)
                 } else {
                     0
                 }
@@ -142,41 +130,32 @@ object SettingsMainScreen : Screen() {
                     state = state,
                     contentPadding = contentPadding,
                 ) {
+                    if (!twoPane) {
+                        item {
+                            Text(
+                                text = stringResource(MR.strings.label_settings),
+                                modifier = Modifier
+                                    .padding(horizontal = 24.dp, vertical = 18.dp)
+                                    .semantics { heading() },
+                                style = MaterialTheme.typography.headlineLarge,
+                            )
+                        }
+                    }
                     sections.forEach { section ->
                         item {
-                            PreferenceGroupHeader(title = stringResource(section.titleRes))
+                            SettingsSectionHeading(title = stringResource(section.titleRes), icon = section.icon)
                         }
                         itemsIndexed(
                             items = section.items,
                             key = { _, item -> item.hashCode() },
                         ) { _, item ->
-                            val selected = twoPane && item.screen::class == selectedClass
-                            var modifier: Modifier = Modifier
-                            var contentColor = LocalContentColor.current
-                            if (twoPane) {
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .then(
-                                        if (selected) {
-                                            Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                                        } else {
-                                            Modifier
-                                        },
-                                    )
-                                if (selected) {
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            }
-                            CompositionLocalProvider(LocalContentColor provides contentColor) {
-                                TextPreferenceWidget(
-                                    modifier = modifier,
-                                    title = stringResource(item.titleRes),
-                                    subtitle = item.formatSubtitle(),
-                                    icon = item.icon,
-                                    onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
-                                )
-                            }
+                            SettingsNavigationCard(
+                                title = stringResource(item.titleRes),
+                                subtitle = item.formatSubtitle(),
+                                icon = item.icon,
+                                selected = twoPane && item.screen::class == selectedClass,
+                                onClick = { navigator.navigate(item.screen, twoPane) },
+                            )
                         }
                     }
                 }
@@ -189,8 +168,27 @@ object SettingsMainScreen : Screen() {
     }
 }
 
+/**
+ * The LazyColumn in tablet mode has one heading before each group's items.
+ * The large page title is phone-only and therefore does not shift these indexes.
+ */
+internal fun settingsRootSelectedListIndex(screenClass: Class<*>): Int {
+    var index = 0
+    sections.forEach { section ->
+        index += 1 // Section heading
+        val itemIndex = section.items.indexOfFirst { it.screen::class.java == screenClass }
+        if (itemIndex >= 0) return index + itemIndex
+        index += section.items.size
+    }
+    return 0
+}
+
+internal fun settingsRootDestinationNamesByGroup(): List<List<String>> =
+    sections.map { group -> group.items.map { it.screen::class.java.simpleName } }
+
 private data class SettingsSection(
     val titleRes: StringResource,
+    val icon: ImageVector,
     val items: List<Item>,
 )
 
@@ -204,7 +202,8 @@ private data class Item(
 
 private val sections = listOf(
     SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_app,
+        titleRes = AMMR.strings.am_settings_group_appearance_usage,
+        icon = Icons.Outlined.Palette,
         items = listOf(
             Item(
                 titleRes = MR.strings.pref_category_appearance,
@@ -217,16 +216,29 @@ private val sections = listOf(
                 icon = Icons.Outlined.Tune,
                 screen = SettingsGeneralScreen,
             ),
+        ),
+    ),
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_content_library,
+        icon = Icons.Outlined.CollectionsBookmark,
+        items = listOf(
             Item(
                 titleRes = MR.strings.pref_category_library,
                 subtitleRes = AMMR.strings.am_pref_library_summary,
                 icon = Icons.Outlined.CollectionsBookmark,
                 screen = SettingsLibraryScreen,
             ),
+            Item(
+                titleRes = AMMR.strings.am_settings_sources_extensions,
+                subtitleRes = MR.strings.pref_browse_summary,
+                icon = Icons.Outlined.Explore,
+                screen = SettingsBrowseScreen,
+            ),
         ),
     ),
     SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_watching,
+        titleRes = AMMR.strings.am_settings_group_watching_downloads,
+        icon = Icons.Outlined.VideoSettings,
         items = listOf(
             Item(
                 titleRes = AYMR.strings.label_player,
@@ -243,14 +255,9 @@ private val sections = listOf(
         ),
     ),
     SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_services,
+        titleRes = AMMR.strings.am_settings_group_sync_connectivity,
+        icon = Icons.Outlined.Sync,
         items = listOf(
-            Item(
-                titleRes = AMMR.strings.am_settings_sources_extensions,
-                subtitleRes = MR.strings.pref_browse_summary,
-                icon = Icons.Outlined.Explore,
-                screen = SettingsBrowseScreen,
-            ),
             Item(
                 titleRes = MR.strings.pref_category_tracking,
                 subtitleRes = MR.strings.pref_tracking_summary,
@@ -267,26 +274,27 @@ private val sections = listOf(
                 icon = Icons.Outlined.Link,
                 screen = SettingsConnectionScreen,
             ),
-        ),
-    ),
-    SettingsSection(
-        titleRes = AMMR.strings.am_settings_group_system,
-        items = listOf(
-            Item(
-                titleRes = MR.strings.pref_category_security,
-                subtitleRes = MR.strings.pref_security_summary,
-                icon = Icons.Outlined.Security,
-                screen = SettingsSecurityScreen,
-            ),
             Item(
                 titleRes = AMMR.strings.am_settings_network,
                 icon = Icons.Outlined.Public,
                 screen = SettingsNetworkScreen,
             ),
+        ),
+    ),
+    SettingsSection(
+        titleRes = AMMR.strings.am_settings_group_data_system,
+        icon = Icons.Outlined.Storage,
+        items = listOf(
             Item(
                 titleRes = AMMR.strings.am_settings_storage_cleanup,
                 icon = Icons.Outlined.Storage,
                 screen = SettingsDataScreen,
+            ),
+            Item(
+                titleRes = MR.strings.pref_category_security,
+                subtitleRes = MR.strings.pref_security_summary,
+                icon = Icons.Outlined.Security,
+                screen = SettingsSecurityScreen,
             ),
             Item(
                 titleRes = MR.strings.pref_category_advanced,
@@ -298,6 +306,7 @@ private val sections = listOf(
     ),
     SettingsSection(
         titleRes = AMMR.strings.am_settings_group_about,
+        icon = Icons.Outlined.Info,
         items = listOf(
             Item(
                 titleRes = MR.strings.pref_category_about,

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="am_settings_group_appearance_usage">Tampilan &amp; penggunaan</string>
+    <string name="am_settings_group_content_library">Konten &amp; pustaka</string>
+    <string name="am_settings_group_watching_downloads">Menonton &amp; unduhan</string>
+    <string name="am_settings_group_sync_connectivity">Sinkronisasi &amp; konektivitas</string>
+    <string name="am_settings_group_data_system">Data &amp; sistem</string>
+    <string name="am_settings_group_about">Tentang</string>
+</resources>

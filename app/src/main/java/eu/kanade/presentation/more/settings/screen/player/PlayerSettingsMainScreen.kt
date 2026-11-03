@@ -1,32 +1,28 @@
 package eu.kanade.presentation.more.settings.screen.player
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Audiotrack
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Gesture
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material.icons.outlined.Terminal
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,8 +37,8 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
 import eu.kanade.presentation.more.settings.screen.player.custombutton.PlayerSettingsCustomButtonScreen
 import eu.kanade.presentation.more.settings.screen.player.editor.PlayerSettingsEditorScreen
-import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
+import eu.kanade.presentation.more.settings.widget.SettingsSectionHeading
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR
@@ -50,8 +46,6 @@ import tachiyomi.i18n.animiru.AMMR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.icons.CustomIcons
-import tachiyomi.presentation.core.icons.Magnet
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
@@ -136,44 +130,24 @@ class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
                         if (index == 0) {
-                            PreferenceGroupHeader(
+                            SettingsSectionHeading(
                                 title = stringResource(AMMR.strings.am_player_group_playback),
+                                icon = Icons.Outlined.PlayCircleOutline,
                             )
                         } else if (index == POWER_USER_START_INDEX) {
-                            PreferenceGroupHeader(
+                            SettingsSectionHeading(
                                 title = stringResource(AMMR.strings.am_settings_power_user),
+                                icon = Icons.Outlined.Code,
                             )
                         }
 
-                        val selected = indexSelected == index
-                        var modifier: Modifier = Modifier
-                        var contentColor = LocalContentColor.current
-                        if (twoPane) {
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .then(
-                                    if (selected) {
-                                        Modifier.background(
-                                            MaterialTheme.colorScheme.surfaceVariant,
-                                        )
-                                    } else {
-                                        Modifier
-                                    },
-                                )
-                            if (selected) {
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        }
-                        CompositionLocalProvider(LocalContentColor provides contentColor) {
-                            TextPreferenceWidget(
-                                modifier = modifier,
-                                title = stringResource(item.titleRes),
-                                subtitle = item.formatSubtitle(),
-                                icon = item.icon,
-                                onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
-                            )
-                        }
+                        SettingsNavigationCard(
+                            title = stringResource(item.titleRes),
+                            subtitle = item.formatSubtitle(),
+                            icon = item.icon,
+                            selected = twoPane && indexSelected == index,
+                            onClick = { navigator.navigate(item.screen, twoPane) },
+                        )
                     }
                 }
             },
@@ -239,7 +213,7 @@ private val items = listOf(
     Item(
         titleRes = AYMR.strings.pref_player_torrents,
         subtitleRes = AYMR.strings.pref_player_torrents_summary,
-        icon = CustomIcons.Magnet,
+        icon = Icons.Outlined.Link,
         screen = PlayerSettingsTorrentScreen,
     ),
     Item(

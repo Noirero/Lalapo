@@ -280,6 +280,11 @@
     <string name="am_player_action_screenshot">Screenshot</string>
     <string name="am_player_tutorial_title">Player controls</string>
     <string name="am_player_tutorial_body">Tap the video to show or hide controls. Use the bottom row for speed and contextual subtitle, audio, quality, or PiP actions. Open More for Video, Timing, Tools, and Advanced controls. Brightness, volume, and seek gestures remain available.</string>
+    <string name="am_settings_group_appearance_usage">Appearance &amp; usage</string>
+    <string name="am_settings_group_content_library">Content &amp; library</string>
+    <string name="am_settings_group_watching_downloads">Watching &amp; downloads</string>
+    <string name="am_settings_group_sync_connectivity">Sync &amp; connectivity</string>
+    <string name="am_settings_group_data_system">Data &amp; system</string>
     <string name="am_settings_group_app">App</string>
     <string name="am_settings_group_watching">Watching</string>
     <string name="am_settings_group_services">Services</string>
