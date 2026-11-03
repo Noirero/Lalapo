@@ -14,7 +14,12 @@ class SettingsMainGroupingTest {
             listOf("SettingsAppearanceScreen", "SettingsGeneralScreen"),
             listOf("SettingsLibraryScreen", "SettingsBrowseScreen"),
             listOf("PlayerSettingsScreen", "SettingsDownloadScreen"),
-            listOf("SettingsTrackingScreen", "SettingsSyncBackupScreen", "SettingsConnectionScreen", "SettingsNetworkScreen"),
+            listOf(
+                "SettingsTrackingScreen",
+                "SettingsSyncBackupScreen",
+                "SettingsConnectionScreen",
+                "SettingsNetworkScreen",
+            ),
             listOf("SettingsDataScreen", "SettingsSecurityScreen", "SettingsAdvancedScreen"),
             listOf("AboutScreen"),
         )
