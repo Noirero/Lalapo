@@ -8,7 +8,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material3.MaterialTheme
@@ -157,7 +156,7 @@ internal fun PreferenceItem(
                 TextPreferenceWidget(
                     title = item.title,
                     subtitle = item.subtitle,
-                    icon = item.icon ?: Icons.Outlined.Info,
+                    icon = item.icon,
                     widget = item.widget,
                     onPreferenceClick = item.onClick,
                 )

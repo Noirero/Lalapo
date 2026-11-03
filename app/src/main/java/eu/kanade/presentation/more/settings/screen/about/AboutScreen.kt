@@ -8,7 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.SystemUpdate
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,6 +31,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.LogoHeader
+import eu.kanade.presentation.more.settings.widget.SettingsNavigationCard
+import eu.kanade.presentation.more.settings.widget.SettingsPreferenceSurface
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
@@ -87,21 +95,26 @@ object AboutScreen : Screen() {
                 }
 
                 item {
-                    TextPreferenceWidget(
-                        title = stringResource(MR.strings.version),
-                        subtitle = getVersionName(withBuildDate = true),
-                        onPreferenceClick = {
-                            val deviceInfo = crashLogUtil.getDebugInfo()
-                            context.copyToClipboard("Debug information", deviceInfo)
-                        },
-                    )
+                    SettingsPreferenceSurface {
+                        TextPreferenceWidget(
+                            title = stringResource(MR.strings.version),
+                            subtitle = getVersionName(withBuildDate = true),
+                            icon = Icons.Outlined.ContentCopy,
+                            onPreferenceClick = {
+                                val deviceInfo = crashLogUtil.getDebugInfo()
+                                context.copyToClipboard("Debug information", deviceInfo)
+                            },
+                        )
+                    }
                 }
 
                 if (updaterEnabled) {
                     item {
-                        TextPreferenceWidget(
-                            title = stringResource(MR.strings.check_for_updates),
-                            widget = {
+                        SettingsPreferenceSurface {
+                            TextPreferenceWidget(
+                                title = stringResource(MR.strings.check_for_updates),
+                                icon = Icons.Outlined.SystemUpdate,
+                                widget = {
                                 AnimatedVisibility(visible = isCheckingUpdates) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(28.dp),
@@ -132,24 +145,31 @@ object AboutScreen : Screen() {
                                     }
                                 }
                             },
-                        )
+                            )
+                        }
                     }
                 }
 
                 if (!BuildConfig.DEBUG) {
                     item {
-                        TextPreferenceWidget(
+                        SettingsNavigationCard(
                             title = stringResource(MR.strings.whats_new),
-                            onPreferenceClick = { uriHandler.openUri(RELEASE_URL) },
+                            subtitle = null,
+                            icon = Icons.Outlined.NewReleases,
+                            selected = false,
+                            onClick = { uriHandler.openUri(RELEASE_URL) },
                         )
                     }
                 }
 
                 // AY -->
                 item {
-                    TextPreferenceWidget(
+                    SettingsNavigationCard(
                         title = stringResource(MR.strings.help_translate),
-                        onPreferenceClick = {
+                        subtitle = null,
+                        icon = Icons.Outlined.Translate,
+                        selected = false,
+                        onClick = {
                             uriHandler.openUri(
                                 "https://aniyomi.org/docs/contribute#translation",
                             )
@@ -159,16 +179,22 @@ object AboutScreen : Screen() {
                 // <-- AY
 
                 item {
-                    TextPreferenceWidget(
+                    SettingsNavigationCard(
                         title = stringResource(MR.strings.licenses),
-                        onPreferenceClick = { navigator.push(OpenSourceLicensesScreen()) },
+                        subtitle = null,
+                        icon = Icons.Outlined.Description,
+                        selected = false,
+                        onClick = { navigator.push(OpenSourceLicensesScreen()) },
                     )
                 }
 
                 item {
-                    TextPreferenceWidget(
+                    SettingsNavigationCard(
                         title = stringResource(MR.strings.privacy_policy),
-                        onPreferenceClick = { uriHandler.openUri("https://aniyomi.org/privacy/") },
+                        subtitle = null,
+                        icon = Icons.Outlined.PrivacyTip,
+                        selected = false,
+                        onClick = { uriHandler.openUri("https://aniyomi.org/privacy/") },
                     )
                 }
 
