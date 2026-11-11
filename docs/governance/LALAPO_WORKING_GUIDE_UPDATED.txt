@@ -241,6 +241,11 @@ Konsekuensi:
 - docs-only changes tertentu dapat tidak memicu workflow;
 - translation resource changes tertentu juga dapat difilter sesuai workflow aktual.
 
+Untuk current docs/governance/*.txt, glob pull_request '**' pada
+build.yml dapat memicu CI Checks termasuk job Android; pengecualian
+'!**.md' tidak mencakup file .txt. Jangan menganggap semua docs-only
+PR otomatis tanpa CI. Tidak ada exception/skip baru dalam policy ini.
+
 Jika workflow tidak trigger karena path filter:
 status = NOT TRIGGERED / NOT APPLICABLE,
 bukan "green".
