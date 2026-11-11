@@ -204,7 +204,7 @@ Buat PR terpisah bila:
 CI retry/reconstruction mechanics bukan alasan otomatis membuat PR baru.
 
 ============================================================
-4. CURRENT AUTOMATED CI — BUILD & TEST
+4. CURRENT AUTOMATED CI — CI CHECKS
 ============================================================
 
 Verified .github/workflows/build.yml on main/beta, name "CI Checks":
@@ -335,8 +335,9 @@ Gunakan:
 - runtime/device validation sesuai behavior;
 - release/compatibility checks bila applicable.
 
-Tidak ada rule "selalu boot emulator" pada Lalapo saat ini.
-Validation dipilih berdasarkan risk dan evidence needed.
+Pada current YAML, Android job berjalan pada workflow CI Checks yang ter-trigger;
+ini bukan klaim bahwa setiap context/release/device scenario telah tervalidasi.
+Validation tambahan tetap dipilih berdasarkan risk dan evidence needed.
 
 ============================================================
 8A. CI OBSERVATION (NO OPTIMIZATION AUTHORIZED)
