@@ -1,0 +1,227 @@
+LALAPO — POLA KERJA / BOOTSTRAP ENTRYPOINT
+
+Document identity:
+Canonical filename: Pola Kerja Lalapo.txt
+Document version: 2026-11-11.1
+Document status: PROPOSED / BOOTSTRAP — NON-GOVERNING
+Review copy; existing canonical Project docs stay in force until owner adoption.
+
+Repository:
+Noirero/Lalapo
+
+============================================================
+0. FUNGSI DOKUMEN INI
+============================================================
+
+Dokumen ini adalah ENTRYPOINT untuk chat/agent baru yang mengerjakan Lalapo.
+
+Tujuannya:
+- menunjukkan dokumen authoritative yang harus dibaca;
+- menetapkan hierarchy;
+- memberi flow kerja singkat;
+- mencegah salah repository/branch/scope;
+- mencegah permission loop;
+- mencegah klaim sukses tanpa evidence.
+
+Dokumen ini BUKAN governing policy ketiga.
+Jangan menduplikasi detail engineering/CI/release yang sudah ada di governing document.
+
+Jika ringkasan di sini berbeda dengan governing document authoritative:
+governing document yang berlaku.
+
+============================================================
+1. DOKUMEN YANG WAJIB DIBACA
+============================================================
+
+Sebelum pekerjaan material pada Lalapo, baca dan gunakan:
+
+1. LALAPO_AI_WORKING_PROTOCOL.txt
+   Authority untuk engineering execution:
+   INVESTIGATE -> REASON -> DESIGN -> IMPLEMENT -> REVIEW.
+
+2. LALAPO_WORKING_GUIDE_UPDATED.txt
+   Authority untuk repository/delivery:
+   ROUTING -> BRANCH -> PR -> CI -> VALIDATION -> MERGE READINESS -> RELEASE.
+
+3. soul.md
+   Default collaboration/reasoning/design profile untuk area yang tidak diatur lebih spesifik.
+
+Baca juga bila task menyentuh area terkait:
+
+4. docs/Lalapo_V2_UI_UX_Spec.md
+   Frozen UI/UX baseline Lalapo v2.
+
+5. docs/FORK_IDENTITY.md
+   Application identity, compatibility URI, OAuth/deep-link, namespace, release identity.
+
+6. .github/RELEASE.md
+   Release tags, signing, repository secret requirements.
+
+7. CONTRIBUTING.md
+   Repository conventions dan quality expectations yang masih current.
+
+Jika task mempunyai specification/master plan/acceptance criteria/governing document task-specific yang dinyatakan authoritative owner:
+baca juga dokumen tersebut.
+
+============================================================
+2. HIERARKI AUTHORITY
+============================================================
+
+Gunakan urutan:
+
+1. Instruksi eksplisit terbaru owner untuk task aktif.
+2. Specification/governing document task-specific authoritative.
+3. LALAPO_WORKING_GUIDE_UPDATED.txt untuk repository/CI/release/delivery.
+4. LALAPO_AI_WORKING_PROTOCOL.txt untuk engineering execution.
+5. Repository authoritative contract yang relevan untuk area task:
+   docs/Lalapo_V2_UI_UX_Spec.md
+   docs/FORK_IDENTITY.md
+   .github/RELEASE.md
+   sesuai scope dan tanpa mengoverride authority lebih tinggi.
+6. soul.md sebagai default collaboration/reasoning/design profile.
+7. Dokumen bootstrap ini hanya navigasi.
+
+Repository/source aktual adalah implementation source of truth untuk kondisi kode, branch, HEAD, PR, workflow, CI, tag, release, dan behavior yang benar-benar ada.
+
+Governing document/task authoritative menentukan intended behavior/policy.
+
+Jika berbeda:
+selesaikan discrepancy dengan evidence; jangan menebak.
+
+============================================================
+3. CURRENT ACTIVE ROUTING
+============================================================
+
+Previously documented default for a new unspecified task: branch from main,
+PR main unless explicitly overridden. Current beta exists but integration
+role is OWNER DECISION REQUIRED. Do not infer routing from commit divergence
+or retarget existing PRs. Read Working Guide §0A and current repository
+checkpoint before work. This docs-only task follows previous main default.
+
+============================================================
+4. FLOW KERJA DEFAULT
+============================================================
+
+AUTHORIZED TASK -> VERIFY INPUTS -> READ GOVERNING DOCS
+-> REFRESH REPO/BASE/HEAD/TARGET/PR/CI
+-> INVESTIGATE SOURCE/ROOT CAUSE/OWNERSHIP
+-> MINIMAL CORRECT CHANGE -> DIFF REVIEW/TARGETED REGRESSION
+-> PR / APPLICABLE EXACT-HEAD CI
+-> IF FAIL: TARGETED-FIRST DIAGNOSIS -> FIX
+-> MANDATORY FINAL VALIDATION -> POST-CI AUDIT
+-> REPORT READINESS; NEVER MERGE WITHOUT OWNER AUTHORIZATION.
+
+============================================================
+5. CURRENT CI YANG HARUS DIKENALI
+============================================================
+
+Current "CI Checks" (build.yml): formatting, JVM unit, legacy category
+Sets migration fixture, SQLDelight migration, and Android 15
+connectedDebugAndroidTest when triggered. Manual Stable/Beta APK and
+tag Release builds are separate. CI Checks does not publish release APKs.
+For exact details and targeted-first failure recovery, follow Working
+Guide §4, §9, §9A; no new classifier/skip policy is implied.
+
+============================================================
+6. AREA SENSITIF LALAPO
+============================================================
+
+Naikkan rigor bila task menyentuh:
+- library/history/progress/Continue Watching;
+- source/extensions/stream resolution;
+- player/mpv;
+- Cast/PiP/external playback;
+- downloads/local/offline;
+- SQLDelight/database;
+- backup/restore;
+- Cross Sync / Google Drive / SyncYomi;
+- trackers;
+- deep links/OAuth;
+- application identity/signing;
+- release workflow;
+- frozen Lalapo v2 navigation/presentation contract.
+
+Gunakan LALAPO_AI_WORKING_PROTOCOL.txt untuk detail reasoning.
+
+============================================================
+7. PERMISSION & FINAL ACTION
+============================================================
+
+Jika owner sudah mengatakan setuju/iya/kerjakan/lanjutkan/gas/lakukan terhadap task yang jelas:
+lanjutkan pekerjaan reversible dalam scope tanpa permission loop.
+
+Tidak perlu izin ulang hanya untuk:
+- membaca source/history;
+- targeted audit;
+- membuat/reuse work branch;
+- implementasi in-scope;
+- commit/push work branch;
+- membuat/update PR;
+- menjalankan validation;
+- post-CI audit.
+
+Tetap membutuhkan explicit authorization:
+- merge PR;
+- create/push stable tag;
+- create/push preview tag;
+- publish release;
+- force push/history rewrite;
+- destructive reset/discard;
+- delete material branch/tag;
+- overwrite important release asset.
+
+MERGE-READY BUKAN MERGE PERMISSION.
+RELEASE-READY BUKAN RELEASE PERMISSION.
+
+============================================================
+8. EVIDENCE & KOMUNIKASI
+============================================================
+
+Jangan langsung mengedit berdasarkan dugaan owner atau dugaan agent.
+Verifikasi terhadap repository/evidence.
+
+Gunakan bila membantu:
+PROVEN
+INFERENCE
+HYPOTHESIS
+UNKNOWN
+
+Jangan samakan:
+- source/static review;
+- unit/integration test;
+- GitHub CI;
+- emulator/runtime;
+- physical-device;
+- release artifact;
+- production evidence.
+
+Laporan akhir cukup menjelaskan:
+- apa yang ditemukan;
+- root cause/design path;
+- apa yang berubah dan mengapa;
+- validation yang benar-benar dilakukan;
+- apa yang belum tervalidasi;
+- blocker/risiko tersisa;
+- merge/release readiness bila terbukti.
+
+============================================================
+9. RECOVERY / HANDOFF
+============================================================
+
+Jika pekerjaan terputus:
+mulai dari actual repository state, bukan memory sesi lama.
+
+Reuse branch/commit/PR yang masih valid.
+
+Checkpoint minimum bila handoff material diperlukan:
+
+REPO / BASE / HEAD / TARGET / PR / SCOPE / ROOT CAUSE OR DESIGN PATH /
+EXISTING WORK / DIFF STATE / VALIDATION STATUS
+
+Jangan restart broad audit jika evidence terbaru sudah mempersempit masalah.
+
+============================================================
+10. PRINSIP SATU KALIMAT
+============================================================
+
+Baca authority yang benar, refresh state Lalapo aktual, buktikan root cause/design path, lakukan perubahan terkecil yang benar, validasi exact code yang akan dikirim, lalu laporkan merge/release readiness tanpa mengambil final action yang belum diotorisasi.

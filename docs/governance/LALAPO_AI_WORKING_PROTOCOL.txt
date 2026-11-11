@@ -1,0 +1,919 @@
+LALAPO — AI WORKING PROTOCOL
+
+Document identity:
+Canonical filename: LALAPO_AI_WORKING_PROTOCOL.txt
+Document version: 2026-11-11.1
+Document status: PROPOSED / OWNER REVIEW REQUIRED — NOT YET CANONICAL
+Proposal tidak supersede canonical owner Project source sebelum diadopsi owner.
+
+VERSION / PRECEDENCE RULE
+- Filename canonical menunjukkan IDENTITAS dokumen, bukan nomor revisi.
+- Suffix seperti _UPDATED, _VNEXT, _V2, _FINAL, atau tanggal pada filename bukan sumber otoritas.
+- Jika beberapa revisi dari governing document yang sama tersedia, gunakan revisi dengan Document version tertinggi yang secara eksplisit ditetapkan owner sebagai CURRENT / CANONICAL.
+- Revisi canonical yang lebih baru SUPERSEDES revisi lama dari dokumen yang sama.
+- Instruksi task eksplisit terbaru owner tetap memiliki precedence tertinggi.
+- Jangan mencampur aturan lama dan baru hanya karena keduanya tersedia.
+- Jika versi/otoritas benar-benar ambigu dan dapat mengubah keputusan engineering atau delivery, STOP dan minta owner menentukan revisi authoritative.
+
+Status:
+Engineering execution protocol untuk AI/agent yang mengerjakan source code Lalapo.
+
+Repository:
+Noirero/Lalapo
+
+Dokumen ini TIDAK menggantikan:
+LALAPO_WORKING_GUIDE_UPDATED.txt
+
+Kedua dokumen digunakan bersama tetapi memiliki tanggung jawab berbeda.
+
+Hubungan dengan dokumen lain:
+- soul.md adalah default collaboration/reasoning/design profile. Ia tidak menggantikan policy Lalapo yang lebih spesifik.
+- Pola Kerja Lalapo.txt adalah bootstrap/entrypoint. Ia bukan governing authority baru.
+- Specification/governing document task-specific yang secara eksplisit diberikan owner berlaku untuk scope task tersebut sesuai hierarki instruksi.
+- docs/Lalapo_V2_UI_UX_Spec.md adalah frozen presentation baseline untuk area Lalapo v2 yang disentuh.
+- docs/FORK_IDENTITY.md adalah authority repository untuk identity/compatibility surface yang terdokumentasi.
+- .github/RELEASE.md adalah authority repository untuk release setup yang terdokumentasi; workflow aktual tetap harus diperiksa sebelum release action.
+
+============================================================
+0. TUJUAN DOKUMEN
+============================================================
+
+Dokumen ini mengatur CARA AI melakukan pekerjaan software engineering pada Lalapo.
+
+Fokus:
+- memahami intent owner;
+- investigasi masalah;
+- menemukan root cause;
+- menentukan source of truth;
+- menjaga scope;
+- memilih solusi;
+- melakukan perubahan kode;
+- menangani legacy/compatibility implementation;
+- lifecycle, concurrency, playback, dan asynchronous state;
+- menjaga data dan integration compatibility;
+- menganalisis regression;
+- melakukan review diff;
+- menentukan apakah implementasi benar secara engineering.
+
+Dokumen ini TIDAK mendefinisikan ulang:
+- branch/routing policy;
+- PR policy;
+- CI workflow;
+- release/tag policy;
+- final-action authorization;
+- artifact/signing policy;
+- repository concurrency/delivery mechanics.
+
+Semua area tersebut mengikuti:
+LALAPO_WORKING_GUIDE_UPDATED.txt
+
+============================================================
+0A. CORE RULES
+============================================================
+
+1. Pahami task dan intent owner.
+2. Verifikasi required input material benar-benar tersedia dan dapat dibaca.
+3. Gunakan repository aktual sebagai evidence kondisi implementasi saat ini.
+4. Gunakan governing document/task authoritative untuk intended behavior/policy.
+5. Investigasi root cause/design path sebelum edit.
+6. Identifikasi source of truth dan ownership sebelum membuat state/mechanism baru.
+7. Terapkan perubahan terkecil yang BENAR; jangan memperluas scope.
+8. Pertahankan behavior unrelated dan compatibility yang relevan.
+9. Validasi sesuai risiko terhadap code/SHA yang benar-benar diuji.
+10. Review seluruh diff; jangan melemahkan test/evidence agar hijau.
+11. Jangan mengklaim lebih dari evidence aktual.
+12. Ikuti Working Guide untuk branch, PR, CI, release, concurrency repository, dan delivery.
+
+Prinsip:
+CORE RULES SUMMARIZE; DETAILED RULES GOVERN.
+
+============================================================
+1. HIERARKI INSTRUKSI
+============================================================
+
+Gunakan hierarki:
+1. Instruksi task eksplisit terbaru dari owner.
+2. Specification/governing document task-specific yang authoritative.
+3. LALAPO_WORKING_GUIDE_UPDATED.txt untuk repository/branch/PR/CI/release/delivery.
+4. LALAPO_AI_WORKING_PROTOCOL.txt untuk engineering execution.
+5. Repository-specific authoritative docs yang relevan untuk behavior yang sudah dikontrak, termasuk:
+   - docs/Lalapo_V2_UI_UX_Spec.md
+   - docs/FORK_IDENTITY.md
+   - .github/RELEASE.md
+   Jika task-specific governing document menyatakan precedence berbeda, ikuti task tersebut.
+6. soul.md sebagai default collaboration/reasoning/design profile.
+7. Pola Kerja Lalapo.txt hanya bootstrap/entrypoint dan tidak mengoverride authority di atas.
+
+Repository/source aktual tetap menjadi implementation source of truth untuk kondisi kode yang benar-benar ada.
+Governing document/task authoritative menentukan intended behavior/policy.
+Perbedaan keduanya harus diselesaikan dengan evidence, bukan ditebak.
+
+Task owner menentukan:
+APA yang harus dicapai.
+
+AI Working Protocol menentukan:
+BAGAIMANA masalah dianalisis dan kode diubah.
+
+Working Guide menentukan:
+BAGAIMANA perubahan divalidasi dan dikirim melalui repository/CI/release flow.
+
+============================================================
+2. PRINSIP ENGINEERING UTAMA
+============================================================
+
+Urutan prioritas:
+1. Correctness
+2. Mencegah regression
+3. Root-cause resolution
+4. Data/state integrity
+5. Playback/source compatibility
+6. Scope discipline
+7. Backward compatibility
+8. Maintainability
+9. Security
+10. Performance
+11. Developer experience
+12. Implementation speed
+
+Tujuan bukan menghasilkan diff terkecil.
+Tujuan adalah menghasilkan perubahan terkecil yang BENAR.
+
+Jangan memilih patch kecil jika patch:
+- hanya menyembunyikan gejala;
+- menambah workaround baru;
+- membuat duplicate source of truth;
+- bergantung pada timing/arbitrary delay;
+- menimbulkan race condition;
+- membuat implementation lama dan baru berjalan bersamaan tanpa ownership jelas;
+- mengorbankan playback/source/download/backup compatibility.
+
+Jangan melakukan refactor besar jika perubahan lokal yang bersih sudah cukup.
+
+============================================================
+3. PAHAMI INTENT OWNER
+============================================================
+
+Bedakan:
+A. Tujuan owner.
+B. Dugaan owner mengenai root cause.
+C. Solusi teknis yang diusulkan owner.
+
+Tujuan owner adalah target utama.
+
+Dugaan root cause dan proposed solution harus diverifikasi terhadap repository.
+
+Jika proposed solution tidak aman:
+- pertahankan tujuan owner;
+- gunakan solusi yang lebih benar;
+- jelaskan trade-off bila material.
+
+============================================================
+4. DEFAULT SCOPE POLICY
+============================================================
+
+Anggap setiap task mempunyai scope sempit kecuali owner meminta perubahan luas.
+
+Default flow:
+TASK
+-> INVESTIGATION
+-> ROOT CAUSE / DESIGN PATH
+-> MINIMAL CORRECT CHANGE
+-> ENGINEERING VALIDATION
+-> DIFF REVIEW
+-> DELIVERY SESUAI WORKING GUIDE
+
+Jangan melakukan opportunistic cleanup.
+
+Jika menemukan masalah lain:
+- catat;
+- nilai apakah menghalangi task;
+- jika tidak menghalangi, jangan perbaiki;
+- laporkan bila relevan.
+
+Prinsip:
+IF OUTSIDE SCOPE: REPORT, DO NOT FIX.
+
+============================================================
+5. INVESTIGATE BEFORE EDIT
+============================================================
+
+Sebelum mengubah kode:
+1. Baca expected behavior.
+2. Baca governing/spec yang relevan.
+3. Temukan entry point.
+4. Telusuri call path.
+5. Telusuri state/data flow.
+6. Cari producer dan consumer state.
+7. Cari persistence/cache/filesystem jika relevan.
+8. Cari lifecycle ownership.
+9. Cari coroutine/job/background ownership.
+10. Cari player/session ownership bila relevan.
+11. Cari source/extension boundary bila relevan.
+12. Cari implementation serupa.
+13. Cari implementation lama/compatibility path.
+14. Cari workaround existing.
+15. Periksa history/diff/reference version bila relevan.
+16. Tentukan root cause atau design path.
+17. Tentukan regression surface.
+18. Baru edit.
+
+Jangan langsung mengedit file pertama yang terlihat berkaitan dengan gejala.
+
+============================================================
+5A. EXTERNAL PROVIDER/API EVIDENCE AUTHORITY
+============================================================
+
+Untuk source/extension, stream, tracker, OAuth, Google Drive, SDK, dan API eksternal,
+repository Lalapo adalah bukti tentang integrasi saat ini, bukan otomatis kontrak
+provider saat ini. Verifikasi endpoint, auth flow, response schema, capability,
+rate limit, attribution, dan compatibility material dengan dokumentasi resmi/current
+atau actual response evidence bila tersedia.
+Jangan mengarang field/endpoint/capability. Bila tidak cukup evidence, nyatakan
+INFERENCE, HYPOTHESIS, atau UNKNOWN; jangan mempromosikannya menjadi PROVEN.
+Jangan mengirim integration berisiko terhadap correctness, data, security,
+atau compatibility berdasarkan contract yang belum terverifikasi.
+Minta owner hanya jika required evidence yang tidak tersedia benar-benar
+memblokir keputusan aman.
+
+============================================================
+6. ROOT CAUSE FIRST
+============================================================
+
+Anggap gejala bukan root cause sampai dibuktikan.
+
+Contoh data/state path Lalapo dapat berbentuk:
+Database / Preferences / Filesystem
+-> Repository / Interactor
+-> Flow
+-> Presenter / ScreenModel / ViewModel
+-> Compose/UI
+
+Playback path dapat berbentuk:
+Source/Extension
+-> episode/stream resolution
+-> headers/cookies/stream metadata
+-> playback handoff
+-> player session/mpv
+-> progress/history persistence
+-> Library/History/Continue Watching
+
+Download path dapat berbentuk:
+Download queue/worker
+-> filesystem
+-> persistence/cache
+-> observer
+-> UI/offline playback
+
+Cari titik pertama di mana expected state berbeda dari actual state.
+Perbaiki divergence sedekat mungkin dengan ownership sebenarnya.
+
+============================================================
+7. SOURCE OF TRUTH
+============================================================
+
+Sebelum membuat state baru, identifikasi source of truth existing.
+
+Kemungkinan:
+- SQLDelight/database;
+- filesystem/download state;
+- source/extension result;
+- repository/interactor;
+- player/session state;
+- tracker state;
+- backup/sync state;
+- preference;
+- cache;
+- ScreenModel/ViewModel;
+- UI-local state.
+
+Jangan membuat source of truth kedua hanya agar UI terlihat benar.
+
+Jika persisted progress benar tetapi Continue Watching salah:
+cari mengapa progress tidak terpropagasi.
+Jangan langsung membuat boolean UI tambahan.
+
+============================================================
+8. STATE OWNERSHIP
+============================================================
+
+Untuk state yang diubah, tentukan:
+- siapa menulis;
+- siapa membaca;
+- siapa menyimpan;
+- siapa menginvalidasi;
+- siapa mengobservasi;
+- kapan state hidup;
+- kapan state dihancurkan;
+- bagaimana state dipulihkan setelah process/lifecycle recreation bila relevan.
+
+Waspadai state yang baru benar setelah membuka screen tertentu.
+Screen visit tidak boleh menjadi dependency tersembunyi untuk state yang seharusnya global/persisted.
+
+============================================================
+9. LEGACY / COMPATIBILITY IMPLEMENTATION
+============================================================
+
+Lalapo mempunyai compatibility surface yang sengaja dipertahankan.
+
+Sebelum menghapus/mengganti legacy code:
+1. Cari direct references.
+2. Cari indirect/reflection references.
+3. Cari lifecycle invocation.
+4. Cari fallback path.
+5. Cari persisted-data dependency.
+6. Cari source/extension API dependency.
+7. Cari deep-link/OAuth callback dependency.
+8. Cari backup/serialization dependency.
+9. Cari package/application identity dependency.
+10. Bandingkan ownership implementation lama vs baru.
+
+Jangan menganggap nama/namespace lama berarti dead code.
+
+============================================================
+10. IDENTITY & COMPATIBILITY GUARD
+============================================================
+
+Current documented Lalapo identity:
+- applicationId: com.noirero.lalapo
+- Kotlin/Android namespace intentionally remains eu.kanade.tachiyomi
+- compatibility URI schemes yang didokumentasikan di docs/FORK_IDENTITY.md tetap dipertahankan sampai ada migration plan yang konkret dan tervalidasi.
+
+Jangan melakukan mass package rename hanya untuk branding.
+
+Sebelum mengubah:
+- applicationId;
+- namespace/package;
+- FileProvider/Shizuku authority;
+- dynamic shortcut target;
+- extension installer broadcast;
+- deep link;
+- OAuth callback;
+- durable backup/database identifier;
+- external integration identifier;
+
+wajib:
+- petakan compatibility surface;
+- identifikasi existing users/data;
+- identifikasi provider/client registration dependency;
+- buat migration/rollback plan bila diperlukan;
+- validasi behavior terkait.
+
+Branding cleanup tidak cukup menjadi alasan untuk memutus compatibility.
+
+============================================================
+11. SURGICAL EDIT MODE
+============================================================
+
+Jika owner menentukan file/function/code path/behavior tertentu:
+- jangan refactor unrelated code;
+- jangan rename unrelated symbol;
+- jangan reformat area luas;
+- jangan mengubah architecture tanpa kebutuhan;
+- jangan mengubah visual behavior yang tidak diminta;
+- jangan mengubah navigation/player/source ownership lain;
+- jangan melakukan cleanup unrelated.
+
+Setiap baris diff harus mempunyai hubungan yang dapat dijelaskan dengan task.
+
+============================================================
+12. FEATURE IMPLEMENTATION
+============================================================
+
+Untuk fitur baru, tentukan sebelum implementasi:
+
+USER
+- masalah yang diselesaikan;
+- expected behavior;
+- fallback/empty/error/offline behavior.
+
+STATE
+- source of truth;
+- persistence;
+- ownership;
+- lifecycle.
+
+FAILURE
+- loading;
+- error;
+- cancellation;
+- retry;
+- offline/no-source/no-stream;
+- unavailable extension/service.
+
+COMPATIBILITY
+- existing library/history/download;
+- existing settings;
+- existing backups;
+- existing source/extensions;
+- existing trackers;
+- existing deep links/navigation;
+- current application identity.
+
+ARCHITECTURE
+- component existing yang dapat digunakan;
+- abstraction baru hanya bila benar-benar perlu.
+
+VALIDATION
+- bagaimana behavior dapat dibuktikan benar.
+
+============================================================
+13. ANDROID / COMPOSE LIFECYCLE
+============================================================
+
+Untuk bug Android/Compose, pertimbangkan bila relevan:
+- Activity lifecycle;
+- navigation/back stack;
+- Compose composition/disposal;
+- remember/rememberSaveable;
+- ScreenModel/ViewModel lifecycle;
+- configuration change;
+- process recreation;
+- foreground/background;
+- Picture-in-Picture transition;
+- player service/session lifetime;
+- coroutine cancellation;
+- Flow collection lifecycle;
+- adaptive/tablet navigation state.
+
+Bug setelah:
+- pindah destination;
+- masuk/keluar player;
+- PiP;
+- background/foreground;
+- rotate;
+- process recreation;
+- kembali dari external player/cast;
+
+harus dianggap mungkin lifecycle/state ownership issue sampai dibuktikan sebaliknya.
+
+============================================================
+14. COROUTINE / FLOW / ASYNC
+============================================================
+
+Periksa:
+- lifecycle scope;
+- cancellation;
+- duplicate collectors;
+- duplicate jobs;
+- stale emission;
+- ordering;
+- race condition;
+- thread/context;
+- idempotency;
+- retry semantics;
+- rapid repeated action;
+- network cancellation;
+- player event ordering;
+- download worker ownership.
+
+Jangan menggunakan arbitrary delay sebagai synchronization mechanism.
+
+============================================================
+15. DATABASE / SQLDELIGHT / PERSISTENCE
+============================================================
+
+Perubahan persistence mempunyai regression surface besar.
+
+Sebelum mengubah:
+- schema;
+- query;
+- migration;
+- serialization;
+- backup format;
+- durable preference;
+- progress/history persistence;
+
+periksa:
+- existing user data;
+- upgrade path;
+- backward compatibility;
+- null/default semantics;
+- partial/old data;
+- migration failure behavior;
+- backup/restore implications.
+
+Jangan menggunakan destructive migration sebagai shortcut.
+
+Repository/CI validation mengikuti Working Guide, termasuk verifySqlDelightMigration bila area terkait.
+
+============================================================
+16. LIBRARY / HISTORY / PROGRESS / CONTINUE WATCHING
+============================================================
+
+Area ini STATE-SENSITIVE.
+
+Periksa hubungan:
+- persisted anime/episode state;
+- watch progress;
+- history;
+- library membership;
+- category/grouping/filter/sort;
+- cache;
+- Flow/observer;
+- screen state;
+- player completion/progress callbacks;
+- cold start;
+- background update.
+
+Perhatikan:
+A. Continue Watching harus berasal dari state yang benar, bukan side effect membuka screen.
+B. History/progress harus konsisten setelah restart.
+C. Library state tidak bergantung pada navigation side effect.
+D. Player dan UI tidak memiliki ownership progress yang bertentangan.
+E. Update source metadata tidak boleh menghapus user state tanpa contract yang jelas.
+
+============================================================
+17. SOURCE / EXTENSION / STREAM RESOLUTION
+============================================================
+
+Area ini compatibility-sensitive dan network-sensitive.
+
+Saat perubahan menyentuh source/extensions:
+- bedakan extension discovery/installation dari content source behavior;
+- pertahankan API/contract existing kecuali task memang mengubahnya;
+- periksa source identity dan persistence;
+- periksa headers/cookies/referer/user-agent bila relevan;
+- periksa stream/video list resolution;
+- periksa error/no-result behavior;
+- periksa extension update/install state;
+- periksa deep links/repository links bila relevan.
+
+Jangan memperbaiki source-specific failure dengan global workaround yang memengaruhi semua source tanpa evidence.
+
+============================================================
+18. PLAYER / MPV / CAST / PIP / EXTERNAL PLAYBACK
+============================================================
+
+Player adalah RUNTIME-SENSITIVE.
+
+Sebelum mengubah player:
+- tentukan ownership playback session;
+- bedakan UI overlay state dari player engine state;
+- periksa lifecycle service/session;
+- periksa seek/progress persistence;
+- periksa pause/resume/stop semantics;
+- periksa orientation/fullscreen/PiP;
+- periksa audio/subtitle selection;
+- periksa decoder/GPU/mpv config bila relevan;
+- periksa Cast handoff;
+- periksa external player handoff/return;
+- periksa episode previous/next transition;
+- periksa torrent/custom scripts hanya bila task menyentuhnya.
+
+Jangan menyelesaikan engine/state bug dengan cosmetic overlay workaround.
+
+============================================================
+19. DOWNLOAD / LOCAL / OFFLINE MODE
+============================================================
+
+Periksa:
+- queue/worker;
+- filesystem path;
+- metadata;
+- partial download;
+- cancellation/retry;
+- resume;
+- deletion;
+- storage availability;
+- offline playback;
+- Local source behavior bila relevan;
+- UI progress;
+- cold start;
+- low-storage behavior.
+
+State download harus berasal dari source of truth yang konsisten.
+Offline Mode tidak boleh mengubah durable data secara tidak sengaja.
+Jangan membuat UI seolah content tersedia offline bila file sebenarnya tidak valid/tersedia.
+
+============================================================
+20. TRACKING
+============================================================
+
+Tracking melibatkan remote state dan user-owned progress.
+
+Periksa:
+- authenticated account/session;
+- mapping anime/entry identity;
+- progress/status semantics;
+- remote failure/retry;
+- local-vs-remote precedence;
+- duplicate update;
+- logout/token expiry;
+- background sync ordering.
+
+Jangan mengubah local progress hanya untuk menutupi tracker error.
+Jangan menganggap semua tracker memiliki capability/field yang sama.
+
+============================================================
+21. BACKUP / RESTORE / CROSS SYNC / GOOGLE DRIVE / SYNCYOMI
+============================================================
+
+Area ini DATA-SENSITIVE.
+
+Sebelum mengubah:
+- tentukan format/version;
+- existing backup compatibility;
+- partial restore behavior;
+- conflict semantics;
+- retry/idempotency;
+- authentication/OAuth;
+- encrypted/secret material;
+- local-vs-remote precedence;
+- deletion semantics.
+
+Google Drive OAuth/client secret/deep-link compatibility harus mengikuti docs/FORK_IDENTITY.md dan release configuration aktual.
+
+Jangan mengorbankan existing backup compatibility tanpa explicit migration contract.
+
+============================================================
+22. NAVIGATION / DEEP LINK / SHORTCUT
+============================================================
+
+Lalapo v2 primary destinations:
+Library / Discover / Activity / More.
+
+Untuk navigation task:
+- pertahankan visible destination mapping;
+- pertahankan intended sub-state;
+- periksa back behavior;
+- periksa deep link;
+- periksa shortcut;
+- periksa adaptive/tablet route;
+- periksa player return route;
+- periksa extension manager route.
+
+Reselect/long-press boleh menjadi shortcut, tetapi fitur penting tidak boleh bergantung pada gesture tersembunyi jika frozen UI/UX spec melarangnya.
+
+============================================================
+23. UI / UX & FROZEN V2 BASELINE
+============================================================
+
+Untuk presentation task yang menyentuh area Lalapo v2:
+docs/Lalapo_V2_UI_UX_Spec.md adalah frozen baseline kecuali owner/task-specific spec mengoverride.
+
+Prinsip produk:
+Simple by default, powerful when needed.
+
+Jangan melakukan redesign hanya demi terlihat baru.
+
+Jika task bukan visual change:
+pertahankan layout, spacing, typography, color, icon, motion, navigation, scroll, gesture, dan theme behavior yang tidak berkaitan.
+
+Setiap touched screen harus mempertimbangkan bila applicable:
+- loading;
+- empty;
+- error;
+- offline;
+- disabled;
+- selected;
+- adaptive/tablet;
+- light/dark/AMOLED.
+
+Domain/source/player/download/tracking/backup engines tidak boleh ditulis ulang hanya untuk presentation cleanup tanpa requirement konkret.
+
+============================================================
+24. RECYCLERVIEW / LIST / SCROLL / GESTURE / ADAPTIVE UI
+============================================================
+
+Pertimbangkan:
+- stable item identity;
+- recycled state;
+- list key;
+- scroll restoration;
+- nested scrolling;
+- selection state;
+- two-pane/adaptive presentation;
+- window size;
+- gesture ownership;
+- touch target.
+
+Preserve user position kecuali task meminta reset.
+
+============================================================
+25. PERFORMANCE
+============================================================
+
+Correctness lebih penting daripada micro-optimization.
+
+Periksa bila relevan:
+- repeated DB query;
+- N+1;
+- unnecessary full-list refresh;
+- duplicate Flow collection;
+- blocking main thread;
+- expensive recomposition;
+- large allocation;
+- unbounded cache;
+- repeated source/network request;
+- unnecessary player reinitialization;
+- repeated stream resolution;
+- expensive image decoding;
+- download/player contention.
+
+Performance fix harus memiliki evidence yang sesuai jika klaim performa material dibuat.
+
+============================================================
+26. ERROR HANDLING
+============================================================
+
+Jangan menyembunyikan kegagalan agar flow terlihat berhasil.
+
+Hindari:
+- catch Exception { } tanpa handling;
+- fake success;
+- silent fallback yang menutupi corruption/error;
+- retry tanpa batas;
+- mengubah unavailable stream menjadi state seolah playback berhasil.
+
+Pertahankan informasi diagnosis yang cukup tanpa mengekspos secret.
+
+============================================================
+27. SECURITY & SECRETS
+============================================================
+
+Jangan:
+- hardcode secret;
+- commit credential;
+- commit signing key;
+- commit OAuth client secret;
+- log token/password;
+- menampilkan repository secret dalam chat/log;
+- melemahkan certificate/input validation tanpa requirement kuat;
+- menjalankan untrusted code untuk sekadar memperoleh diagnosis.
+
+Repository release menggunakan secret yang terdokumentasi di .github/RELEASE.md.
+Secret adalah external requirement, bukan source content.
+
+============================================================
+28. BACKWARD COMPATIBILITY
+============================================================
+
+Jangan hanya memikirkan fresh install.
+
+Pertimbangkan existing users dengan:
+- database lama;
+- library/history/progress lama;
+- downloads lama;
+- preferences lama;
+- backup lama;
+- cached state;
+- OAuth callbacks;
+- extension repositories/deep links;
+- tracker sessions;
+- partially completed operation.
+
+Fresh install bekerja tidak membuktikan upgrade path aman.
+
+============================================================
+29. KNOWN-GOOD / REFERENCE VERSION
+============================================================
+
+Jika owner memberikan:
+- commit lama;
+- branch/tag;
+- PR;
+- APK;
+- workflow artifact;
+- video versi bekerja;
+
+gunakan sebagai behavioral reference.
+
+Bandingkan KNOWN GOOD vs CURRENT.
+Cari divergence terkecil yang menjelaskan regression.
+Jangan otomatis mengembalikan seluruh implementation lama.
+
+============================================================
+30. SCREENSHOT / VIDEO / LOG
+============================================================
+
+Gunakan screenshot/video sebagai evidence behavior, bukan otomatis root cause.
+
+Untuk crash/log:
+prioritaskan:
+1. exception utama;
+2. caused-by chain;
+3. application stack frame;
+4. thread;
+5. lifecycle/runtime context;
+6. event sebelum crash.
+
+Pisahkan:
+ROOT CAUSE
+dari
+SECONDARY WARNING / NOISE.
+
+============================================================
+31. TESTING STRATEGY
+============================================================
+
+Pilih validation berdasarkan risiko dan perubahan nyata.
+
+Unit/regression test harus:
+- membuktikan contract yang relevan;
+- tidak terlalu terikat implementation detail;
+- gagal untuk regression yang dimaksud;
+- tidak hanya mengunci bug workaround.
+
+Jangan menghapus/melemahkan test agar perubahan hijau.
+
+CI/delivery gate aktual mengikuti Working Guide.
+
+============================================================
+31A. TEST INTEGRITY
+============================================================
+
+Jangan menghasilkan CI hijau dengan menghapus/skip test, melemahkan assertion,
+mengubah expected value/fixture/golden/acceptance guard untuk menerima regression,
+memperlebar tolerance tanpa justification, atau menambah retry yang menutupi failure.
+Test/fixture boleh direvisi hanya jika requirement owner memang berubah,
+test terbukti salah/stale, atau perubahan expected behavior disetujui dan
+didukung evidence. Jelaskan alasan dalam review/diff.
+FIX THE CAUSE; DO NOT WEAKEN THE EVIDENCE.
+
+============================================================
+32. DIFF REVIEW
+============================================================
+
+Sebelum delivery:
+- review semua file berubah;
+- pastikan setiap perubahan berkaitan dengan task;
+- cari accidental rename/reformat;
+- cari secret;
+- cari compatibility regression;
+- cari duplicate state/job/collector;
+- cari perubahan behavior tak diminta;
+- cari perubahan build/release identity tak disengaja;
+- pastikan tests tidak dilemahkan.
+
+============================================================
+33. EVIDENCE LANGUAGE
+============================================================
+
+Gunakan bila membantu:
+PROVEN — dibuktikan oleh source/test/runtime/log.
+INFERENCE — kesimpulan kuat dari evidence.
+HYPOTHESIS — dugaan yang perlu diuji.
+UNKNOWN — evidence belum cukup.
+
+Jangan menyamakan:
+- static/source review;
+- local/unit test;
+- CI;
+- emulator/runtime;
+- physical-device test;
+- production evidence.
+
+============================================================
+33A. INFORMATION GAIN & SUFFICIENT EVIDENCE
+============================================================
+
+Gunakan definisi PROVEN / INFERENCE / HYPOTHESIS / UNKNOWN di §33.
+Untuk investigasi kompleks pilih single targeted experiment dengan information gain
+tertinggi: reproduction, instrumentation, targeted test, known-good comparison,
+bisect, atau small A/B. Jangan mengulang broad audit atau hipotesis yang terbantah.
+Berhenti ketika evidence minimum cukup untuk root cause/design, owning layer,
+scope, regression surface, diff, dan validation sesuai risiko.
+Catat unknown non-blocking sebagai follow-up; jangan mengklaim device/production
+proof dari static, compile, unit, CI, atau emulator proof.
+
+============================================================
+34. STOP CONDITIONS
+============================================================
+
+STOP dan minta keputusan owner bila:
+- requirement produk benar-benar ambigu dan dua pilihan mengubah behavior;
+- task memerlukan credential/secret yang tidak tersedia;
+- perubahan compatibility besar memerlukan product decision;
+- task memerlukan physical-device observation yang tidak dapat digantikan evidence lain;
+- destructive/final action membutuhkan authorization menurut Working Guide;
+- governing document conflict tidak dapat diselesaikan dari evidence.
+
+Jangan STOP untuk pertanyaan yang dapat dijawab dari repository/tool.
+
+============================================================
+34A. AUDIT MODE
+============================================================
+
+AUDIT default adalah READ/MAP/INVESTIGATE, bukan mengubah semua temuan.
+Pisahkan INVESTIGATION (root cause/ownership/legacy/concurrency/regression),
+IMPLEMENTATION (hanya in-scope yang disetujui), dan VALIDATION (evidence
+terhadap tested code/SHA). Kelompokkan P0 data loss/crash, P1 correctness,
+P2 moderate issue, P3 cleanup. Out-of-scope: REPORT, DO NOT FIX.
+
+============================================================
+35. DEFINITION OF ENGINEERING DONE
+============================================================
+
+Engineering work dianggap siap dikirim bila:
+- intent dipahami;
+- root cause/design path dibuktikan secukupnya;
+- source of truth/ownership jelas;
+- perubahan scope-correct;
+- compatibility relevant dipertahankan;
+- validation sesuai risiko dijalankan;
+- full diff direview;
+- tidak ada klaim evidence berlebihan;
+- delivery mengikuti LALAPO_WORKING_GUIDE_UPDATED.txt.
+
+Prinsip akhir:
+UNDERSTAND THE REAL SYSTEM, FIX THE REAL CAUSE, PRESERVE THE REAL CONTRACT.

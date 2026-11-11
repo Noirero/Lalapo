@@ -1,0 +1,809 @@
+LALAPO — WORKING GUIDE / REPOSITORY / CI / RELEASE
+
+Document identity:
+Canonical filename: LALAPO_WORKING_GUIDE_UPDATED.txt
+Document version: 2026-11-11.1
+Document status: PROPOSED / OWNER REVIEW REQUIRED — NOT YET CANONICAL
+Proposal ini tidak mengubah CI behavior, routing, checks, merge, atau release.
+Status canonical menunggu keputusan/adopsi eksplisit owner.
+
+VERSION / PRECEDENCE RULE
+- Filename canonical menunjukkan IDENTITAS dokumen, bukan nomor revisi.
+- Suffix filename bukan sumber precedence.
+- Gunakan revisi dengan Document version tertinggi yang secara eksplisit ditetapkan owner sebagai CURRENT / CANONICAL.
+- Instruksi task eksplisit terbaru owner memiliki precedence tertinggi.
+- Jangan mencampur policy lama dan baru.
+- Jika versi/otoritas benar-benar ambigu dan mengubah repository/CI/release decision, STOP dan minta owner menentukan revisi authoritative.
+
+Status:
+Instruksi repository/delivery untuk AI/agent yang mengerjakan Lalapo.
+
+Repository:
+Noirero/Lalapo
+
+HISTORICAL WRITTEN POLICY (2026-10-29.1):
+main was the documented default PR/work branch and tagged-release source;
+no separate standing beta integration policy was authorized in that snapshot.
+
+VERIFIED REPOSITORY CHECKPOINT (OBSERVATIONAL, 2026-11-11):
+main = 2f29822f52b1a3069289c95e82875074483292a9
+beta = aec713382e6e4ff69b362d8a74d59c3b6758d0ae
+main...beta DIVERGED: beta ahead 49, behind 4 commits.
+main-only delta: Modern Library theme/launcher icon changes.
+beta-only delta: category management, presentation/settings, beta build changes.
+Open PRs: #36 Draft -> main; #13 -> beta; #3 -> beta.
+PR #19 (feature/category-sets-parity) is CLOSED/MERGED, not Draft.
+GitHub branch metadata: main/beta protected=false; rulesets listing empty;
+detailed branch-protection read returned 403, so full enforcement not confirmed.
+Actual workflows: build.yml ("CI Checks"), build-stable-manual.yml,
+build-beta-manual.yml, release.yml.
+Source contracts: docs/FORK_IDENTITY.md, docs/Lalapo_V2_UI_UX_Spec.md,
+.github/RELEASE.md. These SHA/PR details are snapshots, not permanent pins.
+
+OWNER DECISION REQUIRED: beta is present, but its permanent/temporary
+integration role is not authorized by this evidence. Do not retarget
+existing PRs, import Miyorare routing/classifier, or change release flow.
+
+============================================================
+0. CARA MENGGUNAKAN DOKUMEN INI
+============================================================
+
+Baca dokumen ini sebelum pekerjaan repository material pada Lalapo.
+
+Dokumen ini mengatur:
+- repository routing;
+- work branch;
+- PR;
+- CI;
+- exact-SHA evidence;
+- runtime validation classification;
+- release/tag flow;
+- final/destructive action authorization;
+- recovery/concurrency;
+- delivery reporting.
+
+Engineering reasoning mengikuti:
+LALAPO_AI_WORKING_PROTOCOL.txt
+
+Untuk task UI/UX:
+gunakan docs/Lalapo_V2_UI_UX_Spec.md bila area terkait.
+
+Untuk identity/deep-link/OAuth/compatibility:
+gunakan docs/FORK_IDENTITY.md.
+
+Untuk release setup:
+gunakan .github/RELEASE.md DAN workflow aktual.
+
+============================================================
+0A. CURRENT ACTIVE ROUTING SNAPSHOT
+============================================================
+
+PRIOR GOVERNING DEFAULT: main -> temporary task branch -> PR main ->
+applicable exact-head validation -> owner-authorized merge.
+Tagged release source remains main under .github/RELEASE.md.
+ACTUAL REPOSITORY: beta exists and receives PRs; role = OWNER DECISION REQUIRED.
+Do not infer a new integration route from number of commits, branch existence,
+manual beta APK workflow, or historical PR targets.
+Do not modify existing PR bases/heads. For the explicitly authorized
+documentation task only, create docs/* from main and Draft PR to main
+under previously documented default; this does not decide beta routing.
+No new CI classifier, required status checks, or promotion policy is adopted.
+
+============================================================
+0B. REPOSITORY REALITY VS GOVERNING POLICY
+============================================================
+
+Repository/GitHub aktual menunjukkan:
+APA YANG SEDANG TERJADI SEKARANG.
+
+Governing document/task authoritative menunjukkan:
+APA YANG SEHARUSNYA BERLAKU.
+
+Jika berbeda:
+- jangan otomatis menganggap repository benar hanya karena current state;
+- jangan otomatis mengubah repository agar cocok dengan dokumen;
+- identifikasi intentional change, drift, stale documentation, incomplete migration, atau kondisi lain;
+- selesaikan dengan evidence.
+
+Prinsip:
+REPOSITORY DESCRIBES CURRENT REALITY; GOVERNING POLICY DEFINES INTENDED AUTHORITY.
+
+============================================================
+0C. PRE-WRITE CHECKPOINT
+============================================================
+
+Sebelum source edit, branch creation, PR update, merge preparation, tag, atau release action:
+verifikasi bila akses tersedia:
+- REPO;
+- BASE;
+- BASE HEAD;
+- WORK BRANCH;
+- TARGET;
+- EXISTING PR;
+- RELEVANT DIFF;
+- RELEVANT CI;
+- DEPENDENCY/PR prerequisite;
+- release/tag state bila task release.
+
+Untuk pekerjaan material, checkpoint minimum:
+REPO / BASE / HEAD / TARGET / PR / DIFF STATE / VALIDATION STATE
+
+============================================================
+1. DEFAULT BRANCH & WORK BRANCH POLICY
+============================================================
+
+main adalah current default branch dan release source.
+
+Untuk AI/agent code changes:
+- jangan edit main secara langsung sebagai default;
+- buat/reuse temporary work branch dari current main;
+- nama branch harus menjelaskan scope, contoh:
+  fix/...
+  feat/...
+  refactor/... hanya bila refactor memang task
+  docs/...
+  chore/...
+  hotfix/... untuk urgent release fix;
+- PR diarahkan ke main kecuali owner menetapkan target lain.
+
+Alasan:
+CI Checks workflow berjalan pada pull_request dan push ke main.
+PR memberikan reviewable diff dan exact-head CI surface.
+
+Karena branch protection saat baseline tidak aktif:
+PR + CI adalah procedural safety requirement untuk AI/agent, bukan sesuatu yang boleh diasumsikan dipaksa GitHub.
+
+Owner dapat secara eksplisit mengubah flow untuk task tertentu.
+
+============================================================
+2. REFRESH BEFORE MATERIAL WRITE
+============================================================
+
+Repository dapat berubah concurrently.
+
+Sebelum:
+- create/update file;
+- create commit;
+- update branch ref;
+- create/update PR;
+- resolve conflict;
+- merge preparation;
+- tag/release preparation;
+
+refresh relevant branch/head.
+
+Jangan overwrite unrelated concurrent work.
+
+Jika work branch sudah bergerak:
+- inspect diff;
+- reconcile;
+- jangan force-push otomatis.
+
+============================================================
+3. PR POLICY
+============================================================
+
+Satu logical change biasanya tetap satu logical PR sampai terintegrasi.
+
+Default:
+- satu task/logical change -> satu work branch -> satu PR main.
+
+Update PR yang sama jika:
+- corrective fix masih bagian logical change;
+- CI failure memperlihatkan defect dari change yang sama;
+- review menemukan regression dalam scope yang sama.
+
+Buat PR terpisah bila:
+- perubahan independen secara produk/engineering;
+- membutuhkan urutan merge berbeda;
+- risk/validation class materially berbeda;
+- rollback independen bernilai;
+- PR original sudah merge;
+- review lebih aman bila dipisah.
+
+CI retry/reconstruction mechanics bukan alasan otomatis membuat PR baru.
+
+============================================================
+4. CURRENT AUTOMATED CI — BUILD & TEST
+============================================================
+
+Verified .github/workflows/build.yml on main/beta, name "CI Checks":
+pull_request with path filtering; push to main and beta.
+Concurrency cancel-in-progress=true; permissions contents:read.
+
+"Code Quality & Tests": checkout; PR Dependency Review; JDK/Gradle setup;
+./gradlew spotlessCheck; ./gradlew testDebugUnitTest;
+python3 scripts/test_category_sets_migration.py (legacy SQLite fixtures);
+./gradlew verifySqlDelightMigration; failure-only unit test report upload.
+
+"Production Restore Integration (Android)": API 35 x86_64 emulator using
+reactivecircus/android-emulator-runner@v2, KVM, 45-minute job timeout,
+./gradlew connectedDebugAndroidTest. No separate risk/path job skip
+is visible in inspected YAML; job name is not exact test-count evidence.
+
+Other workflows are SEPARATE from CI Checks:
+build-stable-manual.yml: workflow_dispatch only on main;
+signed assembleRelease -Pinclude-cast and arm64 APK artifact.
+build-beta-manual.yml: workflow_dispatch only on beta;
+signed assemblePreview -Pinclude-cast and arm64 APK artifact.
+release.yml: tags v* (stable draft release) or r* (preview prerelease),
+signed release/preview APKs and stable-only FOSS APKs.
+Current CI Checks does NOT assembleRelease or upload release APK/mapping.
+No Miyorare classifier/labels or new CI gates are implied.
+
+============================================================
+5. CI PATH FILTER SEMANTICS
+============================================================
+
+CI Checks memiliki path filters.
+
+Konsekuensi:
+- docs-only changes tertentu dapat tidak memicu workflow;
+- translation resource changes tertentu juga dapat difilter sesuai workflow aktual.
+
+Jika workflow tidak trigger karena path filter:
+status = NOT TRIGGERED / NOT APPLICABLE,
+bukan "green".
+
+Jangan mengubah source hanya untuk memaksa workflow trigger.
+
+Jika validation tambahan material diperlukan:
+- jalankan targeted/local validation yang tepat bila environment memungkinkan; atau
+- gunakan workflow/path yang memang tersedia dan benar;
+- jangan membuat dummy commit atau unrelated change hanya untuk CI.
+
+============================================================
+6. TESTED CODE / EXACT-SHA EVIDENCE
+============================================================
+
+Test/build/CI/runtime evidence hanya berlaku untuk code/SHA yang benar-benar diuji.
+
+Jangan:
+- memindahkan status green dari commit A ke commit B;
+- mengklaim PR head baru green karena prior head green;
+- mengklaim release candidate tervalidasi jika tag menunjuk commit berbeda dari evidence.
+
+Sebelum merge/release:
+- identifikasi exact PR head/candidate SHA;
+- cocokkan dengan workflow run/evidence;
+- jika code material berubah setelah validation, tentukan validation yang perlu diulang berdasarkan risiko.
+
+Prinsip:
+VALIDATION PROVES THE CODE THAT RAN, NOT CODE THAT CHANGED AFTERWARD.
+
+============================================================
+7. VALIDATION CLASSIFICATION
+============================================================
+
+A source/static, B local unit/integration, C CI, D emulator/runtime,
+E physical device, F release artifact, G production evidence.
+Levels are distinct; no automatic transfer of proof.
+Actual CI Checks: format/JVM/legacy migration fixture/SQLDelight,
+plus Android 15 connectedDebugAndroidTest if job really executes and passes.
+Actual test count/selection must be verified from XML/log if claimed.
+CI green is NOT physical-device QA, real player/mpv, Cast/PiP, external
+provider/OAuth/Google Drive validation, or signed release artifact proof.
+Distinguish FAILED, CANCELLED, SKIPPED, NOT TRIGGERED, SUCCESS.
+
+============================================================
+8. RISK-BASED VALIDATION
+============================================================
+
+LOW RISK
+Contoh:
+- docs;
+- comment;
+- non-runtime metadata.
+
+Gunakan:
+- diff review;
+- syntax/format bila relevant;
+- CI hanya jika triggered.
+
+NORMAL
+Contoh:
+- presentation behavior;
+- non-critical domain change.
+
+Gunakan:
+- relevant targeted tests;
+- current CI Checks;
+- runtime check bila behavior tidak dapat dibuktikan statically.
+
+HIGH RISK
+Contoh:
+- database/SQLDelight;
+- backup/restore;
+- download/filesystem;
+- player/mpv;
+- source/extension contract;
+- OAuth/deep links;
+- build/signing/release;
+- application identity;
+- navigation/deep-link architecture;
+- cross-sync;
+- migration.
+
+Gunakan:
+- current CI Checks;
+- targeted regression test bila practical;
+- runtime/device validation sesuai behavior;
+- release/compatibility checks bila applicable.
+
+Tidak ada rule "selalu boot emulator" pada Lalapo saat ini.
+Validation dipilih berdasarkan risk dan evidence needed.
+
+============================================================
+8A. CI OBSERVATION (NO OPTIMIZATION AUTHORIZED)
+============================================================
+
+CI #43027587433 (main exact HEAD, 2026-11-11) SUCCESS:
+Code Quality & Tests 6m57s; Android job 10m11s;
+Android runner step 9m25s including emulator preparation and testing.
+CI #41556343840 (beta exact HEAD, 2026-11-03) SUCCESS:
+Code Quality & Tests 3m47s; Android job 5m11s.
+UNKNOWN: isolated emulator boot, test-only duration, Gradle setup/configuration
+overhead, cache hit/miss, duplicate validation cost and representative p50/p95.
+Do not conclude performance bottleneck from these non-matched runs.
+Before any CI behavior change measure representative actual phases, identify
+duplication and submit a separate risk/cost/benefit proposal. No Quick/Smart/
+Final workflows, path-based skips, or removal of mandatory instrumentation here.
+
+============================================================
+9. RUNTIME / EMULATOR / PHYSICAL DEVICE
+============================================================
+
+CURRENT automated Android instrumentation IS present inside CI Checks:
+"Production Restore Integration (Android)", API 35 x86_64,
+./gradlew connectedDebugAndroidTest, timeout 45 minutes.
+For Android proof capture exact SHA/base, run/attempt, job/step, emulator
+config, actual executed test count/result/XML/log when available.
+Build or emulator boot without actual test execution is NOT test PASS.
+If test count not inspected, test-level evidence remains UNKNOWN.
+Emulator PASS does not prove physical-device QA or real external services,
+player hardware codecs, PiP/Cast, OAuth, tracker, download, or UI paths
+not exercised. Owner physical-device acceptance remains separate.
+Do not weaken existing CI instrumentation.
+
+============================================================
+9A. TARGETED-FIRST CI FAILURE RECOVERY
+============================================================
+
+1. Capture exact repo/base/head SHA, failing run/attempt, workflow/job/step,
+   first relevant error/log, XML/artifacts, emulator/test selection.
+2. Classify: application regression, pre-existing baseline, infrastructure,
+   test harness, external dependency, or UNKNOWN. Separate PROVEN/INFERENCE/
+   HYPOTHESIS; matching signatures alone do not prove flakiness.
+3. Choose highest-information-gain targeted diagnostic (formatter/compile,
+   focused JVM or instrumentation test, logcat, known-good diff, small A/B).
+   Never rerun full emulator merely for detectable formatting/static errors.
+4. Fix owning layer using smallest correct change, without weakening test,
+   assertion, fixture, golden, migration, or acceptance guard.
+5. Run targeted regression; update hypothesis from result.
+6. Return to every MANDATORY exact-head validation before readiness.
+   Targeted PASS never replaces required final full CI/Android proof.
+Full rerun as first experiment is justified only when combined-suite behavior,
+proven transient infrastructure or mandatory gate makes it necessary.
+No blind retries, bypass, policy/label changes, or synthetic proof.
+
+============================================================
+10. UI / PRESENTATION VALIDATION
+============================================================
+
+Jika task menyentuh Lalapo v2 presentation:
+- gunakan docs/Lalapo_V2_UI_UX_Spec.md;
+- preserve Library / Discover / Activity / More shell;
+- preserve domain engines kecuali requirement konkret memerlukan domain change;
+- periksa loading/empty/error/offline;
+- periksa adaptive/tablet bila area terkait;
+- periksa light/dark/AMOLED bila area terkait.
+
+Visual QA tidak otomatis harus memblokir semua PR kecil.
+Namun release candidate harus mempunyai evidence sesuai area yang berubah.
+
+============================================================
+11. IDENTITY / COMPATIBILITY VALIDATION
+============================================================
+
+Untuk perubahan yang menyentuh:
+- applicationId;
+- namespace/package;
+- provider authority;
+- extension installer;
+- deep link;
+- OAuth callback;
+- backup identifier;
+- external integration;
+
+baca docs/FORK_IDENTITY.md.
+
+Current documented contract:
+- applicationId com.noirero.lalapo;
+- namespace eu.kanade.tachiyomi retained;
+- selected aniyomi:// and animiru:// schemes retained for compatibility.
+
+Jangan mass-rename atau memutus scheme tanpa migration plan + validation.
+
+============================================================
+12. BUILD VARIANTS
+============================================================
+
+Existing app build variants: debug, release, foss, preview, benchmark.
+Release outputs: universal, armeabi-v7a, arm64-v8a, x86, x86_64.
+Not every workflow builds every variant.
+CI Checks does not build/sign APK artifacts. Manual stable (main) uses
+assembleRelease arm64; manual beta uses assemblePreview arm64; tag Release
+builds stable release+FOSS or preview APKs. Verify exact artifact/run.
+
+============================================================
+13. SIGNING
+============================================================
+
+Signing is security-sensitive.
+
+Current release-related secret names documented:
+- SIGNING_KEY
+- KEY_STORE_PASSWORD
+- ALIAS
+- KEY_PASSWORD
+- CLIENT_SECRETS_TEXT
+
+Rules:
+- jangan expose secret ke chat/log;
+- jangan commit ke repository;
+- jangan print decoded key;
+- jangan convert secret menjadi file repository;
+- jangan weaken signing validation.
+
+app/build.gradle.kts memvalidasi SIGNING_KEY sebagai Base64-encoded JKS/PKCS12 untuk GitHub release context.
+
+Jika signing config invalid:
+treat as release blocker / configuration issue,
+bukan alasan menurunkan signing requirement.
+
+============================================================
+14. RELEASE MODEL
+============================================================
+
+Current release source:
+tags pada main.
+
+Stable:
+tag v<version>
+contoh format repository: v0.20.0.1
+
+Preview:
+tag r<commit-count>
+contoh: r1234
+
+Current release workflow:
+.github/workflows/release.yml
+
+Stable behavior:
+- build release APK universal + ABI-specific;
+- build FOSS universal;
+- create GitHub Release as DRAFT pada current workflow;
+- owner/release operator dapat review draft sebelum publish.
+
+Preview behavior:
+- build preview universal + ABI-specific;
+- FOSS job skipped;
+- create GitHub prerelease;
+- current workflow does not mark it draft.
+
+Workflow aktual adalah source of truth untuk detail teknis.
+.github/RELEASE.md adalah documented release setup.
+Jika keduanya berbeda, investigate discrepancy sebelum release action.
+
+============================================================
+15. RELEASE READINESS
+============================================================
+
+Sebelum membuat stable/preview tag:
+1. refresh main exact HEAD;
+2. pastikan candidate commit adalah commit yang memang ingin dirilis;
+3. periksa CI Checks evidence yang relevan pada candidate/main state;
+4. periksa unresolved PR/known blocker yang relevan;
+5. periksa version/release identity bila task memerlukannya;
+6. periksa runtime/device QA sesuai risk;
+7. pastikan signing/release secret dependency diketahui;
+8. catat exact candidate SHA.
+
+Tag harus menunjuk exact candidate yang disetujui.
+
+Tag creation adalah finalizing action dan memerlukan explicit owner authorization.
+
+Stable draft release yang dihasilkan workflow BUKAN otomatis permission untuk publish.
+
+Publish stable draft release memerlukan explicit owner authorization.
+
+============================================================
+16. PREVIEW RELEASE
+============================================================
+
+Preview bukan jalur untuk melewati quality gate.
+
+Preview dapat digunakan untuk:
+- runtime/user acceptance;
+- owner device test;
+- pre-release distribution.
+
+Karena r* menghasilkan prerelease yang dapat langsung dipublikasikan oleh workflow:
+membuat/push preview tag adalah consequential release action.
+Explicit owner authorization diperlukan.
+
+============================================================
+17. STABLE RELEASE
+============================================================
+
+Stable v* adalah release candidate final.
+
+Sebelum stable tag:
+- exact candidate SHA harus jelas;
+- required CI harus sesuai;
+- release-critical runtime QA harus selesai atau owner secara eksplisit menerima outstanding risk;
+- versionName/versionCode/release notes state harus diperiksa sesuai task;
+- release secrets tidak boleh diekspos.
+
+Workflow stable membuat draft release.
+Draft review tidak sama dengan published release.
+
+============================================================
+18. HOTFIX
+============================================================
+
+Previous governing policy had no separately authorized integration branch;
+beta now exists; its integration role is OWNER DECISION REQUIRED.
+
+Hotfix default:
+current main
+-> hotfix/* branch
+-> minimal fix
+-> PR main
+-> relevant CI Checks
+-> runtime/compat validation sesuai risk
+-> owner-authorized merge
+-> owner-authorized release/tag bila diperlukan.
+
+Hotfix bukan cara melewati CI.
+
+============================================================
+19. DEPENDENCY / RENOVATE / SUPPLY CHAIN
+============================================================
+
+Dependency Review berjalan pada PR di CI Checks.
+
+Renovate config tersedia di .github/renovate.json5.
+
+Untuk dependency update:
+- periksa source/release compatibility;
+- jangan hanya melihat compile;
+- native/player/codec/source libraries dapat membutuhkan runtime validation;
+- preserve lock/version/catalog semantics;
+- review transitive security/risk jika material.
+
+============================================================
+20. SQLDELIGHT MIGRATION
+============================================================
+
+verifySqlDelightMigration adalah current CI step.
+
+Untuk DB/schema/query migration:
+- jangan bypass step;
+- tambahkan migration dengan backward compatibility;
+- test existing-data path bila practical;
+- green migration verification bukan otomatis bukti semua semantic data behavior benar.
+
+============================================================
+21. FORMATTING
+============================================================
+
+Current repository uses Spotless.
+
+Before PR readiness:
+- source harus memenuhi formatting;
+- jangan mass-format unrelated code;
+- ./gradlew spotlessApply dapat digunakan untuk touched files sesuai repository convention;
+- CI menjalankan spotlessCheck.
+
+============================================================
+22. BUILD / ARTIFACT
+============================================================
+
+CI Checks current build.yml does not assemble or upload release APK/mapping;
+it uploads unit-test report only if JVM test step fails.
+Separate manual/tag workflows own signed APK production. Artifact proof
+requires exact run/SHA, file presence and signer verification.
+Prior artifact evidence does not validate a newly changed SHA.
+
+============================================================
+23. CONCURRENCY
+============================================================
+
+CI Checks concurrency group uses workflow + PR number/ref and
+cancel-in-progress=true. Release and manual APK workflows use their own
+concurrency groups with cancel-in-progress=false.
+Cancelled != failed application test and != PASS; verify current exact
+head/ref and relevant job execution before claiming readiness.
+
+============================================================
+24. PR MERGE READINESS
+============================================================
+
+Sebelum menyatakan MERGE-READY:
+- scope sesuai task;
+- PR target benar;
+- diff reviewed;
+- no accidental secret/identity change;
+- CI Checks applicable state diketahui;
+- exact PR head evidence current;
+- required targeted/runtime validation selesai sesuai risk;
+- unresolved blocker material tidak ada;
+- physical-device validation tidak diklaim jika belum dilakukan.
+
+MERGE-READY BUKAN MERGE PERMISSION.
+
+============================================================
+25. FINAL / DESTRUCTIVE ACTION AUTHORIZATION
+============================================================
+
+Bedakan preparation dari final action.
+
+Memerlukan explicit owner authorization, kecuali task aktif sudah jelas mengizinkan:
+- merge PR;
+- create/push release tag v*;
+- create/push preview tag r*;
+- publish GitHub Release;
+- force push / history rewrite;
+- hard reset/discard material work;
+- delete material branch/tag;
+- overwrite important release asset;
+- destructive repository action setara.
+
+"buat PR" bukan izin merge.
+"siapkan release" bukan izin tag/publish.
+"build APK" bukan izin release.
+
+Jika owner sudah memberi izin jelas untuk task aktif:
+jangan meminta izin yang sama berulang kali kecuali target/state material berubah.
+
+Prinsip:
+PREPARE AUTONOMOUSLY WITHIN SCOPE; FINALIZE OR DESTROY ONLY WITH CLEAR AUTHORIZATION.
+
+============================================================
+26. REVERSIBLE ACTIONS
+============================================================
+
+Jika owner sudah mengotorisasi task yang jelas, agent dapat tanpa permission loop:
+- read source/history;
+- create/reuse work branch;
+- edit in-scope source;
+- commit;
+- push work branch;
+- create/update PR;
+- run available tests;
+- inspect CI/log/artifact;
+- perform post-CI audit.
+
+Tetap refresh state dan pertahankan scope.
+
+============================================================
+27. TOOL / CONNECTOR FALLBACK
+============================================================
+
+Tidak ada satu mekanisme repository yang wajib.
+
+Boleh gunakan capability yang aman:
+- GitHub connector/API;
+- contents/blob/tree/commit/ref;
+- PR diff/patch;
+- workflow/artifact API;
+- local repository workspace jika tersedia.
+
+Sebelum write:
+- refresh branch/HEAD;
+- pastikan target benar;
+- jangan overwrite concurrent work;
+- pastikan diff reviewable.
+
+Jangan membuat source change/workflow/commit kosong hanya untuk mengatasi keterbatasan tool.
+
+============================================================
+28. INTERRUPTED WORK / RECOVERY
+============================================================
+
+Jika pekerjaan terputus:
+jangan mengasumsikan state terakhir dari memory masih benar.
+
+Refresh:
+- REPO;
+- BASE/HEAD;
+- WORK BRANCH;
+- TARGET;
+- PR;
+- DIFF;
+- CI;
+- release/tag state bila relevan.
+
+Reuse branch/commit/PR yang masih valid.
+Jangan recreate/reset/force-push tanpa evidence.
+
+Prinsip:
+RECOVER FROM ACTUAL STATE; DO NOT RESTART BLINDLY.
+
+============================================================
+29. MULTI-PR / DEPENDENCY
+============================================================
+
+Conditional validated combined-state preservation applies only if PRs
+depend on each other, share regression surface/stale baseline, require
+corrective integration fix, or reproduce a previously validated candidate.
+For those cases map prerequisites, follow-up fixes, exact validated SHA,
+logical integration order; reconcile stale changes against current target
+and preserve material behavior/known fixes via targeted diff/history/semantic
+checks. Green individual PRs do not prove combined state.
+Do not impose full-tree equivalence/heavy retests on independent PRs.
+Additional CI/emulator is required only by existing policy or actual risk.
+No new routing or merge authorization is created.
+
+============================================================
+30. DOCUMENTATION CHANGES
+============================================================
+
+Docs-only changes mungkin tidak memicu CI Checks karena path filters.
+
+Untuk docs:
+- validate links/paths bila relevant;
+- pastikan tidak menciptakan policy yang bertentangan;
+- update governing document version jika authority berubah;
+- jangan menjalankan heavy build tanpa alasan.
+
+============================================================
+31. GOVERNING DOCUMENT CHANGES
+============================================================
+
+Jika LALAPO_AI_WORKING_PROTOCOL.txt atau LALAPO_WORKING_GUIDE_UPDATED.txt diubah:
+- increment Document version;
+- tetapkan CURRENT/CANONICAL hanya bila owner memang mengadopsi revisi;
+- jangan menyimpan dua revisi current dengan precedence ambigu;
+- Pola Kerja Lalapo.txt harus menunjuk canonical filename, bukan menduplikasi detail policy.
+
+============================================================
+32. SEBELUM MENYATAKAN TASK SELESAI
+============================================================
+
+Pastikan:
+- scope sesuai request;
+- target branch benar;
+- current head diketahui;
+- CI applicable state benar;
+- exact SHA evidence benar;
+- validation sesuai risk;
+- tidak ada coverage yang dilemahkan;
+- tidak ada klaim physical-device palsu;
+- tidak ada secret exposure;
+- tidak ada identity/compat regression tak disengaja;
+- final action tidak dilakukan tanpa authorization.
+
+============================================================
+33. RINGKASAN CEPAT
+============================================================
+
+Prior default remains main -> task branch -> PR main unless owner explicitly
+routes the task otherwise. beta integration role: OWNER DECISION REQUIRED.
+Preserve all existing PR targets.
+
+CI Checks: spotlessCheck + testDebugUnitTest +
+scripts/test_category_sets_migration.py + verifySqlDelightMigration +
+Android 15 connectedDebugAndroidTest (actual run evidence required).
+Manual signed APK workflows and tag Release workflow are separate.
+
+Current release:
+v* = stable, workflow creates draft release.
+r* = preview, workflow creates prerelease.
+Release source = tagged main commit.
+
+No Miyorare CI labels/classifier are assumed.
+
+Prinsip satu kalimat:
+SETIAP VALIDATION LALAPO HARUS MEMBUKTIKAN CODE/SHA YANG BENAR, DAN RELEASE HARUS BERASAL DARI CANDIDATE YANG BENAR.
