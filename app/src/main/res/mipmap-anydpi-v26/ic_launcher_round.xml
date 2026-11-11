@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@android:color/white" />
+    <foreground>
+        <!-- Keep the complete supplied artwork, including the Beta badge, inside the safe zone. -->
+        <inset
+            android:drawable="@drawable/lalapo_launcher_artwork"
+            android:inset="30%" />
+    </foreground>
+</adaptive-icon>
