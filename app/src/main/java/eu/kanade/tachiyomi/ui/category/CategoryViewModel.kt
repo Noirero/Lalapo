@@ -9,12 +9,14 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -59,28 +61,86 @@ class CategoryViewModel(
             libraryPreferences.activeCategorySetKey.get(),
         )
 
-    fun createSet(name: String) = runSetOperation { categorySetRepository.create(name) }
+    // Management is backed by SQLDelight flows, including hidden categories.
+    val categoriesBySet: StateFlow<Map<Long, List<Category>>?> = categorySetRepository.observeCategoriesBySet()
+        .map<Map<Long, List<Category>>, Map<Long, List<Category>>?> { it }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
-    fun renameSet(id: Long, name: String) = runSetOperation { categorySetRepository.rename(id, name) }
+    private val _setBusy = MutableStateFlow(false)
+    val setBusy: StateFlow<Boolean> = _setBusy
 
-    fun selectSet(key: String) = runSetOperation { categorySetRepository.selectActiveSet(key) }
+    private val _setError = MutableStateFlow<String?>(null)
+    val setError: StateFlow<String?> = _setError
 
-    fun deleteSet(id: Long, destinationId: Long?) = runSetOperation {
+    fun clearSetError() {
+        _setError.value = null
+    }
+
+    fun createSet(name: String, onSuccess: () -> Unit = {}) = runSetOperation(onSuccess) {
+        categorySetRepository.create(name)
+    }
+
+    fun renameSet(id: Long, name: String, onSuccess: () -> Unit = {}) = runSetOperation(onSuccess) {
+        categorySetRepository.rename(id, name)
+    }
+
+    fun selectSet(key: String) = runSetOperation {
+        categorySetRepository.selectActiveSet(key)
+    }
+
+    fun deleteSet(id: Long, destinationId: Long?, onSuccess: () -> Unit = {}) = runSetOperation(onSuccess) {
         categorySetRepository.delete(id, destinationId)
     }
 
-    fun moveCategory(categoryId: Long, destinationId: Long) = runSetOperation {
-        categorySetRepository.moveCategories(listOf(categoryId), destinationId)
+    fun moveCategory(categoryId: Long, destinationId: Long, onSuccess: () -> Unit = {}) =
+        runSetOperation(onSuccess) {
+            categorySetRepository.moveCategories(listOf(categoryId), destinationId)
+        }
+
+    fun createCategoryInSet(name: String, setId: Long, onSuccess: () -> Unit = {}) =
+        runSetOperation(onSuccess) {
+            when (val result = createCategoryWithName.await(name, setId)) {
+                is CreateCategoryWithName.Result.InternalError -> throw result.error
+                CreateCategoryWithName.Result.Success -> Unit
+            }
+        }
+
+    fun toggleManagedCategoryVisibility(category: Category) = runSetOperation {
+        when (val result = hideCategory.await(category)) {
+            is HideCategory.Result.InternalError -> throw result.error
+            HideCategory.Result.Success -> Unit
+        }
     }
 
-    fun reorderSets(ids: List<Long>) = runSetOperation { categorySetRepository.reorder(ids) }
+    fun reorderSets(ids: List<Long>) = runSetOperation {
+        categorySetRepository.reorder(ids)
+    }
 
-    private fun runSetOperation(operation: suspend () -> Unit) {
+    // Claim the mutation synchronously, before launching a coroutine, to close
+    // the double-tap window while the UI awaits the next StateFlow emission.
+    private fun runSetOperation(onSuccess: () -> Unit = {}, operation: suspend () -> Unit) {
+        if (_setBusy.value) return
+        _setBusy.value = true
+        _setError.value = null
         viewModelScope.launch {
             try {
                 operation()
+                onSuccess()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _events.send(CategoryEvent.InternalError)
+                _setError.value = when (e.message) {
+                    null, "" -> "Operasi Set gagal. Silakan coba lagi."
+                    "Duplicate Set name" -> "Nama Set sudah digunakan."
+                    "Category name is required" -> "Nama kategori tidak boleh kosong."
+                    "Unknown target Set" -> "Set tujuan tidak ditemukan."
+                    "Destination Set is required" -> "Pilih Set tujuan terlebih dahulu."
+                    "Invalid destination Set" -> "Set tujuan tidak valid."
+                    "Cannot delete last or unknown Set" -> "Set terakhir tidak dapat dihapus."
+                    else -> e.message
+                }
+            } finally {
+                _setBusy.value = false
             }
         }
     }
@@ -105,12 +165,13 @@ class CategoryViewModel(
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), CategoryScreenState.Loading)
 
-    fun createCategory(name: String) {
-        viewModelScope.launch {
-            when (createCategoryWithName.await(name)) {
-                is CreateCategoryWithName.Result.InternalError -> _events.send(CategoryEvent.InternalError)
-                else -> {}
-            }
+    fun createCategory(name: String, onSuccess: () -> Unit = {}) = runSetOperation(onSuccess) {
+        // The edit-categories action belongs to the currently selected Set.
+        // Other callers may continue using CreateCategoryWithName.await(name) unchanged.
+        val setId = categorySetRepository.getActiveSet().id
+        when (val result = createCategoryWithName.await(name, setId)) {
+            is CreateCategoryWithName.Result.InternalError -> throw result.error
+            CreateCategoryWithName.Result.Success -> Unit
         }
     }
 
