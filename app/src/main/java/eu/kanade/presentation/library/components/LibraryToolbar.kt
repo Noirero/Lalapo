@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -61,8 +60,6 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -79,7 +76,6 @@ import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
 import eu.kanade.presentation.theme.ModernLibraryGeometry
 import eu.kanade.presentation.theme.ModernLibraryTitleMotif
-import eu.kanade.presentation.theme.modernLibraryActionSurface
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.theme.modernLibrarySetSelectorWidth
 import eu.kanade.presentation.theme.resolveGlassPalette
@@ -726,56 +722,6 @@ private fun LibraryRegularToolbar(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun RowScope.ModernLibraryActionButton(
-    onClick: () -> Unit,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val palette = LocalModernVisualPalette.current
-    val chrome = requireNotNull(resolveModernLibraryChrome(palette, LocalModernArtworkIdentity.current))
-    val shape = chrome.actionShape
-    val filterHeight = with(LocalDensity.current) {
-        max(ModernLibraryGeometry.FilterHeight, ModernLibraryGeometry.FilterLineHeight.toDp() + 12.dp)
-    }
-    // Reserve the touch bounds independently of the smaller visual button.
-    Box(
-        modifier = modifier.heightIn(min = ModernLibraryGeometry.TouchTarget),
-        contentAlignment = Alignment.Center,
-    ) {
-        OutlinedButton(
-            onClick = onClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(filterHeight)
-                .semantics { this.selected = selected }
-                .modernLibraryActionSurface(chrome, selected = selected),
-            shape = shape,
-            border = BorderStroke(0.dp, Color.Transparent),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = if (selected) chrome.selectedContent else chrome.content,
-            ),
-            contentPadding = PaddingValues(horizontal = 9.dp),
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(ModernLibraryGeometry.FilterIcon),
-            )
-            Text(
-                text = label,
-                modifier = Modifier.padding(start = 4.dp),
-                fontSize = ModernLibraryGeometry.FilterText,
-                lineHeight = ModernLibraryGeometry.FilterLineHeight,
-                fontWeight = FontWeight.SemiBold,
-            )
         }
     }
 }

@@ -1,7 +1,11 @@
 package eu.kanade.presentation.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.anime.components.AnimeCover
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -13,6 +17,23 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ModernLibraryChromeTest {
+    @Test
+    fun `Lalapo retains its authored cover silhouette independently of Material shapes`() {
+        val chrome = requireNotNull(
+            resolveModernLibraryChrome(
+                ModernVisualPalette.Standard.copy(isModern = true),
+                ModernArtworkIdentity.LALAPO_AURORA,
+            ),
+        )
+        val outline = chrome.cardShape.createOutline(Size(128f, 152f), LayoutDirection.Ltr, Density(1f))
+        assertTrue(outline is Outline.Rounded)
+        val rect = (outline as Outline.Rounded).roundRect
+        assertEquals(17f, rect.topLeftCornerRadius.x)
+        assertEquals(17f, rect.topRightCornerRadius.x)
+        assertEquals(17f, rect.bottomLeftCornerRadius.x)
+        assertEquals(17f, rect.bottomRightCornerRadius.x)
+    }
+
     @Test
     fun `only six built-in identities receive authored library chrome`() {
         assertNull(resolveModernLibraryChrome(ModernVisualPalette.Standard, ModernArtworkIdentity.LALAPO_AURORA))

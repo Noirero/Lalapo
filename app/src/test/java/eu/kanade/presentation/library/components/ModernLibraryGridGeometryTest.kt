@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.ModernLibraryGeometry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -36,6 +37,20 @@ class ModernLibraryGridGeometryTest {
         assertEquals(3, tracks(412, 0).size)
         assertEquals(2, tracks(320, 0).size)
         assertEquals(3, tracks(432, 0).size)
+    }
+
+    @Test
+    fun `pilot gutters move layout breakpoints while fixed and auto preferences keep their meaning`() {
+        val widths = listOf(275, 276, 283, 284, 407, 408, 411, 412, 432)
+        // The beta layout before the pilot: 8dp content padding and 4dp between grid tracks.
+        val before = widths.map { width ->
+            with(GridCells.Adaptive(128.dp)) {
+                with(Density(1f)) { calculateCrossAxisCellSizes(width - 16, 4).size }
+            }
+        }
+        assertEquals(listOf(1, 2, 2, 2, 2, 3, 3, 3, 3), before)
+        assertEquals(listOf(1, 1, 1, 2, 2, 2, 2, 3, 3), widths.map { tracks(it, 0).size })
+        widths.forEach { width -> assertEquals(3, tracks(width, 3).size) }
     }
 
     @Test
