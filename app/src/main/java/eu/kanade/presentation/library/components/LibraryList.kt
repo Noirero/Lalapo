@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.anime.model.AnimeCover
 import tachiyomi.domain.library.model.LibraryAnime
@@ -28,6 +31,10 @@ internal fun LibraryList(
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
 ) {
+    val useModernLibraryTreatment = resolveModernLibraryChrome(
+        LocalModernVisualPalette.current,
+        LocalModernArtworkIdentity.current,
+    ) != null
     FastScrollLazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
@@ -49,6 +56,7 @@ internal fun LibraryList(
             val anime = libraryItem.libraryAnime.anime
             AnimeListItem(
                 isSelected = anime.id in selection,
+                useModernLibraryTreatment = useModernLibraryTreatment,
                 title = anime.title,
                 coverData = AnimeCover(
                     animeId = anime.id,

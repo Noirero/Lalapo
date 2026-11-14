@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -58,12 +58,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.AppBar
@@ -72,8 +74,8 @@ import eu.kanade.presentation.components.modernBorderHighlight
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernLibraryGeometry
 import eu.kanade.presentation.theme.ModernLibraryTitleMotif
-import eu.kanade.presentation.theme.modernLibraryActionSurface
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.theme.modernLibrarySetSelectorWidth
 import eu.kanade.presentation.theme.resolveGlassPalette
@@ -201,6 +203,9 @@ private fun LibraryRegularToolbar(
     }
     val searchInteraction = remember { MutableInteractionSource() }
     val searchFocused by searchInteraction.collectIsFocusedAsState()
+    val searchHeight = with(LocalDensity.current) {
+        max(ModernLibraryGeometry.SearchHeight, MaterialTheme.typography.bodyLarge.lineHeight.toDp() + 8.dp)
+    }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Column {
@@ -210,7 +215,8 @@ private fun LibraryRegularToolbar(
                         onClick = onClickSettings,
                         modifier = if (useMiyorareVisuals) {
                             Modifier
-                                .size(44.dp)
+                                .size(ModernLibraryGeometry.TouchTarget)
+                                .padding(ModernLibraryGeometry.SearchTouchInset)
                                 .modernLibraryChromeSurface(chrome!!, shape = controlShape)
                         } else {
                             Modifier
@@ -232,7 +238,12 @@ private fun LibraryRegularToolbar(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(44.dp)
+                                .heightIn(min = ModernLibraryGeometry.TouchTarget)
+                                .padding(
+                                    vertical =
+                                    ModernLibraryGeometry.SearchTouchInset,
+                                )
+                                .height(searchHeight)
                                 .modernLibraryChromeSurface(chrome!!, shape = controlShape, emphasized = searchFocused),
                             singleLine = true,
                             interactionSource = searchInteraction,
@@ -372,7 +383,10 @@ private fun LibraryRegularToolbar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(
+                        horizontal = if (useMiyorareVisuals) ModernLibraryGeometry.TitleMargin else 16.dp,
+                        vertical = 8.dp,
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -381,7 +395,7 @@ private fun LibraryRegularToolbar(
                             text = title.text,
                             style = if (useMiyorareVisuals) {
                                 MaterialTheme.typography.headlineMedium.copy(
-                                    fontSize = if (chrome!!.serifTitle) 35.sp else 34.sp,
+                                    fontSize = ModernLibraryGeometry.TitleSize,
                                     fontWeight = if (chrome!!.serifTitle) FontWeight.Bold else FontWeight.ExtraBold,
                                     fontFamily = if (chrome.serifTitle) FontFamily.Serif else FontFamily.SansSerif,
                                     fontStyle = FontStyle.Italic,
@@ -411,7 +425,11 @@ private fun LibraryRegularToolbar(
                     }
                     Text(
                         text = "Koleksi anime kamu",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = if (useMiyorareVisuals) {
+                            MaterialTheme.typography.bodyMedium.copy(fontSize = ModernLibraryGeometry.SubtitleSize)
+                        } else {
+                            MaterialTheme.typography.bodyMedium
+                        },
                         color = if (useMiyorareVisuals) {
                             chrome!!.headerSubtitleColor
                         } else {
@@ -454,7 +472,7 @@ private fun LibraryRegularToolbar(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = if (useMiyorareVisuals) ModernLibraryGeometry.CategoryMargin else 16.dp)
                         .then(
                             if (isModern) {
                                 if (chrome != null) {
@@ -627,8 +645,11 @@ private fun LibraryRegularToolbar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(if (useMiyorareVisuals) 12.dp else 8.dp),
+                    .padding(
+                        horizontal = if (useMiyorareVisuals) ModernLibraryGeometry.ScreenMargin else 16.dp,
+                        vertical = 8.dp,
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(ModernLibraryGeometry.FilterGap),
             ) {
                 if (useMiyorareVisuals) {
                     ModernLibraryActionButton(
@@ -702,44 +723,6 @@ private fun LibraryRegularToolbar(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun RowScope.ModernLibraryActionButton(
-    onClick: () -> Unit,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val palette = LocalModernVisualPalette.current
-    val chrome = requireNotNull(resolveModernLibraryChrome(palette, LocalModernArtworkIdentity.current))
-    val shape = chrome.actionShape
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier
-            .height(42.dp)
-            .modernLibraryActionSurface(chrome, selected = selected),
-        shape = shape,
-        border = BorderStroke(0.dp, Color.Transparent),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.Transparent,
-            contentColor = if (selected) chrome.selectedContent else chrome.content,
-        ),
-        contentPadding = PaddingValues(horizontal = 9.dp),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-        )
-        Text(
-            text = label,
-            modifier = Modifier.padding(start = 4.dp),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
     }
 }
 

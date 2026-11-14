@@ -8,6 +8,10 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.theme.LocalModernArtworkIdentity
+import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernLibraryGeometry
+import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.util.plus
 
@@ -18,15 +22,31 @@ internal fun LazyLibraryGrid(
     contentPadding: PaddingValues,
     content: LazyGridScope.() -> Unit,
 ) {
+    val useModernGeometry = resolveModernLibraryChrome(
+        LocalModernVisualPalette.current,
+        LocalModernArtworkIdentity.current,
+    ) != null
     FastScrollLazyVerticalGrid(
-        columns = if (columns == 0) GridCells.Adaptive(128.dp) else GridCells.Fixed(columns),
+        columns = libraryGridCells(columns),
         modifier = modifier,
-        contentPadding = contentPadding + PaddingValues(8.dp),
-        verticalArrangement = Arrangement.spacedBy(CommonAnimeItemDefaults.GridVerticalSpacer),
-        horizontalArrangement = Arrangement.spacedBy(CommonAnimeItemDefaults.GridHorizontalSpacer),
+        contentPadding = contentPadding + if (useModernGeometry) {
+            PaddingValues(horizontal = ModernLibraryGeometry.GridPadding, vertical = 8.dp)
+        } else {
+            PaddingValues(8.dp)
+        },
+        verticalArrangement = Arrangement.spacedBy(
+            if (useModernGeometry) ModernLibraryGeometry.GridSpacing else CommonAnimeItemDefaults.GridVerticalSpacer,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(
+            if (useModernGeometry) ModernLibraryGeometry.GridSpacing else CommonAnimeItemDefaults.GridHorizontalSpacer,
+        ),
         content = content,
     )
 }
+
+// Keep the existing preference contract: zero is adaptive; every positive value is fixed.
+internal fun libraryGridCells(columns: Int): GridCells =
+    if (columns == 0) GridCells.Adaptive(128.dp) else GridCells.Fixed(columns)
 
 internal fun LazyGridScope.globalSearchItem(
     searchQuery: String?,
