@@ -1,6 +1,9 @@
 package eu.kanade.presentation.library.components
 
 import android.content.res.Configuration
+import android.os.Build
+import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -23,6 +26,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -39,10 +43,12 @@ import androidx.test.platform.app.InstrumentationRegistry
 import eu.kanade.domain.ui.model.DesignStyle
 import eu.kanade.domain.ui.model.ModernThemePreset
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -114,7 +120,10 @@ class ModernLibraryActionButtonTest {
         compose.waitForIdle()
         val filterMatcher = hasText(filterLabel) and hasClickAction()
         val sortMatcher = hasText(sortLabel) and hasClickAction()
-        compose.onAllNodes(filterMatcher, useUnmergedTree = true).assertCountEquals(1)
+        compose.onAllNodes(
+            hasClickAction() and hasAnyDescendant(hasText(filterLabel)),
+            useUnmergedTree = true,
+        ).assertCountEquals(1)
         val filter = compose.onNode(filterMatcher)
         val sort = compose.onNode(sortMatcher)
         filter.assertIsSelected().assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
@@ -203,7 +212,48 @@ class ModernLibraryActionButtonTest {
 
     private fun requireViewport(widthDp: Int) {
         val configuration = InstrumentationRegistry.getInstrumentation().targetContext.resources.configuration
-        assumeTrue("Set the device viewport to at least ${widthDp}dp wide", configuration.screenWidthDp >= widthDp)
+        val message = "Set the device viewport to at least ${widthDp}dp wide"
+        if (Build.HARDWARE in setOf("ranchu", "goldfish")) {
+            assertTrue(message, configuration.screenWidthDp >= widthDp)
+        } else {
+            assumeTrue(message, configuration.screenWidthDp >= widthDp)
+        }
+    }
+
+    companion object {
+        private var viewportChanged = false
+        private var previousSize = "reset"
+        private var previousDensity = "reset"
+
+        // Configure only an emulator. A physical device keeps its own display configuration.
+        @JvmStatic
+        @BeforeClass
+        fun configureReferenceEmulatorViewport() {
+            if (Build.HARDWARE !in setOf("ranchu", "goldfish")) return
+            previousSize = Regex("Override size: (\\d+x\\d+)").find(shell("wm size"))
+                ?.groupValues?.get(1) ?: "reset"
+            previousDensity = Regex("Override density: (\\d+)").find(shell("wm density"))
+                ?.groupValues?.get(1) ?: "reset"
+            viewportChanged = true
+            shell("wm size 864x1536")
+            shell("wm density 320")
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+            SystemClock.sleep(500)
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun restoreEmulatorViewport() {
+            if (!viewportChanged) return
+            shell("wm size $previousSize")
+            shell("wm density $previousDensity")
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        }
+
+        private fun shell(command: String): String {
+            val descriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
+            return ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use { it.readText() }
+        }
     }
 
     @Composable
