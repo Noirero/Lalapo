@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,6 +37,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -44,7 +48,9 @@ import eu.kanade.presentation.anime.components.AnimeCover
 import eu.kanade.presentation.components.modernCoverTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernLibraryGeometry
 import eu.kanade.presentation.theme.modernLibraryChromeCover
+import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.theme.resolveGlassPalette
 import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.i18n.MR
@@ -68,6 +74,14 @@ private fun libraryCoverAspectRatio(useModernLibraryTreatment: Boolean): Float {
         LocalModernVisualPalette.current,
         LocalModernArtworkIdentity.current,
     )?.cardAspectRatio ?: AnimeCover.Book.ratio
+}
+
+@Composable
+private fun libraryCoverShape(useModernLibraryTreatment: Boolean) = if (useModernLibraryTreatment) {
+    resolveModernLibraryChrome(LocalModernVisualPalette.current, LocalModernArtworkIdentity.current)?.cardShape
+        ?: RoundedCornerShape(14.dp)
+} else {
+    MaterialTheme.shapes.extraSmall
 }
 
 private val ContinueWatchingButtonSizeSmall = 28.dp
@@ -102,6 +116,7 @@ fun AnimeCompactGridItem(
         isSelected = isSelected,
         onClick = onClick,
         onLongClick = onLongClick,
+        useModernLibraryTreatment = useModernLibraryTreatment,
     ) {
         AnimeGridCover(
             cover = {
@@ -111,6 +126,7 @@ fun AnimeCompactGridItem(
                         .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                     data = coverData,
                     coverAspectRatio = libraryCoverAspectRatio(useModernLibraryTreatment),
+                    shape = libraryCoverShape(useModernLibraryTreatment),
                 )
             },
             badgesStart = coverBadgeStart,
@@ -148,6 +164,33 @@ private fun BoxScope.CoverTextOverlay(
     useModernLibraryTreatment: Boolean = false,
 ) {
     val palette = LocalModernVisualPalette.current
+    val chrome = if (useModernLibraryTreatment) {
+        resolveModernLibraryChrome(palette, LocalModernArtworkIdentity.current)
+    } else {
+        null
+    }
+    if (chrome != null) {
+        BoxWithConstraints(modifier = Modifier.matchParentSize()) {
+            CoverTextOverlayContent(
+                title = title,
+                onClickContinueWatching = onClickContinueWatching,
+                useModernLibraryTreatment = true,
+                titleSize = ModernLibraryGeometry.overlayTitleSize(maxWidth.value, maxHeight.value).sp,
+            )
+        }
+    } else {
+        CoverTextOverlayContent(title, onClickContinueWatching, useModernLibraryTreatment, 12.sp)
+    }
+}
+
+@Composable
+private fun BoxScope.CoverTextOverlayContent(
+    title: String,
+    onClickContinueWatching: (() -> Unit)?,
+    useModernLibraryTreatment: Boolean,
+    titleSize: androidx.compose.ui.unit.TextUnit,
+) {
+    val palette = LocalModernVisualPalette.current
     val glass = palette.resolveGlassPalette(MaterialTheme.colorScheme)
     val chrome = if (useModernLibraryTreatment) {
         resolveModernLibraryChrome(palette, LocalModernArtworkIdentity.current)
@@ -156,11 +199,11 @@ private fun BoxScope.CoverTextOverlay(
     }
     Box(
         modifier = Modifier
-            .clip(
+            .then(
                 if (useModernLibraryTreatment) {
-                    RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
+                    Modifier
                 } else {
-                    RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
+                    Modifier.clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
                 },
             )
             .background(
@@ -177,7 +220,13 @@ private fun BoxScope.CoverTextOverlay(
                     )
                 },
             )
-            .fillMaxHeight(if (chrome != null) 0.42f else 0.33f)
+            .then(
+                if (chrome != null) {
+                    Modifier.height(ModernLibraryGeometry.ScrimHeight)
+                } else {
+                    Modifier.fillMaxHeight(0.33f)
+                },
+            )
             .fillMaxWidth()
             .align(Alignment.BottomCenter),
     )
@@ -198,7 +247,7 @@ private fun BoxScope.CoverTextOverlay(
                 ),
             ),
             minLines = 1,
-            fontSize = if (chrome != null) 14.sp else 12.sp,
+            fontSize = titleSize,
         )
         if (onClickContinueWatching != null) {
             ContinueWatchingButton(
@@ -245,6 +294,7 @@ fun AnimeComfortableGridItem(
         isSelected = isSelected,
         onClick = onClick,
         onLongClick = onLongClick,
+        useModernLibraryTreatment = useModernLibraryTreatment,
     ) {
         Column {
             AnimeGridCover(
@@ -255,6 +305,7 @@ fun AnimeComfortableGridItem(
                             .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
                         data = coverData,
                         coverAspectRatio = libraryCoverAspectRatio(useModernLibraryTreatment),
+                        shape = libraryCoverShape(useModernLibraryTreatment),
                     )
                 },
                 badgesStart = coverBadgeStart,
@@ -279,6 +330,7 @@ fun AnimeComfortableGridItem(
                 style = MaterialTheme.typography.titleSmall,
                 minLines = 2,
                 maxLines = titleMaxLines,
+                fontSize = if (useModernLibraryTreatment) ModernLibraryGeometry.CoverTitleSize else 12.sp,
             )
         }
     }
@@ -366,17 +418,26 @@ private fun GridItemSelectable(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    useModernLibraryTreatment: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val chrome = if (useModernLibraryTreatment) {
+        resolveModernLibraryChrome(LocalModernVisualPalette.current, LocalModernArtworkIdentity.current)
+    } else {
+        null
+    }
     Box(
         modifier = modifier
-            .clip(MaterialTheme.shapes.small)
+            .clip(chrome?.cardShape ?: MaterialTheme.shapes.small)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
             .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondary)
-            .padding(4.dp),
+            .then(
+                if (chrome != null) Modifier.semantics { selected = isSelected } else Modifier,
+            )
+            .padding(if (chrome != null) ModernLibraryGeometry.GridItemInset else 4.dp),
     ) {
         val contentColor = if (isSelected) {
             MaterialTheme.colorScheme.onSecondary
@@ -415,10 +476,25 @@ fun AnimeListItem(
     containerHeight: Int = 0,
     modifier: Modifier = Modifier,
     // <-- AY
+    useModernLibraryTreatment: Boolean = false,
 ) {
+    val chrome = if (useModernLibraryTreatment) {
+        resolveModernLibraryChrome(LocalModernVisualPalette.current, LocalModernArtworkIdentity.current)
+    } else {
+        null
+    }
     Row(
         modifier = modifier
-            .selectedBackground(isSelected)
+            .then(
+                if (chrome != null) {
+                    Modifier
+                        .clip(chrome.cardShape)
+                        .modernLibraryChromeSurface(chrome, chrome.cardShape, selected = isSelected)
+                        .semantics { selected = isSelected }
+                } else {
+                    Modifier.selectedBackground(isSelected)
+                },
+            )
             .height(
                 // AY -->
                 when (entries) {
@@ -435,7 +511,7 @@ fun AnimeListItem(
                 onLongClick = onLongClick,
             )
             // AY -->
-            .padding(horizontal = 16.dp, vertical = 3.dp),
+            .padding(horizontal = if (chrome != null) ModernLibraryGeometry.ListInset else 16.dp, vertical = 3.dp),
         // <-- AY
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -443,9 +519,12 @@ fun AnimeListItem(
         AnimeCover.Book(
             // <-- AY
             modifier = Modifier
+                .then(if (chrome != null) Modifier.heightIn(max = ModernLibraryGeometry.ListCoverSize) else Modifier)
                 .fillMaxHeight()
                 .alpha(coverAlpha),
             data = coverData,
+            shape = libraryCoverShape(useModernLibraryTreatment),
+            coverAspectRatio = if (chrome != null) AnimeCover.Square.ratio else AnimeCover.Book.ratio,
         )
         Text(
             text = title,
@@ -454,6 +533,11 @@ fun AnimeListItem(
                 .weight(1f),
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium,
+            color = when {
+                chrome == null -> Color.Unspecified
+                isSelected -> chrome.selectedContent
+                else -> chrome.content
+            },
         )
         BadgeGroup(content = badge)
         if (onClickContinueWatching != null) {

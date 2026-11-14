@@ -9,6 +9,7 @@ androidx-baselineProfile = "1.5.0-rc02"
 androidx-benchmark = "1.4.1"
 androidx-biometric = "1.2.0-alpha05"
 androidx-compose-bom = "2026.07.01"
+androidx-concurrent = "1.2.0"
 androidx-constraintLayout = "2.2.2"
 androidx-core = "1.19.0"
 androidx-coreSplashScreen = "1.2.0"
@@ -94,6 +95,9 @@ androidx-compose-animationGraphics = { module = "androidx.compose.animation:anim
 androidx-compose-bom = { module = "androidx.compose:compose-bom-alpha", version.ref = "androidx-compose-bom" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-uiTestJunit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+androidx-compose-uiTestManifest = { module = "androidx.compose.ui:ui-test-manifest" }
+androidx-concurrent-futuresKtx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "androidx-concurrent" }
 androidx-compose-material3NavSuite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite" }
 androidx-compose-materialIcons = { module = "androidx.compose.material:material-icons-extended" }
 androidx-compose-runtime = { module = "androidx.compose.runtime:runtime" }

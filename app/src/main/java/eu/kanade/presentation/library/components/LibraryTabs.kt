@@ -15,11 +15,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.modernSurfaceTreatment
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernLibraryGeometry
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.theme.resolveModernLibraryChrome
 import tachiyomi.domain.category.model.Category
@@ -57,12 +60,20 @@ internal fun LibraryTabs(
             TextButton(
                 onClick = { onTabItemClick(index) },
                 modifier = Modifier
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = ModernLibraryGeometry.CategoryRailHeight)
+                    .then(
+                        if (useMiyorareVisuals) {
+                            Modifier
+                                .padding(vertical = ModernLibraryGeometry.CategoryVerticalInset)
+                                .semantics { this.selected = selected }
+                        } else {
+                            Modifier
+                        },
+                    )
                     .then(
                         when {
                             useMiyorareVisuals && selected ->
                                 Modifier
-                                    .padding(vertical = 4.dp)
                                     .modernLibraryChromeSurface(
                                         chrome = chrome!!,
                                         shape = chrome.tabShape,
@@ -90,7 +101,11 @@ internal fun LibraryTabs(
                         else -> MaterialTheme.colorScheme.onSurface
                     },
                 ),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                contentPadding = if (useMiyorareVisuals) {
+                    PaddingValues(horizontal = ModernLibraryGeometry.CategoryHorizontalPadding, vertical = 0.dp)
+                } else {
+                    PaddingValues(horizontal = 16.dp)
+                },
             ) {
                 TabText(
                     text = category.visualName,

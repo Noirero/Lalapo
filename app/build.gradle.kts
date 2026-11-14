@@ -278,6 +278,9 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)
+    debugImplementation(libs.androidx.compose.uiTestManifest)
+    // Match the app-under-test runtime to AndroidX Test; release dependencies stay unchanged.
+    debugImplementation(libs.androidx.concurrent.futuresKtx)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
 
@@ -425,6 +428,8 @@ dependencies {
     // <-- AM (CAST)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.uiTestJunit4)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation("androidx.test:runner:1.7.0")
 }
