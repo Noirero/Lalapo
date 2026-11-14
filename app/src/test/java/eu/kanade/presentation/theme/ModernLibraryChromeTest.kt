@@ -48,13 +48,13 @@ class ModernLibraryChromeTest {
     }
 
     @Test
-    fun `all six Modern grid covers use the original Book image ratio`() {
+    fun `pilot ratio stays local to the six Modern Library identities`() {
         assertEquals(2f / 3f, AnimeCover.Book.ratio)
         val modern = ModernVisualPalette.Standard.copy(isModern = true)
         assertEquals(6, ModernThemeDefinitions.authoredBuiltIns.size)
         ModernThemeDefinitions.authoredBuiltIns.forEach { definition ->
             val chrome = requireNotNull(resolveModernLibraryChrome(modern, definition.artworkIdentity))
-            assertEquals(AnimeCover.Book.ratio, chrome.cardAspectRatio, definition.preset.toString())
+            assertEquals(ModernLibraryGeometry.COVER_ASPECT_RATIO, chrome.cardAspectRatio, definition.preset.toString())
             assertNull(resolveModernLibraryChrome(ModernVisualPalette.Standard, definition.artworkIdentity))
         }
         assertNull(resolveModernLibraryChrome(modern, ModernArtworkIdentity.CUSTOM_WAVES))
@@ -71,7 +71,7 @@ class ModernLibraryChromeTest {
             resolveModernLibraryChrome(modern, ModernArtworkIdentity.VIOLET_MOON_AURORA),
         )
         assertEquals(RoundedCornerShape(28.dp), violet.navSelectedShape)
-        assertEquals(AnimeCover.Book.ratio, violet.cardAspectRatio)
+        assertEquals(ModernLibraryGeometry.COVER_ASPECT_RATIO, violet.cardAspectRatio)
         assertNull(resolveModernLibraryChrome(modern, ModernArtworkIdentity.CUSTOM_WAVES))
     }
 

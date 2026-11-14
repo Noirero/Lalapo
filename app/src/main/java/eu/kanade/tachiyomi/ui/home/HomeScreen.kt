@@ -55,6 +55,7 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.presentation.theme.LocalModernArtworkIdentity
 import eu.kanade.presentation.theme.LocalModernVisualPalette
+import eu.kanade.presentation.theme.ModernPhoneNavigationGeometry
 import eu.kanade.presentation.theme.ModernSharpWallpaper
 import eu.kanade.presentation.theme.modernLibraryChromeSurface
 import eu.kanade.presentation.theme.modernLibraryNeedsLightStatusBarIcons
@@ -175,14 +176,22 @@ object HomeScreen : Screen() {
                                     modifier = if (useMiyorareVisuals) {
                                         Modifier
                                             .padding(
-                                                horizontal = if (tabletUi) 8.dp else 18.dp,
-                                                vertical = if (tabletUi) 8.dp else 4.dp,
+                                                horizontal = if (tabletUi) {
+                                                    8.dp
+                                                } else {
+                                                    ModernPhoneNavigationGeometry.HorizontalMargin
+                                                },
+                                                vertical = if (tabletUi) {
+                                                    8.dp
+                                                } else {
+                                                    ModernPhoneNavigationGeometry.VerticalMargin
+                                                },
                                             )
                                             .then(
                                                 if (tabletUi) {
                                                     Modifier
                                                 } else {
-                                                    Modifier.heightIn(min = 70.dp)
+                                                    Modifier.heightIn(min = ModernPhoneNavigationGeometry.MinHeight)
                                                 },
                                             )
                                             .modernLibraryChromeSurface(chrome!!, shape = navigationShape)
@@ -288,12 +297,19 @@ object HomeScreen : Screen() {
         val modernPalette = LocalModernVisualPalette.current
         val chrome = resolveModernLibraryChrome(modernPalette, LocalModernArtworkIdentity.current)
         val useMiyorareVisuals = chrome != null
+        val usePhoneGeometry = useMiyorareVisuals && navigationSuiteType == NavigationSuiteType.NavigationBar
+        val iconSize = when {
+            usePhoneGeometry && selected -> ModernPhoneNavigationGeometry.SelectedIconSize
+            usePhoneGeometry -> ModernPhoneNavigationGeometry.IconSize
+            selected -> 25.dp
+            else -> 23.dp
+        }
         NavigationSuiteItem(
             modifier = if (useMiyorareVisuals && selected) {
                 Modifier.drawWithCache {
                     val horizontalInset = 2.dp.toPx()
                     val targetHeight = if (navigationSuiteType == NavigationSuiteType.NavigationBar) {
-                        60.dp.toPx().coerceAtMost(size.height)
+                        ModernPhoneNavigationGeometry.SelectedHeight.toPx().coerceAtMost(size.height)
                     } else {
                         size.height
                     }
@@ -311,7 +327,11 @@ object HomeScreen : Screen() {
                         is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
                         is Outline.Generic -> outline.path
                     }
-                    val borderWidth = 1.dp.toPx()
+                    val borderWidth = if (usePhoneGeometry) {
+                        ModernPhoneNavigationGeometry.BorderWidth.toPx()
+                    } else {
+                        1.dp.toPx()
+                    }
                     onDrawBehind {
                         translate(left = horizontalInset, top = top) {
                             drawPath(path = selectedPath, brush = selectedBrush)
@@ -342,14 +362,14 @@ object HomeScreen : Screen() {
                             imageVector = Icons.Outlined.Notifications,
                             contentDescription = tab.options.title,
                             tint = if (selected) chrome!!.selectedContent else chrome!!.content,
-                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                            modifier = Modifier.size(iconSize),
                         )
                     } else {
                         Icon(
                             painter = tab.options.icon!!,
                             contentDescription = tab.options.title,
                             tint = if (selected) chrome!!.selectedContent else chrome!!.content,
-                            modifier = Modifier.size(if (selected) 25.dp else 23.dp),
+                            modifier = Modifier.size(iconSize),
                         )
                     }
                 } else {
@@ -366,8 +386,8 @@ object HomeScreen : Screen() {
                         modifier = Modifier.padding(bottom = if (selected) 6.dp else 0.dp),
                         color = if (selected) chrome!!.selectedContent else chrome!!.content,
                         style = MaterialTheme.typography.labelLarge.copy(
-                            fontSize = 14.sp,
-                            lineHeight = 17.sp,
+                            fontSize = if (usePhoneGeometry) ModernPhoneNavigationGeometry.LabelSize else 14.sp,
+                            lineHeight = if (usePhoneGeometry) ModernPhoneNavigationGeometry.LabelLineHeight else 17.sp,
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
