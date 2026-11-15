@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -114,14 +116,14 @@ fun MoreScreen(
             item { LogoHeader() }
 
             item {
-                MoreCard {
+                MoreCard(modifier = Modifier.padding(top = 14.dp)) {
                     MoreRow(
                         title = stringResource(AMMR.strings.am_label_private_session),
                         subtitle = stringResource(
                             if (incognitoMode) {
                                 AMMR.strings.am_private_session_active_summary
                             } else {
-                                AMMR.strings.am_more_private_session_summary
+                                AMMR.strings.am_pref_incognito_mode_summary
                             },
                         ),
                         icon = ImageVector.vectorResource(R.drawable.ic_glasses_24dp),
@@ -135,7 +137,7 @@ fun MoreScreen(
                             if (downloadedOnly) {
                                 AMMR.strings.am_offline_mode_active_summary
                             } else {
-                                AMMR.strings.am_more_offline_mode_summary
+                                MR.strings.downloaded_only_summary
                             },
                         ),
                         icon = Icons.Outlined.CloudOff,
@@ -317,7 +319,9 @@ private fun MoreCard(
         if (sectionTitle != null) {
             Text(
                 text = sectionTitle,
-                modifier = Modifier.padding(start = 12.dp, top = 14.dp, bottom = 8.dp),
+                modifier = Modifier
+                    .padding(start = 12.dp, top = 14.dp, bottom = 8.dp)
+                    .semantics { heading() },
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.8.sp),
             )
@@ -367,19 +371,20 @@ private fun MoreRow(
         onClick != null -> Modifier.clickable(role = Role.Button, onClick = onClick)
         else -> Modifier
     }
+    val isToggle = onCheckedChange != null
     val hasSubtitle = !subtitle.isNullOrBlank()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = if (onCheckedChange != null) 58.dp else 48.dp)
+            .heightIn(min = if (isToggle) 58.dp else 48.dp)
             .then(interaction)
-            .padding(horizontal = 18.dp, vertical = if (hasSubtitle) 8.dp else 6.dp),
+            .padding(horizontal = 18.dp, vertical = if (isToggle) 8.dp else 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val iconShape = RoundedCornerShape(11.dp)
         Box(
             modifier = Modifier
-                .size(width = 38.dp, height = if (onCheckedChange != null) 38.dp else 32.dp)
+                .size(width = 38.dp, height = if (isToggle) 38.dp else 32.dp)
                 .background(
                     Brush.verticalGradient(
                         listOf(iconTint.copy(alpha = 0.20f), iconTint.copy(alpha = 0.08f)),
@@ -392,7 +397,7 @@ private fun MoreRow(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(if (onCheckedChange != null) 24.dp else 22.dp),
+                modifier = Modifier.size(if (isToggle) 24.dp else 22.dp),
             )
         }
         Spacer(Modifier.width(10.dp))
