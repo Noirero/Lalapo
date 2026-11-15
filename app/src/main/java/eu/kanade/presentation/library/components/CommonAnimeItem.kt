@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
@@ -42,6 +43,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -413,35 +415,49 @@ private fun LibraryCoverBadgeLayout(
     modifier: Modifier = Modifier,
     cover: @Composable () -> Unit,
 ) {
-    Layout(
-        modifier = modifier.fillMaxWidth(),
-        content = {
-            cover()
-            BadgeGroup(content = badgesStart)
-            BadgeGroup(content = badgesEnd)
-        },
-    ) { measurables, constraints ->
-        val coverPlaceable = measurables[0].measure(constraints.copy(minHeight = 0))
-        val inset = 4.dp.roundToPx()
-        val gap = 2.dp.roundToPx()
-        val badgeConstraints = constraints.copy(
-            minWidth = 0,
-            minHeight = 0,
-            maxWidth = (coverPlaceable.width - 2 * inset).coerceAtLeast(0),
-        )
-        val start = measurables[1].measure(badgeConstraints)
-        val end = measurables[2].measure(badgeConstraints)
-        val overflow = start.width + end.width > badgeConstraints.maxWidth
-        // An overflowing pair gets its own header; it must not cover either the counts or title.
-        val headerHeight = if (overflow) start.height + end.height + gap + 2 * inset else 0
-        layout(coverPlaceable.width, coverPlaceable.height + headerHeight) {
-            coverPlaceable.placeRelative(0, headerHeight)
-            start.placeRelative(inset, inset)
-            end.placeRelative(
-                coverPlaceable.width - inset - end.width,
-                if (overflow) inset + start.height + gap else inset,
+    CompositionLocalProvider(LocalLibraryBadgeMaxLines provides Int.MAX_VALUE) {
+        Layout(
+            modifier = modifier.fillMaxWidth(),
+            content = {
+                cover()
+                LibraryCoverBadgeGroup(content = badgesStart)
+                LibraryCoverBadgeGroup(content = badgesEnd)
+            },
+        ) { measurables, constraints ->
+            val coverPlaceable = measurables[0].measure(constraints.copy(minHeight = 0))
+            val inset = 4.dp.roundToPx()
+            val gap = 2.dp.roundToPx()
+            val badgeConstraints = constraints.copy(
+                minWidth = 0,
+                minHeight = 0,
+                maxWidth = (coverPlaceable.width - 2 * inset).coerceAtLeast(0),
             )
+            // Check natural widths before constraining either group: a measured Row may already
+            // have clipped a count. Each group can then wrap its badges, and each text badge can
+            // wrap a long count/language rather than shrinking the accessibility font size.
+            val overflow = measurables[1].maxIntrinsicWidth(Constraints.Infinity).toLong() +
+                measurables[2].maxIntrinsicWidth(Constraints.Infinity) > badgeConstraints.maxWidth
+            val start = measurables[1].measure(badgeConstraints)
+            val end = measurables[2].measure(badgeConstraints)
+            val groupGap = if (start.height > 0 && end.height > 0) gap else 0
+            // An overflowing pair gets its own header; it must not cover either the counts or title.
+            val headerHeight = if (overflow) start.height + end.height + groupGap + 2 * inset else 0
+            layout(coverPlaceable.width, coverPlaceable.height + headerHeight) {
+                coverPlaceable.placeRelative(0, headerHeight)
+                start.placeRelative(inset, inset)
+                end.placeRelative(
+                    coverPlaceable.width - inset - end.width,
+                    if (overflow) inset + start.height + groupGap else inset,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun LibraryCoverBadgeGroup(content: @Composable RowScope.() -> Unit) {
+    FlowRow(modifier = Modifier.clip(MaterialTheme.shapes.extraSmall)) {
+        content()
     }
 }
 
