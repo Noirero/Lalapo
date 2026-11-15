@@ -40,6 +40,7 @@ fun Badge(
     color: Color = MaterialTheme.colorScheme.secondary,
     textColor: Color = MaterialTheme.colorScheme.onSecondary,
     shape: Shape = RectangleShape,
+    maxLines: Int = 1,
 ) {
     Text(
         text = text,
@@ -49,7 +50,7 @@ fun Badge(
             .padding(horizontal = 3.dp, vertical = 1.dp),
         color = textColor,
         fontWeight = FontWeight.Medium,
-        maxLines = 1,
+        maxLines = maxLines,
         style = MaterialTheme.typography.bodySmall,
     )
 }

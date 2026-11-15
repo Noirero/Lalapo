@@ -222,6 +222,18 @@ android {
         abortOnError = false
         checkReleaseBuilds = false
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            it.systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
+            it.systemProperty("maven.repo.local", gradle.gradleUserHomeDir.resolve("caches/robolectric-maven").path)
+            it.systemProperty(
+                "modernPilot.recordScreenshots",
+                providers.gradleProperty("recordModernPilotScreenshots").getOrElse("false"),
+            )
+        }
+    }
 }
 
 kotlin {
@@ -393,6 +405,7 @@ dependencies {
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
+    testRuntimeOnly(libs.junit.vintage)
 
     // For detecting memory leaks; see https://square.github.io/leakcanary/
     // debugImplementation(libs.leakCanary.android)
@@ -428,6 +441,9 @@ dependencies {
     // <-- AM (CAST)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.uiTestJunit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.uiTestJunit4)
     androidTestImplementation(libs.androidx.test.junit)
