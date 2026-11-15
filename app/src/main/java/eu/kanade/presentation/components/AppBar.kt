@@ -3,9 +3,11 @@ package eu.kanade.presentation.components
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -360,7 +362,7 @@ fun SearchToolbar(
                     .then(
                         if (useModernChrome) {
                             Modifier
-                                .height(44.dp)
+                                .heightIn(min = 44.dp)
                                 .modernSurfaceTreatment(shape = searchShape)
                                 .padding(horizontal = 14.dp)
                         } else {
@@ -408,6 +410,13 @@ fun SearchToolbar(
                                     fontWeight = FontWeight.Normal,
                                 ),
                             )
+                        },
+                        // Modern already supplies its own inset; Material's 16dp vertical padding
+                        // would leave only 12dp for the text inside a 44dp search surface.
+                        contentPadding = if (useModernChrome) {
+                            PaddingValues(0.dp)
+                        } else {
+                            TextFieldDefaults.contentPaddingWithoutLabel()
                         },
                         container = {},
                     )

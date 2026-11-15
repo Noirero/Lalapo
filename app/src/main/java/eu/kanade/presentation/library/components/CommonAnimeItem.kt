@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -354,6 +355,22 @@ private fun AnimeGridCover(
         null
     }
     val coverShape = chrome?.cardShape ?: RoundedCornerShape(14.dp)
+    if (chrome != null && badgesStart != null && badgesEnd != null) {
+        LibraryCoverBadgeLayout(
+            modifier = modifier.modernLibraryChromeCover(chrome, coverShape),
+            badgesStart = badgesStart,
+            badgesEnd = badgesEnd,
+        ) {
+            Box(
+                Modifier.fillMaxWidth()
+                    .aspectRatio(chrome.cardAspectRatio),
+            ) {
+                cover()
+                content?.invoke(this)
+            }
+        }
+        return
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -383,6 +400,46 @@ private fun AnimeGridCover(
                     .padding(4.dp)
                     .align(Alignment.TopEnd),
                 content = badgesEnd,
+            )
+        }
+    }
+}
+
+/** Keep large badges readable without changing the image ratio or the user's column count. */
+@Composable
+private fun LibraryCoverBadgeLayout(
+    badgesStart: @Composable RowScope.() -> Unit,
+    badgesEnd: @Composable RowScope.() -> Unit,
+    modifier: Modifier = Modifier,
+    cover: @Composable () -> Unit,
+) {
+    Layout(
+        modifier = modifier.fillMaxWidth(),
+        content = {
+            cover()
+            BadgeGroup(content = badgesStart)
+            BadgeGroup(content = badgesEnd)
+        },
+    ) { measurables, constraints ->
+        val coverPlaceable = measurables[0].measure(constraints.copy(minHeight = 0))
+        val inset = 4.dp.roundToPx()
+        val gap = 2.dp.roundToPx()
+        val badgeConstraints = constraints.copy(
+            minWidth = 0,
+            minHeight = 0,
+            maxWidth = (coverPlaceable.width - 2 * inset).coerceAtLeast(0),
+        )
+        val start = measurables[1].measure(badgeConstraints)
+        val end = measurables[2].measure(badgeConstraints)
+        val overflow = start.width + end.width > badgeConstraints.maxWidth
+        // An overflowing pair gets its own header; it must not cover either the counts or title.
+        val headerHeight = if (overflow) start.height + end.height + gap + 2 * inset else 0
+        layout(coverPlaceable.width, coverPlaceable.height + headerHeight) {
+            coverPlaceable.placeRelative(0, headerHeight)
+            start.placeRelative(inset, inset)
+            end.placeRelative(
+                coverPlaceable.width - inset - end.width,
+                if (overflow) inset + start.height + gap else inset,
             )
         }
     }
