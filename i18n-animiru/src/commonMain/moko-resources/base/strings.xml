@@ -347,4 +347,8 @@
     <string name="am_anime_detail_progress">Watching progress</string>
     <string name="am_anime_detail_progress_format">%1$d of %2$d episodes watched</string>
     <string name="am_label_sync_backup">Sync &amp; backup</string>
+    <string name="am_more_private_session_summary">Pauses watching history.</string>
+    <string name="am_more_offline_mode_summary">Filters all entries in your library.</string>
+    <string name="am_more_tools_section">TOOLS &amp; MANAGEMENT</string>
+    <string name="am_more_app_section">APP</string>
 </resources>
