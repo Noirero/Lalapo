@@ -29,13 +29,16 @@ jobs:
       - name: Get tag metadata
         id: extract
         shell: bash
+        env:
+          REQUESTED_VERSION_CODE: ${{ vars.LALAPO_RELEASE_VERSION_CODE }}
         run: |
           set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
-          version_code=$(( GITHUB_RUN_ID - 41000000000 ))
-          if (( version_code <= 148 || version_code > 2100000000 )); then
-            echo "::error::Workflow run ID outside supported versionCode allocation range"
+          version_code="$REQUESTED_VERSION_CODE"
+          if [[ ! "$version_code" =~ ^[1-9][0-9]{0,9}$ ]] ||
+             (( version_code <= 2031852413 || version_code > 2100000000 )); then
+            echo "::error::Set repository variable LALAPO_RELEASE_VERSION_CODE to a fresh decimal integer greater than 2031852413 and at most 2100000000"
             exit 1
           fi
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
