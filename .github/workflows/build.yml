@@ -96,4 +96,5 @@ jobs:
           api-level: 35
           arch: x86_64
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest
+          # All instrumentation sources live in :app; avoid packaging empty library test APKs.
+          script: ./gradlew :app:connectedDebugAndroidTest --stacktrace

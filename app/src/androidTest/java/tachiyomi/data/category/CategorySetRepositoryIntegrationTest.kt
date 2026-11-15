@@ -6,9 +6,10 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
-import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonObject
@@ -84,17 +85,29 @@ class CategorySetRepositoryIntegrationTest {
             .single { it.name == "Second category" }.id
         repository.moveCategories(listOf(secondCategoryId), secondSet.id)
 
-        val changed = async(start = CoroutineStart.UNDISPATCHED) {
-            withTimeout(5_000) {
-                repository.observeVisibleCategoriesInActiveSet().first { categories ->
+        repository.selectActiveSet(defaultSet.syncKey)
+        val initialEmission = CompletableDeferred<Unit>()
+        val changed = async {
+            repository.observeVisibleCategoriesInActiveSet()
+                .onEach { categories ->
+                    if (categories.any { it.id == defaultCategoryId } &&
+                        categories.none { it.id == secondCategoryId }
+                    ) {
+                        initialEmission.complete(Unit)
+                    }
+                }
+                .first { categories ->
                     categories.any { it.id == secondCategoryId } &&
                         categories.none { it.id == defaultCategoryId }
                 }
-            }
         }
 
-        repository.selectActiveSet(secondSet.syncKey)
-        val categories = changed.await()
+        // CoroutineStart.UNDISPATCHED alone does not initialize the child flows inside combine.
+        val categories = withTimeout(5_000) {
+            initialEmission.await()
+            repository.selectActiveSet(secondSet.syncKey)
+            changed.await()
+        }
 
         assertTrue(categories.any { it.id == secondCategoryId })
         assertFalse(categories.any { it.id == defaultCategoryId })
