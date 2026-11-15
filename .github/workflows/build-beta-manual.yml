@@ -5,11 +5,6 @@ permissions:
 
 on:
   workflow_dispatch:
-    inputs:
-      version_code:
-        description: 'APK versionCode; choose a fresh value above the highest APK already distributed for this package'
-        required: true
-        type: string
 
 concurrency:
   group: lalapo-beta-manual-${{ github.ref }}
@@ -59,22 +54,7 @@ jobs:
             fi
           fi
 
-      - name: Set build version code
-        shell: bash
-        env:
-          REQUESTED_VERSION_CODE: ${{ inputs.version_code }}
-        run: |
-          set -euo pipefail
-          version_code="$REQUESTED_VERSION_CODE"
-          if [[ ! "$version_code" =~ ^[1-9][0-9]{0,9}$ ]] ||
-             (( version_code <= 2031852413 || version_code > 2100000000 )); then
-            echo "::error::versionCode must be a decimal integer greater than 2031852413 and at most 2100000000"
-            exit 1
-          fi
-          echo "LALAPO_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
-          echo "APK versionCode: $version_code" >> "$GITHUB_STEP_SUMMARY"
-          echo "Distribution policy: publish only APKs built from the current protected branch tip; historical commit artifacts are for testing, not app updates." >> "$GITHUB_STEP_SUMMARY"
-
+      # Internal preview builds use the app's default Android versionCode, not a public release allocation.
       - name: Assemble APK
         run: ./gradlew assemblePreview -Pinclude-cast
         env:
